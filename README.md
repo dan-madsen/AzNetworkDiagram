@@ -12,8 +12,10 @@ The Get-AzNetworkDiagram.ps1 visualizes Azure networking utilizing GraphViz and 
 IMPORTANT:
 Icons in the .\icons\ folder is necessary in order to generate the diagram. If module is run from another working directory, it will generate the diagram without proper images!
 
-Demo output:
++ Demo output:
 ![Demo output](https://github.com/dan-madsen/AzNetworkDiagram/blob/main/DemoOutput/Demo.png)  
+
+- Disclaimer: I take no resposibility for any actions caused by this script!
 
 # Future ideas
 - Upload to PSGallery
