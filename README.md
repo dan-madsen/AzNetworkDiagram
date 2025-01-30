@@ -27,6 +27,10 @@ Icons in the .\icons\ folder is necessary in order to generate the diagram. If m
 # Requirements
 The script depends on Graphviz (the "DOT" language) to genereate the diagrams in .PDF and .PNG format.
 
+Graphviz can be downloaded from: https://graphviz.org/. But note that the default install doesn't add the executable to $PATH, so make sure to enable that during install.
+
+It can also be installed using "Winget", but that will _NOT_ add the executable to $PATH - so you will have to do that manually.
+
 # Flow
 It will loop over any subscriptions available and process supported resource types.
 
