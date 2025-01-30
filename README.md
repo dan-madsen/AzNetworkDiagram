@@ -11,18 +11,14 @@ The Get-AzNetworkDiagram.ps1 visualizes Azure networking utilizing Graphviz and 
 
 The idea is _not_ to diagram everything - but enough to get an overview of routing across the entire network environment, with documentation and trobleshooting in mind.
 
-**IMPORTANT:**
-
-Icons in the .\icons\ folder is necessary in order to generate the diagram. If module is run from another working directory, it will generate the diagram without proper images!
-
-```diff
-+ Demo output:
-```
-![Demo output](https://github.com/dan-madsen/AzNetworkDiagram/blob/main/DemoOutput/Demo.png)  
-
 ```diff
 - Disclaimer: I take no resposibility for any actions caused by this script!
 ```
+
+# Demo output:
+![Demo output](https://github.com/dan-madsen/AzNetworkDiagram/blob/main/DemoOutput/Demo.png)  
+
+
 
 # Requirements
 The script depends on Graphviz (the "DOT" language) to genereate the diagrams in .PDF and .PNG format.
@@ -30,6 +26,17 @@ The script depends on Graphviz (the "DOT" language) to genereate the diagrams in
 Graphviz can be downloaded from: https://graphviz.org/. But note that the default install doesn't add the executable to $PATH, so make sure to enable that during install.
 
 It can also be installed using "Winget", but that will _NOT_ add the executable to $PATH - so you will have to do that manually.
+
+# Getting started
+Import module (will be available on PSGallary in the near future)
+```code
+PS> Import-Module .\AzNetworkDiagram.psm1
+```
+Examplels:
+```diff
+PS> Get-AzNetworkDiagram [-outputPath C:\temp\]
+PS> Get-AzNetworkDiagram 
+```
 
 # Flow
 It will loop over any subscriptions available and process supported resource types.
