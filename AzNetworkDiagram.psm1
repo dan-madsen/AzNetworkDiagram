@@ -14,7 +14,7 @@
     - ER (excl. connected cicuits!)
 
   IMPORTANT:
-  Icons in the .\icons\ folder is necessary in order to generate the diagram. If module is run from another working directory, it will generate the diagram without proper images!
+  Icons in the .\icons\ folder is necessary in order to generate the diagram. If not present, they will be downloaded to current working during runtime.
   
   .PARAMETER OutputPath
   Specifies the path for the DOT-based output file. If unset - current working directory will be used.
@@ -87,12 +87,12 @@ function Export-dotFooter {
 
 function Export-CreateFile {
     param([string]$Data)
-    $Data | Out-File -Encoding ASCII $OutputPath\Visualize-AzureNetwork.dot
+    $Data | Out-File -Encoding ASCII $OutputPath\AzNetworkDiagram.dot
 }
 
 function Export-AddToFile {
     param([string]$Data)
-    $Data | Out-File -Encoding ASCII  -Append $OutputPath\Visualize-AzureNetwork.dot
+    $Data | Out-File -Encoding ASCII  -Append $OutputPath\AzNetworkDiagram.dot
 }
 
 function Export-SubnetConfig {
@@ -155,9 +155,9 @@ function Export-SubnetConfig {
                         $AzFWPublicIPs += "$ipname : $publicip \n"
                     }
                     
-                    $data = $data + "$id [label = `"\n$name\n$AddressPrefix\n\nName: $AzFWname\nPolicy name: $AzFWpolicyName\n\nPrivate IP:$AzFWPrivateIP\n\nPublic IP(s):\n$AzFWPublicIPs`" ; color = lightgray;image = `"icons\afw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
+                    $data = $data + "$id [label = `"\n$name\n$AddressPrefix\n\nName: $AzFWname\nPolicy name: $AzFWpolicyName\n\nPrivate IP:$AzFWPrivateIP\n\nPublic IP(s):\n$AzFWPublicIPs`" ; color = lightgray;image = `"$OutputPath\icons\afw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
                 } else { 
-                    $data = $data + "$id [label = `"\n$name\n$AddressPrefix`" ; color = lightgray;image = `"icons\afw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
+                    $data = $data + "$id [label = `"\n$name\n$AddressPrefix`" ; color = lightgray;image = `"$OutputPath\icons\afw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
                     #Write-Output $data
                 }
                 
@@ -168,10 +168,10 @@ function Export-SubnetConfig {
                     $AzBastionName = ($subnetconfigobject.IpConfigurationsText | ConvertFrom-Json).id.split("/")[8]
                 }
                 $AzBastionName = $AzBastionName.ToLower()
-                $data = $data + "$id [label = `"\n\n$name\n$AddressPrefix\nName: $AzBastionName`" ; color = lightgray;image = `"icons\bas.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+                $data = $data + "$id [label = `"\n\n$name\n$AddressPrefix\nName: $AzBastionName`" ; color = lightgray;image = `"$OutputPath\icons\bas.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
             }
             "GatewaySubnet" { 
-                $data = $data + "$id [label = `"\n\n$name\n$AddressPrefix`" ; color = lightgray;image = `"icons\vgw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+                $data = $data + "$id [label = `"\n\n$name\n$AddressPrefix`" ; color = lightgray;image = `"$OutputPath\icons\vgw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
                 $data += "`n"
                 
                 #GW DOT
@@ -197,9 +197,9 @@ function Export-SubnetConfig {
                                 $gwips += "$ipname : $publicip \n"
                             
                             }
-                            $data += "$gwid [color = lightgray;label = `"\n\nName: $gwname`\n\nPublic IP(s):\n$gwips`";image = `"icons\vgw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
+                            $data += "$gwid [color = lightgray;label = `"\n\nName: $gwname`\n\nPublic IP(s):\n$gwips`";image = `"$OutputPath\icons\vgw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
                         } elseif ($gwtype -eq "ExpressRoute") {
-                            $data += "$gwid [color = lightgray;label = `"\nName: $gwname`";image = `"icons\ergw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
+                            $data += "$gwid [color = lightgray;label = `"\nName: $gwname`";image = `"$OutputPath\icons\ergw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
                         }
                         $data += "`n"
                         $data += "$id -> $gwid"
@@ -207,7 +207,7 @@ function Export-SubnetConfig {
                     }
                 }
             }
-            default { $data = $data + "$id [label = `"\n$name\n$AddressPrefix`" ; color = lightgray;image = `"icons\snet.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" }
+            default { $data = $data + "$id [label = `"\n$name\n$AddressPrefix`" ; color = lightgray;image = `"$OutputPath\icons\snet.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" }
         }
         
         $data += "`n"
@@ -249,7 +249,7 @@ function Export-SubnetConfig {
                 $ipprefixesstring += "$ipname : $prefix \n"
             }
         
-            $data += "$NATGWID [color = lightgrey;label = `"\n\nName: $name\n\nPublic IP(s):\n$ipsstring\nPublic IP Prefix(es):\n$ipprefixesstring`";image = `"icons\ng.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
+            $data += "$NATGWID [color = lightgrey;label = `"\n\nName: $name\n\nPublic IP(s):\n$ipsstring\nPublic IP Prefix(es):\n$ipprefixesstring`";image = `"$OutputPath\icons\ng.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
             $data += "$id -> $NATGWID" + "`n"
 
         }
@@ -283,7 +283,7 @@ function Export-vnet {
         $vnetAddressSpacesString = $vnetAddressSpacesString + $_ + "\n"
     }
 
-    $vnetdata = "$id [color = lightgray;label = `"\nAddress Space(s):\n$vnetAddressSpacesString`";image = `"icons\vnet.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
+    $vnetdata = "$id [color = lightgray;label = `"\nAddress Space(s):\n$vnetAddressSpacesString`";image = `"$OutputPath\icons\vnet.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
 
     # Subnets
     if ($subnetconfig) {
@@ -369,13 +369,15 @@ function Export-VPNConnection {
     }
 
     #DOT
-    $data += "$lgwid [color = lightgrey;label = `"\n\nLocal GW: $lgwname\nConnection Name: $lgwconnectionname\nPeer IP:$lgwip\n\nStatic remote subnet(s):\n$lgwsubnets`";image = `"icons\lgw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
+    $data += "$lgwid [color = lightgrey;label = `"\n\nLocal GW: $lgwname\nConnection Name: $lgwconnectionname\nPeer IP:$lgwip\n\nStatic remote subnet(s):\n$lgwsubnets`";image = `"$OutputPath\icons\lgw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
     $data += "$vpngwid -> $lgwid"
     Export-AddToFile -Data $data
 }
 
 function Confirm-Prerequisites {
     $ErrorActionPreference = "Stop"
+
+    if (! (Test-Path $OutputPath)) {}
 
     # dot.exe executable
     try {
@@ -404,6 +406,24 @@ function Confirm-Prerequisites {
         Write-Output "A login window should appear - hint: they may hide behind active windows!"
         Login-AzAccount
         return
+    }
+
+    # Icons available?
+    if (! (Test-Path "$OutputPath\icons") ) { Write-Output "Downloading icons to $OutputPath\icons\ ... " ; New-Item -Path "$OutputPath" -Name "icons" -ItemType "directory" | Out-null }
+    $icons =  @(
+        "afw.png",
+        "bas.png",
+        "ergw.png",
+        "lgw.png",
+        "LICENSE",
+        "ng.png",
+        "snet.png",
+        "vgw.png",
+        "vnet.png"
+    )
+    
+    $icons | ForEach-Object {
+        if (! (Test-Path ".\icons\$_") ) { Invoke-WebRequest "https://github.com/dan-madsen/AzNetworkDiagram/raw/refs/heads/main/icons/$_" -OutFile "$OutputPath\icons\$_" }
     }
 }
 
@@ -455,12 +475,11 @@ function Get-AzNetworkDiagram {
     Export-dotFooter
 
     ##### Generate diagram #####
-    # Generate diagram using GraphViz
-    dot -Tpdf $OutputPath\Visualize-AzureNetwork.dot -o $OutputPath\Visualize-AzureNetwork.pdf
-    dot -Tpng $OutputPath\Visualize-AzureNetwork.dot -o $OutputPath\Visualize-AzureNetwork.png
-
-    # Open Result
-    # $outputPNG
+    # Generate diagram using Graphviz
+    Write-Output "Generating $OutputPath\AzNetworkDiagram.pdf ..."
+    dot -Tpdf $OutputPath\Visualize-AzureNetwork.dot -o $OutputPath\AzNetworkDiagram.pdf
+    Write-Output "Generating $OutputPath\AzNetworkDiagram.png ..."
+    dot -Tpng $OutputPath\Visualize-AzureNetwork.dot -o $OutputPath\AzNetworkDiagram.png
 } 
 
 Export-ModuleMember -Function Get-AzNetworkDiagram
