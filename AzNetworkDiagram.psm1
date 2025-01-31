@@ -477,9 +477,9 @@ function Get-AzNetworkDiagram {
     ##### Generate diagram #####
     # Generate diagram using Graphviz
     Write-Output "Generating $OutputPath\AzNetworkDiagram.pdf ..."
-    dot -Tpdf $OutputPath\Visualize-AzureNetwork.dot -o $OutputPath\AzNetworkDiagram.pdf
+    dot -Tpdf $OutputPath\AzNetworkDiagram.dot -o $OutputPath\AzNetworkDiagram.pdf
     Write-Output "Generating $OutputPath\AzNetworkDiagram.png ..."
-    dot -Tpng $OutputPath\Visualize-AzureNetwork.dot -o $OutputPath\AzNetworkDiagram.png
+    dot -Tpng $OutputPath\AzNetworkDiagram.dot -o $OutputPath\AzNetworkDiagram.png
 } 
 
 Export-ModuleMember -Function Get-AzNetworkDiagram
