@@ -21,7 +21,7 @@ The idea is _not_ to diagram everything - but enough to get an overview of routi
 
 
 # Requirements
-The script depends on Graphviz (the "DOT" language) to genereate the diagrams in .PDF and .PNG format.
+The script depends on Graphviz (the "DOT", diagram-as-code language) to genereate the diagrams in .PDF and .PNG format.
 
 Graphviz can be downloaded from: https://graphviz.org/. But note that the default install doesn't add the executable to $PATH, so make sure to enable that during install.
 
