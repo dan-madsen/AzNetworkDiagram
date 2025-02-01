@@ -423,7 +423,7 @@ function Confirm-Prerequisites {
     )
     
     $icons | ForEach-Object {
-        if (! (Test-Path ".\icons\$_") ) { Invoke-WebRequest "https://github.com/dan-madsen/AzNetworkDiagram/raw/refs/heads/main/icons/$_" -OutFile "$OutputPath\icons\$_" }
+        if (! (Test-Path "$OutputPath\icons\$_") ) { Invoke-WebRequest "https://github.com/dan-madsen/AzNetworkDiagram/raw/refs/heads/main/icons/$_" -OutFile "$OutputPath\icons\$_" }
     }
 }
 
@@ -433,7 +433,10 @@ function Get-AzNetworkDiagram {
     [string]$OutputPath = $pwd
     )
 
+    Write-Output "Checking prerequisites ..."
     Confirm-Prerequisites
+
+    Write-Output "Gathering information ..."
 
     ##### Data collection / Execution #####
     # Run program and collect data through powershell commands
