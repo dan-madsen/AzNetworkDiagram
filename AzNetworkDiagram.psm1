@@ -32,6 +32,9 @@
   # Run
   PS> .\Get-AzNetworkDiagram [-outputPath C:\temp\]
   PS> .\Get-AzNetworkDiagram 
+
+  .LINK
+   https://github.com/dan-madsen/AzNetworkDiagram
 #>
 
 # Change Execution Policy for current process, if prohibited by policy
