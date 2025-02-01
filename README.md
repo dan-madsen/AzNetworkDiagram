@@ -27,22 +27,30 @@ Graphviz can be downloaded from: https://graphviz.org/. But note that the defaul
 
 It can also be installed using "Winget", but that will _NOT_ add the executable to $PATH - so you will have to do that manually.
 
-# Getting started
+# Getting started (with GIT version)
 Import module (will be available on PSGallary in the near future)
 ```code
 PS> Import-Module .\AzNetworkDiagram.psm1
 ```
-Examplels:
+Examples:
 ```diff
 PS> Get-AzNetworkDiagram [-outputPath C:\temp\]
 PS> Get-AzNetworkDiagram 
 ```
 
+# Getting started (PSGallery)
+```code
+Install-Module -Name AzNetworkDiagram
+```
+Examples:
+```diff
+PS> Get-AzNetworkDiagram [-outputPath C:\temp\]
+PS> Get-AzNetworkDiagram 
+
 # Flow
-It will loop over any subscriptions available and process supported resource types.
+It will loop over any subscriptions available and process supported resource types. After data is collected, a .PDF and .PNG file with the digram will be created.
 
 # Future ideas
-- Availlability via PSGallery
 - Support for
     - Express Route Circuits
     - Azure vWAN support
