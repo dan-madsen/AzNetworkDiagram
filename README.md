@@ -46,6 +46,7 @@ Examples:
 ```diff
 PS> Get-AzNetworkDiagram [-outputPath C:\temp\]
 PS> Get-AzNetworkDiagram 
+```
 
 # Flow
 It will loop over any subscriptions available and process supported resource types. After data is collected, a .PDF and .PNG file with the digram will be created.

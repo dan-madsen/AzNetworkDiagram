@@ -9,10 +9,10 @@
 @{
 
     # Script module or binary module file associated with this manifest.
-    # RootModule = ''
+    RootModule = 'AzNetworkDiagram.psm1'
     
     # Version number of this module.
-    ModuleVersion = '0.1'
+    ModuleVersion = '0.1.3'
     
     # Supported PSEditions
     # CompatiblePSEditions = @()
@@ -69,13 +69,13 @@
     # NestedModules = @()
     
     # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-    FunctionsToExport = @("Get-AzNetworkDiagram")
+    #FunctionsToExport = @("Get-AzNetworkDiagram")
     
     # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
-    CmdletsToExport = @()
+    #CmdletsToExport = @("Get-AzNetworkDiagram")
     
     # Variables to export from this module
-    VariablesToExport = '*'
+    VariablesToExport = ''
     
     # Aliases to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no aliases to export.
     AliasesToExport = @()
@@ -84,7 +84,7 @@
     # DscResourcesToExport = @()
     
     # List of all modules packaged with this module
-    # ModuleList = @()
+    #ModuleList = @("AzNetworkDiagram")
     
     # List of all files packaged with this module
     # FileList = @()
