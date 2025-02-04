@@ -1,5 +1,5 @@
 # Introduction 
-The Get-AzNetworkDiagram.ps1 visualizes Azure networking utilizing Graphviz and the "DOT", diagram-as-code language to export a PDF and PNG with a network digram containing:
+The Get-AzNetworkDiagram (Powershell)Cmdlet visualizes Azure networking utilizing Graphviz and the "DOT", diagram-as-code language to export a PDF and PNG with a network digram containing:
   - VNets, including:
     - VNet peerings
     - Subnets (will be marked with an "#" if a Network Security Group is associated)
@@ -27,29 +27,29 @@ Graphviz can be downloaded from: https://graphviz.org/. But note that the defaul
 
 It can also be installed using "Winget", but that will _NOT_ add the executable to $PATH - so you will have to do that manually.
 
-# Getting started (with GIT version)
-Import module (will be available on PSGallary in the near future)
+# Getting started 
+## Install from Github repo 
+Clone repository, switch to the cloned directory, then:
 ```code
 PS> Import-Module .\AzNetworkDiagram.psm1
 ```
-Examples:
-```diff
-PS> Get-AzNetworkDiagram [-outputPath C:\temp\]
-PS> Get-AzNetworkDiagram 
-```
 
-# Getting started (PSGallery)
+## Install using PSGallery
 ```code
 Install-Module -Name AzNetworkDiagram
 ```
+
+## Running the Powershell module
 Examples:
 ```diff
-PS> Get-AzNetworkDiagram [-outputPath C:\temp\]
+PS> Get-AzNetworkDiagram [-Subscriptions "subid1","subid2","..."] [-OutputPath C:\temp\]
 PS> Get-AzNetworkDiagram 
 ```
 
+Beware, that by using "-Subscriptions" to limit the scope of data collection, you might end up with peerings being created to sparsely defined VNets (which would be out of your defined scope). These would appear as a long string, that is the id of said vnet, with special characters stripped for DOT-compatability.
+
 # Flow
-It will loop over any subscriptions available and process supported resource types. After data is collected, a .PDF and .PNG file with the digram will be created.
+It will loop over any subscriptions available (or those defined as the parameter) and process supported resource types. After data is collected, a .PDF and .PNG file with the digram will be created.
 
 # Future ideas
 - Support for
@@ -58,5 +58,4 @@ It will loop over any subscriptions available and process supported resource typ
 - Azure DevOps pipeline for automated runs, with output saved to storage account
     - Mail on changes?
 - Subnet marks for other special purposes (SQLMI, App Services, etc.)
-- Proper indents in the .dot file
-- Subscription scoping via parameters
+- Proper indents in the .dot file (should be much better already!)

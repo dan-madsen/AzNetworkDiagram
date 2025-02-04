@@ -58,16 +58,18 @@ function Export-dotHeader {
     compound = true;
     
     # Rank (height in picture) support
-    newrank=true; #Needed for 
+    newrank = true;
     rankdir = TB;
     "
     Export-CreateFile -Data $Data
 }
 
 function Export-dotFooter {
-    Export-AddToFile -Data "##### RANKS #####"
-    Export-AddToFile -Data "### AddressSpace ranks"
-    $rankvnetaddressspacesdata = "{ rank=same; "
+    Export-AddToFile -Data "`n    ##########################################################################################################"
+    Export-AddToFile -Data "    ##### RANKS"
+    Export-AddToFile -Data "    ##########################################################################################################`n"
+    Export-AddToFile -Data "    ### AddressSpace ranks"
+    $rankvnetaddressspacesdata = "    { rank=same; "
     
     $global:rankvnetaddressspaces | ForEach-Object {
         $vnetaddresspacename = $_
@@ -76,9 +78,9 @@ function Export-dotFooter {
 
     Export-AddToFile -Data "$rankvnetaddressspacesdata }"
 
-    Export-AddToFile -Data "### Subnets ranks (TODO!)"
-    Export-AddToFile -Data "### Route table ranks"
-    $rankroutedata = "{ rank=same; "
+    Export-AddToFile -Data "`n    ### Subnets ranks (TODO!)"
+    Export-AddToFile -Data "`n    ### Route table ranks"
+    $rankroutedata = "    { rank=same; "
     
     $rankrts | ForEach-Object {
         $routename = $_
@@ -158,9 +160,9 @@ function Export-SubnetConfig {
                         $AzFWPublicIPs += "$ipname : $publicip \n"
                     }
                     
-                    $data = $data + "$id [label = `"\n$name\n$AddressPrefix\n\nName: $AzFWname\nPolicy name: $AzFWpolicyName\n\nPrivate IP:$AzFWPrivateIP\n\nPublic IP(s):\n$AzFWPublicIPs`" ; color = lightgray;image = `"$OutputPath\icons\afw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
+                    $data = $data + "        $id [label = `"\n$name\n$AddressPrefix\n\nName: $AzFWname\nPolicy name: $AzFWpolicyName\n\nPrivate IP:$AzFWPrivateIP\n\nPublic IP(s):\n$AzFWPublicIPs`" ; color = lightgray;image = `"$OutputPath\icons\afw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
                 } else { 
-                    $data = $data + "$id [label = `"\n$name\n$AddressPrefix`" ; color = lightgray;image = `"$OutputPath\icons\afw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
+                    $data = $data + "        $id [label = `"\n$name\n$AddressPrefix`" ; color = lightgray;image = `"$OutputPath\icons\afw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
                     #Write-Output $data
                 }
                 
@@ -171,10 +173,10 @@ function Export-SubnetConfig {
                     $AzBastionName = ($subnetconfigobject.IpConfigurationsText | ConvertFrom-Json).id.split("/")[8]
                 }
                 $AzBastionName = $AzBastionName.ToLower()
-                $data = $data + "$id [label = `"\n\n$name\n$AddressPrefix\nName: $AzBastionName`" ; color = lightgray;image = `"$OutputPath\icons\bas.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+                $data = $data + "        $id [label = `"\n\n$name\n$AddressPrefix\nName: $AzBastionName`" ; color = lightgray;image = `"$OutputPath\icons\bas.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
             }
             "GatewaySubnet" { 
-                $data = $data + "$id [label = `"\n\n$name\n$AddressPrefix`" ; color = lightgray;image = `"$OutputPath\icons\vgw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+                $data = $data + "        $id [label = `"\n\n$name\n$AddressPrefix`" ; color = lightgray;image = `"$OutputPath\icons\vgw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
                 $data += "`n"
                 
                 #GW DOT
@@ -200,22 +202,22 @@ function Export-SubnetConfig {
                                 $gwips += "$ipname : $publicip \n"
                             
                             }
-                            $data += "$gwid [color = lightgray;label = `"\n\nName: $gwname`\n\nPublic IP(s):\n$gwips`";image = `"$OutputPath\icons\vgw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
+                            $data += "        $gwid [color = lightgray;label = `"\n\nName: $gwname`\n\nPublic IP(s):\n$gwips`";image = `"$OutputPath\icons\vgw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
                         } elseif ($gwtype -eq "ExpressRoute") {
-                            $data += "$gwid [color = lightgray;label = `"\nName: $gwname`";image = `"$OutputPath\icons\ergw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
+                            $data += "        $gwid [color = lightgray;label = `"\nName: $gwname`";image = `"$OutputPath\icons\ergw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
                         }
                         $data += "`n"
-                        $data += "$id -> $gwid"
+                        $data += "        $id -> $gwid"
                         $data += "`n"
                     }
                 }
             }
-            default { $data = $data + "$id [label = `"\n$name\n$AddressPrefix`" ; color = lightgray;image = `"$OutputPath\icons\snet.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" }
+            default { $data = $data + "        $id [label = `"\n$name\n$AddressPrefix`" ; color = lightgray;image = `"$OutputPath\icons\snet.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" }
         }
         
         $data += "`n"
         # DOT
-        $data = $data + "$vnetid -> $id"
+        $data = $data + "        $vnetid -> $id"
         $data += "`n"
     
         if ($routetableid -ne "null" ) {
@@ -273,7 +275,7 @@ function Export-vnet {
     $global:rankvnetaddressspaces += $id
 
     $header = "
-        # $vnetname - $id
+    # $vnetname - $id
     subgraph cluster_$id {
         style = solid;
         color = black;
@@ -286,14 +288,14 @@ function Export-vnet {
         $vnetAddressSpacesString = $vnetAddressSpacesString + $_ + "\n"
     }
 
-    $vnetdata = "$id [color = lightgray;label = `"\nAddress Space(s):\n$vnetAddressSpacesString`";image = `"$OutputPath\icons\vnet.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
+    $vnetdata = "    $id [color = lightgray;label = `"\nAddress Space(s):\n$vnetAddressSpacesString`";image = `"$OutputPath\icons\vnet.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];`n"
 
     # Subnets
     if ($subnetconfig) {
         $subnetdata = Export-SubnetConfig $subnetconfig
     }
     $footer = "
-            label = `"$vnetname`";
+        label = `"$vnetname`";
     }
     "
 
@@ -433,8 +435,14 @@ function Confirm-Prerequisites {
 function Get-AzNetworkDiagram {
     # Parameters
     param (
-    [string]$OutputPath = $pwd
+        [string]$OutputPath = $pwd,
+        [string[]]$Subscriptions
     )
+
+    # Reset global vars
+    $global:rankrts = @()
+    #$global:ranksubnets = @()
+    $global:rankvnetaddressspaces = @()
 
     Write-Output "Checking prerequisites ..."
     Confirm-Prerequisites
@@ -445,13 +453,20 @@ function Get-AzNetworkDiagram {
     # Run program and collect data through powershell commands
     Export-dotHeader
 
-    $subscriptions = Get-AzSubscription
-    $subscriptions | ForEach-Object {
+    # Set subscriptions to every accessible subscription, if unset
+    if ( $null -eq $Subscriptions ) { $Subscriptions = (Get-AzSubscription).Id } 
+
+    $Subscriptions | ForEach-Object {
         # Set Context
-        Set-AzContext $_.Id | Out-null
+        $context = $_
+        Set-AzContext $context | Out-null
+        $subname = (Get-AzContext).Subscription.Name
+        Export-AddToFile "`n    ##########################################################################################################"
+        Export-AddToFile "    ##### $subname "
+        Export-AddToFile "    ##########################################################################################################`n"
 
         ### RTs
-        Export-AddToFile "##### " + Get-AzContext.id + " Route Tables #####"
+        Export-AddToFile "    ##### $subname - Route Tables #####"
         $routetables = Get-AzRouteTable | Where-Object { ($_.SubnetsText -ne "[]") }
         $routetables | ForEach-Object {
             $routetable = $_
@@ -459,7 +474,7 @@ function Get-AzNetworkDiagram {
         }
 
         ### vNets (incl. subnets)
-        Export-AddToFile "#####  " + Get-AzContext.id + " Virtual Networks #####"
+        Export-AddToFile "    ##### $subname - Virtual Networks #####"
         $vnets = Get-AzVirtualNetwork
         $vnets | ForEach-Object {
             $vnet = $_
@@ -467,7 +482,7 @@ function Get-AzNetworkDiagram {
         }
 
         #VPN Connections
-        Export-AddToFile "#####  " + Get-AzContext.id + " Route Tables #####"
+        Export-AddToFile "    ##### $subname - VPN Connections #####"
         $VPNConnections = Get-AzResource | Where-Object { $_.ResourceType -eq "Microsoft.Network/connections" }
         #$VPNConnections = Get- | Where-Object { ($_. -ne "[]")}
         $VPNConnections | ForEach-Object {
