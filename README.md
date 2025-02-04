@@ -58,4 +58,4 @@ It will loop over any subscriptions available (or those defined as the parameter
 - Azure DevOps pipeline for automated runs, with output saved to storage account
     - Mail on changes?
 - Subnet marks for other special purposes (SQLMI, App Services, etc.)
-- Proper indents in the .dot file (should be much better already!)
+- Proper indents in the .dot file (*__should__ be much better already!*)
