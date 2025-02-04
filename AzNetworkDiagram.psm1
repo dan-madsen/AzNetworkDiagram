@@ -3,7 +3,7 @@
   Creates a Network Diagram of your Azure networking infrastructure.
 
   .DESCRIPTION
-  The Get-AzNetworkDiagram.ps1 visualizes Azure networking utilizing GraphViz and the "DOT", diagram-as-code language to export a PNG and PDF with a network digram containing:
+  The Get-AzNetworkDiagram.psm1 visualizes Azure networking utilizing GraphViz and the "DOT", diagram-as-code language to export a PNG and PDF with a network digram containing:
   - VNets, including:
     - VNet peerings
     - Subnets (will be marked with an "#" if a Network Security Group is associated)
@@ -23,14 +23,10 @@
   None. It will however require previous authentication to Azure
 
   .OUTPUTS
-  None. .\Get-AzNetworkDiagram.psm1 doesn't generate any output (Powershell-wise). FIle based out will be save in the OutputPath
+  None. .\Get-AzNetworkDiagram.psm1 doesn't generate any output (Powershell-wise). File based out will be save in the OutputPath
 
   .EXAMPLE
-  # Import module (will be available on PSGallary shortly)
-  PS> Import-Module .\AzNetworkDiagram.psm1
-
-  # Run
-  PS> .\Get-AzNetworkDiagram [-outputPath C:\temp\]
+  PS> Get-AzNetworkDiagram [-Subscriptions "subid1","subid2","..."] [-OutputPath C:\temp\]
   PS> .\Get-AzNetworkDiagram 
 
   .LINK
