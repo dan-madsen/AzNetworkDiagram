@@ -36,7 +36,7 @@ PS> Import-Module .\AzNetworkDiagram.psm1
 
 ## Install using PSGallery
 ```code
-Install-Module -Name AzNetworkDiagram
+PS> Install-Module -Name AzNetworkDiagram
 ```
 
 ## Running the Powershell module
