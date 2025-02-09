@@ -60,7 +60,7 @@ function Export-dotHeader {
     Export-CreateFile -Data $Data
 }
 
-function Export-dotFooter {
+function Export-dotFooterRanking {
     Export-AddToFile -Data "`n    ##########################################################################################################"
     Export-AddToFile -Data "    ##### RANKS"
     Export-AddToFile -Data "    ##########################################################################################################`n"
@@ -83,6 +83,9 @@ function Export-dotFooter {
         $rankroutedata += $routename + "; ";
     }
     Export-AddToFile -Data "$rankroutedata }"
+}
+
+function Export-dotFooter {
     Export-AddToFile -Data "}" #EOF
 }
 
@@ -109,27 +112,37 @@ function Export-SubnetConfig {
     $subnetconfig | ForEach-Object {
         $subnetconfigobject = $_
         $id = $_.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-        
-        # NSG
-        $nsgid = $_.NetworkSecurityGroupText.ToLower()
-        if ($nsgid -ne "null") { $nsgid = ($_.NetworkSecurityGroupText | ConvertFrom-Json).id.replace("-", "").replace("/", "").replace(".", "").ToLower() }
-        
-        # Route Table
-        $routetableid = $_.RouteTableText.ToLower()
-        if ($routetableid -ne "null" ) { $routetableid = (($_.RouteTableText | ConvertFrom-Json).id).replace("-", "").replace("/", "").replace(".", "").ToLower() }
-       
-        # Name
         $name = $_.Name
-        if ( $nsgid -ne "null") { $name += " #" }
+        $AddressPrefix = $_.AddressPrefix
 
         # vNet      
         $vnetid = $_.id
         $vnetid = $vnetid -split "/subnets/"
         $vnetid = $vnetid[0].replace("-", "").replace("/", "").replace(".", "").ToLower()
-
-        # AddressPrefix
-        $AddressPrefix = $_.AddressPrefix
+     
+        ##########################################
+        ##### Special subnet characteristics #####
+        ##########################################
+                
+        ### NSG ###
+        $nsgid = $_.NetworkSecurityGroupText.ToLower()
+        if ($nsgid -ne "null") { $nsgid = ($_.NetworkSecurityGroupText | ConvertFrom-Json).id.replace("-", "").replace("/", "").replace(".", "").ToLower() }
+        if ($nsgid -ne "null") { $name += " #" }
         
+        ### Route Table ###
+        $routetableid = $_.RouteTableText.ToLower()
+        if ($routetableid -ne "null" ) { $routetableid = (($_.RouteTableText | ConvertFrom-Json).id).replace("-", "").replace("/", "").replace(".", "").ToLower() }
+        if ($routetableid -ne "null" ) { $data += "$id -> $routetableid" + "`n" }
+        # Moved route table association from just before NATGW
+
+        ### Private subnet - ie. no default outbound internet access ###
+        $subnetDefaultOutBoundAccess = $subnetconfigobject.DefaultOutboundAccess #(false if activated)
+        if ($subnetDefaultOutBoundAccess -eq $false ) { $name += " *" }
+
+
+        ##############################################
+        ##### Special subnet characteristics END #####
+        ##############################################
         
         # Support for different types of subnets (AzFW, Bastion etc.)
         # DOT
@@ -159,7 +172,6 @@ function Export-SubnetConfig {
                     $data = $data + "        $id [label = `"\n$name\n$AddressPrefix\n\nName: $AzFWname\nPolicy name: $AzFWpolicyName\n\nPrivate IP:$AzFWPrivateIP\n\nPublic IP(s):\n$AzFWPublicIPs`" ; color = lightgray;image = `"$OutputPath\icons\afw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
                 } else { 
                     $data = $data + "        $id [label = `"\n$name\n$AddressPrefix`" ; color = lightgray;image = `"$OutputPath\icons\afw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
-                    #Write-Output $data
                 }
                 
             }
@@ -208,19 +220,37 @@ function Export-SubnetConfig {
                     }
                 }
             }
-            default { $data = $data + "        $id [label = `"\n$name\n$AddressPrefix`" ; color = lightgray;image = `"$OutputPath\icons\snet.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" }
+            default { 
+                ##### Subnet delegations #####
+                # Might be moved to subnet switch "default" ???
+                # Just change the icon, or maybe a line with "Delegation info" ?
+                # ((get-azvirtualNetwork| Get-AzVirtualNetworkSubnetConfig).Delegations).Name
+                $subnetDelegationName = $subnetconfigobject.Delegations.Name
+                
+                if ( $null -ne $subnetDelegationName ) {
+                    # Delegated
+
+                    $iconname = ""
+                    switch ($subnetDelegationName) {
+                        "Microsoft.Web/serverFarms" { $iconname = "asp" }
+                        "Microsoft.Sql/managedInstances" { $iconname = "sqlmi" } 
+                        "Microsoft.Network/dnsResolvers" { $iconname = "dnspr" }
+                        Default { $iconname = "snet" }
+                        }
+                    $data = $data + "        $id [label = `"\n\n$name\n$AddressPrefix\n\nDelegated to:\n$subnetDelegationName`" ; color = lightgray;image = `"$OutputPath\icons\$iconname.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+                } else {
+                    # No Delegation
+                    $data = $data + "        $id [label = `"\n$name\n$AddressPrefix`" ; color = lightgray;image = `"$OutputPath\icons\snet.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+                }
+            }
         }
         
         $data += "`n"
-        # DOT
+        
+        # DOT VNET->Subnet
         $data = $data + "        $vnetid -> $id"
         $data += "`n"
     
-        if ($routetableid -ne "null" ) {
-            # DOT
-            $data += "$id -> $routetableid" + "`n"
-        }
-        
         #NATGW
         if ( $null -ne $subnetconfigobject.NatGateway ) {
             #Define NAT GW
@@ -250,8 +280,8 @@ function Export-SubnetConfig {
                 $ipprefixesstring += "$ipname : $prefix \n"
             }
         
-            $data += "$NATGWID [color = lightgrey;label = `"\n\nName: $name\n\nPublic IP(s):\n$ipsstring\nPublic IP Prefix(es):\n$ipprefixesstring`";image = `"$OutputPath\icons\ng.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
-            $data += "$id -> $NATGWID" + "`n"
+            $data += "        $NATGWID [color = lightgrey;label = `"\n\nName: $name\n\nPublic IP(s):\n$ipsstring\nPublic IP Prefix(es):\n$ipprefixesstring`";image = `"$OutputPath\icons\ng.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
+            $data += "        $id -> $NATGWID" + "`n"
 
         }
     }
@@ -370,8 +400,8 @@ function Export-VPNConnection {
     }
 
     #DOT
-    $data += "$lgwid [color = lightgrey;label = `"\n\nLocal GW: $lgwname\nConnection Name: $lgwconnectionname\nPeer IP:$lgwip\n\nStatic remote subnet(s):\n$lgwsubnets`";image = `"$OutputPath\icons\lgw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
-    $data += "$vpngwid -> $lgwid"
+    $data += "    $lgwid [color = lightgrey;label = `"\n\nLocal GW: $lgwname\nConnection Name: $lgwconnectionname\nPeer IP:$lgwip\n\nStatic remote subnet(s):\n$lgwsubnets`";image = `"$OutputPath\icons\lgw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
+    $data += "    $vpngwid -> $lgwid"
     Export-AddToFile -Data $data
 }
 
@@ -413,12 +443,15 @@ function Confirm-Prerequisites {
     if (! (Test-Path "$OutputPath\icons") ) { Write-Output "Downloading icons to $OutputPath\icons\ ... " ; New-Item -Path "$OutputPath" -Name "icons" -ItemType "directory" | Out-null }
     $icons =  @(
         "afw.png",
+        "asp.png",
         "bas.png",
+        "dnspr.png",
         "ergw.png",
         "lgw.png",
         "LICENSE",
         "ng.png",
         "snet.png",
+        "sqlmi.png",
         "vgw.png",
         "vnet.png"
     )
@@ -432,7 +465,8 @@ function Get-AzNetworkDiagram {
     # Parameters
     param (
         [string]$OutputPath = $pwd,
-        [string[]]$Subscriptions
+        [string[]]$Subscriptions,
+        [bool]$EnableRanking = $true
     )
 
     # Reset global vars
@@ -446,6 +480,7 @@ function Get-AzNetworkDiagram {
     Write-Output "Gathering information ..."
 
     ##### Data collection / Execution #####
+
     # Run program and collect data through powershell commands
     Export-dotHeader
 
@@ -480,7 +515,6 @@ function Get-AzNetworkDiagram {
         #VPN Connections
         Export-AddToFile "    ##### $subname - VPN Connections #####"
         $VPNConnections = Get-AzResource | Where-Object { $_.ResourceType -eq "Microsoft.Network/connections" }
-        #$VPNConnections = Get- | Where-Object { ($_. -ne "[]")}
         $VPNConnections | ForEach-Object {
             $connection = $_
             $resname = $connection.Name
@@ -488,7 +522,14 @@ function Get-AzNetworkDiagram {
             $connection = Get-AzVirtualNetworkGatewayConnection -name $resname -ResourceGroupName $rgname
             Export-VPNConnection $connection
         }
+
+        Export-AddToFile "`n    ##########################################################################################################"
+        Export-AddToFile "    ##### $subname "
+        Export-AddToFile "    ##### END"
+        Export-AddToFile "    ##########################################################################################################`n"
     }
+
+    if ( $EnableRanking ) { Export-dotFooterRanking }
     Export-dotFooter
 
     ##### Generate diagram #####

@@ -1,9 +1,10 @@
 # Introduction 
-The Get-AzNetworkDiagram (Powershell)Cmdlet visualizes Azure networking utilizing Graphviz and the "DOT", diagram-as-code language to export a PDF and PNG with a network digram containing:
+The **Get-AzNetworkDiagram** (Powershell)Cmdlet visualizes Azure networking utilizing Graphviz and the "DOT", diagram-as-code language to export a PDF and PNG with a network digram containing:
   - VNets, including:
     - VNet peerings
     - Subnets (will be marked with an "#" if a Network Security Group is associated)
         - Special subnets - AzureBastionSubnet, GatewaySubnet, AzureFirewallSubnet and associated resources
+        - Delegations will be noted, and commonly used delegations will be given a proper icon
         - Associated Route Tables
   - Gateways
     - VPN incl. associated Local Network Gateways and static remote subnets
@@ -39,14 +40,23 @@ PS> Import-Module .\AzNetworkDiagram.psm1
 PS> Install-Module -Name AzNetworkDiagram
 ```
 
+## Runtime options
+**-OutputPath c:\temp** - set output directory. Default: "."
+
+**-Subscriptions "subid1","subid2","..."** - a list of subscriptions in scope for the digram
+
+**-EnableRanking $bool** ($true/$false) - enable ranking (equal hight in the output) of certain resource types. For larger networks, this might be worth a shot. **Default: $true**
+
+
 ## Running the Powershell module
-Examples:
+**Examples:**
 ```diff
-PS> Get-AzNetworkDiagram [-Subscriptions "subid1","subid2","..."] [-OutputPath C:\temp\]
+PS> Get-AzNetworkDiagram [-Subscriptions "subid1","subid2","..."] [-OutputPath C:\temp\] [-EnableRanking $true]
+
 PS> Get-AzNetworkDiagram 
 ```
 
-Beware, that by using "-Subscriptions" to limit the scope of data collection, you might end up with peerings being created to sparsely defined VNets (which would be out of your defined scope). These would appear as a long string, that is the id of said vnet, with special characters stripped for DOT-compatability.
+Beware, that by using "-Subscriptions" to limit the scope of data collection, you might end up with peerings being created to sparsely defined VNets (which would be out of your defined scope). These would appear as a long string, that is the id of the vnet, with special characters stripped for DOT-compatability.
 
 # Flow
 It will loop over any subscriptions available (or those defined as the parameter) and process supported resource types. After data is collected, a .PDF and .PNG file with the digram will be created.
@@ -57,5 +67,3 @@ It will loop over any subscriptions available (or those defined as the parameter
     - Azure vWAN support
 - Azure DevOps pipeline for automated runs, with output saved to storage account
     - Mail on changes?
-- Subnet marks for other special purposes (SQLMI, App Services, etc.)
-- Proper indents in the .dot file (*__should__ be much better already!*)
