@@ -3,18 +3,19 @@
   Creates a Network Diagram of your Azure networking infrastructure.
 
   .DESCRIPTION
-  The Get-AzNetworkDiagram.psm1 visualizes Azure networking utilizing GraphViz and the "DOT", diagram-as-code language to export a PNG and PDF with a network digram containing:
+The Get-AzNetworkDiagram (Powershell)Cmdlet visualizes Azure networking utilizing Graphviz and the "DOT", diagram-as-code language to export a PDF and PNG with a network digram containing:
   - VNets, including:
     - VNet peerings
     - Subnets (will be marked with an "#" if a Network Security Group is associated)
-        - Special subnets - AzureBastionSubnet, GatewaySubnet, AzureFirewallSubnet
+        - Special subnets - AzureBastionSubnet, GatewaySubnet, AzureFirewallSubnet and associated resources
+        - Delegations will be noted, and commonly used delegations will be given a proper icon
         - Associated Route Tables
   - Gateways
     - VPN incl. associated Local Network Gateways and static remote subnets
-    - ER (excl. connected cicuits!)
+    - ER (excl. connected circuits!)
 
   IMPORTANT:
-  Icons in the .\icons\ folder is necessary in order to generate the diagram. If not present, they will be downloaded to current working during runtime.
+  Icons in the .\icons\ folder is necessary in order to generate the diagram. If not present, they will be downloaded to the output directory during runtime.
   
   .PARAMETER OutputPath
   Specifies the path for the DOT-based output file. If unset - current working directory will be used.

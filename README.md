@@ -8,7 +8,7 @@ The **Get-AzNetworkDiagram** (Powershell)Cmdlet visualizes Azure networking util
         - Associated Route Tables
   - Gateways
     - VPN incl. associated Local Network Gateways and static remote subnets
-    - ER (excl. connected cicuits!)
+    - ER (excl. connected circuits!)
 
 The idea is _not_ to diagram everything - but enough to get an overview of routing across the entire network environment, with documentation and trobleshooting in mind.
 
@@ -16,7 +16,7 @@ The idea is _not_ to diagram everything - but enough to get an overview of routi
 - Disclaimer: I take no resposibility for any actions caused by this script!
 ```
 
-# Demo output:
+# Demo output, version 0.2:
 ![Demo output](https://github.com/dan-madsen/AzNetworkDiagram/blob/main/DemoOutput/Demo.png)  
 
 
