@@ -419,10 +419,14 @@ function Confirm-Prerequisites {
 
     # dot.exe executable
     try {
-        $dot = (get-command dot.exe).Path
+        $dot = (get-command dot.exe -errorAction SilentlyContinue).Path
+        if ($null -eq $dot) {
+            Write-Output "dot.exe executable not found - please install Graphiz (https://graphviz.org), and/or ensure `"dot.exe` is in `"`$PATH`" !"
+            return
+        }
     }
     catch {
-        Write-Output "dot executable not found - please install Graphiz (https://graphviz.org), and/or ensure `"dot.exe` is in `"`$PATH`" !"
+        Write-Output "dot.exe executable not found - please install Graphiz (https://graphviz.org), and/or ensure `"dot.exe` is in `"`$PATH`" !"
         return
     }
     
