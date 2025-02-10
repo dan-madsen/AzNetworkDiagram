@@ -422,12 +422,12 @@ function Confirm-Prerequisites {
         $dot = (get-command dot.exe -errorAction SilentlyContinue).Path
         if ($null -eq $dot) {
             Write-Output "dot.exe executable not found - please install Graphiz (https://graphviz.org), and/or ensure `"dot.exe` is in `"`$PATH`" !"
-            return
+            exit(1)
         }
     }
     catch {
         Write-Output "dot.exe executable not found - please install Graphiz (https://graphviz.org), and/or ensure `"dot.exe` is in `"`$PATH`" !"
-        return
+        exit(1)
     }
     
     # Load Powershell modules
@@ -437,7 +437,7 @@ function Confirm-Prerequisites {
     }
     catch {
         Write-Output "Please install the following PowerShell modules, using install-module: Az.Network + Az.Accounts"
-        return
+        exit(1)
     }
 
 
@@ -447,7 +447,6 @@ function Confirm-Prerequisites {
         Write-Output "Please make sure you are logged in to Azure using Login-AzAccount, and that permissions are granted to resources within scope."
         Write-Output "A login window should appear - hint: they may hide behind active windows!"
         Login-AzAccount
-        return
     }
 
     # Icons available?
