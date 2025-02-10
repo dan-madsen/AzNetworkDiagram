@@ -3,22 +3,28 @@
   Creates a Network Diagram of your Azure networking infrastructure.
 
   .DESCRIPTION
-The Get-AzNetworkDiagram (Powershell)Cmdlet visualizes Azure networking utilizing Graphviz and the "DOT", diagram-as-code language to export a PDF and PNG with a network digram containing:
+  The Get-AzNetworkDiagram (Powershell)Cmdlet visualizes Azure networking utilizing Graphviz and the "DOT", diagram-as-code language to export a PDF and PNG with a network digram containing:
   - VNets, including:
     - VNet peerings
-    - Subnets (will be marked with an "#" if a Network Security Group is associated)
-        - Special subnets - AzureBastionSubnet, GatewaySubnet, AzureFirewallSubnet and associated resources
-        - Delegations will be noted, and commonly used delegations will be given a proper icon
+    - Subnets
+        - Special subnet: AzureBastionSubnet and associated Azure Bastion resource
+        - Special subnet: GatewaySubnet and associated resources, incl. Network Gateways, Local Network Gateways and connections with the static defined remote subnets. But excluding Express Route Cirtcuits.
+        - Special subnet:  AzureFirewallSubnet and associated Azure Firewall Policy
         - Associated Route Tables
-  - Gateways
-    - VPN incl. associated Local Network Gateways and static remote subnets
-    - ER (excl. connected circuits!)
+        - A * will be added to the subnet name, if a subnet is delegated. Commonly used delegations will be given a proper icon
+        - A # will be added to the subnet name, in case an NSG is associated
 
   IMPORTANT:
   Icons in the .\icons\ folder is necessary in order to generate the diagram. If not present, they will be downloaded to the output directory during runtime.
   
   .PARAMETER OutputPath
-  Specifies the path for the DOT-based output file. If unset - current working directory will be used.
+  -OutputPath specifies the path for the DOT-based output file. If unset - current working directory will be used.
+
+  .PARAMETER Subscriptions
+  -Subscriptions "subid1","subid2","..."** - a list of subscriptions in scope for the digram. Default is all available subscriptions.
+
+  .PARAMETER EnableRanking
+  -EnableRanking $true ($true/$false) - enable ranking (equal hight in the output) of certain resource types. For larger networks, this might be worth a shot. **Default: $true**
 
   .INPUTS
   None. It will however require previous authentication to Azure
@@ -27,7 +33,7 @@ The Get-AzNetworkDiagram (Powershell)Cmdlet visualizes Azure networking utilizin
   None. .\Get-AzNetworkDiagram.psm1 doesn't generate any output (Powershell-wise). File based out will be save in the OutputPath
 
   .EXAMPLE
-  PS> Get-AzNetworkDiagram [-Subscriptions "subid1","subid2","..."] [-OutputPath C:\temp\]
+  PS> Get-AzNetworkDiagram [-Subscriptions "subid1","subid2","..."] [-OutputPath C:\temp\] [-EnableRanking $true]
   PS> .\Get-AzNetworkDiagram 
 
   .LINK
@@ -133,7 +139,7 @@ function Export-SubnetConfig {
         ### Route Table ###
         $routetableid = $_.RouteTableText.ToLower()
         if ($routetableid -ne "null" ) { $routetableid = (($_.RouteTableText | ConvertFrom-Json).id).replace("-", "").replace("/", "").replace(".", "").ToLower() }
-        if ($routetableid -ne "null" ) { $data += "$id -> $routetableid" + "`n" }
+        if ($routetableid -ne "null" ) { $data += "        $id -> $routetableid" + "`n" }
         # Moved route table association from just before NATGW
 
         ### Private subnet - ie. no default outbound internet access ###
@@ -170,7 +176,7 @@ function Export-SubnetConfig {
                         $AzFWPublicIPs += "$ipname : $publicip \n"
                     }
                     
-                    $data = $data + "        $id [label = `"\n$name\n$AddressPrefix\n\nName: $AzFWname\nPolicy name: $AzFWpolicyName\n\nPrivate IP:$AzFWPrivateIP\n\nPublic IP(s):\n$AzFWPublicIPs`" ; color = lightgray;image = `"$OutputPath\icons\afw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
+                    $data = $data + "        $id [label = `"\n$name\n$AddressPrefix\n\nName: $AzFWname\nPolicy name: $AzFWpolicyName\n\nPrivate IP : $AzFWPrivateIP\n\nPublic IP(s):\n$AzFWPublicIPs`" ; color = lightgray;image = `"$OutputPath\icons\afw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
                 } else { 
                     $data = $data + "        $id [label = `"\n$name\n$AddressPrefix`" ; color = lightgray;image = `"$OutputPath\icons\afw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
                 }
@@ -337,7 +343,7 @@ function Export-vnet {
         $vnetPeerings | ForEach-Object {
             $peering = $_.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
             # DOT
-            $data = "$id -> $peering [ltail = cluster_$id; lhead = cluster_$peering;];"
+            $data = "    $id -> $peering [ltail = cluster_$id; lhead = cluster_$peering;];"
             Export-AddToFile -Data $data
         }
     }

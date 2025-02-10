@@ -2,13 +2,13 @@
 The **Get-AzNetworkDiagram** (Powershell)Cmdlet visualizes Azure networking utilizing Graphviz and the "DOT", diagram-as-code language to export a PDF and PNG with a network digram containing:
   - VNets, including:
     - VNet peerings
-    - Subnets (will be marked with an "#" if a Network Security Group is associated)
-        - Special subnets - AzureBastionSubnet, GatewaySubnet, AzureFirewallSubnet and associated resources
-        - Delegations will be noted, and commonly used delegations will be given a proper icon
+    - Subnets
+        - Special subnet: AzureBastionSubnet and associated Azure Bastion resource
+        - Special subnet: GatewaySubnet and associated resources, incl. Network Gateways, Local Network Gateways and connections with the static defined remote subnets. But excluding Express Route Cirtcuits.
+        - Special subnet:  AzureFirewallSubnet and associated Azure Firewall Policy
         - Associated Route Tables
-  - Gateways
-    - VPN incl. associated Local Network Gateways and static remote subnets
-    - ER (excl. connected circuits!)
+        - A * will be added to the subnet name, if a subnet is delegated. Commonly used delegations will be given a proper icon
+        - A # will be added to the subnet name, in case an NSG is associated
 
 The idea is _not_ to diagram everything - but enough to get an overview of routing across the entire network environment, with documentation and trobleshooting in mind.
 
@@ -16,9 +16,8 @@ The idea is _not_ to diagram everything - but enough to get an overview of routi
 - Disclaimer: I take no resposibility for any actions caused by this script!
 ```
 
-# Demo output, version 0.2:
+# Demo output, version 0.3.1:
 ![Demo output](https://github.com/dan-madsen/AzNetworkDiagram/blob/main/DemoOutput/Demo.png)  
-
 
 
 # Requirements
