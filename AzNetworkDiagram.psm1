@@ -413,31 +413,30 @@ function Export-VPNConnection {
 }
 
 function Confirm-Prerequisites {
-    $ErrorActionPreference = "Stop"
+    $ErrorActionPreference = 'Stop'
 
     if (! (Test-Path $OutputPath)) {}
 
     # dot.exe executable
     try {
-        $dot = (get-command dot.exe -errorAction SilentlyContinue).Path
+        $dot = (get-command dot.exe).Path
         if ($null -eq $dot) {
-            Write-Output "dot.exe executable not found - please install Graphiz (https://graphviz.org), and/or ensure `"dot.exe` is in `"`$PATH`" !"
-            exit(1)
+            Write-Error "dot.exe executable not found - please install Graphiz (https://graphviz.org), and/or ensure `"dot.exe` is in `"`$PATH`" !"
         }
-    }
-    catch {
-        Write-Output "dot.exe executable not found - please install Graphiz (https://graphviz.org), and/or ensure `"dot.exe` is in `"`$PATH`" !"
-        exit(1)
+    } catch {
+        Write-Error "dot.exe executable not found - please install Graphiz (https://graphviz.org), and/or ensure `"dot.exe` is in `"`$PATH`" !"
     }
     
     # Load Powershell modules
     try {
         import-module az.network -DisableNameChecking
         import-module az.accounts
-    }
-    catch {
+    } catch {
         Write-Output "Please install the following PowerShell modules, using install-module: Az.Network + Az.Accounts"
-        exit(1)
+        Write-Output ""
+        Write-Output "Ie:"
+        Write-Output "Install-Module Az.Accounts"
+        Write-Error "Install-Module Az.Network"
     }
 
 
@@ -495,7 +494,13 @@ function Get-AzNetworkDiagram {
     Export-dotHeader
 
     # Set subscriptions to every accessible subscription, if unset
-    if ( $null -eq $Subscriptions ) { $Subscriptions = (Get-AzSubscription).Id } 
+    if ( $null -eq $Subscriptions ) { $Subscriptions = (Get-AzSubscription).Id }
+    try {
+        Set-AzContext $Subscriptions[0] -ErrorAction Stop | Out-null
+    } catch {
+        Write-Error "No available subscriptions within active AzContext - missing permissions?"
+        return
+    } 
 
     $Subscriptions | ForEach-Object {
         # Set Context
