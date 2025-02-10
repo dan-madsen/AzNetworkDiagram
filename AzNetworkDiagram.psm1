@@ -421,10 +421,10 @@ function Confirm-Prerequisites {
     try {
         $dot = (get-command dot.exe).Path
         if ($null -eq $dot) {
-            Write-Error "dot.exe executable not found - please install Graphiz (https://graphviz.org), and/or ensure `"dot.exe` is in `"`$PATH`" !"
+            Write-Error "dot.exe executable not found - please install Graphiz (https://graphviz.org), and/or ensure `"dot.exe`" is in `"`$PATH`" !"
         }
     } catch {
-        Write-Error "dot.exe executable not found - please install Graphiz (https://graphviz.org), and/or ensure `"dot.exe` is in `"`$PATH`" !"
+        Write-Error "dot.exe executable not found - please install Graphiz (https://graphviz.org), and/or ensure `"dot.exe`" is in `"`$PATH`" !"
     }
     
     # Load Powershell modules
