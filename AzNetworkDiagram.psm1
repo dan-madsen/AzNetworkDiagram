@@ -106,6 +106,104 @@ function Export-AddToFile {
     $Data | Out-File -Encoding ASCII  -Append $OutputPath\AzNetworkDiagram.dot
 }
 
+function Export-Hub {
+    param ([PSCustomObject[]]$hub)
+    $hubname = $hub.Name
+    $id = $hub.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+    $location = $hub.Location
+    $sku = $hub.Sku
+    $AddressPrefix = $hub.AddressPrefix
+    $HubRoutingPreference = $hub.HubRoutingPreference
+
+    # DOT
+    $data = "
+    # $hubname - $id
+    subgraph cluster_$id {
+        style = solid;
+        color = black;
+        node [color = white;];
+    "
+    # Hub details
+
+    # Find out the Hub's own vNet
+    if ($null -ne $hub.VirtualNetworkConnections) {
+        $vnetname = ($hub.VirtualNetworkConnections[0].RemoteVirtualNetwork.id).Split("/")[-1]
+        $vnetrg = ($hub.VirtualNetworkConnections[0].RemoteVirtualNetwork.id).Split("/")[4]
+        $vnet = Get-AzVirtualNetwork -name $vnetname -ResourceGroupName $vnetrg
+        $HubvNetID = $vnet.VirtualNetworkPeerings.RemoteVirtualNetwork.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+
+        $data += "        $HubvNetID [label = `"\n\n$hubname\nLocation: $location\nSKU: $sku\nAddress Prefix: $AddressPrefix\nHub Routing Preference: $HubRoutingPreference`" ; color = lightgray;image = `"$OutputPath\icons\vWAN-Hub.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
+        $headid = $HubvNetID
+    }
+    else {
+        $data += "        $id [label = `"\n$hubname\nLocation: $location\nSKU: $sku\nAddress Prefix: $AddressPrefix\nHub Routing Preference: $HubRoutingPreference`" ; color = lightgray;image = `"$OutputPath\icons\vWAN-Hub.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
+        $headid = $id
+    }
+   
+    # Hub Items
+
+    if ($null -ne $hub.VpnGateway) {
+        $vgwId = $hub.VpnGateway.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $vgwName = $hub.VpnGateway.id.split("/")[-1]
+        $data += "`n"
+        $data +=  "        $vgwId [label = `"\n\n$vgwName\n`" ; color = lightgray;image = `"$OutputPath\icons\vgw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+        Export-VirtualGateway -GatewayName $vgwName -ResourceGroupName $hub.ResourceGroupName -GatewayId $vgwId -HeadId $headid
+    }
+    if ($null -ne $hub.ExpressRouteGateway) {
+        $ergwId = $hub.ExpressRouteGateway.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $ergwName = $hub.ExpressRouteGateway.id.split("/")[-1]
+        $data += "`n"
+        $data += "        $ergwId [label = `"\n\n$ergwName\n`" ; color = lightgray;image = `"$OutputPath\icons\ergw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+        Export-VirtualGateway -GatewayName $ergwName -ResourceGroupName $hub.ResourceGroupName -GatewayId $ergwId -HeadId $headid
+    }
+    if ($null -ne $hub.P2SVpnGateway) {
+        $p2sgwId = $hub.P2SVpnGateway.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $p2sgwName = $hub.P2SVpnGateway.id.split("/")[-1]
+        $data += "`n"
+        $data += "        $p2sgwId [label = `"\n\n$p2sgwName\n`" ; color = lightgray;image = `"$OutputPath\icons\ergw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+        $data += "`n    $headid -> $p2sgwId;"
+    }
+    if ($null -ne $hub.AzureFirewall) {
+        $azFWId = $hub.AzureFirewall.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $azFWName = $hub.AzureFirewall.id.split("/")[-1]
+        $data += "`n"
+        $data += "        $azFWId [label = `"\n\n$azFWName\n`" ; color = lightgray;image = `"$OutputPath\icons\afw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+        $data += "`n    $headid -> $azFWId;"
+    }
+    $vWANId = $hub.VirtualWAN.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+    $data += "`n    $vWANId -> $headid;"
+    $data += "`n
+    }"
+
+    return $data
+}
+
+function Export-VirtualGateway 
+{
+    param ([string]$GatewayName, [string]$ResourceGroupName, [string]$GatewayId, [string]$HeadId)   
+    
+    $gw = Get-AzVirtualNetworkGateway -ResourceGroupName $ResourceGroupName -ResourceName $GatewayName
+    $gwtype = $gw.Gatewaytype
+
+    # ER vs VPN GWs are handled differently
+    if ($gwtype -eq "Vpn" ) {
+        $gwipobjetcs = $gw.IpConfigurations.PublicIpAddress
+        $gwips = ""
+        $gwipobjetcs.id | ForEach-Object {
+            $rgname = $_.split("/")[4]
+            $ipname = $_.split("/")[8]
+            $publicip = (Get-AzPublicIpAddress -ResourceName $ipname -ResourceGroupName $rgname).IpAddress
+            $gwips += "$ipname : $publicip \n"
+        
+        }
+        $data += "        $GatewayId [color = lightgray;label = `"\n\nName: $GatewayName`\n\nPublic IP(s):\n$gwips`";image = `"$OutputPath\icons\vgw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
+    } elseif ($gwtype -eq "ExpressRoute") {
+        $data += "        $GatewayId [color = lightgray;label = `"\nName: $GatewayName`";image = `"$OutputPath\icons\ergw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
+    }
+    $data += "`n"
+    $data += "        $HeadId -> $GatewayId"
+    $data += "`n"
+}
 function Export-SubnetConfig {
     Param
     (
@@ -201,29 +299,9 @@ function Export-SubnetConfig {
                     #Multi GW scenearios
                     $gws | ForEach-Object {
                         $gwid = (($_.id -split ("/ipConfigurations/"))[0]).replace("-", "").replace("/", "").replace(".", "").ToLower()
-                        $gwname = ($_.id-split "/").split("/")[8].ToLower()
+                        $gwname = ($_.id -split "/").split("/")[8].ToLower()
                         $gwrg = ($_.id -split "/").split("/")[4]
-                        $gw = Get-AzVirtualNetworkGateway -ResourceGroupName $gwrg -ResourceName $gwname
-                        $gwtype = $gw.Gatewaytype
-
-                        # ER vs VPN GWs are handled differently
-                        if ($gwtype -eq "Vpn" ) {
-                            $gwipobjetcs = $gw.IpConfigurations.PublicIpAddress
-                            $gwips = ""
-                            $gwipobjetcs.id | ForEach-Object {
-                                $rgname = $_.split("/")[4]
-                                $ipname = $_.split("/")[8]
-                                $publicip = (Get-AzPublicIpAddress -ResourceName $ipname -ResourceGroupName $rgname).IpAddress
-                                $gwips += "$ipname : $publicip \n"
-                            
-                            }
-                            $data += "        $gwid [color = lightgray;label = `"\n\nName: $gwname`\n\nPublic IP(s):\n$gwips`";image = `"$OutputPath\icons\vgw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
-                        } elseif ($gwtype -eq "ExpressRoute") {
-                            $data += "        $gwid [color = lightgray;label = `"\nName: $gwname`";image = `"$OutputPath\icons\ergw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
-                        }
-                        $data += "`n"
-                        $data += "        $id -> $gwid"
-                        $data += "`n"
+                        Export-VirtualGateway -GatewayName $gwname -ResourceGroupName $gwrg -GatewayId $gwid -HeadId $id
                     }
                 }
             }
@@ -348,6 +426,166 @@ function Export-vnet {
         }
     }
 }
+ function Export-vWAN
+ {
+    param ([PSCustomObject[]]$vwan)
+
+    $vwanname = $vwan.Name
+    $id = $vwan.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+    $VirtualWANType = $vwan.VirtualWANType
+    $ResourceGroupName = $vwan.ResourceGroupName
+    $AllowVnetToVnetTraffic = $vwan.AllowVnetToVnetTraffic
+    $AllowBranchToBranchTraffic = $vwan.AllowBranchToBranchTraffic
+    $Location = $vwan.Location
+    
+    $header = "
+    # $vwanname - $id
+    subgraph cluster_$id {
+        style = solid;
+        color = black;
+        node [color = white;];
+    "
+
+    # Convert addressSpace prefixes from array to string
+    $vWANDetails = "Virtual WAN Type: $VirtualWANType\nLocation: $Location\nAllow Vnet to Vnet Traffic: $AllowVnetToVnetTraffic\nAllow Branch to Branch Traffic: $AllowBranchToBranchTraffic"
+    
+    $vwandata = "    $id [color = lightgray;label = `"\n$vWANDetails`";image = `"$OutputPath\icons\vwan.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n"
+
+    # Hubs
+    $hubdata = ""
+    $hubs = Get-AzVirtualHub -ResourceGroupName $ResourceGroupName | Where-Object { $($_.VirtualWAN.id) -eq $($vwan.id) }
+    foreach ($hub in $hubs) {
+        $hubdata += Export-Hub -Hub $hub
+    }
+    $footer = "
+        label = `"$vwanname`";
+    }
+    "
+
+    $alldata = $header + $vwandata + $hubdata + $footer
+    Export-AddToFile -Data $alldata
+ }
+function Export-ExpressRouteCircuit {
+    param ([PSCustomObject[]]$er)
+    $ername = $er.Name
+    $ServiceProviderName = $er.ServiceProviderProperties.ServiceProviderName
+    $Peeringlocation = $er.ServiceProviderProperties.PeeringLocation
+    $BandwidthInMbps = $er.ServiceProviderProperties.BandwidthInMbps
+    $skuName = $er.sku.name
+    $ResourceGroupName = $er.ResourceGroupName
+    $id = $er.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+
+    $header = "
+    # $ername - $id
+    subgraph cluster_$id {
+        style = solid;
+        color = black;
+        node [color = white;];
+
+        $id [label = `"\n$ername`" ; color = lightgray;image = `"$OutputPath\icons\ercircuit.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];
+        $id [shape = none;label = <
+            <TABLE border=`"1`" style=`"rounded`">
+            <tr><td>SKU Name</td><td>$skuName</td></tr>
+            <tr><td>Provider</td><td>$ServiceProviderName</td></tr>
+            <tr><td>Location</td><td>$Peeringlocation</td></tr>
+            <tr><td>Bandwidth</td><td>$BandwidthInMbps Mbps</td></tr>
+    "
+
+    # End table
+    $header = $header + "</TABLE>>;
+            ];
+            label = `"$ername`";
+        }
+    "
+
+    # Express Route Circuit Peerings
+    $PeeringData = ""
+    $erPeerings = $er.Peerings
+    foreach ($peering in $erPeerings) {
+        $peeringName = $peering.Name
+        $peeringId = $peering.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $peeringType = $peering.PeeringType
+        $AzureASN = $peering.AzureASN
+        $PeerASN = $peering.PeerASN
+        $PrimaryPeerAddressPrefix = $peering.PrimaryPeerAddressPrefix
+        $SecondaryPeerAddressPrefix = $peering.SecondaryPeerAddressPrefix
+        $VlanId = $peering.VlanId
+
+        # DOT
+        $PeeringData = $PeeringData + "
+            # $peeringName - $peeringId
+            subgraph cluster_$peeringId {
+                style = solid;
+                color = black;
+                node [color = white;];
+        
+                $peeringId [label = `"\n$peeringName`" ; color = lightgray;image = `"$OutputPath\icons\connections.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];
+                $peeringId [shape = none;label = <
+                    <TABLE border=`"1`" style=`"rounded`">
+                    <tr><td>Peering Type</td><td>$peeringType</td></tr>
+                    <tr><td>Address Prefixes</td><td>$PrimaryPeerAddressPrefix</td><td>$SecondaryPeerAddressPrefix</td></tr>
+                    <tr><td>ASN Azure/Peer</td><td>$AzureASN</td><td>$PeerASN</td></tr>
+                    <tr><td>VlanId</td><td>$VlanId</td></tr>
+                    </TABLE>>;
+                    ];
+
+                $id -> $peeringId [ltail = cluster_$id; lhead = cluster_$peeringId;];
+
+                label = `"$peeringName`";
+            }
+            "
+    }
+
+    # Connections
+    $ResourceQuery = "resources `
+        | where type =~ 'microsoft.network/connections' `
+        | where properties.peer.id =~ '$($er.id)' `
+        | project id, name, properties `
+        | union (resources `
+        | where type =~ 'microsoft.network/expressroutegateways' `
+        | extend exrGatewayid = id `
+        | mv-expand properties['expressRouteConnections'] `
+        | where properties_expressRouteConnections['properties']['expressRouteCircuitPeering']['id'] startswith '$($er.id)' `
+        | extend id = tostring(properties_expressRouteConnections.id) `
+        | project id, name=tostring(properties_expressRouteConnections.name), `
+		properties = bag_merge( properties_expressRouteConnections.properties,pack('virtualNetworkGateway1', pack('id',exrGatewayid)), `
+		properties_expressRouteConnections.properties,pack('connectionType','ExpressRoute'), ` 
+		properties_expressRouteConnections.properties,pack('peer', pack('id','$($er.id)'))))"
+
+    $ConnectionData = ""
+    $erConnections = Search-AzGraph -Query $ResourceQuery
+    foreach ($connection in $erConnections) {
+        $connectionName = $connection.name
+        $connectionId = $connection.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $connectionType = $connection.properties.connectionType
+        $virtualNetworkGateway = ($connection.properties.virtualNetworkGateway1.id).Split("/")[-1]
+
+        # DOT
+        $ConnectionData = $ConnectionData + "
+            # $connectionName - $connectionId
+            subgraph cluster_$connectionId {
+                style = solid;
+                color = black;
+                node [color = white;];
+        
+                $connectionId [label = `"\n$connectionName`" ; color = lightgray;image = `"$OutputPath\icons\ergw.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];
+                $connectionId [shape = none;label = <
+                    <TABLE border=`"1`" style=`"rounded`">
+                    <tr><td>Connection Type</td><td>$connectionType</td></tr>
+                    <tr><td>Peer Gateway</td><td>$virtualNetworkGateway</td></tr>
+                    </TABLE>>;
+                    ];
+
+                $id -> $connectionId [ltail = cluster_$id; lhead = cluster_$connectionId;];
+
+                label = `"$connectionName`";
+            }
+            "
+    }
+    $footer = ""
+    $alldata = $header + $PeeringData + $ConnectionData + $footer
+    Export-AddToFile -Data $alldata
+}
 
 function Export-RouteTable {
     param ([PSCustomObject[]]$routetable)
@@ -454,6 +692,9 @@ function Confirm-Prerequisites {
         "afw.png",
         "asp.png",
         "bas.png",
+        "Connections.png",
+        "ercircuit.png",
+        "peerings.png",
         "dnspr.png",
         "ergw.png",
         "lgw.png",
@@ -462,7 +703,9 @@ function Confirm-Prerequisites {
         "snet.png",
         "sqlmi.png",
         "vgw.png",
-        "vnet.png"
+        "vnet.png",
+        "vWAN.png",
+        "vWAN-Hub.png"
     )
     
     $icons | ForEach-Object {
@@ -526,6 +769,21 @@ function Get-AzNetworkDiagram {
             $vnet = $_
             Export-vnet $vnet
         }
+        #Express Route Circuits
+        Export-AddToFile "    ##### $subname - Express Route Circuits #####"
+        $er = Get-AzExpressRouteCircuit
+        $er | ForEach-Object {
+            $er = $_
+            Export-ExpressRouteCircuit $er
+        }
+
+        #Virtual WANs
+        Export-AddToFile "    ##### $subname - Virtual WANs #####"
+        $vWANs = Get-AzVirtualWan
+        $vWANs | ForEach-Object {
+            $vWAN = $_
+            Export-vWAN $vWAN
+        }
 
         #VPN Connections
         Export-AddToFile "    ##### $subname - VPN Connections #####"
@@ -556,3 +814,9 @@ function Get-AzNetworkDiagram {
 } 
 
 Export-ModuleMember -Function Get-AzNetworkDiagram
+
+<# Test:
+ import-Module .\AzNetworkDiagram.psm1 -Force
+ Get-AzNetworkDiagram -Subscriptions "c5f8123f-f457-4556-bc74-eb9e5d7e0edd","a0b459f1-0d75-45da-8e7e-350849ca0b8a","18509d8d-d874-4598-a2d4-29df4b5812f9" -OutputPath .\ -EnableRanking $false
+ https://graphviz.org/doc/info/lang.html#subgraphs-and-clusters
+#>
