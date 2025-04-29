@@ -66,3 +66,9 @@ It will loop over any subscriptions available (or those defined as the parameter
     - Azure vWAN support
 - Azure DevOps pipeline for automated runs, with output saved to storage account
     - Mail on changes?
+- Skip disabled subscriptions
+- P2S VPN info
+- Device login
+- Fix ugle Vnet if access is missing
+- Dynamic routing information
+- Redo subnet delegation matching
