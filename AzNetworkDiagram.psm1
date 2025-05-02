@@ -48,20 +48,6 @@ $ErrorActionPreference = 'Stop'
 $WarningPreference = 'Continue'
 $InformationPreference = 'Continue'
 
-##### Global runtime vars #####
-#Rank (visual) in diagram
-$global:rankrts = @()
-#$global:ranksubnets = @()
-$global:rankvnetaddressspaces = @()
-$global:rankvwans = @()
-$global:rankvwanhubs = @()
-$global:rankercircuits = @()
-$global:rankvpnsites = @()
-$global:rankipgroups = @()
-$global:PDNSREpIp = $null
-$global:PDNSRId = $null
-$global:AllInScopevNetIds = @()
-
 ##### Functions for standard definitions #####
 function Export-dotHeader {
     [CmdletBinding()]
@@ -90,20 +76,21 @@ function Export-dotFooterRanking {
     Export-AddToFile -Data "    ##### RANKS"
     Export-AddToFile -Data "    ##########################################################################################################`n"
     Export-AddToFile -Data "    ### AddressSpace ranks"
-    Export-AddToFile "    { rank=min; $($global:rankvnetaddressspaces -join '; ') }`n "
-    Export-AddToFile -Data "`n    ### Subnets ranks (TODO!)"
+    Export-AddToFile "    { rank=min; $($script:rankvnetaddressspaces -join '; ') }`n "
+    Export-AddToFile -Data "`n    ### Subnets ranks"
+    Export-AddToFile "    { rank=same; $($script:ranksubnets -join '; ') }`n "
     Export-AddToFile -Data "`n    ### Route table ranks"
-    Export-AddToFile "    { rank=same; $($global:rankrts -join '; ') }`n "
+    Export-AddToFile "    { rank=same; $($script:rankrts -join '; ') }`n "
     Export-AddToFile -Data "`n    ### vWAN ranks"
-    Export-AddToFile "    { rank=same; $($global:rankvwans -join '; ') }`n "
+    Export-AddToFile "    { rank=same; $($script:rankvwans -join '; ') }`n "
     Export-AddToFile -Data "`n    ### vWAN Hub ranks"
-    Export-AddToFile "    { rank=same; $($global:rankvwanhubs -join '; ') }`n "
+    Export-AddToFile "    { rank=same; $($script:rankvwanhubs -join '; ') }`n "
     Export-AddToFile -Data "`n    ### ER Circuit ranks"
-    Export-AddToFile "    { rank=same; $($global:rankercircuits -join '; ') }`n "
+    Export-AddToFile "    { rank=same; $($script:rankercircuits -join '; ') }`n "
     Export-AddToFile -Data "`n    ### VPN Site ranks"
-    Export-AddToFile "    { rank=same; $($global:rankvpnsites -join '; ') }`n "        
+    Export-AddToFile "    { rank=same; $($script:rankvpnsites -join '; ') }`n "        
     Export-AddToFile -Data "`n    ### IP Groups ranks"
-    Export-AddToFile "    { rank=max; $($global:rankipgroups -join '; ') }`n "        
+    Export-AddToFile "    { rank=max; $($script:rankipgroups -join '; ') }`n "        
 }
 
 function Export-dotFooter {
@@ -122,6 +109,76 @@ function Export-AddToFile {
     param([string]$Data)
 
     $Data | Out-File -Encoding ASCII  -Append $OutputPath\AzNetworkDiagram.dot
+}
+<#
+.SYNOPSIS
+Exports details of an Azure Application Gateway for inclusion in a network diagram.
+
+.DESCRIPTION
+The `Export-ApplicationGateway` function processes a specified Azure Application Gateway object, retrieves its details, and formats the data for inclusion in a network diagram. It visualizes the gateway's name, SKU, zones, SSL certificates, frontend IP configurations, and associated firewall policies.
+
+.PARAMETER agw
+Specifies the Azure Application Gateway object to be processed.
+
+.EXAMPLE
+PS> Export-ApplicationGateway -agw $applicationGateway
+
+This example processes the specified Azure Application Gateway and exports its details for inclusion in a network diagram.
+
+#>
+function Export-ApplicationGateway {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$agw 
+    )   
+    
+    try {
+        $agwid = $agw.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $agwSubnetId = $agw.GatewayIPConfigurations.Subnet.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $data = "
+        # $GatewayName - $agwid
+        subgraph cluster_$agwid {
+            style = solid;
+            color = black;
+            node [color = white;];
+        "
+
+        $skuname = $agw.Sku.Name
+        if ($agw.SslCertificates) {
+            $sslcerts = $agw.SslCertificates.Name -join ", "
+        } else {
+            $sslcerts = "None"
+        }
+        if ($agw.FrontendIPConfigurations.PrivateIPAddress) {
+            $pvtips = $agw.FrontendIPConfigurations.PrivateIPAddress -join ", "
+        } else {
+            $pvtips = "None"
+        }
+        $polname = $agw.FirewallPolicy.Id.split("/")[-1]
+        if ($agw.Zones) {
+            $zones = $agw.Zones -join ","
+        } else {
+            $zones = "None"
+        }
+        if ($agw.FrontendPorts) {
+            $feports = $agw.FrontendPorts.Port -join ", "
+        } else {
+            $feports = "None"
+        }
+
+        $data += "        $agwid [label = `"\nPolicy name: $polname\nPrivate IP's: $pvtips\nSKU: $skuname\nZones: $zones\nSSL Certificates: $sslcerts\nFrontend ports: $feports\n`" ; color = lightgray;image = `"$OutputPath\icons\agw.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
+        $data += "`n"
+        $data += "        $agwid -> $agwSubnetId;`n"
+        $data += "   label = `"$GatewayName`";
+                }`n"
+
+        Export-AddToFile $data
+
+    }
+    catch {
+        Write-Host "Can't export Application Gateway: $($agw.name)" $_.Exception.Message
+    }
 }
 
 <#
@@ -189,9 +246,9 @@ function Export-AzureFirewall {
     $data += "        $fwpolid [label = `"\n\n$firewallPolicyName\nSKU Tier: $($firewallPolicy.sku.tier)\nThreat Intel Mode: $($firewallPolicy.ThreatIntelMode)\nDNS Servers: $($firewallPolicy.DnsSettings.Servers -join '; ')\nProxy Enabled: $($firewallPolicy.DnsSettings.EnableProxy)`" ; color = lightgray;image = `"$OutputPath\icons\firewallpolicy.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
     $data += "`n    $azFWId -> $fwpolid;"
 
-    $index = $firewallPolicy.DnsSettings.Servers.IndexOf($global:PDNSREpIp)
+    $index = $firewallPolicy.DnsSettings.Servers.IndexOf($script:PDNSREpIp)
     if ($index -ge 0) {
-        $data += "        $fwpolid -> $global:PDNSRId [label = `"DNS Query`"; ];`n" 
+        $data += "        $fwpolid -> $script:PDNSRId [label = `"DNS Query`"; ];`n" 
     }
     
     # Initialize an array to store IP Group names
@@ -254,7 +311,7 @@ function Export-Hub {
             $vnet = Get-AzVirtualNetwork -name $vnetname -ResourceGroupName $vnetrg -ErrorAction Stop
             $HubvNetID = $vnet.VirtualNetworkPeerings.RemoteVirtualNetwork.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
             $headid = $HubvNetID
-            $global:AllInScopevNetIds += $vnet.VirtualNetworkPeerings.RemoteVirtualNetwork.id
+            $script:AllInScopevNetIds += $vnet.VirtualNetworkPeerings.RemoteVirtualNetwork.id
             $data = "
             # $hubname - $id
             subgraph cluster_$headid {
@@ -268,7 +325,7 @@ function Export-Hub {
             $data += "        $id [label = `"\n$hubname\nLocation: $location\nSKU: $sku\nAddress Prefix: $AddressPrefix\nHub Routing Preference: $HubRoutingPreference`" ; color = lightgray;image = `"$OutputPath\icons\vWAN-Hub.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
             $headid = $id
         }
-        $global:rankvwanhubs += $headid
+        $script:rankvwanhubs += $headid
 
         # Hub Items
 
@@ -285,7 +342,7 @@ function Export-Hub {
             $VpnSites = Get-AzVPNSite -ResourceGroupName $hub.ResourceGroupName  -ErrorAction Stop | Where-Object { $_.VirtualWan.id -eq $hub.virtualwan.id}
             foreach ($VpnSite in $VpnSites) {
                 $vpnsiteId = $VpnSite.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $global:rankvpnsites += $vpnsiteId
+                $script:rankvpnsites += $vpnsiteId
                 $vpnsiteName = $VpnSite.id.split("/")[-1]
                 $data += "`n"
                 $data += "        $vpnsiteId [label = `"\n\n\n$vpnsiteName\nAddressPrefixes: $($VpnSite.AddressSpace.AddressPrefixes)\nDevice Vendor: $($VpnSite.DeviceProperties.DeviceVendor)\nLink Speed: $($VpnSite.VpnSiteLinks.LinkProperties.LinkSpeedInMbps) Mbps\nLinks: $($VpnSite.VpnSiteLinks.count)\n`" ; color = lightgray;image = `"$OutputPath\icons\vpn-site.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
@@ -426,6 +483,7 @@ function Export-SubnetConfig {
         $id = $subnet.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
         $name = $subnet.Name
         $AddressPrefix = $subnet.AddressPrefix
+        $script:ranksubnets += $id
 
         # vNet      
         $vnetid = $subnet.id
@@ -600,7 +658,7 @@ function Export-vnet {
     $vnetname = $vnet.Name
     $id = $vnet.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
     $vnetAddressSpaces = $vnet.AddressSpace.AddressPrefixes
-    $global:rankvnetaddressspaces += $id
+    $script:rankvnetaddressspaces += $id
 
     $header = "
     # $vnetname - $id
@@ -662,8 +720,8 @@ function Export-vnet {
                     label = `"$resolverName`";
                 }
                 "
-                $global:PDNSRepIP = $inboundEpIp
-                $global:PDNSRId = $pdnsrId
+                $script:PDNSRepIP = $inboundEpIp
+                $script:PDNSRId = $pdnsrId
             }
         }
     }                            
@@ -707,7 +765,7 @@ This example processes the specified Virtual WAN and exports its details for inc
 
     try {
         Write-Host "Exporting vWAN: $vwanname"
-        $global:rankvwans += $id
+        $script:rankvwans += $id
         $hubs = Get-AzVirtualHub -ResourceGroupName $ResourceGroupName -ErrorAction Stop | Where-Object { $($_.VirtualWAN.id) -eq $($vwan.id) }
         if ($null -ne $hubs) {
             $header = "
@@ -842,8 +900,7 @@ function Export-ExpressRouteCircuit {
             <tr><td>Bandwidth</td><td>$Bandwidth</td></tr>
             <tr><td>Encapsulation</td><td>$Encapsulation</td></tr>
     "
-    $global:rankercircuits += $id
-
+    $script:rankercircuits += $id
     # End table
     $header = $header + "</TABLE>>;
             ];
@@ -916,7 +973,7 @@ function Export-RouteTable {
     $routetableName = $routetable.Name
     $id = $routetable.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
 
-    $global:rankrts += $id
+    $script:rankrts += $id
 
     $header = "
     subgraph cluster_$id {
@@ -973,7 +1030,7 @@ function Export-IpGroup {
     )
 
     $id = $ipGroup.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-    $global:rankipgroups += $id
+    $script:rankipgroups += $id
 
     $alldata = "
     subgraph cluster_$id {
@@ -1223,14 +1280,23 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)]
         [string]$TenantId = $null
     )
-  
-    # Reset global vars
-    $global:rankrts = @()
-    #$global:ranksubnets = @()
-    $global:rankvnetaddressspaces = @()
 
     Write-Output "Checking prerequisites ..."
     Confirm-Prerequisites
+
+    ##### Global runtime vars #####
+    #Rank (visual) in diagram
+    $script:rankrts = @()
+    $script:ranksubnets = @()
+    $script:rankvnetaddressspaces = @()
+    $script:rankvwans = @()
+    $script:rankvwanhubs = @()
+    $script:rankercircuits = @()
+    $script:rankvpnsites = @()
+    $script:rankipgroups = @()
+    $script:PDNSREpIp = $null
+    $script:PDNSRId = $null
+    $script:AllInScopevNetIds = @()
 
     ##### Data collection / Execution #####
 
@@ -1301,7 +1367,7 @@ function Get-AzNetworkDiagram {
             Export-AddToFile "    ##### $subname - Virtual Networks #####"
             $vnets = Get-AzVirtualNetwork -ErrorAction Stop
             if ($null -ne $vnets.id) {
-                $global:AllInScopevNetIds += $vnets.id
+                $script:AllInScopevNetIds += $vnets.id
 
                 $vnets | ForEach-Object {
                     $vnet = $_
@@ -1317,6 +1383,14 @@ function Get-AzNetworkDiagram {
             $results = @()
             foreach ($pe in $privateEndpoints) {
                 Export-PrivateEndpoint $pe
+            }
+
+            # Application Gateways
+            Write-Output "Collecting Application Gateways..."
+            Export-AddToFile "    ##### $subname - Application Gateways #####"
+            $agws = Get-AzApplicationGateway -ErrorAction Stop
+            foreach ($agw in $agws) {
+                Export-ApplicationGateway $agw
             }
 
             #Express Route Circuits
@@ -1357,7 +1431,7 @@ function Get-AzNetworkDiagram {
         
         # vNet Peerings
         Write-Output "Connecting in-scope peered vNets..."
-        foreach($InScopevNetId in $global:AllInScopevNetIds) {
+        foreach($InScopevNetId in $script:AllInScopevNetIds) {
             $vnetname = $InScopevNetId.split("/")[-1]
             $vnetsub = $InScopevNetId.split("/")[2]
             $vnetrg = $InScopevNetId.split("/")[4]
@@ -1375,7 +1449,7 @@ function Get-AzNetworkDiagram {
                 $vnetId = $vnet.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
                 $vnetPeerings = $vnet.VirtualNetworkPeerings.RemoteVirtualNetwork.id
                 foreach ($peering in $vnetPeerings) {
-                    if ($global:AllInScopevNetIds.IndexOf($peering) -ge 0) {
+                    if ($script:AllInScopevNetIds.IndexOf($peering) -ge 0) {
                         $peeringId = $peering.replace("-", "").replace("/", "").replace(".", "").ToLower()
                         # DOT
                         $data = "    $vnetId -> $peeringId [ltail = cluster_$vnetId; lhead = cluster_$peeringId; weight = 10;];"
