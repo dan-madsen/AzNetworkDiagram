@@ -476,162 +476,167 @@ function Export-SubnetConfig {
         [PSCustomObject[]] $subnets
     )
 
-    $data = ""
+    try {
+        $data = ""
 
-    #Loop over subnets
-    foreach ($subnet in $subnets) {
-        $id = $subnet.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-        $name = $subnet.Name
-        $AddressPrefix = $subnet.AddressPrefix
-        $script:ranksubnets += $id
+        #Loop over subnets
+        foreach ($subnet in $subnets) {
+            $id = $subnet.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $name = $subnet.Name
+            $AddressPrefix = $subnet.AddressPrefix
+            $script:ranksubnets += $id
 
-        # vNet      
-        $vnetid = $subnet.id
-        $vnetid = $vnetid -split "/subnets/"
-        $vnetid = $vnetid[0].replace("-", "").replace("/", "").replace(".", "").ToLower()
-        $nsgid = $null
-     
-        ##########################################
-        ##### Special subnet characteristics #####
-        ##########################################
-                
-        ### NSG ###
-        if ($null -ne $subnet.NetworkSecurityGroup) {
-            $nsgname = $subnet.NetworkSecurityGroup.id.split("/")[8]
-            $nsgid = $subnet.NetworkSecurityGroup.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-            if ($nsgid -ne "null") { 
-                $data += "`n        $nsgid [label = `"\n$nsgname`" ; color = lightgray;image = `"$OutputPath\icons\nsg.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
-                $data += "`n        $id -> $nsgid`n"
-            }
-        }
+            # vNet      
+            $vnetid = $subnet.id
+            $vnetid = $vnetid -split "/subnets/"
+            $vnetid = $vnetid[0].replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $nsgid = $null
 
-        ### Route Table ###
-        $routetableid = $subnet.RouteTableText.ToLower()
-        if ($routetableid -ne "null" ) { $routetableid = (($subnet.RouteTableText | ConvertFrom-Json).id).replace("-", "").replace("/", "").replace(".", "").ToLower() }
-        if ($routetableid -ne "null" ) { $data += "        $id -> $routetableid" + "`n" }
-        # Moved route table association from just before NATGW
-
-        ### Private subnet - ie. no default outbound internet access ###
-        $subnetDefaultOutBoundAccess = $subnet.DefaultOutboundAccess #(false if activated)
-        if ($subnetDefaultOutBoundAccess -eq $false ) { $name += " *" }
-
-
-        ##############################################
-        ##### Special subnet characteristics END #####
-        ##############################################
-        
-        # Support for different types of subnets (AzFW, Bastion etc.)
-        # DOT
-        switch ($name) {
-            "AzureFirewallSubnet" { 
-                if ($subnet.IpConfigurations.Id.split("/")[8]) {
-                    $AzFWid = $subnet.IpConfigurations.Id.split("/azureFirewallIpConfigurations/ipconfig1")[0]
-                    $AzFWname = $subnet.IpConfigurations.Id.split("/")[8]
-                    $AzFWrg = $subnet.IpConfigurations.id.split("/")[4]
-
-                    $data += "        $id [label = `"\n\n$name\n$AddressPrefix`" ; color = lightgray;image = `"$OutputPath\icons\afw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
-
-                    $data += Export-AzureFirewall -FirewallId $AzFWid -ResourceGroupName $AzFWrg
-                    $AzFWDotId = $AzFWid.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                    $data += "`n    $id -> $azFWDotId;"
+            ##########################################
+            ##### Special subnet characteristics #####
+            ##########################################
+                    
+            ### NSG ###
+            if ($null -ne $subnet.NetworkSecurityGroup) {
+                $nsgname = $subnet.NetworkSecurityGroup.id.split("/")[8]
+                $nsgid = $subnet.NetworkSecurityGroup.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                if ($nsgid -ne "null") { 
+                    $data += "`n        $nsgid [label = `"\n$nsgname`" ; color = lightgray;image = `"$OutputPath\icons\nsg.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+                    $data += "`n        $id -> $nsgid`n"
                 }
             }
-           "AzureBastionSubnet" { 
-                if ($subnet.IpConfigurations.Id.split("/")[8]) { 
-                    $AzBastionName = $subnet.IpConfigurations.Id.split("/")[8].ToLower()
-                
-                    $data += "        $id [label = `"\n\n$name\n$AddressPrefix\nName: $AzBastionName`" ; color = lightgray;image = `"$OutputPath\icons\bas.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
-                }
-            }
-            "AppGatewaySubnet" { 
-                if ($subnet.IpConfigurations.Id.split("/")[8]) { 
-                    $AppGatewayName = $subnet.IpConfigurations.Id.split("/")[8].ToLower()
-                
-                    $data += "        $id [label = `"\n\n$name\n$AddressPrefix\nName: $AppGatewayName`" ; color = lightgray;image = `"$OutputPath\icons\agw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
-                }
-            }
-            "GatewaySubnet" { 
-                $data += "        $id [label = `"\n\n$name\n$AddressPrefix`" ; color = lightgray;image = `"$OutputPath\icons\vgw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
-                $data += "`n"
-                
-                #GW DOT
-                $gwid = $subnet.IpConfigurations.Id.split("/ipConfigurations/vnetGatewayConfig")[0]
-                $gwname = $subnet.IpConfigurations.Id.split("/")[8].ToLower()
-                $gwrg = $subnet.IpConfigurations.Id.split("/")[4].ToLower()
-                Export-VirtualGateway -GatewayName $gwname -ResourceGroupName $gwrg -GatewayId $gwid -HeadId $id
-            }
-            default { 
-                ##### Subnet delegations #####
-                # Might be moved to subnet switch "default" ???
-                # Just change the icon, or maybe a line with "Delegation info" ?
-                $subnetDelegationName = $subnet.Delegations.Name
-                
-                if ( $null -ne $subnetDelegationName ) {
-                    # Delegated
 
-                    $iconname = ""
-                    switch ($subnetDelegationName) {
-                        "Microsoft.Web.serverFarms" { $iconname = "asp" }
-                        "Microsoft.Sql.managedInstances" { $iconname = "sqlmi" } 
-                        "Microsoft.Network.dnsResolvers" 
-                        { 
-                            $iconname = "dnspr" 
-                        }
-                        Default { $iconname = "snet" }
+            ### Route Table ###
+            $routetableid = $subnet.RouteTableText.ToLower()
+            if ($routetableid -ne "null" ) { $routetableid = (($subnet.RouteTableText | ConvertFrom-Json).id).replace("-", "").replace("/", "").replace(".", "").ToLower() }
+            if ($routetableid -ne "null" ) { $data += "        $id -> $routetableid" + "`n" }
+            # Moved route table association from just before NATGW
+
+            ### Private subnet - ie. no default outbound internet access ###
+            $subnetDefaultOutBoundAccess = $subnet.DefaultOutboundAccess #(false if activated)
+            if ($subnetDefaultOutBoundAccess -eq $false ) { $name += " *" }
+
+
+            ##############################################
+            ##### Special subnet characteristics END #####
+            ##############################################
+            
+            # Support for different types of subnets (AzFW, Bastion etc.)
+            # DOT
+            switch ($name) {
+                "AzureFirewallSubnet" { 
+                    if ($subnet.IpConfigurations.Id) {
+                        $AzFWid = $subnet.IpConfigurations.Id.split("/azureFirewallIpConfigurations/ipconfig1")[0]
+                        $AzFWname = $subnet.IpConfigurations.Id.split("/")[8]
+                        $AzFWrg = $subnet.IpConfigurations.id.split("/")[4]
+
+                        $data += "        $id [label = `"\n\n$name\n$AddressPrefix`" ; color = lightgray;image = `"$OutputPath\icons\afw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+
+                        $data += Export-AzureFirewall -FirewallId $AzFWid -ResourceGroupName $AzFWrg
+                        $AzFWDotId = $AzFWid.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                        $data += "`n    $id -> $azFWDotId;"
                     }
-                    $data = $data + "        $id [label = `"\n\n$name\n$AddressPrefix\n\nDelegated to:\n$subnetDelegationName`" ; color = lightgray;image = `"$OutputPath\icons\$iconname.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
-                } else {
-                    # No Delegation
-                    $data = $data + "        $id [label = `"\n$name\n$AddressPrefix`" ; color = lightgray;image = `"$OutputPath\icons\snet.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
                 }
-                $data += "`n"
-                foreach ($pe in $subnet.PrivateEndpoints) {
-                    $peid = $pe.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                    $data += "        $id -> $peid ;`n"
+                "AzureBastionSubnet" { 
+                if ($subnet.IpConfigurations.Id) { 
+                        $AzBastionName = $subnet.IpConfigurations.Id.split("/")[8].ToLower()
+                    
+                        $data += "        $id [label = `"\n\n$name\n$AddressPrefix\nName: $AzBastionName`" ; color = lightgray;image = `"$OutputPath\icons\bas.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+                    }
                 }
+                "AppGatewaySubnet" { 
+                    if ($subnet.IpConfigurations.Id) { 
+                        $AppGatewayName = $subnet.IpConfigurations.Id.split("/")[8].ToLower()
+                    
+                        $data += "        $id [label = `"\n\n$name\n$AddressPrefix\nName: $AppGatewayName`" ; color = lightgray;image = `"$OutputPath\icons\agw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+                    }
+                }
+                "GatewaySubnet" { 
+                    $data += "        $id [label = `"\n\n$name\n$AddressPrefix`" ; color = lightgray;image = `"$OutputPath\icons\vgw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+                    $data += "`n"
+                    
+                    #GW DOT
+                    if ($subnet.IpConfigurations.Id) { 
+                        $gwid = $subnet.IpConfigurations.Id.split("/ipConfigurations/vnetGatewayConfig")[0]
+                        $gwname = $subnet.IpConfigurations.Id.split("/")[8].ToLower()
+                        $gwrg = $subnet.IpConfigurations.Id.split("/")[4].ToLower()
+                        Export-VirtualGateway -GatewayName $gwname -ResourceGroupName $gwrg -GatewayId $gwid -HeadId $id
+                    }
+                }
+                default { 
+                    ##### Subnet delegations #####
+                    # Might be moved to subnet switch "default" ???
+                    # Just change the icon, or maybe a line with "Delegation info" ?
+                    $subnetDelegationName = $subnet.Delegations.Name
+                    
+                    if ( $null -ne $subnetDelegationName ) {
+                        # Delegated
+
+                        $iconname = ""
+                        switch ($subnetDelegationName) {
+                            "Microsoft.Web.serverFarms" { $iconname = "asp" }
+                            "Microsoft.Sql.managedInstances" { $iconname = "sqlmi" } 
+                            "Microsoft.Network.dnsResolvers" 
+                            { 
+                                $iconname = "dnspr" 
+                            }
+                            Default { $iconname = "snet" }
+                        }
+                        $data = $data + "        $id [label = `"\n\n$name\n$AddressPrefix\n\nDelegated to:\n$subnetDelegationName`" ; color = lightgray;image = `"$OutputPath\icons\$iconname.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+                    } else {
+                        # No Delegation
+                        $data = $data + "        $id [label = `"\n$name\n$AddressPrefix`" ; color = lightgray;image = `"$OutputPath\icons\snet.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+                    }
+                    $data += "`n"
+                    foreach ($pe in $subnet.PrivateEndpoints) {
+                        $peid = $pe.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                        $data += "        $id -> $peid ;`n"
+                    }
+                }
+            }
+            $data += "`n"
+            
+            # DOT VNET->Subnet
+            $data = $data + "        $vnetid -> $id"
+            $data += "`n"
+        
+            #NATGW
+            if ($subnet.NatGateway.count -gt 0 ) {
+                #Define NAT GW
+                $NATGWID = $subnet.NatGateway.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                
+                $name = $subnet.NatGateway.id.split("/")[8]
+                $rg = $subnet.NatGateway.id.split("/")[4]
+                $NATGWobject = Get-AzNatGateway -Name $name -ResourceGroupName $rg -ErrorAction Stop
+                
+                #Public IPs associated
+                $ips = $NATGWobject.PublicIpAddresses
+                $ipsstring = ""
+                $ips.id | ForEach-Object {
+                    $rgname = $_.split("/")[4]
+                    $ipname = $_.split("/")[8]
+                    $publicip = (Get-AzPublicIpAddress -ResourceName $ipname -ResourceGroupName $rgname -ErrorAction Stop).IpAddress
+                    $ipsstring += "$ipname : $publicip \n"
+                }
+
+                #Public IP prefixes associated
+                $ipprefixes = $NATGWobject.PublicIpPrefixes
+                $ipprefixesstring = ""
+                $ipprefixes.id | ForEach-Object {
+                    $rgname = $_.split("/")[4]
+                    $ipname = $_.split("/")[8]
+                    $prefix = (Get-AzPublicIpPrefix -ResourceName $ipname -ResourceGroupName $rgname -ErrorAction Stop).IPPrefix
+                    $ipprefixesstring += "$ipname : $prefix \n"
+                }
+            
+                $data += "        $NATGWID [color = lightgrey;label = `"\n\nName: $name\n\nPublic IP(s):\n$ipsstring\nPublic IP Prefix(es):\n$ipprefixesstring`";image = `"$OutputPath\icons\ng.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
+                $data += "        $id -> $NATGWID" + "`n"
+
             }
         }
-        $data += "`n"
-        
-        # DOT VNET->Subnet
-        $data = $data + "        $vnetid -> $id"
-        $data += "`n"
-    
-        #NATGW
-        if ($subnet.NatGateway.count -gt 0 ) {
-            #Define NAT GW
-            $NATGWID = $subnet.NatGateway.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-            
-            $name = $subnet.NatGateway.id.split("/")[8]
-            $rg = $subnet.NatGateway.id.split("/")[4]
-            $NATGWobject = Get-AzNatGateway -Name $name -ResourceGroupName $rg -ErrorAction Stop
-            
-            #Public IPs associated
-            $ips = $NATGWobject.PublicIpAddresses
-            $ipsstring = ""
-            $ips.id | ForEach-Object {
-                $rgname = $_.split("/")[4]
-                $ipname = $_.split("/")[8]
-                $publicip = (Get-AzPublicIpAddress -ResourceName $ipname -ResourceGroupName $rgname -ErrorAction Stop).IpAddress
-                $ipsstring += "$ipname : $publicip \n"
-            }
-
-            #Public IP prefixes associated
-            $ipprefixes = $NATGWobject.PublicIpPrefixes
-            $ipprefixesstring = ""
-            $ipprefixes.id | ForEach-Object {
-                $rgname = $_.split("/")[4]
-                $ipname = $_.split("/")[8]
-                $prefix = (Get-AzPublicIpPrefix -ResourceName $ipname -ResourceGroupName $rgname -ErrorAction Stop).IPPrefix
-                $ipprefixesstring += "$ipname : $prefix \n"
-            }
-        
-            $data += "        $NATGWID [color = lightgrey;label = `"\n\nName: $name\n\nPublic IP(s):\n$ipsstring\nPublic IP Prefix(es):\n$ipprefixesstring`";image = `"$OutputPath\icons\ng.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
-            $data += "        $id -> $NATGWID" + "`n"
-
-        }
+    } catch {
+        Write-Host "Can't export Subnet: $($subnet.name)" $_.Exception.Message
     }
-
     return $data
 }
 
@@ -655,83 +660,88 @@ function Export-vnet {
     [CmdletBinding()]
     param ([PSCustomObject[]]$vnet)
 
-    $vnetname = $vnet.Name
-    $id = $vnet.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-    $vnetAddressSpaces = $vnet.AddressSpace.AddressPrefixes
-    $script:rankvnetaddressspaces += $id
+    try {
+        $vnetname = $vnet.Name
+        $id = $vnet.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $vnetAddressSpaces = $vnet.AddressSpace.AddressPrefixes
+        $script:rankvnetaddressspaces += $id
 
-    $header = "
-    # $vnetname - $id
-    subgraph cluster_$id {
-        style = solid;
-        color = black;
-        node [color = white;];
-    "
+        $header = "
+        # $vnetname - $id
+        subgraph cluster_$id {
+            style = solid;
+            color = black;
+            node [color = white;];
+        "
 
-    # Convert addressSpace prefixes from array to string
-    $vnetAddressSpacesString = ""
-    $vnetAddressSpaces | ForEach-Object {
-        $vnetAddressSpacesString = $vnetAddressSpacesString + $_ + "\n"
-    }
-
-    $vnetdata = "    $id [color = lightgray;label = `"\nAddress Space(s):\n$vnetAddressSpacesString`";image = `"$OutputPath\icons\vnet.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];`n"
-
-    # Subnets
-    if ($vnet.Subnets) {
-        $subnetdata = Export-SubnetConfig $vnet.Subnets
-    }
-    # Retrieve all Private DNS Resolvers in a specific resource group
-    $dnsResolvers = Get-AzDnsResolver -ResourceGroupName $vnet.resourceGroupName -VirtualNetworkName $vnet.name -ErrorAction Stop
-    $dnsprdata = ""
-    if ($dnsResolvers) {
-        # Display details of each Private DNS Resolver
-        foreach ($resolver in $dnsResolvers) {
-            $resolverName = $resolver.Id.split("/")[-1]
-            $inboundEp = (Get-AzDnsResolverInboundEndpoint -DnsResolverName $resolverName -ResourceGroupName $vnet.resourceGroupName -ErrorAction Stop)
-            $outboundEp = (Get-AzDnsResolverOutboundEndpoint -DnsResolverName $resolverName -ResourceGroupName $vnet.resourceGroupName -ErrorAction Stop)
-            $inboundEpIp = $inboundEp.IPConfiguration.PrivateIPAddress 
-            $pdnsrId = $resolver.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-            $dnsFrs = Get-AzDnsForwardingRuleset -ResourceGroupName $vnet.ResourceGroupName -ErrorAction Stop | Where-Object { ($_.DnsResolverOutboundEndpoint).id -eq $outboundEp.id }
-            
-            if ($dnsFrs) {
-                # Retrieve and display Forwarding Rulesets associated with the resolver
-                $dnsFrsId = $dnsFrs.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $frsRules = Get-AzDnsForwardingRulesetForwardingRule -DnsForwardingRulesetName $dnsFrs.name -ResourceGroupName $vnet.resourceGroupName -ErrorAction Stop
-
-                # DOT
-                $dnsprdata += "`n        subgraph cluster_$pdnsrId {
-                    style = solid;
-                    color = black;
-                    node [color = white;];
-                           
-                    $pdnsrId [label = `"\n$($resolverName)\nInbound IP Address: $($inboundEpIp)`" ; color = lightgray;image = `"$OutputPath\icons\dnspr.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;]; 
-                    $pdnsrId [shape=none; label = <
-                                    <TABLE border=`"1`" style=`"rounded`" align=`"left`">
-                                    <TR><TD colspan=`"3`" border=`"0`">$($dnsFrs.Name)</TD></TR>
-                                    <TR><TD>Name</TD><TD>Domain Name</TD><TD>Target DNS</TD></TR>
-                "
-                foreach ($rule in $frsRules) {
-                    $dnsprdata += "                <TR><TD align=`"left`">$($rule.Name)</TD><TD align=`"left`">$($rule.DomainName)</TD><TD align=`"left`">$($rule.TargetDnsServer.IPAddress -join ', ')</TD></TR>`n"                    
-                }
-                # End table                     $pdnsrId -> $dnsFrsId;     
-
-                $dnsprdata += "</TABLE>>;
-                        ];
-                    label = `"$resolverName`";
-                }
-                "
-                $script:PDNSRepIP = $inboundEpIp
-                $script:PDNSRId = $pdnsrId
-            }
+        # Convert addressSpace prefixes from array to string
+        $vnetAddressSpacesString = ""
+        $vnetAddressSpaces | ForEach-Object {
+            $vnetAddressSpacesString = $vnetAddressSpacesString + $_ + "\n"
         }
-    }                            
-    
-    $footer = "
-        label = `"$vnetname`";
+
+        $vnetdata = "    $id [color = lightgray;label = `"\nAddress Space(s):\n$vnetAddressSpacesString`";image = `"$OutputPath\icons\vnet.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];`n"
+
+        # Subnets
+        if ($vnet.Subnets) {
+            $subnetdata = Export-SubnetConfig $vnet.Subnets
+        }
+        # Retrieve all Private DNS Resolvers in a specific resource group
+        $dnsResolvers = Get-AzDnsResolver -ResourceGroupName $vnet.resourceGroupName -VirtualNetworkName $vnet.name -ErrorAction Stop
+        $dnsprdata = ""
+        if ($dnsResolvers) {
+            # Display details of each Private DNS Resolver
+            foreach ($resolver in $dnsResolvers) {
+                $resolverName = $resolver.Id.split("/")[-1]
+                $inboundEp = (Get-AzDnsResolverInboundEndpoint -DnsResolverName $resolverName -ResourceGroupName $vnet.resourceGroupName -ErrorAction Stop)
+                $outboundEp = (Get-AzDnsResolverOutboundEndpoint -DnsResolverName $resolverName -ResourceGroupName $vnet.resourceGroupName -ErrorAction Stop)
+                $inboundEpIp = $inboundEp.IPConfiguration.PrivateIPAddress 
+                $pdnsrId = $resolver.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $dnsFrs = Get-AzDnsForwardingRuleset -ResourceGroupName $vnet.ResourceGroupName -ErrorAction Stop | Where-Object { ($_.DnsResolverOutboundEndpoint).id -eq $outboundEp.id }
+                
+                if ($dnsFrs) {
+                    # Retrieve and display Forwarding Rulesets associated with the resolver
+                    $dnsFrsId = $dnsFrs.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $frsRules = Get-AzDnsForwardingRulesetForwardingRule -DnsForwardingRulesetName $dnsFrs.name -ResourceGroupName $vnet.resourceGroupName -ErrorAction Stop
+
+                    # DOT
+                    $dnsprdata += "`n        subgraph cluster_$pdnsrId {
+                        style = solid;
+                        color = black;
+                        node [color = white;];
+                            
+                        $pdnsrId [label = `"\n$($resolverName)\nInbound IP Address: $($inboundEpIp)`" ; color = lightgray;image = `"$OutputPath\icons\dnspr.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;]; 
+                        $pdnsrId [shape=none; label = <
+                                        <TABLE border=`"1`" style=`"rounded`" align=`"left`">
+                                        <TR><TD colspan=`"3`" border=`"0`">$($dnsFrs.Name)</TD></TR>
+                                        <TR><TD>Name</TD><TD>Domain Name</TD><TD>Target DNS</TD></TR>
+                    "
+
+                    foreach ($rule in $frsRules) {
+                        $dnsprdata += "                <TR><TD align=`"left`">$($rule.Name)</TD><TD align=`"left`">$($rule.DomainName)</TD><TD align=`"left`">$($rule.TargetDnsServer.IPAddress -join ', ')</TD></TR>`n"                    
+                    }
+                    # End table                     $pdnsrId -> $dnsFrsId;     
+
+                    $dnsprdata += "</TABLE>>;
+                            ];
+                        label = `"$resolverName`";
+                    }
+                    "
+                    $script:PDNSRepIP = $inboundEpIp
+                    $script:PDNSRId = $pdnsrId
+                }
+            }
+        }                            
+
+        $footer = "
+            label = `"$vnetname`";
+        }
+        "
+        $alldata = $header + $vnetdata + $subnetdata + $footer + $dnsprdata
+        Export-AddToFile -Data $alldata
+    } catch {
+        Write-Error "Can't export VNet: $($vnet.name)" $_.Exception.Message 
     }
-    "
-    $alldata = $header + $vnetdata + $subnetdata + $footer + $dnsprdata
-    Export-AddToFile -Data $alldata
 }
 
 <#
@@ -1037,7 +1047,7 @@ function Export-IpGroup {
         style = solid;
         color = black;
         
-        $id [label = `"\n$($ipGroup.Name))\n$($ipGroup.IpAddresses -join '\n')`" ; color = lightgray;image = `"$OutputPath\icons\ipgroup.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];
+        $id [label = `"\n$($ipGroup.Name)\n$($ipGroup.IpAddresses -join '\n')`" ; color = lightgray;image = `"$OutputPath\icons\ipgroup.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];
     }
     "
     Export-AddToFile -Data $alldata
@@ -1348,19 +1358,21 @@ function Get-AzNetworkDiagram {
             Write-Output "Collecting IP Groups..."
             Export-AddToFile "    ##### $subname - IP Groups #####"
             $ipGroups = Get-AzIpGroup  -ErrorAction Stop
-            $cluster = "subgraph cluster_ipgroups {
-                style = solid;
-                color = black;
-            "
-            Export-AddToFile -Data $cluster
-            $ipGroups | ForEach-Object {
-                $ipGroup = $_
-                Export-IpGroup -IpGroup $ipGroup
+            if ($null -ne $ipGroups) {
+                $cluster = "subgraph cluster_ipgroups {
+                    style = solid;
+                    color = black;
+                "
+                Export-AddToFile -Data $cluster
+                $ipGroups | ForEach-Object {
+                    $ipGroup = $_
+                    Export-IpGroup -IpGroup $ipGroup
+                }
+                $footer = "
+                    label = `"IP Groups`";
+                }"
+                Export-AddToFile -Data $footer
             }
-            $footer = "
-                label = `"IP Groups`";
-            }"
-            Export-AddToFile -Data $footer
 
             ### vNets (incl. subnets)
             Write-Output "Collecting vNets..."
