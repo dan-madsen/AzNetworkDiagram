@@ -232,7 +232,7 @@ function Export-AzureFirewall {
         # Hub Integrated Azure Firewall
         $PrivateIPAddress = $azFW.HubIPAddresses.PrivateIPAddress
         $PublicIPs = ""
-        foreach ($publicIP in $azFWFT.HubIPAddresses.PublicIPs.Addresses) { $PublicIPs += ($publicIP.Address + "\n") }
+        foreach ($publicIP in $azFW.HubIPAddresses.PublicIPs.Addresses) { $PublicIPs += ($publicIP.Address + "\n") }
     }
     $data = "`n"
     $data += "        $azFWId [label = `"\n\n$azFWName\nPrivate IP Address: $PrivateIPAddress\nSKU Tier: $($azfw.Sku.Tier)\nZones: $($azfw.zones -join "," )\nPublic IP(s):\n$($PublicIPs -join "\n")`" ; color = lightgray;image = `"$OutputPath\icons\afw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
@@ -526,7 +526,7 @@ function Export-SubnetConfig {
             switch ($name) {
                 "AzureFirewallSubnet" { 
                     if ($subnet.IpConfigurations.Id) {
-                        $AzFWid = $subnet.IpConfigurations.Id.split("/azureFirewallIpConfigurations/ipconfig1")[0]
+                        $AzFWid = $subnet.IpConfigurations.Id.ToLower().split("/azurefirewallipconfigurations/ipconfig1")[0]
                         $AzFWname = $subnet.IpConfigurations.Id.split("/")[8]
                         $AzFWrg = $subnet.IpConfigurations.id.split("/")[4]
 
@@ -710,7 +710,7 @@ function Export-vnet {
                         color = black;
                         node [color = white;];
                             
-                        $pdnsrId [label = `"\n$($resolverName)\nInbound IP Address: $($inboundEpIp)`" ; color = lightgray;image = `"$OutputPath\icons\dnspr.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;]; 
+                        $pdnsrId [label = `"\n$($resolverName)\nInbound IP Address: $($inboundEpIp)`" ; color = lightgray;image = `"$OutputPath\icons\dnspr.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]; 
                         $pdnsrId [shape=none; label = <
                                         <TABLE border=`"1`" style=`"rounded`" align=`"left`">
                                         <TR><TD colspan=`"3`" border=`"0`">$($dnsFrs.Name)</TD></TR>
