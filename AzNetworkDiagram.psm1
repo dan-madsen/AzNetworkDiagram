@@ -108,7 +108,7 @@ function Export-AddToFile {
     [CmdletBinding()]
     param([string]$Data)
 
-    $Data | Out-File -Encoding ASCII  -Append $OutputPath\AzNetworkDiagram.dot
+    $Data | Out-File -Encoding ASCII -Append $OutputPath\AzNetworkDiagram.dot
 }
 <#
 .SYNOPSIS
@@ -345,7 +345,7 @@ function Export-Hub {
                 $script:rankvpnsites += $vpnsiteId
                 $vpnsiteName = $VpnSite.id.split("/")[-1]
                 $data += "`n"
-                $data += "        $vpnsiteId [label = `"\n\n\n$vpnsiteName\nAddressPrefixes: $($VpnSite.AddressSpace.AddressPrefixes)\nDevice Vendor: $($VpnSite.DeviceProperties.DeviceVendor)\nLink Speed: $($VpnSite.VpnSiteLinks.LinkProperties.LinkSpeedInMbps) Mbps\nLinks: $($VpnSite.VpnSiteLinks.count)\n`" ; color = lightgray;image = `"$OutputPath\icons\vpn-site.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+                $data += "        $vpnsiteId [label = `"\n\n\n$vpnsiteName\nAddressPrefixes: $($VpnSite.AddressSpace.AddressPrefixes)\nDevice Vendor: $($VpnSite.DeviceProperties.DeviceVendor)\nLink Speed: $($VpnSite.VpnSiteLinks.LinkProperties.LinkSpeedInMbps) Mbps\nLinks: $($VpnSite.VpnSiteLinks.count)\n`" ; color = lightgray;image = `"$OutputPath\icons\VPN-Site.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
                 $data += "`n    $vgwId -> $vpnsiteId;"
             }
         }
@@ -1112,7 +1112,7 @@ function Export-VPNConnection {
     }
 
     #DOT
-    $data += ";image = `"$OutputPath\icons\vpn-site.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];"
+    $data += ";image = `"$OutputPath\icons\VPN-Site.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];"
 
     if ($connection.Peer -and $vpngwid -ne 0) {
         $peerid = $connection.Peer.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
@@ -1243,8 +1243,8 @@ function Confirm-Prerequisites {
         "sqlmi.png",
         "vgw.png",
         "vnet.png",
-        "vpn-site.png",
-        "vpn-user.png",
+        "VPN-Site.png",
+        "VPN-User.png",
         "vWAN.png",
         "vWAN-Hub.png"
     )
