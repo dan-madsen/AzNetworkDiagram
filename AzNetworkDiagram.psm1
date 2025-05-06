@@ -1283,7 +1283,7 @@ function Get-AzNetworkDiagram {
     param (
         [Parameter(Mandatory = $false)]
         [string]$OutputPath = $pwd,
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [string[]]$Subscriptions,
         [Parameter(Mandatory = $false)]
         [bool]$EnableRanking = $true,
