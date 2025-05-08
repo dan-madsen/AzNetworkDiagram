@@ -1426,9 +1426,9 @@ function Get-AzNetworkDiagram {
     # Set subscriptions to every accessible subscription, if unset
     try {
         if ($TenantId) {
-            if ( $null -eq $Subscriptions ) { $Subscriptions = (Get-AzSubscription -TenantId $TenantId -ErrorAction Stop).Id }
+            if ( $null -eq $Subscriptions ) { $Subscriptions = (Get-AzSubscription -TenantId $TenantId -ErrorAction Stop | Where-Object -Property State -eq "Enabled").Id }
         } else {
-            if ( $null -eq $Subscriptions ) { $Subscriptions = (Get-AzSubscription -ErrorAction Stop).Id }
+            if ( $null -eq $Subscriptions ) { $Subscriptions = (Get-AzSubscription -ErrorAction Stop | Where-Object -Property State -eq "Enabled").Id }
         }
     } catch {
         Write-Error "No available subscriptions within active AzContext - missing permissions? " $_.Exception.Message
