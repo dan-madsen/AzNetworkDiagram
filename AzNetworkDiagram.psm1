@@ -110,6 +110,68 @@ function Export-AddToFile {
 
     $Data | Out-File -Encoding ASCII -Append $OutputPath\AzNetworkDiagram.dot
 }
+
+function Export-AKSCluster {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$Aks
+    )
+
+    try {
+        # Check if ACR integration is enabled and which ACRs are attached
+        #$Aks.IdentityProfile.kubeletidentity.ClientId
+        $roleAssignments = Get-AzRoleAssignment -ObjectId $Aks.IdentityProfile.kubeletidentity.ObjectId -ErrorAction Stop
+
+        # Filter for ACR-related role assignments
+        $acrRoleAssignments = $roleAssignments | Where-Object { 
+            $_.Scope -like "*/Microsoft.ContainerRegistry/registries/*" -and 
+            ($_.RoleDefinitionName -eq "AcrPull" -or $_.RoleDefinitionName -eq "AcrPush")
+        }
+
+        # Display the linked ACRs
+        if ($null -ne $acrRoleAssignments) {
+            $aksacr = $acrRoleAssignments.Scope.split("/")[-1] 
+            $aksacrid = $acrRoleAssignments.Scope.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        } else {
+            $aksacr = "None"
+            $aksacrid = ""
+        }
+
+        $aksid = $Aks.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $data = "
+        # $($Aks.Name) - $aksid
+        subgraph cluster_$aksid {
+            style = solid;
+            color = black;
+            node [color = white;];
+        "
+
+        $data += "        $aksid [label = `"\nLocation: $($Aks.Location)\nVersion: $($Aks.KubernetesVersion)\nSKU Tier: $($Aks.Sku.Tier)\nPrivate Cluster: $($Aks.ApiServerAccessProfile.EnablePrivateCluster)\nDNS Service IP: $($Aks.DnsServiceIP)\nMax Agent Pools: $($Aks.MaxAgentPools)\nContainer Registry: $aksacr\nPod CIDR: $($Aks.NetworkProfile.PodCidr)\nService CIDR: $($Aks.NetworkProfile.ServiceCidr)\n`" ; color = lightgray;image = `"$OutputPath\icons\aks-service.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];"
+        
+        #$Aks.PrivateLinkResources.PrivateLinkServiceId
+
+        foreach ($agentpool in $Aks.AgentPoolProfiles) {
+            $agentpoolid = $aksid +  $agentpool.Name.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $agentpoolsubnetid = $agentpool.VnetSubnetId.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $data += "        $($agentpoolid) [label = `"\nName: $($agentpool.Name)\nMode: $($agentpool.Mode)\nZones: $($agentpool.AvailabilityZones)\nVM Size: $($agentpool.VmSize)\nMax Pods: $($agentpool.MaxPods)\nOS SKU: $($agentpool.OsSKU)\nAgent Pools: $($agentpool.MinCount) >= Pod Count <=  $($agentpool.MaxCount)\nEnable AutoScaling: $($agentpool.EnableAutoScaling)\nPublic IP: $($agentpool.EnableNodePublicIP)\n`" ; color = lightgray;image = `"$OutputPath\icons\aks-node-pool.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n" 
+            $data += "        $agentpoolid -> $agentpoolsubnetid;`n"
+            $data += "        $aksid -> $agentpoolid;`n"
+
+        }
+        $data += "`n"
+        if ($aksacr -ne "None") {
+            $data += "        $aksid -> $aksacrid;`n"
+        }   
+        $data += "   label = `"$($Aks.Name)`";
+                }`n"
+        Export-AddToFile -Data $data
+    }
+    catch {
+        Write-Host "Can't export AKS Cluster: $($Aks.name)" $_.Exception.Message
+    }
+}
+
 <#
 .SYNOPSIS
 Exports details of an Azure Application Gateway for inclusion in a network diagram.
@@ -167,7 +229,7 @@ function Export-ApplicationGateway {
             $feports = "None"
         }
 
-        $data += "        $agwid [label = `"\nPolicy name: $polname\nPrivate IP's: $pvtips\nSKU: $skuname\nZones: $zones\nSSL Certificates: $sslcerts\nFrontend ports: $feports\n`" ; color = lightgray;image = `"$OutputPath\icons\agw.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
+        $data += "        $agwid [label = `"\nPolicy name: $polname\nPrivate IP's: $pvtips\nSKU: $skuname\nZones: $zones\nSSL Certificates: $sslcerts\nFrontend ports: $feports\n`" ; color = lightgray;image = `"$OutputPath\icons\agw.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];"
         $data += "`n"
         $data += "        $agwid -> $agwSubnetId;`n"
         $data += "   label = `"$GatewayName`";
@@ -178,6 +240,41 @@ function Export-ApplicationGateway {
     }
     catch {
         Write-Host "Can't export Application Gateway: $($agw.name)" $_.Exception.Message
+    }
+}
+function Export-ACR {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$acr
+    )   
+    
+    try {
+        $acrid = $acr.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        
+        $data = "
+        # $($acr.Name) - $acrid
+        subgraph cluster_$acrid {
+            style = solid;
+            color = black;
+            node [color = white;];
+        "
+
+
+        $data += "        $acrid [label = `"\nName: $($acr.Name))\nLocation: $($acr.Location)\nSKU: $($acr.SkuName.ToString())\nZone Redundancy: $($acr.ZoneRedundancy.ToString())\nPublic Network Access: $($acr.PublicNetworkAccess.ToString())\n`" ; color = lightgray;image = `"$OutputPath\icons\acr.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
+        $data += "`n"
+        if ($acr.PrivateEndpointConnection.PrivateEndpointId) {
+            $acrpeid = $acr.PrivateEndpointConnection.PrivateEndpointId.ToString().replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $data += "        $acrid -> $($acrpeid);`n"
+        }
+        $data += "   label = `"$($acr.Name)`";
+                }`n"
+
+        Export-AddToFile $data
+
+    }
+    catch {
+        Write-Host "Can't export ACR: $($acr.name)" $_.Exception.Message
     }
 }
 
@@ -340,13 +437,23 @@ function Export-Hub {
 
             # Connections
             $VpnSites = Get-AzVPNSite -ResourceGroupName $hub.ResourceGroupName  -ErrorAction Stop | Where-Object { $_.VirtualWan.id -eq $hub.virtualwan.id}
-            foreach ($VpnSite in $VpnSites) {
-                $vpnsiteId = $VpnSite.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $script:rankvpnsites += $vpnsiteId
-                $vpnsiteName = $VpnSite.id.split("/")[-1]
-                $data += "`n"
-                $data += "        $vpnsiteId [label = `"\n\n\n$vpnsiteName\nAddressPrefixes: $($VpnSite.AddressSpace.AddressPrefixes)\nDevice Vendor: $($VpnSite.DeviceProperties.DeviceVendor)\nLink Speed: $($VpnSite.VpnSiteLinks.LinkProperties.LinkSpeedInMbps) Mbps\nLinks: $($VpnSite.VpnSiteLinks.count)\n`" ; color = lightgray;image = `"$OutputPath\icons\VPN-Site.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
-                $data += "`n    $vgwId -> $vpnsiteId;"
+            # Get the VPN connections from this gateway
+            $vpnConnections = $vpngw.Connections
+
+            #foreach ($VpnSite in $VpnSites) {
+            foreach ($connection in $vpnConnections) {
+                # Find which VPN site this connection is linked to
+                $siteId = $connection.RemoteVpnSite.Id
+                $vpnSite = $VpnSites | Where-Object { $_.Id -eq $siteId }
+            
+                if ($vpnSite) {
+                    $vpnsiteId = $siteId.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $script:rankvpnsites += $vpnsiteId
+                    $vpnsiteName = $VpnSite.Name
+                    $data += "`n"
+                    $data += "        $vpnsiteId [label = `"\n\n\n$vpnsiteName\nAddressPrefixes: $($VpnSite.AddressSpace.AddressPrefixes)\nDevice Vendor: $($VpnSite.DeviceProperties.DeviceVendor)\nLink Speed: $($VpnSite.VpnSiteLinks.LinkProperties.LinkSpeedInMbps) Mbps\nLinks: $($VpnSite.VpnSiteLinks.count)\n`" ; color = lightgray;image = `"$OutputPath\icons\VPN-Site.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+                    $data += "`n    $vgwId -> $vpnsiteId;"
+                }
             }
         }
         if ($null -ne $hub.ExpressRouteGateway) {
@@ -1223,8 +1330,11 @@ function Confirm-Prerequisites {
     # Icons available?
     if (! (Test-Path "$OutputPath\icons") ) { Write-Output "Downloading icons to $OutputPath\icons\ ... " ; New-Item -Path "$OutputPath" -Name "icons" -ItemType "directory" | Out-null }
     $icons =  @(
+        "acr.png",
         "afw.png",
         "agw.png",
+        "aks-service.png",
+        "aks-node-pool.png",
         "firewallpolicy.png",
         "asp.png",
         "bas.png",
@@ -1422,6 +1532,22 @@ function Get-AzNetworkDiagram {
                 $vWAN = $_
                 Export-vWAN $vWAN
             }
+
+            #ACRs
+            Write-Output "Collecting Azure Contiainer Registries..."
+            Export-AddToFile "    ##### $subname - Azure Contiainer Registries #####"
+            $acrs = Get-AzContainerRegistry -ErrorAction Stop
+            foreach ($acr in $acrs) {
+                Export-ACR $acr
+            }   
+
+            #AKS
+            Write-Output "Collecting AKS Clusters..."
+            Export-AddToFile "    ##### $subname - AKS Clusters #####"
+            $aksclusters = Get-AzAksCluster -ErrorAction Stop
+            foreach ($akscluster in $aksclusters) {
+                Export-AKSCluster $akscluster
+            }   
 
             #VPN Connections
             Write-Output "Collecting VPN Connections..."
