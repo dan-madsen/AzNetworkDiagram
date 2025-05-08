@@ -437,13 +437,23 @@ function Export-Hub {
 
             # Connections
             $VpnSites = Get-AzVPNSite -ResourceGroupName $hub.ResourceGroupName  -ErrorAction Stop | Where-Object { $_.VirtualWan.id -eq $hub.virtualwan.id}
-            foreach ($VpnSite in $VpnSites) {
-                $vpnsiteId = $VpnSite.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $script:rankvpnsites += $vpnsiteId
-                $vpnsiteName = $VpnSite.id.split("/")[-1]
-                $data += "`n"
-                $data += "        $vpnsiteId [label = `"\n\n\n$vpnsiteName\nAddressPrefixes: $($VpnSite.AddressSpace.AddressPrefixes)\nDevice Vendor: $($VpnSite.DeviceProperties.DeviceVendor)\nLink Speed: $($VpnSite.VpnSiteLinks.LinkProperties.LinkSpeedInMbps) Mbps\nLinks: $($VpnSite.VpnSiteLinks.count)\n`" ; color = lightgray;image = `"$OutputPath\icons\VPN-Site.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
-                $data += "`n    $vgwId -> $vpnsiteId;"
+            # Get the VPN connections from this gateway
+            $vpnConnections = $vpngw.Connections
+
+            #foreach ($VpnSite in $VpnSites) {
+            foreach ($connection in $vpnConnections) {
+                # Find which VPN site this connection is linked to
+                $siteId = $connection.RemoteVpnSite.Id
+                $vpnSite = $VpnSites | Where-Object { $_.Id -eq $siteId }
+            
+                if ($vpnSite) {
+                    $vpnsiteId = $siteId.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $script:rankvpnsites += $vpnsiteId
+                    $vpnsiteName = $VpnSite.Name
+                    $data += "`n"
+                    $data += "        $vpnsiteId [label = `"\n\n\n$vpnsiteName\nAddressPrefixes: $($VpnSite.AddressSpace.AddressPrefixes)\nDevice Vendor: $($VpnSite.DeviceProperties.DeviceVendor)\nLink Speed: $($VpnSite.VpnSiteLinks.LinkProperties.LinkSpeedInMbps) Mbps\nLinks: $($VpnSite.VpnSiteLinks.count)\n`" ; color = lightgray;image = `"$OutputPath\icons\VPN-Site.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+                    $data += "`n    $vgwId -> $vpnsiteId;"
+                }
             }
         }
         if ($null -ne $hub.ExpressRouteGateway) {
