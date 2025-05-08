@@ -1447,7 +1447,7 @@ function Get-AzNetworkDiagram {
                 $context = Set-AzContext -Subscription $subid -ErrorAction Stop
             }
             $subname = $context.Subscription.Name
-            Write-Output "Collecting data from subscription: $subname ($subid)"
+            Write-Output "`nCollecting data from subscription: $subname ($subid)"
             Export-AddToFile "`n    ##########################################################################################################"
             Export-AddToFile "    ##### $subname "
             Export-AddToFile "    ##########################################################################################################`n"
