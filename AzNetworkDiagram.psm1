@@ -681,12 +681,9 @@ function Export-SubnetConfig {
 
                         $iconname = ""
                         switch ($subnetDelegationName) {
-                            "Microsoft.Web.serverFarms" { $iconname = "asp" }
-                            "Microsoft.Sql.managedInstances" { $iconname = "sqlmi" } 
-                            "Microsoft.Network.dnsResolvers" 
-                            { 
-                                $iconname = "dnspr" 
-                            }
+                            "Microsoft.Web/serverFarms" { $iconname = "asp" }
+                            "Microsoft.Sql/managedInstances" { $iconname = "sqlmi" } 
+                            "Microsoft.Network/dnsResolvers" { $iconname = "dnspr" }
                             Default { $iconname = "snet" }
                         }
                         $data = $data + "        $id [label = `"\n\n$name\n$AddressPrefix\n\nDelegated to:\n$subnetDelegationName`" ; color = lightgray;image = `"$OutputPath\icons\$iconname.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
@@ -1467,7 +1464,7 @@ function Get-AzNetworkDiagram {
             ### Ip Groups
             Write-Output "Collecting IP Groups..."
             Export-AddToFile "    ##### $subname - IP Groups #####"
-            $ipGroups = Get-AzIpGroup  -ErrorAction Stop
+            $ipGroups = Get-AzIpGroup -ErrorAction Stop
             if ($null -ne $ipGroups) {
                 $cluster = "subgraph cluster_ipgroups {
                     style = solid;
