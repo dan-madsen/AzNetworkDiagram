@@ -70,19 +70,19 @@ If links to other resources exist then these links are drawn too. For example, i
 
 # Currently Supported Resources
 This module will include in the diagram:
-    - Subscriptions
-    - vNets & Subnets & Delegations
-    - Route Tables
-    - NSG's
-    - IP Groups
-    - Application Gateways
-    - Express Routes Circuits and ER Direct ports & Links
-    - vWAN's & Hubs
-    - Azure Firewall
-    - VPN Gateway
-    - NAT Gateway
-    - Bastion
-    - Private Endpoints
+  - Subscriptions
+  - vNets & Subnets & Delegations
+  - Route Tables
+  - NSG's
+  - IP Groups
+  - Application Gateways
+  - Express Routes Circuits and ER Direct ports & Links
+  - vWAN's & Hubs
+  - Azure Firewall
+  - VPN Gateway
+  - NAT Gateway
+  - Bastion
+  - Private Endpoints
     
 # Work in progress...
     - Support for
