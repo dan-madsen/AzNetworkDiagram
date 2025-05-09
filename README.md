@@ -99,6 +99,6 @@ This module will include in the diagram:
     - App Services
 - Azure DevOps pipeline for automated runs, with output saved to storage account
     - Mail on changes?
-   
+
 # Issues, bugs, comments and ideas
 Please submit using the issues option in GitHub
