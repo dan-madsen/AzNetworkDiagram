@@ -1710,6 +1710,7 @@ function Confirm-Prerequisites {
         "keyvault.png",
         "lgw.png",
         "managed-identity.png",
+        "mysql.png",
         "ipgroup.png",
         "LICENSE",
         "ng.png",

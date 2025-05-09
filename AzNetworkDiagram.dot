@@ -187,4 +187,298 @@ digraph G {
                 }
 
     ##### gh-sdd-vse-prd-1 - PostgreSQL Servers #####
-    ##### gh-sdd-vse-prd-1 - MongoDB Servers #####
+    ##### gh-sdd-vse-prd-1 - Redis Servers #####
+    ##### gh-sdd-vse-prd-1 - SQL Servers #####
+    ##### gh-sdd-vse-prd-1 - Event Hubs #####
+    ##### gh-sdd-vse-prd-1 - App Service Plans #####
+    ##### gh-sdd-vse-prd-1 - API Management Services #####
+    ##### gh-sdd-vse-prd-1 - AKS Clusters #####
+
+        # aks-sdd-vse-prd-ne2-1 - subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22providersmicrosoftcontainerservicemanagedclustersakssddvseprdne21
+        subgraph cluster_subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22providersmicrosoftcontainerservicemanagedclustersakssddvseprdne21 {
+            style = solid;
+            color = black;
+            node [color = white;];
+                subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22providersmicrosoftcontainerservicemanagedclustersakssddvseprdne21 [label = "\nLocation: northeurope\nVersion: 1.30.10\nSKU Tier: Standard\nPrivate Cluster: True\nDNS Service IP: \nMax Agent Pools: 100\nContainer Registry: crsddvseprdne21\nPod CIDR: 192.168.0.0/16\nService CIDR: 10.2.0.0/16\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\aks-service.png";imagepos = "tc";labelloc = "b";height = 3.0;];        subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22providersmicrosoftcontainerservicemanagedclustersakssddvseprdne21systempool [label = "\nName: systempool\nMode: System\nZones: 2 3\nVM Size: Standard_F8als_v6\nMax Pods: 250\nOS SKU: Ubuntu\nAgent Pools: 1 >= Pod Count <=  3\nEnable AutoScaling: True\nPublic IP: False\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\aks-node-pool.png";imagepos = "tc";labelloc = "b";height = 3.0;];
+        subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22providersmicrosoftcontainerservicemanagedclustersakssddvseprdne21systempool -> subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne21providersmicrosoftnetworkvirtualnetworksvnetsddvseprdne21subnetssnetsddvseprdne24;
+        subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22providersmicrosoftcontainerservicemanagedclustersakssddvseprdne21 -> subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22providersmicrosoftcontainerservicemanagedclustersakssddvseprdne21systempool;
+        subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22providersmicrosoftcontainerservicemanagedclustersakssddvseprdne21appusrpool [label = "\nName: appusrpool\nMode: User\nZones: 2 3\nVM Size: Standard_F16als_v6\nMax Pods: 250\nOS SKU: Ubuntu\nAgent Pools: 1 >= Pod Count <=  8\nEnable AutoScaling: True\nPublic IP: False\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\aks-node-pool.png";imagepos = "tc";labelloc = "b";height = 3.0;];
+        subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22providersmicrosoftcontainerservicemanagedclustersakssddvseprdne21appusrpool -> subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne21providersmicrosoftnetworkvirtualnetworksvnetsddvseprdne21subnetssnetsddvseprdne24;
+        subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22providersmicrosoftcontainerservicemanagedclustersakssddvseprdne21 -> subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22providersmicrosoftcontainerservicemanagedclustersakssddvseprdne21appusrpool;
+        subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22providersmicrosoftcontainerservicemanagedclustersakssddvseprdne21 -> subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22providersmicrosoftcontainerregistryregistriescrsddvseprdne21;
+        subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22providersmicrosoftcontainerservicemanagedclustersakssddvseprdne21 -> subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22providersmicrosoftcomputesshpublickeyssshksddvseprdne21;
+        subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22providersmicrosoftcontainerservicemanagedclustersakssddvseprdne21 -> subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22providersmicrosoftmanagedidentityuserassignedidentitiesidsddvseprdne23;
+        subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22providersmicrosoftcontainerservicemanagedclustersakssddvseprdne21 -> subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftnetworkprivateendpointskubeapiserver;
+        subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22providersmicrosoftcontainerservicemanagedclustersakssddvseprdne21appusrpool -> subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftcomputevirtualmachinescalesetsaksappusrpool35688892vmss;
+        subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22providersmicrosoftcontainerservicemanagedclustersakssddvseprdne21systempool -> subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftcomputevirtualmachinescalesetsakssystempool18589896vmss;
+   label = "aks-sdd-vse-prd-ne2-1";
+                }
+
+    ##### gh-sdd-vse-prd-1 - VMSS #####
+
+        # aks-appusrpool-35688892-vmss - subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftcomputevirtualmachinescalesetsaksappusrpool35688892vmss
+        subgraph cluster_subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftcomputevirtualmachinescalesetsaksappusrpool35688892vmss {
+            style = solid;
+            color = black;
+            node [color = white;];
+                subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftcomputevirtualmachinescalesetsaksappusrpool35688892vmss [label = "\nLocation: northeurope\nSKU: Standard_F16als_v6\nCapacity: 1\nZones: 2 3\nOS Type: \nOrchestration Mode: Uniform\nUpgrade Policy: Microsoft.Azure.Management.Compute.Models.UpgradePolicy\nExtensions: vmssCSE, aks-appusrpool-35688892-vmss-AKSLinuxBilling, AKSLinuxExtension" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\vmss.png";imagepos = "tc";labelloc = "b";height = 3.0;];
+        subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftcomputevirtualmachinescalesetsaksappusrpool35688892vmss -> subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22providersmicrosoftcomputesshpublickeyssshksddvseprdne21;
+        subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftcomputevirtualmachinescalesetsaksappusrpool35688892vmss -> subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftmanagedidentityuserassignedidentitiesakssddvseprdne21agentpool;
+        subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftcomputevirtualmachinescalesetsaksappusrpool35688892vmss -> subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftmanagedidentityuserassignedidentitiesazurekeyvaultsecretsproviderakssddvseprdne21;
+        subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftcomputevirtualmachinescalesetsaksappusrpool35688892vmss -> subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftmanagedidentityuserassignedidentitiesazurepolicyakssddvseprdne21;
+        subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftcomputevirtualmachinescalesetsaksappusrpool35688892vmss -> subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne21providersmicrosoftnetworkvirtualnetworksvnetsddvseprdne21subnetssnetsddvseprdne24;
+        subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftcomputevirtualmachinescalesetsaksappusrpool35688892vmss -> subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftnetworknetworksecuritygroupsaksagentpool32661530nsg;
+   label = "aks-appusrpool-35688892-vmss";
+        }
+
+
+        # aks-systempool-18589896-vmss - subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftcomputevirtualmachinescalesetsakssystempool18589896vmss
+        subgraph cluster_subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftcomputevirtualmachinescalesetsakssystempool18589896vmss {
+            style = solid;
+            color = black;
+            node [color = white;];
+                subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftcomputevirtualmachinescalesetsakssystempool18589896vmss [label = "\nLocation: northeurope\nSKU: Standard_F8als_v6\nCapacity: 2\nZones: 2 3\nOS Type: \nOrchestration Mode: Uniform\nUpgrade Policy: Microsoft.Azure.Management.Compute.Models.UpgradePolicy\nExtensions: vmssCSE, aks-systempool-18589896-vmss-AKSLinuxBilling, AKSLinuxExtension" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\vmss.png";imagepos = "tc";labelloc = "b";height = 3.0;];
+        subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftcomputevirtualmachinescalesetsakssystempool18589896vmss -> subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22providersmicrosoftcomputesshpublickeyssshksddvseprdne21;
+        subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftcomputevirtualmachinescalesetsakssystempool18589896vmss -> subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftmanagedidentityuserassignedidentitiesakssddvseprdne21agentpool;
+        subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftcomputevirtualmachinescalesetsakssystempool18589896vmss -> subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftmanagedidentityuserassignedidentitiesazurekeyvaultsecretsproviderakssddvseprdne21;
+        subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftcomputevirtualmachinescalesetsakssystempool18589896vmss -> subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftmanagedidentityuserassignedidentitiesazurepolicyakssddvseprdne21;
+        subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftcomputevirtualmachinescalesetsakssystempool18589896vmss -> subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne21providersmicrosoftnetworkvirtualnetworksvnetsddvseprdne21subnetssnetsddvseprdne24;
+        subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftcomputevirtualmachinescalesetsakssystempool18589896vmss -> subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftnetworknetworksecuritygroupsaksagentpool32661530nsg;
+   label = "aks-systempool-18589896-vmss";
+        }
+
+    ##### gh-sdd-vse-prd-1 - Managed Identities #####
+
+        # id-sdd-vse-prd-ne2-2 - 
+        subgraph cluster_subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22providersmicrosoftmanagedidentityuserassignedidentitiesidsddvseprdne22 {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22providersmicrosoftmanagedidentityuserassignedidentitiesidsddvseprdne22 [label = "\nid-sdd-vse-prd-ne2-2\nLocation: northeurope" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\managed-identity.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "id-sdd-vse-prd-ne2-2";
+        }
+        
+
+        # id-sdd-vse-prd-ne2-1 - 
+        subgraph cluster_subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22providersmicrosoftmanagedidentityuserassignedidentitiesidsddvseprdne21 {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22providersmicrosoftmanagedidentityuserassignedidentitiesidsddvseprdne21 [label = "\nid-sdd-vse-prd-ne2-1\nLocation: northeurope" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\managed-identity.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "id-sdd-vse-prd-ne2-1";
+        }
+        
+
+        # Built-In-Identity-northeurope - 
+        subgraph cluster_subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsbuiltinidentityrgprovidersmicrosoftmanagedidentityuserassignedidentitiesbuiltinidentitynortheurope {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsbuiltinidentityrgprovidersmicrosoftmanagedidentityuserassignedidentitiesbuiltinidentitynortheurope [label = "\nBuilt-In-Identity-northeurope\nLocation: northeurope" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\managed-identity.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "Built-In-Identity-northeurope";
+        }
+        
+
+        # id-sdd-vse-prd-ne2-3 - 
+        subgraph cluster_subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22providersmicrosoftmanagedidentityuserassignedidentitiesidsddvseprdne23 {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22providersmicrosoftmanagedidentityuserassignedidentitiesidsddvseprdne23 [label = "\nid-sdd-vse-prd-ne2-3\nLocation: northeurope" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\managed-identity.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "id-sdd-vse-prd-ne2-3";
+        }
+        
+
+        # azurepolicy-aks-sdd-vse-prd-ne2-1 - 
+        subgraph cluster_subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftmanagedidentityuserassignedidentitiesazurepolicyakssddvseprdne21 {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftmanagedidentityuserassignedidentitiesazurepolicyakssddvseprdne21 [label = "\nazurepolicy-aks-sdd-vse-prd-ne2-1\nLocation: northeurope" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\managed-identity.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "azurepolicy-aks-sdd-vse-prd-ne2-1";
+        }
+        
+
+        # azurekeyvaultsecretsprovider-aks-sdd-vse-prd-ne2-1 - 
+        subgraph cluster_subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftmanagedidentityuserassignedidentitiesazurekeyvaultsecretsproviderakssddvseprdne21 {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftmanagedidentityuserassignedidentitiesazurekeyvaultsecretsproviderakssddvseprdne21 [label = "\nazurekeyvaultsecretsprovider-aks-sdd-vse-prd-ne2-1\nLocation: northeurope" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\managed-identity.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "azurekeyvaultsecretsprovider-aks-sdd-vse-prd-ne2-1";
+        }
+        
+
+        # aks-sdd-vse-prd-ne2-1-agentpool - 
+        subgraph cluster_subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftmanagedidentityuserassignedidentitiesakssddvseprdne21agentpool {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftmanagedidentityuserassignedidentitiesakssddvseprdne21agentpool [label = "\naks-sdd-vse-prd-ne2-1-agentpool\nLocation: northeurope" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\managed-identity.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "aks-sdd-vse-prd-ne2-1-agentpool";
+        }
+        
+    ##### gh-sdd-vse-prd-1 - Azure Contiainer Registries #####
+
+        # crsddvseprdne21 - subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22providersmicrosoftcontainerregistryregistriescrsddvseprdne21
+        subgraph cluster_subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22providersmicrosoftcontainerregistryregistriescrsddvseprdne21 {
+            style = solid;
+            color = black;
+            node [color = white;];
+                subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22providersmicrosoftcontainerregistryregistriescrsddvseprdne21 [label = "\nName: crsddvseprdne21)\nLocation: northeurope\nSKU: Premium\nZone Redundancy: Enabled\nPublic Network Access: Disabled\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\acr.png";imagepos = "tc";labelloc = "b";height = 2.5;];
+        subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22providersmicrosoftcontainerregistryregistriescrsddvseprdne21 -> subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22providersmicrosoftnetworkprivateendpointspepcrsddvseprdne21registry0;
+   label = "crsddvseprdne21";
+                }
+
+    ##### gh-sdd-vse-prd-1 - SSH Keys #####
+
+        # sshk-sdd-vse-prd-ne2-1 - subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22providersmicrosoftcomputesshpublickeyssshksddvseprdne21
+        subgraph cluster_subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22providersmicrosoftcomputesshpublickeyssshksddvseprdne21 {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22providersmicrosoftcomputesshpublickeyssshksddvseprdne21 [label = "\nsshk-sdd-vse-prd-ne2-1\nLocation: northeurope" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\ssh-key.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "sshk-sdd-vse-prd-ne2-1";
+        }
+        
+    ##### gh-sdd-vse-prd-1 - NSG's #####
+
+        # nsg-sdd-vse-bkp-prd-ne2-1 - subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne21providersmicrosoftnetworknetworksecuritygroupsnsgsddvsebkpprdne21
+        subgraph cluster_subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne21providersmicrosoftnetworknetworksecuritygroupsnsgsddvsebkpprdne21 {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne21providersmicrosoftnetworknetworksecuritygroupsnsgsddvsebkpprdne21 [label = "\nnsg-sdd-vse-bkp-prd-ne2-1\nLocation: northeurope" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\nsg.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "nsg-sdd-vse-bkp-prd-ne2-1";
+        }
+        
+
+        # nsg-sdd-vse-prd-ne2-2 - subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne21providersmicrosoftnetworknetworksecuritygroupsnsgsddvseprdne22
+        subgraph cluster_subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne21providersmicrosoftnetworknetworksecuritygroupsnsgsddvseprdne22 {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne21providersmicrosoftnetworknetworksecuritygroupsnsgsddvseprdne22 [label = "\nnsg-sdd-vse-prd-ne2-2\nLocation: northeurope" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\nsg.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "nsg-sdd-vse-prd-ne2-2";
+        }
+        
+
+        # nsg-sdd-vse-prd-ne2-3 - subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne21providersmicrosoftnetworknetworksecuritygroupsnsgsddvseprdne23
+        subgraph cluster_subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne21providersmicrosoftnetworknetworksecuritygroupsnsgsddvseprdne23 {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne21providersmicrosoftnetworknetworksecuritygroupsnsgsddvseprdne23 [label = "\nnsg-sdd-vse-prd-ne2-3\nLocation: northeurope" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\nsg.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "nsg-sdd-vse-prd-ne2-3";
+        }
+        
+
+        # nsg-sdd-vse-prd-ne2-4 - subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne21providersmicrosoftnetworknetworksecuritygroupsnsgsddvseprdne24
+        subgraph cluster_subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne21providersmicrosoftnetworknetworksecuritygroupsnsgsddvseprdne24 {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne21providersmicrosoftnetworknetworksecuritygroupsnsgsddvseprdne24 [label = "\nnsg-sdd-vse-prd-ne2-4\nLocation: northeurope" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\nsg.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "nsg-sdd-vse-prd-ne2-4";
+        }
+        
+
+        # nsg-sdd-vse-prd-ne2-5 - subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne21providersmicrosoftnetworknetworksecuritygroupsnsgsddvseprdne25
+        subgraph cluster_subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne21providersmicrosoftnetworknetworksecuritygroupsnsgsddvseprdne25 {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne21providersmicrosoftnetworknetworksecuritygroupsnsgsddvseprdne25 [label = "\nnsg-sdd-vse-prd-ne2-5\nLocation: northeurope" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\nsg.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "nsg-sdd-vse-prd-ne2-5";
+        }
+        
+
+        # nsg-sdd-vse-prd-ne2-6 - subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne21providersmicrosoftnetworknetworksecuritygroupsnsgsddvseprdne26
+        subgraph cluster_subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne21providersmicrosoftnetworknetworksecuritygroupsnsgsddvseprdne26 {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne21providersmicrosoftnetworknetworksecuritygroupsnsgsddvseprdne26 [label = "\nnsg-sdd-vse-prd-ne2-6\nLocation: northeurope" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\nsg.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "nsg-sdd-vse-prd-ne2-6";
+        }
+        
+
+        # nsg-sdd-vse-prd-ne2-7 - subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne21providersmicrosoftnetworknetworksecuritygroupsnsgsddvseprdne27
+        subgraph cluster_subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne21providersmicrosoftnetworknetworksecuritygroupsnsgsddvseprdne27 {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne21providersmicrosoftnetworknetworksecuritygroupsnsgsddvseprdne27 [label = "\nnsg-sdd-vse-prd-ne2-7\nLocation: northeurope" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\nsg.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "nsg-sdd-vse-prd-ne2-7";
+        }
+        
+
+        # aks-agentpool-32661530-nsg - subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftnetworknetworksecuritygroupsaksagentpool32661530nsg
+        subgraph cluster_subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftnetworknetworksecuritygroupsaksagentpool32661530nsg {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne22_aks_akssddvseprdne21_nodesprovidersmicrosoftnetworknetworksecuritygroupsaksagentpool32661530nsg [label = "\naks-agentpool-32661530-nsg\nLocation: northeurope" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\nsg.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "aks-agentpool-32661530-nsg";
+        }
+        
+    ##### gh-sdd-vse-prd-1 - VPN Connections #####
+
+    ##########################################################################################################
+    ##### gh-sdd-vse-prd-1 
+    ##### END
+    ##########################################################################################################
+
+
+    ##########################################################################################################
+    ##### RANKS
+    ##########################################################################################################
+
+    ### AddressSpace ranks
+    { rank=min; subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne21providersmicrosoftnetworkvirtualnetworksvnetsddvseprdne21 }
+ 
+
+    ### Subnets ranks
+    { rank=same; subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne21providersmicrosoftnetworkvirtualnetworksvnetsddvseprdne21subnetssnetsddvsebkpprdne21; subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne21providersmicrosoftnetworkvirtualnetworksvnetsddvseprdne21subnetssnetsddvseprdne22; subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne21providersmicrosoftnetworkvirtualnetworksvnetsddvseprdne21subnetssnetsddvseprdne24; subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne21providersmicrosoftnetworkvirtualnetworksvnetsddvseprdne21subnetssnetsddvseprdne26; subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne21providersmicrosoftnetworkvirtualnetworksvnetsddvseprdne21subnetssnetsddvseprdne27; subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne21providersmicrosoftnetworkvirtualnetworksvnetsddvseprdne21subnetssnetsddvseprdne23; subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne21providersmicrosoftnetworkvirtualnetworksvnetsddvseprdne21subnetssnetsddvseprdne25 }
+ 
+
+    ### Route table ranks
+    { rank=same; subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne21providersmicrosoftnetworkroutetablesrtghsddvseagwprdne23; subscriptionsdfd649a450f34295ac542c87ebfadec2resourcegroupsrgsddvseprdne21providersmicrosoftnetworkroutetablesrtghsddvseoutprdne21 }
+ 
+
+    ### vWAN ranks
+    { rank=same;  }
+ 
+
+    ### vWAN Hub ranks
+    { rank=same;  }
+ 
+
+    ### ER Circuit ranks
+    { rank=same;  }
+ 
+
+    ### VPN Site ranks
+    { rank=same;  }
+ 
+
+    ### IP Groups ranks
+    { rank=max;  }
+ 
+}
