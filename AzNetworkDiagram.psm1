@@ -157,24 +157,6 @@ function Export-AKSCluster {
             $data += "        $($agentpoolid) [label = `"\nName: $($agentpool.Name)\nMode: $($agentpool.Mode)\nZones: $($agentpool.AvailabilityZones)\nVM Size: $($agentpool.VmSize)\nMax Pods: $($agentpool.MaxPods)\nOS SKU: $($agentpool.OsSKU)\nAgent Pools: $($agentpool.MinCount) >= Pod Count <=  $($agentpool.MaxCount)\nEnable AutoScaling: $($agentpool.EnableAutoScaling)\nPublic IP: $($agentpool.EnableNodePublicIP)\n`" ; color = lightgray;image = `"$OutputPath\icons\aks-node-pool.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n" 
             $data += "        $agentpoolid -> $agentpoolsubnetid;`n"
             $data += "        $aksid -> $agentpoolid;`n"
-
-            # Check for azureKeyvaultSecretsProvider identity
-            if ($aks.AddonProfiles.azureKeyvaultSecretsProvider.Identity.ResourceId) {
-                $azureKeyvaultSecretsProviderId = $aks.AddonProfiles.azureKeyvaultSecretsProvider.Identity.ResourceId.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $data += "        $agentpoolid -> $azureKeyvaultSecretsProviderId;`n"
-            }
-
-            # Check for azure policy identity
-            if ($aks.AddonProfiles.azurepolicy.Identity.ResourceId) {
-                $azurePolicyId = $aks.AddonProfiles.azurepolicy.Identity.ResourceId.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $data += "        $agentpoolid -> $azurePolicyId;`n"
-            }
-
-            # Check for Kubelet identity managed identity
-            if ($Aks.IdentityProfile.kubeletidentity.ResourceId) {
-                $managedIdentityId = $Aks.IdentityProfile.kubeletidentity.ResourceId.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $data += "        $agentpoolid -> $managedIdentityId;`n"
-            }
         }
 
         if ($aksacr -ne "None") {
@@ -196,13 +178,37 @@ function Export-AKSCluster {
             $peid = $_.replace("-", "").replace("/", "").replace(".", "").ToLower()
             $data += "        $aksid -> $peid;`n"
         }
+        # Match VMSS to node pools
+        $vmssResources = Get-AzVmss 
+        
+        if ($vmssResources) {
+            foreach ($vmss in $vmssResources) {
+                # Extract node pool name from the VMSS name/tags
+                $nodePoolName = $null
+                
+                # Method 1: Check in VMSS tags
+                if ($vmss.Tags -and $vmss.Tags.ContainsKey("aks-managed-poolName")) {
+                    $nodePoolName = $vmss.Tags["aks-managed-poolName"]
+                }
+                # Method 2: Extract from VMSS name (aks-[poolname]-[random])
+                elseif ($vmss.Name -match "^aks-(.+?)-\d+-vmss$") {
+                    $nodePoolName = $matches[1]
+                }
+                
+                # Try to find matching node pool in the AKS cluster
+                $matchingPool = $aks.AgentPoolProfiles | Where-Object { $_.Name -eq $nodePoolName }
+                $agentpoolid = $aksid +  $nodePoolName.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $vmssid = $vmss.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
 
+                $data += "        $agentpoolid -> $vmssid;`n"
+            }
+        }
         $data += "   label = `"$($Aks.Name)`";
                 }`n"
         Export-AddToFile -Data $data
     }
     catch {
-        Write-Host "Can't export AKS Cluster: $($Aks.name)" $_.Exception.Message
+        Write-Host "Can't export AKS Cluster: $($Aks.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
     }
 }
 
@@ -279,7 +285,7 @@ function Export-ApplicationGateway {
 
     }
     catch {
-        Write-Host "Can't export Application Gateway: $($agw.name)" $_.Exception.Message
+        Write-Host "Can't export Application Gateway: $($agw.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
     }
 }
 
@@ -306,10 +312,36 @@ function Export-ManagedIdentity {
         Export-AddToFile -Data $data
     }
     catch {
-        Write-Host "Can't export Managed Identity: $($managedIdentity.name)" $_.Exception.Message
+        Write-Host "Can't export Managed Identity: $($managedIdentity.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
     }
 }
 
+function Export-NSG {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$nsg
+    )   
+    
+    try {
+        $id = $nsg.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $data = "
+        # $($nsg.Name) - $id
+        subgraph cluster_$id {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            $id [label = `"\n$($nsg.Name)\nLocation: $($nsg.Location)`" ; color = lightgray;image = `"$OutputPath\icons\nsg.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];
+            label = `"$($nsg.Name)`";
+        }
+        "
+        Export-AddToFile -Data $data
+    }
+    catch {
+        Write-Host "Can't export NSG: $($nsg.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+}
 function Export-SSHKey {
     [CmdletBinding()]
     param (
@@ -333,7 +365,7 @@ function Export-SSHKey {
         Export-AddToFile -Data $data
     }
     catch {
-        Write-Host "Can't export SSH Key: $($sshkey.name)" $_.Exception.Message
+        Write-Host "Can't export SSH Key: $($sshkey.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
     }
 }
 
@@ -367,7 +399,58 @@ function Export-Keyvault {
         Export-AddToFile -Data $data
     }
     catch {
-        Write-Host "Can't export Key Vault: $($keyvault.VaultName)" $_.Exception.Message
+        Write-Host "Can't export Key Vault: $($keyvault.VaultName) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+}
+
+function Export-VMSS {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$vmss
+    )   
+    
+    try {
+        $vmssid = $vmss.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        
+        $data = "
+        # $($vmss.Name) - $vmssid
+        subgraph cluster_$vmssid {
+            style = solid;
+            color = black;
+            node [color = white;];
+        "
+        $extensions = $vmss.VirtualMachineProfile.ExtensionProfile.Extensions | ForEach-Object { $_.Name } | Join-String -Separator ", "
+        
+        $data += "        $vmssid [label = `"\nLocation: $($vmss.Location)\nSKU: $($vmss.Sku.Name)\nCapacity: $($vmss.Sku.Capacity)\nZones: $($vmss.Zones)\nOS Type: $($vmss.StorageProfile.OsDisk.OsType)\nOrchestration Mode: $($vmss.OrchestrationMode)\nUpgrade Policy: $($vmss.UpgradePolicy)\nExtensions: $extensions`" ; color = lightgray;image = `"$OutputPath\icons\vmss.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];"
+        $data += "`n"
+
+        $sshid = (Get-AzSshKey | Where-Object { $_.publickey -eq $vmss.VirtualMachineProfile.OsProfile.LinuxConfiguration.Ssh.PublicKeys.KeyData }).Id
+        if ($sshid) {
+            $sshid = $sshid.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $data += "        $vmssid -> $sshid;`n"
+        }
+        if ($vmss.Identity.UserAssignedIdentities.Keys) {
+            foreach ($identity in $vmss.Identity.UserAssignedIdentities.Keys) { 
+                $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower() 
+                $data += "        $vmssid -> $managedIdentityId;`n"
+            } 
+        }
+        if ($vmss.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations.IpConfigurations.Subnet.Id) {
+            $subnetid = $vmss.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations.IpConfigurations.Subnet.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $data += "        $vmssid -> $subnetid;`n"
+        }
+        if ($vmss.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations.NetworkSecurityGroup.Id) {
+            $nsgid = $vmss.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations.NetworkSecurityGroup.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $data += "        $vmssid -> $nsgid;`n"
+        }
+        $data += "   label = `"$($vmss.Name)`";
+        }`n"
+
+        Export-AddToFile -Data $data
+
+    } catch {
+        Write-Host "Can't export VMSS: $($vmss.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
     }
 }
 
@@ -406,8 +489,84 @@ function Export-VM {
         Export-AddToFile -Data $data
     }
     catch {
-        Write-Host "Can't export VM: $($vm.name)" $_.Exception.Message
+        Write-Host "Can't export VM: $($vm.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
     }
+}
+
+function Export-MySQLServer {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$mysql
+    )   
+    
+    try {
+        $mysqlid = $mysql.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $properties = Get-AzResource -ResourceId $mysql.id -ErrorAction Stop      
+
+        $data = "
+        # $($mysql.Name) - $mysqlid
+        subgraph cluster_$mysqlid {
+            style = solid;
+            color = black;
+            node [color = white;];
+        "
+
+        $data += "        $mysqlid [label = `"\nName: $($mysql.Name)\nLocation: $($mysql.Location)\nSKU: $($mysql.SkuName)\nTier: $($mysql.SkuTier.ToString())\nVersion: $($mysql.Version)\nVM Size: $($properties.Sku.Name)\nAvailability Zone: $($mysql.AvailabilityZone)\nStandby Zone: $($mysql.HighAvailabilityStandbyAvailabilityZone)\nPublic Network Access: $($mysql.NetworkPublicNetworkAccess)`" ; color = lightgray;image = `"$OutputPath\icons\mysql.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
+        $data += "`n"
+        if ($properties.properties.network.delegatedSubnetResourceId  ) {
+            $mysqlsubnetid = $properties.properties.network.delegatedSubnetResourceId.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $data += "        $mysqlid -> $($mysqlsubnetid);`n"
+        }
+        if ($properties.Identity.UserAssignedIdentities.Keys) {
+            $identity = $properties.Identity.UserAssignedIdentities.Keys[0]
+            $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower() 
+            $data += "        $mysqlid -> $managedIdentityId;`n"
+        }
+        $data += "   label = `"$($mysql.Name)`";
+                }`n"
+
+        Export-AddToFile -Data $data
+
+    }
+    catch {
+        Write-Host "Can't export MySQL Server: $($mysql.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+}
+
+function Export-PostgreSQLServer {
+}
+
+function Export-MongoDBServer {
+
+}
+
+function Export-RedisServer {
+
+}
+
+function Export-SQLManagedInstance {
+
+}
+
+function Export-SQLServer {
+
+}
+
+function Export-SQLDatabase {
+
+}
+
+function Export-EventHub {
+
+}
+
+function Export-AppServicePlan {
+
+}
+
+function Export-APIM {
+
 }
 
 function Export-ACR {
@@ -442,7 +601,7 @@ function Export-ACR {
 
     }
     catch {
-        Write-Host "Can't export ACR: $($acr.name)" $_.Exception.Message
+        Write-Host "Can't export ACR: $($acr.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
     }
 }
 
@@ -479,7 +638,7 @@ function Export-StorageAccount {
 
     }
     catch {
-        Write-Host "Can't export Storage Account: $($storageaccount.StorageAccountName)" $_.Exception.Message
+        Write-Host "Can't export Storage Account: $($storageaccount.StorageAccountName) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
     }
 }
 
@@ -697,7 +856,7 @@ function Export-Hub {
 
         return $data
     } catch {
-        Write-Error "Can't export Hub: $($hub.name)" $_.Exception.Message
+        Write-Error "Can't export Hub: $($hub.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
         return $null
     }impo
 }
@@ -810,10 +969,8 @@ function Export-SubnetConfig {
                     
             ### NSG ###
             if ($null -ne $subnet.NetworkSecurityGroup) {
-                $nsgname = $subnet.NetworkSecurityGroup.id.split("/")[8]
                 $nsgid = $subnet.NetworkSecurityGroup.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
                 if ($nsgid -ne "null") { 
-                    $data += "`n        $nsgid [label = `"\n$nsgname`" ; color = lightgray;image = `"$OutputPath\icons\nsg.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
                     $data += "`n        $id -> $nsgid`n"
                 }
             }
@@ -944,7 +1101,7 @@ function Export-SubnetConfig {
             }
         }
     } catch {
-        Write-Host "Can't export Subnet: $($subnet.name)" $_.Exception.Message
+        Write-Host "Can't export Subnet: $($subnet.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
     }
     return $data
 }
@@ -1049,7 +1206,7 @@ function Export-vnet {
         $alldata = $header + $vnetdata + $subnetdata + $footer + $dnsprdata
         Export-AddToFile -Data $alldata
     } catch {
-        Write-Error "Can't export VNet: $($vnet.name)" $_.Exception.Message 
+        Write-Error "Can't export VNet: $($vnet.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
     }
 }
 
@@ -1117,7 +1274,7 @@ This example processes the specified Virtual WAN and exports its details for inc
         }            
     }
     catch {
-        Write-Error "Can't export Hub: $($hub.name)" $_.Exception.Message
+        Write-Error "Can't export Hub: $($hub.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
     }
  }
 
@@ -1483,7 +1640,7 @@ function Export-PrivateEndpoint {
         Export-AddToFile -Data $data
     }
     catch {
-        Write-Error "Can't export Private Endpoint: $($pe.Name)" $_.Exception.Message
+        Write-Error "Can't export Private Endpoint: $($pe.Name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
     }
 }
 
@@ -1561,6 +1718,7 @@ function Confirm-Prerequisites {
         "sqlmi.png",
         "vgw.png",
         "vm.png",
+        "vmss.png",
         "vnet.png",
         "VPN-Site.png",
         "VPN-User.png",
@@ -1766,6 +1924,84 @@ function Get-AzNetworkDiagram {
                 Export-vWAN $vWAN
             }
 
+            #MySQL Servers
+            Write-Output "Collecting MySQL Flexible Servers..."
+            Export-AddToFile "    ##### $subname - MySQL Flexible Servers #####"
+            $mysqlservers = Get-AzMySqlFlexibleServer -ErrorAction Stop
+            foreach ($mysqlserver in $mysqlservers) {
+                Export-MySQLServer $mysqlserver 
+            }
+
+            #PostgreSQL Servers
+            Write-Output "Collecting PostgreSQL Servers..."
+            Export-AddToFile "    ##### $subname - PostgreSQL Servers #####"
+            $postgresqlservers = Get-AzPostgreSqlServer -ErrorAction Stop
+            foreach ($postgresqlserver in $postgresqlservers) {
+                Export-PostgreSQLServer $postgresqlserver 
+            }
+
+            #MongoDB Servers
+            #Write-Output "Collecting MongoDB Servers..."
+            #Export-AddToFile "    ##### $subname - MongoDB Servers #####"
+            #$mongodbservers = Get-AzCosmosDBAccount -ErrorAction Stop
+            #foreach ($mongodbserver in $mongodbservers) {
+            #    Export-MongoDBServer $mongodbserver 
+            #}
+
+            #Redis Servers
+            Write-Output "Collecting Redis Servers..."
+            Export-AddToFile "    ##### $subname - Redis Servers #####"
+            $redisservers = Get-AzRedisCache -ErrorAction Stop
+            foreach ($redisserver in $redisservers) {
+                Export-RedisServer $redisserver 
+            }
+            #SQL Managed Instances
+            #Write-Output "Collecting SQL Managed Instances..."
+            #Export-AddToFile "    ##### $subname - SQL Managed Instances #####"
+            #$sqlmanagedinstances = Get-AzSqlManagedInstance -ErrorAction Stop
+            #foreach ($sqlmanagedinstance in $sqlmanagedinstances) {
+            #    Export-SQLManagedInstance $sqlmanagedinstance 
+            #}
+
+            #SQL Servers
+            Write-Output "Collecting SQL Servers..."
+            Export-AddToFile "    ##### $subname - SQL Servers #####"
+            $sqlservers = Get-AzSqlServer -ErrorAction Stop
+            foreach ($sqlserver in $sqlservers) {
+                Export-SQLServer $sqlserver 
+            }
+            #SQL Databases
+            #Write-Output "Collecting SQL Databases..."
+            #Export-AddToFile "    ##### $subname - SQL Databases #####"
+            #$sqldatabases = Get-AzSqlDatabase -ErrorAction Stop
+            #foreach ($sqldatabase in $sqldatabases) {
+            #    Export-SQLDatabase $sqldatabase 
+            #}
+
+            #EventHubs
+            Write-Output "Collecting Event Hubs..."
+            Export-AddToFile "    ##### $subname - Event Hubs #####"
+            $eventhubs = Get-AzEventHubNamespace -ErrorAction Stop
+            foreach ($eventhub in $eventhubs) {
+                Export-EventHub $eventhub 
+            }
+
+            #App Service Plans
+            Write-Output "Collecting App Service Plans..."
+            Export-AddToFile "    ##### $subname - App Service Plans #####"
+            $appserviceplans = Get-AzAppServicePlan -ErrorAction Stop   
+            foreach ($appserviceplan in $appserviceplans) {
+                Export-AppServicePlan $appserviceplan 
+            }
+
+            #APIMs
+            Write-Output "Collecting API Management Services..."
+            Export-AddToFile "    ##### $subname - API Management Services #####"
+            $apims = Get-AzApiManagement -ErrorAction Stop
+            foreach ($apim in $apims) {
+                Export-APIM $apim 
+            }
+
             #AKS
             Write-Output "Collecting AKS Clusters..."
             Export-AddToFile "    ##### $subname - AKS Clusters #####"
@@ -1774,13 +2010,13 @@ function Get-AzNetworkDiagram {
                 Export-AKSCluster $akscluster
             }   
 
-            #ACRs
-            Write-Output "Collecting Azure Contiainer Registries..."
-            Export-AddToFile "    ##### $subname - Azure Contiainer Registries #####"
-            $acrs = Get-AzContainerRegistry -ErrorAction Stop
-            foreach ($acr in $acrs) {
-                Export-ACR $acr
-            }   
+            #VMSSs
+            Write-Output "Collecting VMSS..."
+            Export-AddToFile "    ##### $subname - VMSS #####"
+            $VMSSs = Get-AzVMSS -ErrorAction Stop
+            foreach ($vmss in $VMSSs) {
+                Export-VMSS $vmss
+            }
 
             #Managed Identities
             Write-Output "Collecting Managed Identities..."
@@ -1790,12 +2026,28 @@ function Get-AzNetworkDiagram {
                 Export-ManagedIdentity $managedIdentity
             }
 
+            #ACRs
+            Write-Output "Collecting Azure Contiainer Registries..."
+            Export-AddToFile "    ##### $subname - Azure Contiainer Registries #####"
+            $acrs = Get-AzContainerRegistry -ErrorAction Stop
+            foreach ($acr in $acrs) {
+                Export-ACR $acr
+            }   
+
             #SSH Keys
             Write-Output "Collecting SSH Keys..."
             Export-AddToFile "    ##### $subname - SSH Keys #####"
             $sshkeys = Get-AzSshKey -ErrorAction Stop
             foreach ($sshkey in $sshkeys) {
                 Export-SSHKey $sshkey
+            }
+
+            #NSGs
+            Write-Output "Collecting NSG's..."
+            Export-AddToFile "    ##### $subname - NSG's #####"
+            $nsgs = Get-AzNetworkSecurityGroup -ErrorAction Stop
+            foreach ($nsg in $nsgs) {
+                Export-NSG $nsg
             }
 
             #VPN Connections

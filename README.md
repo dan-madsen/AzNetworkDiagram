@@ -83,16 +83,16 @@ This module will include in the diagram:
   - NAT Gateway
   - Bastion
   - Private Endpoints
+  - SSH Keys
+  - ACR
+  - AKS
+  - Storage Accounts
+  - VM, VMSS
+  - Keyvaults
     
 # Work in progress...
   - Support for
-    - SSH Keys
     - APIM
-    - ACR
-    - AKS
-    - Storage Accounts
-    - VM, VMSS
-    - Keyvaults
     - MongoDB, MySQL, PostgreSQL
     - EventHub
     - Redis
