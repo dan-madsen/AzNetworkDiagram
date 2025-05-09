@@ -66,7 +66,7 @@ function Export-dotHeader {
     newrank = true;
     rankdir = TB;
     ranksep=`"2.0 equally`"
-    nodesep=`"2.0`"
+    nodesep=`"1.0`"
     "
     Export-CreateFile -Data $Data
 }
@@ -158,11 +158,45 @@ function Export-AKSCluster {
             $data += "        $agentpoolid -> $agentpoolsubnetid;`n"
             $data += "        $aksid -> $agentpoolid;`n"
 
+            # Check for azureKeyvaultSecretsProvider identity
+            if ($aks.AddonProfiles.azureKeyvaultSecretsProvider.Identity.ResourceId) {
+                $azureKeyvaultSecretsProviderId = $aks.AddonProfiles.azureKeyvaultSecretsProvider.Identity.ResourceId.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $data += "        $agentpoolid -> $azureKeyvaultSecretsProviderId;`n"
+            }
+
+            # Check for azure policy identity
+            if ($aks.AddonProfiles.azurepolicy.Identity.ResourceId) {
+                $azurePolicyId = $aks.AddonProfiles.azurepolicy.Identity.ResourceId.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $data += "        $agentpoolid -> $azurePolicyId;`n"
+            }
+
+            # Check for Kubelet identity managed identity
+            if ($Aks.IdentityProfile.kubeletidentity.ResourceId) {
+                $managedIdentityId = $Aks.IdentityProfile.kubeletidentity.ResourceId.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $data += "        $agentpoolid -> $managedIdentityId;`n"
+            }
         }
-        $data += "`n"
+
         if ($aksacr -ne "None") {
             $data += "        $aksid -> $aksacrid;`n"
         }   
+        $sshid = (Get-AzSshKey | Where-Object { $_.publickey -eq $Aks.LinuxProfile.Ssh.Publickeys.Keydata }).Id
+        if ($sshid) {
+            $sshid = $sshid.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $data += "        $aksid -> $sshid;`n"
+        }
+        # Check for User Assign Identity
+        if ($aks.Identity.UserAssignedIdentities.Keys) {
+            $identity = $aks.Identity.UserAssignedIdentities.Keys[0]
+            $userIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $data += "        $aksid -> $userIdentityId;`n"
+        }
+        # Check for Private Endpoints
+        (get-azprivateEndpointConnection -PrivateLinkResourceId $aks.id).PrivateEndpoint.Id | ForEach-Object {
+            $peid = $_.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $data += "        $aksid -> $peid;`n"
+        }
+
         $data += "   label = `"$($Aks.Name)`";
                 }`n"
         Export-AddToFile -Data $data
@@ -199,7 +233,7 @@ function Export-ApplicationGateway {
         $agwid = $agw.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
         $agwSubnetId = $agw.GatewayIPConfigurations.Subnet.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
         $data = "
-        # $GatewayName - $agwid
+        # $($agw.Name) - $agwid
         subgraph cluster_$agwid {
             style = solid;
             color = black;
@@ -229,10 +263,16 @@ function Export-ApplicationGateway {
             $feports = "None"
         }
 
-        $data += "        $agwid [label = `"\nPolicy name: $polname\nPrivate IP's: $pvtips\nSKU: $skuname\nZones: $zones\nSSL Certificates: $sslcerts\nFrontend ports: $feports\n`" ; color = lightgray;image = `"$OutputPath\icons\agw.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];"
+        $data += "        $agwid [label = `"\nPolicy name: $polname\nPrivate IP's: $pvtips\nSKU: $skuname\nZones: $zones\nSSL Certificates: $sslcerts\nFrontend ports: $feports\n`" ; color = lightgray;image = `"$OutputPath\icons\agw.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
         $data += "`n"
         $data += "        $agwid -> $agwSubnetId;`n"
-        $data += "   label = `"$GatewayName`";
+
+        if ($agw.Identity.UserAssignedIdentities.Keys) {
+            $identity = $agw.Identity.UserAssignedIdentities.Keys[0]
+            $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $data += "        $agwid -> $managedIdentityId;`n"
+        }
+        $data += "   label = `"$($agw.Name)`";
                 }`n"
 
         Export-AddToFile $data
@@ -242,6 +282,134 @@ function Export-ApplicationGateway {
         Write-Host "Can't export Application Gateway: $($agw.name)" $_.Exception.Message
     }
 }
+
+function Export-ManagedIdentity {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$managedIdentity
+    )   
+    
+    try {
+        $id = $managedIdentity.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $data = "
+        # $($managedIdentity.Name) - $managedIdentityId
+        subgraph cluster_$id {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            $id [label = `"\n$($managedIdentity.Name)\nLocation: $($managedIdentity.Location)`" ; color = lightgray;image = `"$OutputPath\icons\managed-identity.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];
+            label = `"$($managedIdentity.Name)`";
+        }
+        "
+        Export-AddToFile -Data $data
+    }
+    catch {
+        Write-Host "Can't export Managed Identity: $($managedIdentity.name)" $_.Exception.Message
+    }
+}
+
+function Export-SSHKey {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$sshkey
+    )   
+    
+    try {
+        $id = $sshkey.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $data = "
+        # $($sshkey.Name) - $id
+        subgraph cluster_$id {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            $id [label = `"\n$($sshkey.Name)\nLocation: $($sshkey.Location)`" ; color = lightgray;image = `"$OutputPath\icons\ssh-key.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];
+            label = `"$($sshkey.Name)`";
+        }
+        "
+        Export-AddToFile -Data $data
+    }
+    catch {
+        Write-Host "Can't export SSH Key: $($sshkey.name)" $_.Exception.Message
+    }
+}
+
+function Export-Keyvault {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$keyvault
+    )   
+    
+    try {
+        $properties = Get-AzResource -ResourceId $keyvault.ResourceId -ErrorAction Stop
+        $id = $keyvault.ResourceId.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $data = "
+        # $($keyvault.VaultName) - $id
+        subgraph cluster_$id {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            $id [label = `"\nLocation: $($keyvault.Location)\nSKU: $($properties.Properties.Sku.Name)\nSoft Delete Enabled: $($properties.Properties.enableSoftDelete)\nRBAC Authorization Enabled: $($properties.Properties.enableRbacAuthorization)\nPublic Network Access: $($properties.Properties.publicNetworkAccess)\nPurge Protection Enabled: $($properties.Properties.enablePurgeProtection)`" ; color = lightgray;image = `"$OutputPath\icons\keyvault.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];
+        "
+        if ($properties.Properties.privateEndpointConnections.properties.PrivateEndpoint.Id) {
+            $peid = $properties.Properties.privateEndpointConnections.properties.PrivateEndpoint.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $data += "        $id -> $peid;`n"
+        }
+        $data += "
+            label = `"$($keyvault.VaultName)`";
+        }
+        "
+        Export-AddToFile -Data $data
+    }
+    catch {
+        Write-Host "Can't export Key Vault: $($keyvault.VaultName)" $_.Exception.Message
+    }
+}
+
+function Export-VM {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$vm
+    )   
+    
+    try {
+        $vmid = $vm.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        
+        $data = "
+        # $($vm.Name) - $vmid
+        subgraph cluster_$vmid {
+            style = solid;
+            color = black;
+            node [color = white;];
+        "
+        $extensions = $vm.Extensions | ForEach-Object { $_.Id.split("/")[-1] } | Join-String -Separator ", "
+        $nic = Get-AzNetworkInterface -ResourceId $vm.NetworkProfile.NetworkInterfaces[0].Id -ErrorAction Stop
+
+        $data += "        $vmid [label = `"\nLocation: $($vm.Location)\nSKU: $($vm.HardwareProfile.VmSize)\nZones: $($vm.Zones)\nOS Type: $($vm.StorageProfile.OsDisk.OsType)\nPublic IP: $($nic.IpConfigurations[0].PublicIpAddress)\nPrivate IP Address: $($nic.IpConfigurations[0].PrivateIpAddress)\nExtensions: $extensions`" ; color = lightgray;image = `"$OutputPath\icons\vm.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];"
+        $data += "`n"
+        $subnetid = $nic.IpConfigurations[0].Subnet.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $data += "        $vmid -> $subnetid;`n"
+        if ($vm.Identity.UserAssignedIdentities.Keys) {
+            $identity = $vm.Identity.UserAssignedIdentities.Keys[0]
+            $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower() 
+            $data += "        $vmid -> $managedIdentityId;`n"
+        }
+        $data += "   label = `"$($vm.Name)`";
+                }`n"
+
+        Export-AddToFile -Data $data
+    }
+    catch {
+        Write-Host "Can't export VM: $($vm.name)" $_.Exception.Message
+    }
+}
+
 function Export-ACR {
     [CmdletBinding()]
     param (
@@ -275,6 +443,43 @@ function Export-ACR {
     }
     catch {
         Write-Host "Can't export ACR: $($acr.name)" $_.Exception.Message
+    }
+}
+
+function Export-StorageAccount {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$storageaccount
+    )   
+    
+    try {
+        $staid = $storageaccount.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        
+        $data = "
+        # $($storageaccount.StorageAccountName) - $staid
+        subgraph cluster_$staid {
+            style = solid;
+            color = black;
+            node [color = white;];
+        "
+
+        $data += "        $staid [label = `"\nLocation: $($storageaccount.Location)\nSKU: $($storageaccount.Sku.Name)\nKind: $($storageaccount.Kind)\nPublic Network Access: $($storageaccount.PublicNetworkAccess)\nAccess Tier: $($storageaccount.AccessTier)\nHierarchical Namespace Enabled: $($storageaccount.EnableHierarchicalNamespace)\n`" ; color = lightgray;image = `"$OutputPath\icons\storage-account.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
+        $data += "`n"
+        $peid = Get-AzPrivateEndpointConnection -PrivateLinkResourceId $storageaccount.Id -ErrorAction Stop
+        
+        if ($peid) {
+            $stapeid = $peid.PrivateEndpoint.Id.ToString().replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $data += "        $staid -> $($stapeid);`n"
+        }
+        $data += "   label = `"$($storageaccount.StorageAccountName)`";
+                }`n"
+
+        Export-AddToFile $data
+
+    }
+    catch {
+        Write-Host "Can't export Storage Account: $($storageaccount.StorageAccountName)" $_.Exception.Message
     }
 }
 
@@ -494,7 +699,7 @@ function Export-Hub {
     } catch {
         Write-Error "Can't export Hub: $($hub.name)" $_.Exception.Message
         return $null
-    }
+    }impo
 }
 
 <#
@@ -897,19 +1102,21 @@ This example processes the specified Virtual WAN and exports its details for inc
             $vWANDetails = "Virtual WAN Type: $VirtualWANType\nLocation: $Location\nAllow Vnet to Vnet Traffic: $AllowVnetToVnetTraffic\nAllow Branch to Branch Traffic: $AllowBranchToBranchTraffic"
             
             $vwandata = "    $id [color = lightgray;label = `"\n$vWANDetails`";image = `"$OutputPath\icons\vwan.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n"
+            $footer = "
+                label = `"$vwanname`";
+            }
+            "
+            $alldata = $header + $vwandata + $footer
         
             # Hubs
             $hubdata = ""
             foreach ($hub in $hubs) {
                 $hubdata += Export-Hub -Hub $hub
             }
-            $footer = "
-                label = `"$vwanname`";
-            }
-            "
         
-            $alldata = $header + $vwandata + $hubdata + $footer
             Export-AddToFile -Data $alldata
+            Export-AddToFile -Data $hubdata
+
         }            
     }
     catch {
@@ -1345,13 +1552,17 @@ function Confirm-Prerequisites {
         "private-endpoint.png",
         "dnspr.png",
         "ergw.png",
+        "keyvault.png",
         "lgw.png",
+        "managed-identity.png",
         "ipgroup.png",
         "LICENSE",
         "ng.png",
         "snet.png",
+        "storage-account.png",
         "sqlmi.png",
         "vgw.png",
+        "vm.png",
         "vnet.png",
         "VPN-Site.png",
         "VPN-User.png",
@@ -1497,12 +1708,34 @@ function Get-AzNetworkDiagram {
                 }
             }
 
-            ### Private Endpoints
-            # Get all private endpoints in the subscription
-            $privateEndpoints = Get-AzPrivateEndpoint
+            ### VMs
+            Write-Output "Collecting VMs..."
+            Export-AddToFile "    ##### $subname - VMs #####"
+            $VMs = Get-AzVM -ErrorAction Stop
+            foreach ($vm in $VMs) {
+                Export-VM $VM
+            }
 
-            # Display results in a table format
-            $results = @()
+            ### Keyvaults
+            Write-Output "Collecting Keyvaults..."
+            Export-AddToFile "    ##### $subname - Keyvaults #####"
+            $Keyvaults = Get-AzKeyVault -ErrorAction Stop
+            foreach ($keyvault in $Keyvaults) {
+                Export-Keyvault $Keyvault
+            }
+
+            ### Storage Accounts
+            Write-Output "Collecting Storage Accounts..."
+            Export-AddToFile "    ##### $subname - Storage Accounts #####"
+            $storageaccounts = Get-AzStorageAccount -ErrorAction Stop
+            foreach ($storageaccount in $storageaccounts) {
+                Export-StorageAccount $storageaccount
+            }
+            
+            ### Private Endpoints
+            Write-Output "Collecting Private Endpoints..."
+            Export-AddToFile "    ##### $subname - Private Endpoints #####"
+            $privateEndpoints = Get-AzPrivateEndpoint -ErrorAction Stop
             foreach ($pe in $privateEndpoints) {
                 Export-PrivateEndpoint $pe
             }
@@ -1533,6 +1766,14 @@ function Get-AzNetworkDiagram {
                 Export-vWAN $vWAN
             }
 
+            #AKS
+            Write-Output "Collecting AKS Clusters..."
+            Export-AddToFile "    ##### $subname - AKS Clusters #####"
+            $aksclusters = Get-AzAksCluster -ErrorAction Stop
+            foreach ($akscluster in $aksclusters) {
+                Export-AKSCluster $akscluster
+            }   
+
             #ACRs
             Write-Output "Collecting Azure Contiainer Registries..."
             Export-AddToFile "    ##### $subname - Azure Contiainer Registries #####"
@@ -1541,13 +1782,21 @@ function Get-AzNetworkDiagram {
                 Export-ACR $acr
             }   
 
-            #AKS
-            Write-Output "Collecting AKS Clusters..."
-            Export-AddToFile "    ##### $subname - AKS Clusters #####"
-            $aksclusters = Get-AzAksCluster -ErrorAction Stop
-            foreach ($akscluster in $aksclusters) {
-                Export-AKSCluster $akscluster
-            }   
+            #Managed Identities
+            Write-Output "Collecting Managed Identities..."
+            Export-AddToFile "    ##### $subname - Managed Identities #####"
+            $managedIdentities = Get-AzUserAssignedIdentity -ErrorAction Stop
+            foreach ($managedIdentity in $managedIdentities) {
+                Export-ManagedIdentity $managedIdentity
+            }
+
+            #SSH Keys
+            Write-Output "Collecting SSH Keys..."
+            Export-AddToFile "    ##### $subname - SSH Keys #####"
+            $sshkeys = Get-AzSshKey -ErrorAction Stop
+            foreach ($sshkey in $sshkeys) {
+                Export-SSHKey $sshkey
+            }
 
             #VPN Connections
             Write-Output "Collecting VPN Connections..."

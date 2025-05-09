@@ -1,0 +1,774 @@
+digraph G {
+    fontname="Arial,sans-serif"
+    node [fontname="Arial,sans-serif"]
+    edge [fontname="Arial,sans-serif"]
+    
+    # Ability for peerings arrows/connections to end at border
+    compound = true;
+    #concentrate = true;
+    clusterrank = local;
+    
+    # Rank (height in picture) support
+    newrank = true;
+    rankdir = TB;
+    ranksep="2.0 equally"
+    nodesep="1.0"
+    
+
+    ##########################################################################################################
+    ##### ft-con-prd-1 
+    ##########################################################################################################
+
+    ##### ft-con-prd-1 - Route Tables #####
+    ##### ft-con-prd-1 - IP Groups #####
+subgraph cluster_ipgroups {
+                    style = solid;
+                    color = black;
+                
+
+    subgraph cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkipgroupsipgpftalzprd1 {
+        style = solid;
+        color = black;
+        
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkipgroupsipgpftalzprd1 [label = "\nipgp-ft-alz-prd-1\n172.24.184.0/22\n172.24.188.0/22\n172.24.176.0/21\n172.21.128.0/18" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\ipgroup.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+    }
+    
+
+    subgraph cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkipgroupsipgpftbastionprdsan1 {
+        style = solid;
+        color = black;
+        
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkipgroupsipgpftbastionprdsan1 [label = "\nipgp-ft-bastion-prd-san-1\n172.24.185.0/26" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\ipgroup.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+    }
+    
+
+    subgraph cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkipgroupsipgpftbastionprdne21 {
+        style = solid;
+        color = black;
+        
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkipgroupsipgpftbastionprdne21 [label = "\nipgp-ft-bastion-prd-ne2-1\n172.24.187.0/26" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\ipgroup.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+    }
+    
+
+                    label = "IP Groups";
+                }
+    ##### ft-con-prd-1 - Virtual Networks #####
+
+        # vnet-ft-bas-prd-ne2-1 - subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftbasprdne21
+        subgraph cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftbasprdne21 {
+            style = solid;
+            color = black;
+            node [color = white;];
+            subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftbasprdne21 [color = lightgray;label = "\nAddress Space(s):\n172.24.187.0/26\n";image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\vnet.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftbasprdne21subnetsazurebastionsubnet [label = "\n\nAzureBastionSubnet\n172.24.187.0/26\nName: bas-ft-con-prd-ne2-1" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\bas.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftbasprdne21 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftbasprdne21subnetsazurebastionsubnet
+
+            label = "vnet-ft-bas-prd-ne2-1";
+        }
+        
+
+        # vnet-ft-dns-prd-ne2-1 - subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftdnsprdne21
+        subgraph cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftdnsprdne21 {
+            style = solid;
+            color = black;
+            node [color = white;];
+            subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftdnsprdne21 [color = lightgray;label = "\nAddress Space(s):\n172.24.187.64/27\n";image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\vnet.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftdnsprdne21subnetssnetftpriprdne21 [label = "\n\nsnet-ft-pri-prd-ne2-1\n172.24.187.64/28\n\nDelegated to:\nMicrosoft.Network.dnsResolvers" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\dnspr.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftdnsprdne21 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftdnsprdne21subnetssnetftpriprdne21
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftdnsprdne21subnetssnetftproprdne21 [label = "\n\nsnet-ft-pro-prd-ne2-1\n172.24.187.80/28\n\nDelegated to:\nMicrosoft.Network.dnsResolvers" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\dnspr.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftdnsprdne21 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftdnsprdne21subnetssnetftproprdne21
+
+            label = "vnet-ft-dns-prd-ne2-1";
+        }
+        
+        subgraph cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkdnsresolverspdnsrftconprdne21 {
+                        style = solid;
+                        color = black;
+                        node [color = white;];
+                            
+                        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkdnsresolverspdnsrftconprdne21 [label = "\npdnsr-ft-con-prd-ne2-1\nInbound IP Address: 172.24.187.68" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\dnspr.png";imagepos = "tc";labelloc = "b";height = 3.0;]; 
+                        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkdnsresolverspdnsrftconprdne21 [shape=none; label = <
+                                        <TABLE border="1" style="rounded" align="left">
+                                        <TR><TD colspan="3" border="0">frs-ft-con-prd-ne2-1</TD></TR>
+                                        <TR><TD>Name</TD><TD>Domain Name</TD><TD>Target DNS</TD></TR>
+                    </TABLE>>;
+                            ];
+                        label = "pdnsr-ft-con-prd-ne2-1";
+                    }
+                    
+
+        # vnet-ft-pvt-prd-ne2-1 - subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftpvtprdne21
+        subgraph cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftpvtprdne21 {
+            style = solid;
+            color = black;
+            node [color = white;];
+            subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftpvtprdne21 [color = lightgray;label = "\nAddress Space(s):\n172.24.187.96/27\n";image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\vnet.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworknetworksecuritygroupsnsgsnetftpvtprdne21 [label = "\nnsg-snet-ft-pvt-prd-ne2-1" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\nsg.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftpvtprdne21subnetssnetftpvtprdne21 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworknetworksecuritygroupsnsgsnetftpvtprdne21
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftpvtprdne21subnetssnetftpvtprdne21 [label = "\nsnet-ft-pvt-prd-ne2-1\n172.24.187.96/27" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\snet.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftpvtprdne21 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftpvtprdne21subnetssnetftpvtprdne21
+
+            label = "vnet-ft-pvt-prd-ne2-1";
+        }
+        
+
+        # vnet-ft-bas-prd-san-1 - subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftbasprdsan1
+        subgraph cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftbasprdsan1 {
+            style = solid;
+            color = black;
+            node [color = white;];
+            subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftbasprdsan1 [color = lightgray;label = "\nAddress Space(s):\n172.24.185.0/26\n";image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\vnet.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftbasprdsan1subnetsazurebastionsubnet [label = "\n\nAzureBastionSubnet\n172.24.185.0/26\nName: bas-ft-con-prd-san-1" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\bas.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftbasprdsan1 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftbasprdsan1subnetsazurebastionsubnet
+
+            label = "vnet-ft-bas-prd-san-1";
+        }
+        
+
+        # vnet-ft-dns-prd-san-1 - subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftdnsprdsan1
+        subgraph cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftdnsprdsan1 {
+            style = solid;
+            color = black;
+            node [color = white;];
+            subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftdnsprdsan1 [color = lightgray;label = "\nAddress Space(s):\n172.24.185.64/27\n";image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\vnet.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftdnsprdsan1subnetssnetftpriprdsan1 [label = "\n\nsnet-ft-pri-prd-san-1\n172.24.185.64/28\n\nDelegated to:\nMicrosoft.Network.dnsResolvers" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\dnspr.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftdnsprdsan1 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftdnsprdsan1subnetssnetftpriprdsan1
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftdnsprdsan1subnetssnetftproprdsan1 [label = "\n\nsnet-ft-pro-prd-san-1\n172.24.185.80/28\n\nDelegated to:\nMicrosoft.Network.dnsResolvers" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\dnspr.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftdnsprdsan1 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftdnsprdsan1subnetssnetftproprdsan1
+
+            label = "vnet-ft-dns-prd-san-1";
+        }
+        
+        subgraph cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkdnsresolverspdnsrftconprdsan1 {
+                        style = solid;
+                        color = black;
+                        node [color = white;];
+                            
+                        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkdnsresolverspdnsrftconprdsan1 [label = "\npdnsr-ft-con-prd-san-1\nInbound IP Address: 172.24.185.68" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\dnspr.png";imagepos = "tc";labelloc = "b";height = 3.0;]; 
+                        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkdnsresolverspdnsrftconprdsan1 [shape=none; label = <
+                                        <TABLE border="1" style="rounded" align="left">
+                                        <TR><TD colspan="3" border="0">frs-ft-con-prd-san-1</TD></TR>
+                                        <TR><TD>Name</TD><TD>Domain Name</TD><TD>Target DNS</TD></TR>
+                    </TABLE>>;
+                            ];
+                        label = "pdnsr-ft-con-prd-san-1";
+                    }
+                    
+
+        # vnet-ft-pvt-prd-san-1 - subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftpvtprdsan1
+        subgraph cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftpvtprdsan1 {
+            style = solid;
+            color = black;
+            node [color = white;];
+            subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftpvtprdsan1 [color = lightgray;label = "\nAddress Space(s):\n172.24.185.96/27\n";image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\vnet.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworknetworksecuritygroupsnsgsnetftpvtprdsan1 [label = "\nnsg-snet-ft-pvt-prd-san-1" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\nsg.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftpvtprdsan1subnetssnetftpvtprdsan1 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworknetworksecuritygroupsnsgsnetftpvtprdsan1
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftpvtprdsan1subnetssnetftpvtprdsan1 [label = "\nsnet-ft-pvt-prd-san-1\n172.24.185.96/27" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\snet.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftpvtprdsan1subnetssnetftpvtprdsan1 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkprivateendpointsamplsftconprdsan1azuremonitor0 ;
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftpvtprdsan1subnetssnetftpvtprdsan1 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkprivateendpointspekvftconprdsan1 ;
+
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftpvtprdsan1 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftpvtprdsan1subnetssnetftpvtprdsan1
+
+            label = "vnet-ft-pvt-prd-san-1";
+        }
+        
+    ##### ft-con-prd-1 - VMs #####
+    ##### ft-con-prd-1 - Keyvaults #####
+
+        # kv-ft-con-prd-san-1 - subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftkeyvaultvaultskvftconprdsan1
+        subgraph cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftkeyvaultvaultskvftconprdsan1 {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftkeyvaultvaultskvftconprdsan1 [label = "\nLocation: southafricanorth\nSKU: Premium\nSoft Delete Enabled: True\nRBAC Authorization Enabled: True\nPublic Network Access: Disabled\nPurge Protection Enabled: True" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\keyvault.png";imagepos = "tc";labelloc = "b";height = 2.5;];
+                subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftkeyvaultvaultskvftconprdsan1 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkprivateendpointspekvftconprdsan1;
+
+            label = "kv-ft-con-prd-san-1";
+        }
+        
+    ##### ft-con-prd-1 - Storage Accounts #####
+
+        # config1713272483292 - subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsmicrosoftnetworksouthafricanorthprovidersmicrosoftstoragestorageaccountsconfig1713272483292
+        subgraph cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsmicrosoftnetworksouthafricanorthprovidersmicrosoftstoragestorageaccountsconfig1713272483292 {
+            style = solid;
+            color = black;
+            node [color = white;];
+                subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsmicrosoftnetworksouthafricanorthprovidersmicrosoftstoragestorageaccountsconfig1713272483292 [label = "\nLocation: southafricanorth\nSKU: Standard_LRS\nKind: BlobStorage\nPublic Network Access: Disabled\nAccess Tier: Cool\nHierarchical Namespace Enabled: \n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\storage-account.png";imagepos = "tc";labelloc = "b";height = 2.5;];
+   label = "config1713272483292";
+                }
+
+
+        # stftconbckprdsan1 - subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftstoragestorageaccountsstftconbckprdsan1
+        subgraph cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftstoragestorageaccountsstftconbckprdsan1 {
+            style = solid;
+            color = black;
+            node [color = white;];
+                subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftstoragestorageaccountsstftconbckprdsan1 [label = "\nLocation: southafricanorth\nSKU: Standard_RAGRS\nKind: StorageV2\nPublic Network Access: Disabled\nAccess Tier: Hot\nHierarchical Namespace Enabled: \n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\storage-account.png";imagepos = "tc";labelloc = "b";height = 2.5;];
+   label = "stftconbckprdsan1";
+                }
+
+    ##### ft-con-prd-1 - Private Endpoints #####
+
+                     subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkprivateendpointsamplsftconprdsan1azuremonitor0 [label = "\nampls-ft-con-prd-san-1-azuremonitor-0\nampls-ft-con-prd-san-1\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\private-endpoint.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+                     subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkprivateendpointspekvftconprdsan1 [label = "\npe-kv-ft-con-prd-san-1\nkv-ft-con-prd-san-1\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\private-endpoint.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+    ##### ft-con-prd-1 - Application Gateways #####
+    ##### ft-con-prd-1 - Express Route Circuits #####
+
+    # erc-cg-mom-prd-ne2-1 - subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccgmomprdne21
+    subgraph cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccgmomprdne21 {
+        style = solid;
+        color = black;
+        node [color = white;];
+
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccgmomprdne21 [label = "\nerc-cg-mom-prd-ne2-1" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\ercircuit.png";imagepos = "tc";labelloc = "b";height = 3.5;];
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccgmomprdne21 [shape = none;label = <
+            <TABLE border="1" style="rounded">
+            <tr><td>SKU Tier</td><td>Standard</td></tr>
+            <tr><td>SKU Family</td><td>MeteredData</td></tr>
+            <tr><td>Billing Type</td><td>N/A</td></tr>
+            <tr><td>Provider</td><td>Equinix</td></tr>
+            <tr><td>Location</td><td>Dublin</td></tr>
+            <tr><td>Bandwidth</td><td>50 Mbps</td></tr>
+            <tr><td>Encapsulation</td><td>N/A</td></tr>
+    </TABLE>>;
+            ];
+            label = "erc-cg-mom-prd-ne2-1";
+        }
+    
+            # AzurePrivatePeering - subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccgmomprdne21peeringsazureprivatepeering
+            subgraph cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccgmomprdne21peeringsazureprivatepeering {
+                style = solid;
+                color = black;
+                node [color = white;];
+        
+                subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccgmomprdne21peeringsazureprivatepeering [label = "\nAzurePrivatePeering" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\peerings.png";imagepos = "tc";labelloc = "b";height = 2.5;];
+                subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccgmomprdne21peeringsazureprivatepeering [shape = none;label = <
+                    <TABLE border="1" style="rounded" align="left">
+                    <tr><td>Peering Type</td><td COLSPAN="2">AzurePrivatePeering</td></tr>
+                    <tr><td>Address Prefixes</td><td>105.177.11.0/30</td><td>105.177.11.4/30</td></tr>
+                    <tr><td>ASN Azure/Peer</td><td>12076</td><td>16637</td></tr>
+                    <tr><td>VlanId</td><td colspan="2">1046</td></tr>
+                    </TABLE>>;
+                    ];
+
+                subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccgmomprdne21 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccgmomprdne21peeringsazureprivatepeering [ltail = cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccgmomprdne21; lhead = cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccgmomprdne21peeringsazureprivatepeering;];
+
+                label = "AzurePrivatePeering";
+            }
+            
+
+    # erc-cm-mom-prd-ne2-1 - subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccmmomprdne21
+    subgraph cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccmmomprdne21 {
+        style = solid;
+        color = black;
+        node [color = white;];
+
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccmmomprdne21 [label = "\nerc-cm-mom-prd-ne2-1" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\ercircuit.png";imagepos = "tc";labelloc = "b";height = 3.5;];
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccmmomprdne21 [shape = none;label = <
+            <TABLE border="1" style="rounded">
+            <tr><td>SKU Tier</td><td>Standard</td></tr>
+            <tr><td>SKU Family</td><td>MeteredData</td></tr>
+            <tr><td>Billing Type</td><td>N/A</td></tr>
+            <tr><td>Provider</td><td>Equinix</td></tr>
+            <tr><td>Location</td><td>Dublin</td></tr>
+            <tr><td>Bandwidth</td><td>100 Mbps</td></tr>
+            <tr><td>Encapsulation</td><td>N/A</td></tr>
+    </TABLE>>;
+            ];
+            label = "erc-cm-mom-prd-ne2-1";
+        }
+    
+            # AzurePrivatePeering - subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccmmomprdne21peeringsazureprivatepeering
+            subgraph cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccmmomprdne21peeringsazureprivatepeering {
+                style = solid;
+                color = black;
+                node [color = white;];
+        
+                subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccmmomprdne21peeringsazureprivatepeering [label = "\nAzurePrivatePeering" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\peerings.png";imagepos = "tc";labelloc = "b";height = 2.5;];
+                subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccmmomprdne21peeringsazureprivatepeering [shape = none;label = <
+                    <TABLE border="1" style="rounded" align="left">
+                    <tr><td>Peering Type</td><td COLSPAN="2">AzurePrivatePeering</td></tr>
+                    <tr><td>Address Prefixes</td><td>105.177.9.152/30</td><td>105.177.9.160/30</td></tr>
+                    <tr><td>ASN Azure/Peer</td><td>12076</td><td>16637</td></tr>
+                    <tr><td>VlanId</td><td colspan="2">1040</td></tr>
+                    </TABLE>>;
+                    ];
+
+                subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccmmomprdne21 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccmmomprdne21peeringsazureprivatepeering [ltail = cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccmmomprdne21; lhead = cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccmmomprdne21peeringsazureprivatepeering;];
+
+                label = "AzurePrivatePeering";
+            }
+            
+
+    # erc-ng-mom-prd-ne2-1 - subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercngmomprdne21
+    subgraph cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercngmomprdne21 {
+        style = solid;
+        color = black;
+        node [color = white;];
+
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercngmomprdne21 [label = "\nerc-ng-mom-prd-ne2-1" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\ercircuit.png";imagepos = "tc";labelloc = "b";height = 3.5;];
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercngmomprdne21 [shape = none;label = <
+            <TABLE border="1" style="rounded">
+            <tr><td>SKU Tier</td><td>Standard</td></tr>
+            <tr><td>SKU Family</td><td>MeteredData</td></tr>
+            <tr><td>Billing Type</td><td>N/A</td></tr>
+            <tr><td>Provider</td><td>Equinix</td></tr>
+            <tr><td>Location</td><td>Dublin</td></tr>
+            <tr><td>Bandwidth</td><td>200 Mbps</td></tr>
+            <tr><td>Encapsulation</td><td>N/A</td></tr>
+    </TABLE>>;
+            ];
+            label = "erc-ng-mom-prd-ne2-1";
+        }
+    
+            # AzurePrivatePeering - subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercngmomprdne21peeringsazureprivatepeering
+            subgraph cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercngmomprdne21peeringsazureprivatepeering {
+                style = solid;
+                color = black;
+                node [color = white;];
+        
+                subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercngmomprdne21peeringsazureprivatepeering [label = "\nAzurePrivatePeering" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\peerings.png";imagepos = "tc";labelloc = "b";height = 2.5;];
+                subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercngmomprdne21peeringsazureprivatepeering [shape = none;label = <
+                    <TABLE border="1" style="rounded" align="left">
+                    <tr><td>Peering Type</td><td COLSPAN="2">AzurePrivatePeering</td></tr>
+                    <tr><td>Address Prefixes</td><td>41.181.105.200/30</td><td>41.181.105.204/30</td></tr>
+                    <tr><td>ASN Azure/Peer</td><td>12076</td><td>16637</td></tr>
+                    <tr><td>VlanId</td><td colspan="2">1041</td></tr>
+                    </TABLE>>;
+                    ];
+
+                subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercngmomprdne21 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercngmomprdne21peeringsazureprivatepeering [ltail = cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercngmomprdne21; lhead = cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercngmomprdne21peeringsazureprivatepeering;];
+
+                label = "AzurePrivatePeering";
+            }
+            
+
+    # erc-ci-mom-prd-san-1 - subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccimomprdsan1
+    subgraph cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccimomprdsan1 {
+        style = solid;
+        color = black;
+        node [color = white;];
+
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccimomprdsan1 [label = "\nerc-ci-mom-prd-san-1" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\ercircuit.png";imagepos = "tc";labelloc = "b";height = 3.5;];
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccimomprdsan1 [shape = none;label = <
+            <TABLE border="1" style="rounded">
+            <tr><td>SKU Tier</td><td>Standard</td></tr>
+            <tr><td>SKU Family</td><td>MeteredData</td></tr>
+            <tr><td>Billing Type</td><td>N/A</td></tr>
+            <tr><td>Provider</td><td>MTN Global Connect</td></tr>
+            <tr><td>Location</td><td>Johannesburg</td></tr>
+            <tr><td>Bandwidth</td><td>100 Mbps</td></tr>
+            <tr><td>Encapsulation</td><td>N/A</td></tr>
+    </TABLE>>;
+            ];
+            label = "erc-ci-mom-prd-san-1";
+        }
+    
+            # AzurePrivatePeering - subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccimomprdsan1peeringsazureprivatepeering
+            subgraph cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccimomprdsan1peeringsazureprivatepeering {
+                style = solid;
+                color = black;
+                node [color = white;];
+        
+                subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccimomprdsan1peeringsazureprivatepeering [label = "\nAzurePrivatePeering" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\peerings.png";imagepos = "tc";labelloc = "b";height = 2.5;];
+                subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccimomprdsan1peeringsazureprivatepeering [shape = none;label = <
+                    <TABLE border="1" style="rounded" align="left">
+                    <tr><td>Peering Type</td><td COLSPAN="2">AzurePrivatePeering</td></tr>
+                    <tr><td>Address Prefixes</td><td>41.181.245.224/30</td><td>41.181.245.152/30</td></tr>
+                    <tr><td>ASN Azure/Peer</td><td>12076</td><td>16637</td></tr>
+                    <tr><td>VlanId</td><td colspan="2">600</td></tr>
+                    </TABLE>>;
+                    ];
+
+                subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccimomprdsan1 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccimomprdsan1peeringsazureprivatepeering [ltail = cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccimomprdsan1; lhead = cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccimomprdsan1peeringsazureprivatepeering;];
+
+                label = "AzurePrivatePeering";
+            }
+            
+
+    # erc-gh-mom-prd-san-3 - subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercghmomprdsan3
+    subgraph cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercghmomprdsan3 {
+        style = solid;
+        color = black;
+        node [color = white;];
+
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercghmomprdsan3 [label = "\nerc-gh-mom-prd-san-3" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\ercircuit.png";imagepos = "tc";labelloc = "b";height = 3.5;];
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercghmomprdsan3 [shape = none;label = <
+            <TABLE border="1" style="rounded">
+            <tr><td>SKU Tier</td><td>Standard</td></tr>
+            <tr><td>SKU Family</td><td>MeteredData</td></tr>
+            <tr><td>Billing Type</td><td>N/A</td></tr>
+            <tr><td>Provider</td><td>MTN Global Connect</td></tr>
+            <tr><td>Location</td><td>Johannesburg</td></tr>
+            <tr><td>Bandwidth</td><td>100 Mbps</td></tr>
+            <tr><td>Encapsulation</td><td>N/A</td></tr>
+    </TABLE>>;
+            ];
+            label = "erc-gh-mom-prd-san-3";
+        }
+    
+            # AzurePrivatePeering - subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercghmomprdsan3peeringsazureprivatepeering
+            subgraph cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercghmomprdsan3peeringsazureprivatepeering {
+                style = solid;
+                color = black;
+                node [color = white;];
+        
+                subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercghmomprdsan3peeringsazureprivatepeering [label = "\nAzurePrivatePeering" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\peerings.png";imagepos = "tc";labelloc = "b";height = 2.5;];
+                subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercghmomprdsan3peeringsazureprivatepeering [shape = none;label = <
+                    <TABLE border="1" style="rounded" align="left">
+                    <tr><td>Peering Type</td><td COLSPAN="2">AzurePrivatePeering</td></tr>
+                    <tr><td>Address Prefixes</td><td>41.181.245.228/30</td><td>41.181.245.156/30</td></tr>
+                    <tr><td>ASN Azure/Peer</td><td>12076</td><td>16637</td></tr>
+                    <tr><td>VlanId</td><td colspan="2">700</td></tr>
+                    </TABLE>>;
+                    ];
+
+                subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercghmomprdsan3 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercghmomprdsan3peeringsazureprivatepeering [ltail = cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercghmomprdsan3; lhead = cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercghmomprdsan3peeringsazureprivatepeering;];
+
+                label = "AzurePrivatePeering";
+            }
+            
+
+    # erc-rw-mom-prd-san-3 - subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercrwmomprdsan3
+    subgraph cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercrwmomprdsan3 {
+        style = solid;
+        color = black;
+        node [color = white;];
+
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercrwmomprdsan3 [label = "\nerc-rw-mom-prd-san-3" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\ercircuit.png";imagepos = "tc";labelloc = "b";height = 3.5;];
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercrwmomprdsan3 [shape = none;label = <
+            <TABLE border="1" style="rounded">
+            <tr><td>SKU Tier</td><td>Standard</td></tr>
+            <tr><td>SKU Family</td><td>MeteredData</td></tr>
+            <tr><td>Billing Type</td><td>N/A</td></tr>
+            <tr><td>Provider</td><td>MTN Global Connect</td></tr>
+            <tr><td>Location</td><td>Johannesburg</td></tr>
+            <tr><td>Bandwidth</td><td>50 Mbps</td></tr>
+            <tr><td>Encapsulation</td><td>N/A</td></tr>
+    </TABLE>>;
+            ];
+            label = "erc-rw-mom-prd-san-3";
+        }
+    
+            # AzurePrivatePeering - subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercrwmomprdsan3peeringsazureprivatepeering
+            subgraph cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercrwmomprdsan3peeringsazureprivatepeering {
+                style = solid;
+                color = black;
+                node [color = white;];
+        
+                subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercrwmomprdsan3peeringsazureprivatepeering [label = "\nAzurePrivatePeering" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\peerings.png";imagepos = "tc";labelloc = "b";height = 2.5;];
+                subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercrwmomprdsan3peeringsazureprivatepeering [shape = none;label = <
+                    <TABLE border="1" style="rounded" align="left">
+                    <tr><td>Peering Type</td><td COLSPAN="2">AzurePrivatePeering</td></tr>
+                    <tr><td>Address Prefixes</td><td>105.177.10.24/30</td><td>105.177.10.28/30</td></tr>
+                    <tr><td>ASN Azure/Peer</td><td>12076</td><td>16637</td></tr>
+                    <tr><td>VlanId</td><td colspan="2">900</td></tr>
+                    </TABLE>>;
+                    ];
+
+                subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercrwmomprdsan3 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercrwmomprdsan3peeringsazureprivatepeering [ltail = cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercrwmomprdsan3; lhead = cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercrwmomprdsan3peeringsazureprivatepeering;];
+
+                label = "AzurePrivatePeering";
+            }
+            
+
+    # erc-ss-mom-prd-san-1 - subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercssmomprdsan1
+    subgraph cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercssmomprdsan1 {
+        style = solid;
+        color = black;
+        node [color = white;];
+
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercssmomprdsan1 [label = "\nerc-ss-mom-prd-san-1" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\ercircuit.png";imagepos = "tc";labelloc = "b";height = 3.5;];
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercssmomprdsan1 [shape = none;label = <
+            <TABLE border="1" style="rounded">
+            <tr><td>SKU Tier</td><td>Standard</td></tr>
+            <tr><td>SKU Family</td><td>MeteredData</td></tr>
+            <tr><td>Billing Type</td><td>N/A</td></tr>
+            <tr><td>Provider</td><td>MTN Global Connect</td></tr>
+            <tr><td>Location</td><td>Johannesburg</td></tr>
+            <tr><td>Bandwidth</td><td>50 Mbps</td></tr>
+            <tr><td>Encapsulation</td><td>N/A</td></tr>
+    </TABLE>>;
+            ];
+            label = "erc-ss-mom-prd-san-1";
+        }
+    
+            # AzurePrivatePeering - subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercssmomprdsan1peeringsazureprivatepeering
+            subgraph cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercssmomprdsan1peeringsazureprivatepeering {
+                style = solid;
+                color = black;
+                node [color = white;];
+        
+                subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercssmomprdsan1peeringsazureprivatepeering [label = "\nAzurePrivatePeering" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\peerings.png";imagepos = "tc";labelloc = "b";height = 2.5;];
+                subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercssmomprdsan1peeringsazureprivatepeering [shape = none;label = <
+                    <TABLE border="1" style="rounded" align="left">
+                    <tr><td>Peering Type</td><td COLSPAN="2">AzurePrivatePeering</td></tr>
+                    <tr><td>Address Prefixes</td><td>105.177.10.192/30</td><td>105.177.10.196/30</td></tr>
+                    <tr><td>ASN Azure/Peer</td><td>12076</td><td>16637</td></tr>
+                    <tr><td>VlanId</td><td colspan="2">1000</td></tr>
+                    </TABLE>>;
+                    ];
+
+                subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercssmomprdsan1 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercssmomprdsan1peeringsazureprivatepeering [ltail = cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercssmomprdsan1; lhead = cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercssmomprdsan1peeringsazureprivatepeering;];
+
+                label = "AzurePrivatePeering";
+            }
+            
+
+    # erc-ug-mom-prd-san-2 - subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercugmomprdsan2
+    subgraph cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercugmomprdsan2 {
+        style = solid;
+        color = black;
+        node [color = white;];
+
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercugmomprdsan2 [label = "\nerc-ug-mom-prd-san-2" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\ercircuit.png";imagepos = "tc";labelloc = "b";height = 3.5;];
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercugmomprdsan2 [shape = none;label = <
+            <TABLE border="1" style="rounded">
+            <tr><td>SKU Tier</td><td>Standard</td></tr>
+            <tr><td>SKU Family</td><td>MeteredData</td></tr>
+            <tr><td>Billing Type</td><td>N/A</td></tr>
+            <tr><td>Provider</td><td>MTN Global Connect</td></tr>
+            <tr><td>Location</td><td>Johannesburg</td></tr>
+            <tr><td>Bandwidth</td><td>200 Mbps</td></tr>
+            <tr><td>Encapsulation</td><td>N/A</td></tr>
+    </TABLE>>;
+            ];
+            label = "erc-ug-mom-prd-san-2";
+        }
+    
+            # AzurePrivatePeering - subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercugmomprdsan2peeringsazureprivatepeering
+            subgraph cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercugmomprdsan2peeringsazureprivatepeering {
+                style = solid;
+                color = black;
+                node [color = white;];
+        
+                subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercugmomprdsan2peeringsazureprivatepeering [label = "\nAzurePrivatePeering" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\peerings.png";imagepos = "tc";labelloc = "b";height = 2.5;];
+                subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercugmomprdsan2peeringsazureprivatepeering [shape = none;label = <
+                    <TABLE border="1" style="rounded" align="left">
+                    <tr><td>Peering Type</td><td COLSPAN="2">AzurePrivatePeering</td></tr>
+                    <tr><td>Address Prefixes</td><td>105.177.9.176/30</td><td>105.177.9.180/30</td></tr>
+                    <tr><td>ASN Azure/Peer</td><td>12076</td><td>16637</td></tr>
+                    <tr><td>VlanId</td><td colspan="2">2111</td></tr>
+                    </TABLE>>;
+                    ];
+
+                subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercugmomprdsan2 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercugmomprdsan2peeringsazureprivatepeering [ltail = cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercugmomprdsan2; lhead = cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercugmomprdsan2peeringsazureprivatepeering;];
+
+                label = "AzurePrivatePeering";
+            }
+            
+    ##### ft-con-prd-1 - Virtual WANs #####
+
+            # Dublin-Hub - subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualhubsdublinhub
+            subgraph cluster_subscriptions29433e68c4f146238293dcccf1a8a2d3resourcegroupsrg_dublinhub_eacb8c669f924c96b10a5a9e60a306c2providersmicrosoftnetworkvirtualnetworkshv_dublinhub_3fe5fab9ee1a4aedbc58587874bb6b9a {
+                style = solid;
+                color = black;
+                node [color = white;];
+                    subscriptions29433e68c4f146238293dcccf1a8a2d3resourcegroupsrg_dublinhub_eacb8c669f924c96b10a5a9e60a306c2providersmicrosoftnetworkvirtualnetworkshv_dublinhub_3fe5fab9ee1a4aedbc58587874bb6b9a [label = "\n\nDublin-Hub\nLocation: northeurope\nSKU: Standard\nAddress Prefix: 172.24.186.0/24\nHub Routing Preference: ExpressRoute" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\vWAN-Hub.png";imagepos = "tc";labelloc = "b";height = 2.5;];
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvpngatewaysvgwftconprdne21 [label = "\n\nvgw-ft-con-prd-ne2-1\nScale Units: 2\nPublic IP(s):\n4.207.220.95,4.207.220.126\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\vgw.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+    subscriptions29433e68c4f146238293dcccf1a8a2d3resourcegroupsrg_dublinhub_eacb8c669f924c96b10a5a9e60a306c2providersmicrosoftnetworkvirtualnetworkshv_dublinhub_3fe5fab9ee1a4aedbc58587874bb6b9a -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvpngatewaysvgwftconprdne21;
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutegatewaysegwftconprdne21 [label = "\n\n\negw-ft-con-prd-ne2-1\nAuto Scale Configuration: 1-0" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\ergw.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+    subscriptions29433e68c4f146238293dcccf1a8a2d3resourcegroupsrg_dublinhub_eacb8c669f924c96b10a5a9e60a306c2providersmicrosoftnetworkvirtualnetworkshv_dublinhub_3fe5fab9ee1a4aedbc58587874bb6b9a -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutegatewaysegwftconprdne21;
+    subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutegatewaysegwftconprdne21 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccmmomprdne21 ;
+    subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutegatewaysegwftconprdne21 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercngmomprdne21 ;
+    subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutegatewaysegwftconprdne21 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercrwmomprdsan3 ;
+    subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutegatewaysegwftconprdne21 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccgmomprdne21 ;
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkazurefirewallsafwftconprdne21 [label = "\n\nafw-ft-con-prd-ne2-1\nPrivate IP Address: 172.24.186.132\nSKU Tier: Premium\nZones: 1,2,3\nPublic IP(s):\n52.178.206.160\n52.169.211.174\n52.236.125.66\n52.236.126.180\n52.138.232.47\n168.63.74.48\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\afw.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkfirewallpolicieswafftconprdne21 [label = "\n\nwaf-ft-con-prd-ne2-1\nSKU Tier: Premium\nThreat Intel Mode: Alert\nDNS Servers: 172.24.187.68\nProxy Enabled: True" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\firewallpolicy.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+    subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkazurefirewallsafwftconprdne21 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkfirewallpolicieswafftconprdne21;
+    subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkfirewallpolicieswafftconprdne21 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkipgroupsipgpftalzprd1;
+    subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkfirewallpolicieswafftconprdne21 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkipgroupsipgpftbastionprdne21;
+    subscriptions29433e68c4f146238293dcccf1a8a2d3resourcegroupsrg_dublinhub_eacb8c669f924c96b10a5a9e60a306c2providersmicrosoftnetworkvirtualnetworkshv_dublinhub_3fe5fab9ee1a4aedbc58587874bb6b9a -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkazurefirewallsafwftconprdne21;
+    subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualwansvwanftconprdsan1 -> subscriptions29433e68c4f146238293dcccf1a8a2d3resourcegroupsrg_dublinhub_eacb8c669f924c96b10a5a9e60a306c2providersmicrosoftnetworkvirtualnetworkshv_dublinhub_3fe5fab9ee1a4aedbc58587874bb6b9a;
+        label = "Dublin-Hub";
+        }
+        
+            # Johannesburg-Hub - subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualhubsjohannesburghub
+            subgraph cluster_subscriptions894889a9c0ab442cbc223379c6bb82b3resourcegroupsrg_johannesburghub_7bfc049d8d34484ba646d54876cbdf69providersmicrosoftnetworkvirtualnetworkshv_johannesburghub_2b39aafbf72d4929a9992e4df4f9cc86 {
+                style = solid;
+                color = black;
+                node [color = white;];
+                    subscriptions894889a9c0ab442cbc223379c6bb82b3resourcegroupsrg_johannesburghub_7bfc049d8d34484ba646d54876cbdf69providersmicrosoftnetworkvirtualnetworkshv_johannesburghub_2b39aafbf72d4929a9992e4df4f9cc86 [label = "\n\nJohannesburg-Hub\nLocation: southafricanorth\nSKU: Standard\nAddress Prefix: 172.24.184.0/24\nHub Routing Preference: ExpressRoute" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\vWAN-Hub.png";imagepos = "tc";labelloc = "b";height = 2.5;];
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvpngatewaysvgwftconprdsan1 [label = "\n\nvgw-ft-con-prd-san-1\nScale Units: 2\nPublic IP(s):\n20.87.192.145,20.164.85.229\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\vgw.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+    subscriptions894889a9c0ab442cbc223379c6bb82b3resourcegroupsrg_johannesburghub_7bfc049d8d34484ba646d54876cbdf69providersmicrosoftnetworkvirtualnetworkshv_johannesburghub_2b39aafbf72d4929a9992e4df4f9cc86 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvpngatewaysvgwftconprdsan1;
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvpnsitesjumoworld [label = "\n\n\nJumo.World\nAddressPrefixes: 10.199.110.190/32\nDevice Vendor: Strongswan\nLink Speed: 10 Mbps\nLinks: 1\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\VPN-Site.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+    subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvpngatewaysvgwftconprdsan1 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvpnsitesjumoworld;
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvpnsitesjumoworldproduction [label = "\n\n\nJumo.World.Production\nAddressPrefixes: 10.199.10.190/32\nDevice Vendor: Strongswan\nLink Speed: 10 Mbps\nLinks: 1\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\VPN-Site.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+    subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvpngatewaysvgwftconprdsan1 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvpnsitesjumoworldproduction;
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvpnsitesniprod [label = "\n\n\nNI-Prod\nAddressPrefixes: 193.151.177.142/32 193.151.177.15/32\nDevice Vendor: Fortigate\nLink Speed: 500 Mbps\nLinks: 1\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\VPN-Site.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+    subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvpngatewaysvgwftconprdsan1 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvpnsitesniprod;
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvpnsitesniuat [label = "\n\n\nNI-UAT\nAddressPrefixes: 193.151.177.41/32 193.151.177.42/32\nDevice Vendor: Fortigate\nLink Speed: 500 Mbps\nLinks: 1\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\VPN-Site.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+    subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvpngatewaysvgwftconprdsan1 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvpnsitesniuat;
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvpnsitestbills4allacdc [label = "\n\n\nTbills4All-AcDC\nAddressPrefixes: 156.0.82.242/32\nDevice Vendor: Palo_Alto_5020\nLink Speed: 10 Mbps\nLinks: 1\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\VPN-Site.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+    subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvpngatewaysvgwftconprdsan1 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvpnsitestbills4allacdc;
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutegatewaysegwftconprdsan1 [label = "\n\n\negw-ft-con-prd-san-1\nAuto Scale Configuration: 1-0" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\ergw.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+    subscriptions894889a9c0ab442cbc223379c6bb82b3resourcegroupsrg_johannesburghub_7bfc049d8d34484ba646d54876cbdf69providersmicrosoftnetworkvirtualnetworkshv_johannesburghub_2b39aafbf72d4929a9992e4df4f9cc86 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutegatewaysegwftconprdsan1;
+    subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutegatewaysegwftconprdsan1 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccimomprdsan1 ;
+    subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutegatewaysegwftconprdsan1 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercghmomprdsan3 ;
+    subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutegatewaysegwftconprdsan1 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercugmomprdsan2 ;
+    subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutegatewaysegwftconprdsan1 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercrwmomprdsan3 ;
+    subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutegatewaysegwftconprdsan1 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccgmomprdne21 ;
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkazurefirewallsafwftconprdsan1 [label = "\n\nafw-ft-con-prd-san-1\nPrivate IP Address: 172.24.184.132\nSKU Tier: Premium\nZones: 1,2,3\nPublic IP(s):\n4.221.158.216\n4.222.16.253\n4.221.112.164\n4.221.199.178\n4.221.78.164\n4.221.164.82\n4.221.229.24\n4.221.198.94\n4.221.112.68\n4.221.191.86\n4.221.184.68\n4.221.72.178\n4.221.128.51\n4.221.133.85\n4.221.135.144\n4.221.135.238\n4.221.208.72\n4.168.233.98\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\afw.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkfirewallpolicieswafftconprdsan1 [label = "\n\nwaf-ft-con-prd-san-1\nSKU Tier: Premium\nThreat Intel Mode: Alert\nDNS Servers: 172.24.185.68\nProxy Enabled: True" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\firewallpolicy.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+    subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkazurefirewallsafwftconprdsan1 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkfirewallpolicieswafftconprdsan1;        subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkfirewallpolicieswafftconprdsan1 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkdnsresolverspdnsrftconprdsan1 [label = "DNS Query"; ];
+
+    subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkfirewallpolicieswafftconprdsan1 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkipgroupsipgpftalzprd1;
+    subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkfirewallpolicieswafftconprdsan1 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkipgroupsipgpftbastionprdsan1;
+    subscriptions894889a9c0ab442cbc223379c6bb82b3resourcegroupsrg_johannesburghub_7bfc049d8d34484ba646d54876cbdf69providersmicrosoftnetworkvirtualnetworkshv_johannesburghub_2b39aafbf72d4929a9992e4df4f9cc86 -> subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkazurefirewallsafwftconprdsan1;
+    subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualwansvwanftconprdsan1 -> subscriptions894889a9c0ab442cbc223379c6bb82b3resourcegroupsrg_johannesburghub_7bfc049d8d34484ba646d54876cbdf69providersmicrosoftnetworkvirtualnetworkshv_johannesburghub_2b39aafbf72d4929a9992e4df4f9cc86;
+        label = "Johannesburg-Hub";
+        }
+        
+
+            # vwan-ft-con-prd-san-1 - subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualwansvwanftconprdsan1
+            subgraph cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualwansvwanftconprdsan1 {
+                style = solid;
+                color = black;
+                node [color = white;];
+                subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualwansvwanftconprdsan1 [color = lightgray;label = "\nVirtual WAN Type: Standard\nLocation: southafricanorth\nAllow Vnet to Vnet Traffic: True\nAllow Branch to Branch Traffic: True";image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\vwan.png";imagepos = "tc";labelloc = "b";height = 2.0;];
+
+                label = "vwan-ft-con-prd-san-1";
+            }
+            
+    ##### ft-con-prd-1 - AKS Clusters #####
+    ##### ft-con-prd-1 - Azure Contiainer Registries #####
+    ##### ft-con-prd-1 - Managed Identities #####
+    ##### ft-con-prd-1 - SSH Keys #####
+    ##### ft-con-prd-1 - VPN Connections #####
+
+    ##########################################################################################################
+    ##### ft-con-prd-1 
+    ##### END
+    ##########################################################################################################
+
+
+    ##########################################################################################################
+    ##### ft-mgt-prd-1 
+    ##########################################################################################################
+
+    ##### ft-mgt-prd-1 - Route Tables #####
+    ##### ft-mgt-prd-1 - IP Groups #####
+    ##### ft-mgt-prd-1 - Virtual Networks #####
+    ##### ft-mgt-prd-1 - VMs #####
+    ##### ft-mgt-prd-1 - Keyvaults #####
+    ##### ft-mgt-prd-1 - Storage Accounts #####
+
+        # stfrmmgtprdsan1 - subscriptionsa4290975612347048298b9542b3f224bresourcegroupsrgftmgtprdsan2providersmicrosoftstoragestorageaccountsstfrmmgtprdsan1
+        subgraph cluster_subscriptionsa4290975612347048298b9542b3f224bresourcegroupsrgftmgtprdsan2providersmicrosoftstoragestorageaccountsstfrmmgtprdsan1 {
+            style = solid;
+            color = black;
+            node [color = white;];
+                subscriptionsa4290975612347048298b9542b3f224bresourcegroupsrgftmgtprdsan2providersmicrosoftstoragestorageaccountsstfrmmgtprdsan1 [label = "\nLocation: southafricanorth\nSKU: Standard_LRS\nKind: StorageV2\nPublic Network Access: Disabled\nAccess Tier: Hot\nHierarchical Namespace Enabled: \n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\storage-account.png";imagepos = "tc";labelloc = "b";height = 2.5;];
+   label = "stfrmmgtprdsan1";
+                }
+
+    ##### ft-mgt-prd-1 - Private Endpoints #####
+    ##### ft-mgt-prd-1 - Application Gateways #####
+    ##### ft-mgt-prd-1 - Express Route Circuits #####
+    ##### ft-mgt-prd-1 - Virtual WANs #####
+    ##### ft-mgt-prd-1 - AKS Clusters #####
+    ##### ft-mgt-prd-1 - Azure Contiainer Registries #####
+    ##### ft-mgt-prd-1 - Managed Identities #####
+    ##### ft-mgt-prd-1 - SSH Keys #####
+    ##### ft-mgt-prd-1 - VPN Connections #####
+
+    ##########################################################################################################
+    ##### ft-mgt-prd-1 
+    ##### END
+    ##########################################################################################################
+
+
+    ##########################################################################################################
+    ##### ft-id-prd-1 
+    ##########################################################################################################
+
+    ##### ft-id-prd-1 - Route Tables #####
+    ##### ft-id-prd-1 - IP Groups #####
+    ##### ft-id-prd-1 - Virtual Networks #####
+
+        # vnet-ft-id-prd-san-1 - subscriptionsc66daca915464ba0a6c43f436608e4caresourcegroupsrgftidprdsan1providersmicrosoftnetworkvirtualnetworksvnetftidprdsan1
+        subgraph cluster_subscriptionsc66daca915464ba0a6c43f436608e4caresourcegroupsrgftidprdsan1providersmicrosoftnetworkvirtualnetworksvnetftidprdsan1 {
+            style = solid;
+            color = black;
+            node [color = white;];
+            subscriptionsc66daca915464ba0a6c43f436608e4caresourcegroupsrgftidprdsan1providersmicrosoftnetworkvirtualnetworksvnetftidprdsan1 [color = lightgray;label = "\nAddress Space(s):\n172.24.185.192/26\n";image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\vnet.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+        subscriptionsc66daca915464ba0a6c43f436608e4caresourcegroupsrgftidprdsan1providersmicrosoftnetworknetworksecuritygroupsnsgftadprdsan1 [label = "\nnsg-ft-ad-prd-san-1" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\nsg.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+        subscriptionsc66daca915464ba0a6c43f436608e4caresourcegroupsrgftidprdsan1providersmicrosoftnetworkvirtualnetworksvnetftidprdsan1subnetssnetftadprdsan1 -> subscriptionsc66daca915464ba0a6c43f436608e4caresourcegroupsrgftidprdsan1providersmicrosoftnetworknetworksecuritygroupsnsgftadprdsan1
+        subscriptionsc66daca915464ba0a6c43f436608e4caresourcegroupsrgftidprdsan1providersmicrosoftnetworkvirtualnetworksvnetftidprdsan1subnetssnetftadprdsan1 [label = "\nsnet-ft-ad-prd-san-1\n172.24.185.192/26" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\snet.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+        subscriptionsc66daca915464ba0a6c43f436608e4caresourcegroupsrgftidprdsan1providersmicrosoftnetworkvirtualnetworksvnetftidprdsan1 -> subscriptionsc66daca915464ba0a6c43f436608e4caresourcegroupsrgftidprdsan1providersmicrosoftnetworkvirtualnetworksvnetftidprdsan1subnetssnetftadprdsan1
+
+            label = "vnet-ft-id-prd-san-1";
+        }
+        
+    ##### ft-id-prd-1 - VMs #####
+    ##### ft-id-prd-1 - Keyvaults #####
+    ##### ft-id-prd-1 - Storage Accounts #####
+    ##### ft-id-prd-1 - Private Endpoints #####
+    ##### ft-id-prd-1 - Application Gateways #####
+    ##### ft-id-prd-1 - Express Route Circuits #####
+    ##### ft-id-prd-1 - Virtual WANs #####
+    ##### ft-id-prd-1 - AKS Clusters #####
+    ##### ft-id-prd-1 - Azure Contiainer Registries #####
+    ##### ft-id-prd-1 - Managed Identities #####
+    ##### ft-id-prd-1 - SSH Keys #####
+    ##### ft-id-prd-1 - VPN Connections #####
+
+    ##########################################################################################################
+    ##### ft-id-prd-1 
+    ##### END
+    ##########################################################################################################
+
+    subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftbasprdne21 -> subscriptions29433e68c4f146238293dcccf1a8a2d3resourcegroupsrg_dublinhub_eacb8c669f924c96b10a5a9e60a306c2providersmicrosoftnetworkvirtualnetworkshv_dublinhub_3fe5fab9ee1a4aedbc58587874bb6b9a [ltail = cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftbasprdne21; lhead = cluster_subscriptions29433e68c4f146238293dcccf1a8a2d3resourcegroupsrg_dublinhub_eacb8c669f924c96b10a5a9e60a306c2providersmicrosoftnetworkvirtualnetworkshv_dublinhub_3fe5fab9ee1a4aedbc58587874bb6b9a; weight = 10;];
+    subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftdnsprdne21 -> subscriptions29433e68c4f146238293dcccf1a8a2d3resourcegroupsrg_dublinhub_eacb8c669f924c96b10a5a9e60a306c2providersmicrosoftnetworkvirtualnetworkshv_dublinhub_3fe5fab9ee1a4aedbc58587874bb6b9a [ltail = cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftdnsprdne21; lhead = cluster_subscriptions29433e68c4f146238293dcccf1a8a2d3resourcegroupsrg_dublinhub_eacb8c669f924c96b10a5a9e60a306c2providersmicrosoftnetworkvirtualnetworkshv_dublinhub_3fe5fab9ee1a4aedbc58587874bb6b9a; weight = 10;];
+    subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftpvtprdne21 -> subscriptions29433e68c4f146238293dcccf1a8a2d3resourcegroupsrg_dublinhub_eacb8c669f924c96b10a5a9e60a306c2providersmicrosoftnetworkvirtualnetworkshv_dublinhub_3fe5fab9ee1a4aedbc58587874bb6b9a [ltail = cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftpvtprdne21; lhead = cluster_subscriptions29433e68c4f146238293dcccf1a8a2d3resourcegroupsrg_dublinhub_eacb8c669f924c96b10a5a9e60a306c2providersmicrosoftnetworkvirtualnetworkshv_dublinhub_3fe5fab9ee1a4aedbc58587874bb6b9a; weight = 10;];
+    subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftbasprdsan1 -> subscriptions894889a9c0ab442cbc223379c6bb82b3resourcegroupsrg_johannesburghub_7bfc049d8d34484ba646d54876cbdf69providersmicrosoftnetworkvirtualnetworkshv_johannesburghub_2b39aafbf72d4929a9992e4df4f9cc86 [ltail = cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftbasprdsan1; lhead = cluster_subscriptions894889a9c0ab442cbc223379c6bb82b3resourcegroupsrg_johannesburghub_7bfc049d8d34484ba646d54876cbdf69providersmicrosoftnetworkvirtualnetworkshv_johannesburghub_2b39aafbf72d4929a9992e4df4f9cc86; weight = 10;];
+    subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftdnsprdsan1 -> subscriptions894889a9c0ab442cbc223379c6bb82b3resourcegroupsrg_johannesburghub_7bfc049d8d34484ba646d54876cbdf69providersmicrosoftnetworkvirtualnetworkshv_johannesburghub_2b39aafbf72d4929a9992e4df4f9cc86 [ltail = cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftdnsprdsan1; lhead = cluster_subscriptions894889a9c0ab442cbc223379c6bb82b3resourcegroupsrg_johannesburghub_7bfc049d8d34484ba646d54876cbdf69providersmicrosoftnetworkvirtualnetworkshv_johannesburghub_2b39aafbf72d4929a9992e4df4f9cc86; weight = 10;];
+    subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftpvtprdsan1 -> subscriptions894889a9c0ab442cbc223379c6bb82b3resourcegroupsrg_johannesburghub_7bfc049d8d34484ba646d54876cbdf69providersmicrosoftnetworkvirtualnetworkshv_johannesburghub_2b39aafbf72d4929a9992e4df4f9cc86 [ltail = cluster_subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftpvtprdsan1; lhead = cluster_subscriptions894889a9c0ab442cbc223379c6bb82b3resourcegroupsrg_johannesburghub_7bfc049d8d34484ba646d54876cbdf69providersmicrosoftnetworkvirtualnetworkshv_johannesburghub_2b39aafbf72d4929a9992e4df4f9cc86; weight = 10;];
+
+    ##########################################################################################################
+    ##### RANKS
+    ##########################################################################################################
+
+    ### AddressSpace ranks
+    { rank=min; subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftbasprdne21; subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftdnsprdne21; subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftpvtprdne21; subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftbasprdsan1; subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftdnsprdsan1; subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftpvtprdsan1; subscriptionsc66daca915464ba0a6c43f436608e4caresourcegroupsrgftidprdsan1providersmicrosoftnetworkvirtualnetworksvnetftidprdsan1 }
+ 
+
+    ### Subnets ranks
+    { rank=same; subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftbasprdne21subnetsazurebastionsubnet; subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftdnsprdne21subnetssnetftpriprdne21; subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftdnsprdne21subnetssnetftproprdne21; subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftpvtprdne21subnetssnetftpvtprdne21; subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftbasprdsan1subnetsazurebastionsubnet; subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftdnsprdsan1subnetssnetftpriprdsan1; subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftdnsprdsan1subnetssnetftproprdsan1; subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualnetworksvnetftpvtprdsan1subnetssnetftpvtprdsan1; subscriptionsc66daca915464ba0a6c43f436608e4caresourcegroupsrgftidprdsan1providersmicrosoftnetworkvirtualnetworksvnetftidprdsan1subnetssnetftadprdsan1 }
+ 
+
+    ### Route table ranks
+    { rank=same;  }
+ 
+
+    ### vWAN ranks
+    { rank=same; subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvirtualwansvwanftconprdsan1 }
+ 
+
+    ### vWAN Hub ranks
+    { rank=same; subscriptions29433e68c4f146238293dcccf1a8a2d3resourcegroupsrg_dublinhub_eacb8c669f924c96b10a5a9e60a306c2providersmicrosoftnetworkvirtualnetworkshv_dublinhub_3fe5fab9ee1a4aedbc58587874bb6b9a; subscriptions894889a9c0ab442cbc223379c6bb82b3resourcegroupsrg_johannesburghub_7bfc049d8d34484ba646d54876cbdf69providersmicrosoftnetworkvirtualnetworkshv_johannesburghub_2b39aafbf72d4929a9992e4df4f9cc86 }
+ 
+
+    ### ER Circuit ranks
+    { rank=same; subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccgmomprdne21; subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccmmomprdne21; subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercngmomprdne21; subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitserccimomprdsan1; subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercghmomprdsan3; subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercrwmomprdsan3; subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercssmomprdsan1; subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkexpressroutecircuitsercugmomprdsan2 }
+ 
+
+    ### VPN Site ranks
+    { rank=same; subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvpnsitesjumoworld; subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvpnsitesjumoworldproduction; subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvpnsitesniprod; subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvpnsitesniuat; subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkvpnsitestbills4allacdc }
+ 
+
+    ### IP Groups ranks
+    { rank=max; subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkipgroupsipgpftalzprd1; subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkipgroupsipgpftbastionprdsan1; subscriptionsba12561c421e4b6691b5ed0b8fb90dc6resourcegroupsrgftconprdsan1providersmicrosoftnetworkipgroupsipgpftbastionprdne21 }
+ 
+}
