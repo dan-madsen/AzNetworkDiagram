@@ -257,7 +257,11 @@ function Export-ApplicationGateway {
         } else {
             $pvtips = "None"
         }
-        $polname = $agw.FirewallPolicy.Id.split("/")[-1]
+        if ($agw.FirewallPolicy.Id) {
+            $polname = $agw.FirewallPolicy.Id.split("/")[-1]
+        } else {
+            $polname = "None"
+        }
         if ($agw.Zones) {
             $zones = $agw.Zones -join ","
         } else {
@@ -501,6 +505,20 @@ function Export-MySQLServer {
     )   
     
     try {
+        # Get Entra ID Admin
+        $subid = $mysql.id.split("/")[2]
+        $resourceGroupName = $mysql.id.split("/")[4]
+        $uri = "https://management.azure.com/subscriptions/$subid/resourceGroups/$resourceGroupName/providers/Microsoft.DBforMySQL/flexibleServers/$($mysql.Name)/administrators?api-version=2023-06-01-preview"
+        $token = (Get-AzAccessToken -ResourceUrl 'https://management.azure.com').Token
+        $headers = @{
+            Accept = '*/*'
+            Authorization = "bearer $token"
+        }
+
+        $response = Invoke-RestMethod -ContentType "application/json" -Method Get -Uri $uri -Headers $headers -ErrorAction SilentlyContinue
+        $sqladmins = $response.value.properties.login
+
+        # Get other server properties
         $mysqlid = $mysql.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
         $properties = Get-AzResource -ResourceId $mysql.id -ErrorAction Stop      
 
@@ -512,7 +530,7 @@ function Export-MySQLServer {
             node [color = white;];
         "
 
-        $data += "        $mysqlid [label = `"\nName: $($mysql.Name)\nLocation: $($mysql.Location)\nSKU: $($mysql.SkuName)\nTier: $($mysql.SkuTier.ToString())\nVersion: $($mysql.Version)\nVM Size: $($properties.Sku.Name)\nAvailability Zone: $($mysql.AvailabilityZone)\nStandby Zone: $($mysql.HighAvailabilityStandbyAvailabilityZone)\nPublic Network Access: $($mysql.NetworkPublicNetworkAccess)`" ; color = lightgray;image = `"$OutputPath\icons\mysql.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
+        $data += "        $mysqlid [label = `"\n\n\nLocation: $($mysql.Location)\nSKU: $($mysql.SkuName)\nTier: $($mysql.SkuTier.ToString())\nVersion: $($mysql.Version)\nLogin Admins:$sqladmins\nVM Size: $($properties.Sku.Name)\nAvailability Zone: $($mysql.AvailabilityZone)\nStandby Zone: $($mysql.HighAvailabilityStandbyAvailabilityZone)\nPublic Network Access: $($mysql.NetworkPublicNetworkAccess)`" ; color = lightgray;image = `"$OutputPath\icons\mysql.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.5;];"
         $data += "`n"
         if ($properties.properties.network.delegatedSubnetResourceId  ) {
             $mysqlsubnetid = $properties.properties.network.delegatedSubnetResourceId.replace("-", "").replace("/", "").replace(".", "").ToLower()
@@ -534,11 +552,138 @@ function Export-MySQLServer {
     }
 }
 
-function Export-PostgreSQLServer {
+function Export-CosmosDBAccount {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$cosmosdbact
+    )   
+    
+    try {
+        $cosmosdbactid = $cosmosdbact.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        
+        $data = "
+        # $($cosmosdbact.Name) - $cosmosdbactid
+        subgraph cluster_$cosmosdbactid {
+            style = solid;
+            color = black;
+            node [color = white;];
+        "
+
+        $data += "        $cosmosdbactid [label = `"Version: $($cosmosdbact.ApiProperties.ServerVersion)\nLocations: $($cosmosdbact.Locations.LocationName -join ", ")\nDefault Consistency Level: $($cosmosdbact.ConsistencyPolicy.DefaultConsistencyLevel)\nKind: $($cosmosdbact.Kind)\nDatabase Account Offer Type: $($cosmosdbact.DatabaseAccountOfferType)\nEnable Analytical Storage: $($cosmosdbact.EnableAnalyticalStorage)\nVirtual Network Filter Enabled: $($cosmosdbact.IsVirtualNetworkFilterEnabled)`" ; color = lightgray;image = `"$OutputPath\icons\cosmosdb.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];"
+        $data += "`n"
+        $resourceGroupName = $cosmosdbact.Id.split("/")[4]
+        switch ($cosmosdbact.Kind) {
+            #MongoDB
+            "MongoDB" {  
+                $dbs = Get-AzCosmosDBMongoDBDatabase -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -ErrorAction Stop
+                $iconname = "mongodb"
+                foreach ($db in $dbs) {
+                    $dbthroughput = Get-AzCosmosDBMongoDBDatabaseThroughput -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -Name $db.Name -ErrorAction SilentlyContinue
+                    if ($null -eq $dbthroughput) {
+                        $dbthroughput = "Unknown"
+                    }   
+                    else {
+                        $dbthroughput = $dbthroughput.Throughput
+                    }
+                    $collection = Get-AzCosmosDBMongoDBCollection -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -DatabaseName $db.Name -ErrorAction SilentlyContinue
+                    $colthroughputs = $collection | ForEach-Object {
+                                [PSCustomObject]@{
+                                    Collection = $_.Name
+                                    RU   = (Get-AzCosmosDBMongoDBCollectionThroughput `
+                                                -ResourceGroupName $resourceGroupName `
+                                                -AccountName      $cosmosdbact.Name `
+                                                -DatabaseName     $db.Name `
+                                                -Name             $_.Name `
+                                                -ErrorAction      SilentlyContinue
+                                            ).Throughput
+                                }
+                            } | Format-Table Collection, RU  | Out-String      
+
+                    if ($null -eq $colthroughputs) {
+                        $colthroughputs = "Unknown"
+                    }   
+
+                    $dbid = $db.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $data += "        $($dbid) [label = `"\n\nName: $($db.Name)\nDatabase Throughput: $dbthroughput\n$colthroughputs\n`" ; color = lightgray;image = `"$OutputPath\icons\$iconname.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n" 
+                    $data += "        $cosmosdbactid -> $($dbid);`n"
+                }
+            }
+            # NoSQL
+            "GlobalDocumentDB" { 
+                $dbs = Get-AzCosmosDBSqlDatabase -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -ErrorAction Stop
+                $iconname = "documentdb"
+                foreach ($db in $dbs) {
+                    $throughput = Get-AzCosmosDBSqlDatabaseThroughput -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -Name $db.Name -ErrorAction Stop
+                    $dbid = $db.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $data += "        $($dbid) [label = `"\nName: $($db.Name)\nThroughput: $($throughput.Throughput)\n`" ; color = lightgray;image = `"$OutputPath\icons\$iconname.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];`n" 
+                    $data += "        $cosmosdbactid -> $($dbid);`n"
+                }
+            }
+            #Gremlin
+            "Gremlin" {  
+                $dbs = Get-AzCosmosDBGremlinDatabase -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -ErrorAction Stop
+                $iconname = "gremlin"
+                foreach ($db in $dbs) {
+                    $throughput = Get-AzCosmosDBGremlinGraphThroughput -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -Name $db.Name -ErrorAction Stop
+                    $dbid = $db.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $data += "        $($dbid) [label = `"\nName: $($db.Name)\nThroughput: $($throughput.Throughput)\n`" ; color = lightgray;image = `"$OutputPath\icons\$iconname.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];`n" 
+                    $data += "        $cosmosdbactid -> $($dbid);`n"
+                }
+            }
+            #Table
+            "Table" {  
+                $dbs = Get-AzCosmosDBTable -ResourceGroupName $$resourceGroupName -AccountName $cosmosdbact.Name -ErrorAction Stop
+                $iconname = "table"
+                foreach ($db in $dbs) {
+                    $throughput = Get-AzCosmosDBTableThroughput -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -Name $db.Name -ErrorAction Stop
+                    $dbid = $db.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $data += "        $($dbid) [label = `"\nName: $($db.Name)\nThroughput: $($throughput.Throughput)\n`" ; color = lightgray;image = `"$OutputPath\icons\$iconname.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];`n" 
+                    $data += "        $cosmosdbactid -> $($dbid);`n"
+                }
+            }   
+            #Cassandra
+            "Cassandra" { 
+                $dbs = Get-AzCosmosDBCassandraKeyspace -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -ErrorAction Stop
+                $iconname = "cassandra"
+                foreach ($db in $dbs) {
+                    $throughput = Get-AzCosmosDBCassandraKeyspaceThroughput -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -Name $db.Name -ErrorAction Stop
+                    $dbid = $db.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $data += "        $($dbid) [label = `"\nName: $($db.Name)\nThroughput: $($throughput.Throughput)\n`" ; color = lightgray;image = `"$OutputPath\icons\$iconname.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];`n" 
+                    $data += "        $cosmosdbactid -> $($dbid);`n"
+                }
+            }
+
+            default { 
+                Write-Output "Unknown CosmosDB type: $($cosmosdbact.Kind)" 
+                $iconname = $null
+                $dbs = $null
+            }
+        }   
+        # Add links to Virtual Network Rules, Private Endpoints, and Managed Identities
+        foreach ($vnRule in $cosmosdbact.VirtualNetworkRules) {
+            $vnRuleid = $vnRule.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $data += "        $cosmosdbactid -> $($vnRuleid) [label = `"Virtual Network Rule`"; ];`n"
+        }
+        if ($cosmosdbact.PrivateEndpointConnections.PrivateEndpoint.Id) {
+            $peid = $cosmosdbact.PrivateEndpointConnections.PrivateEndpoint.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $data += "        $cosmosdbactid -> $peid;`n"
+        }
+        if ($cosmosdbact.Identity.UserAssignedIdentities.Keys) {
+            foreach ($identity in $cosmosdbact.Identity.UserAssignedIdentities.Keys) { 
+                $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower() 
+                $data += "        $cosmosdbactid -> $managedIdentityId;`n"
+            } 
+        }
+        $data += "   label = `"$($cosmosdbact.Name)`";
+                }`n"
+
+        Export-AddToFile -Data $data
+    } catch {
+        Write-Host "Can't export Cosmos DB Account: $($cosmosdbact.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
 }
-
-function Export-MongoDBServer {
-
+function Export-PostgreSQLServer {
 }
 
 function Export-RedisServer {
@@ -1697,12 +1842,18 @@ function Confirm-Prerequisites {
         "agw.png",
         "aks-service.png",
         "aks-node-pool.png",
+        "azuresql.png",
         "firewallpolicy.png",
         "asp.png",
         "bas.png",
+        "cassandra.png",
+        "computegalleries.png",
+        "cosmosdb.png",
         "Connections.png",
+        "documentdb.png",
         "ercircuit.png",
         "erport.png",
+        "gremlin.png",
         "peerings.png",
         "private-endpoint.png",
         "dnspr.png",
@@ -1710,13 +1861,18 @@ function Confirm-Prerequisites {
         "keyvault.png",
         "lgw.png",
         "managed-identity.png",
+        "mariadb.png",
+        "mongodb.png",
         "mysql.png",
         "ipgroup.png",
         "LICENSE",
         "ng.png",
+        "rsv.png",
         "snet.png",
         "storage-account.png",
+        "sqldb.png",
         "sqlmi.png",
+        "table.png",
         "vgw.png",
         "vm.png",
         "vmss.png",
@@ -1941,13 +2097,16 @@ function Get-AzNetworkDiagram {
                 Export-PostgreSQLServer $postgresqlserver 
             }
 
-            #MongoDB Servers
-            #Write-Output "Collecting MongoDB Servers..."
-            #Export-AddToFile "    ##### $subname - MongoDB Servers #####"
-            #$mongodbservers = Get-AzCosmosDBAccount -ErrorAction Stop
-            #foreach ($mongodbserver in $mongodbservers) {
-            #    Export-MongoDBServer $mongodbserver 
-            #}
+            #CosmosDB Servers
+            Write-Output "Collecting CosmosDB Servers..."
+            Export-AddToFile "    ##### $subname - CosmosDB Servers #####"
+            $resourceGroups = Get-AzResourceGroup -ErrorAction Stop
+            foreach ($rg in $resourceGroups) {
+                $dbaccts = Get-AzCosmosDBAccount -ResourceGroupName $rg.ResourceGroupName -ErrorAction Stop
+                foreach ($dbaact in $dbaccts) {
+                    Export-CosmosDBAccount $dbaact
+                }
+            }
 
             #Redis Servers
             Write-Output "Collecting Redis Servers..."
@@ -2109,11 +2268,11 @@ function Get-AzNetworkDiagram {
     ##### Generate diagram #####
     # Generate diagram using Graphviz
     Write-Output "Generating $OutputPath\AzNetworkDiagram.pdf ..."
-    dot -Tpdf $OutputPath\AzNetworkDiagram.dot -o $OutputPath\AzNetworkDiagram.pdf
+    dot -q1 -Tpdf $OutputPath\AzNetworkDiagram.dot -o $OutputPath\AzNetworkDiagram.pdf
     Write-Output "Generating $OutputPath\AzNetworkDiagram.png ..."
-    dot -Tpng $OutputPath\AzNetworkDiagram.dot -o $OutputPath\AzNetworkDiagram.png
+    dot -q1 -Tpng $OutputPath\AzNetworkDiagram.dot -o $OutputPath\AzNetworkDiagram.png
     Write-Output "Generating $OutputPath\AzNetworkDiagram.svg ..."
-    dot -Tsvg $OutputPath\AzNetworkDiagram.dot -o $OutputPath\AzNetworkDiagram.svg
+    dot -q1 -Tsvg $OutputPath\AzNetworkDiagram.dot -o $OutputPath\AzNetworkDiagram.svg
 } 
 
 Export-ModuleMember -Function Get-AzNetworkDiagram
