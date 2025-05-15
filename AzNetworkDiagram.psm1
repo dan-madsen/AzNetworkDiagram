@@ -910,7 +910,43 @@ function Export-AppServicePlan {
 }
 
 function Export-APIM {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$apim
+    )
+    try {
+        $apimid = $apim.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        
+        $data = "
+        # $($apim.Name) - $apimid
+        subgraph cluster_$apimid {
+            style = solid;
+            color = black;
+            node [color = white;];
+        "
+        $apimCtx = New-AzApiManagementContext -ResourceGroupName $apim.ResourceGroupName -ServiceName $apim.name
+        $prodCount = (Get-AzApiManagementProduct -Context $apimCtx -ErrorAction SilentlyContinue).Count
+        $apiCount  = (Get-AzApiManagementApi     -Context $apimCtx -ErrorAction SilentlyContinue).Count
 
+        $data += "        $apimid [label = `"\nLocation: $($apim.Location)\nSKU: $($apim.Sku)\nPlatform Version: $($apim.PlatformVersion)\nPublic IP Addresses: $($apim.PublicIPAddresses)\nPrivate IP Addresses: $($apim.PrivateIPAddresses)\nCapacity: $($apim.Capacity)\nZone: $($apim.Zone)\nPublic Network Access: $($apim.PublicNetworkAccess)\nProducts: $prodCount\nAPI's: $apiCount\nVirtual Network: $($apim.VpnType)`" ; color = lightgray;image = `"$OutputPath\icons\apim.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
+        $data += "`n"
+        if ($apim.VirtualNetwork.SubnetResourceId) {
+            $subnetid = $apim.VirtualNetwork.SubnetResourceId.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $data += "        $apimid -> $subnetid;`n"
+        }
+        if ($apim.PrivateEndpointConnections.Id) {
+            $peid = $apim.PrivateEndpointConnections.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $data += "        $apimid -> $peid;`n"
+        }
+        $data += "   label = `"$($apim.Name)`";
+                }`n"
+
+        Export-AddToFile -Data $data
+    }
+    catch {
+        Write-Host "Can't export APIM: $($apim.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
 }
 
 function Export-ACR {
@@ -2041,6 +2077,7 @@ function Confirm-Prerequisites {
         "agw.png",
         "aks-service.png",
         "aks-node-pool.png",
+        "apim.png",
         "appplan.png",
         "appserviceplan.png",
         "appservices.png",
