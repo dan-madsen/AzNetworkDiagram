@@ -1,0 +1,720 @@
+digraph G {
+    fontname="Arial,sans-serif"
+    node [fontname="Arial,sans-serif"]
+    edge [fontname="Arial,sans-serif"]
+    
+    # Ability for peerings arrows/connections to end at border
+    compound = true;
+    #concentrate = true;
+    clusterrank = local;
+    
+    # Rank (height in picture) support
+    newrank = true;
+    rankdir = TB;
+    ranksep="2.0 equally"
+    nodesep="1.0"
+    
+
+    ##########################################################################################################
+    ##### za-ols-chb-dev-1 
+    ##########################################################################################################
+
+    ##### za-ols-chb-dev-1 - Route Tables #####
+
+    subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkroutetablesrtzaolschbagwdevsan1 {
+        style = solid;
+        color = black;
+        
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkroutetablesrtzaolschbagwdevsan1 [shape = none;label = <
+            <TABLE border="1" style="rounded">
+            <TR><TD colspan="3" border="0">rt-za-ols-chb-agw-dev-san-1</TD></TR>
+            <TR><TD>Route</TD><TD>NextHopType</TD><TD>NextHopIpAddress</TD></TR>
+            <TR><TD>0.0.0.0/0</TD><TD>Internet</TD><TD></TD></TR><TR><TD>10.30.0.0/16</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.200.200.0/21</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.200.208.0/21</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.250.0.0/16</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.0.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.1.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.2.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.3.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.4.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.5.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.6.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.7.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.8.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.9.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.10.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.11.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.12.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.13.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.14.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.15.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.16.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.17.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.18.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.19.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.20.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.21.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.22.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.23.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.24.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.25.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.26.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.27.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.28.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.29.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.30.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.31.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.32.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.33.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.34.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.35.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.36.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.37.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.38.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.39.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.40.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.41.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.42.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.43.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.44.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.45.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.46.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.47.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.48.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.49.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.50.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.51.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.52.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.53.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.54.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.55.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.56.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.57.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.58.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.59.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.60.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.61.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.62.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.63.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.64.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.65.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.66.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.67.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.68.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.69.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.70.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.71.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.72.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.73.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.74.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.75.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.76.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.77.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.78.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.79.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.80.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.81.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.82.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.83.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.84.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.85.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.86.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.87.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.88.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.89.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.90.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.91.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.92.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.93.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.94.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.95.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.96.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.97.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.98.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.99.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.100.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.101.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.102.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.103.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.104.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.105.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.106.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.107.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.108.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.109.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.110.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.111.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.112.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.113.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.114.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.115.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.116.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.117.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.118.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.119.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.120.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.121.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.122.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.123.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.124.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.125.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.126.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.127.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.128.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.129.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.130.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.131.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.132.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.133.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.135.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.136.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.137.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.138.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.139.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.140.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.141.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.142.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.143.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.144.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.145.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.146.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.147.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.148.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.149.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.150.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.151.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.152.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.153.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.154.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.155.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.156.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.157.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.158.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.159.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.160.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.161.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.162.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.163.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.164.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.165.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.166.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.167.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.168.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.169.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.170.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.171.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.172.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.173.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.174.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.175.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.176.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.177.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.178.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.179.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.180.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.181.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.182.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.183.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.184.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.185.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.186.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.187.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.188.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.189.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.190.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.191.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.192.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.193.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.194.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.195.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.196.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.197.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.198.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.199.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.200.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.201.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.202.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.203.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.204.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.205.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.206.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.207.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.208.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.209.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.210.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.211.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.212.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.213.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.214.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.215.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.216.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.217.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.218.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.219.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.220.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.221.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.222.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.223.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.224.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.225.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.226.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.227.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.228.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.229.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.230.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.231.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.232.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.233.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.234.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.235.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.236.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.237.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.238.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.239.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.240.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.241.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.242.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.243.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.244.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.245.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.246.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.247.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.248.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.249.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.250.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.251.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.252.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.253.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.254.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>10.21.255.0/24</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR>
+            </TABLE>>;
+            ];
+    }
+            
+
+    subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkroutetablesrtzaolschbagwuatsan2 {
+        style = solid;
+        color = black;
+        
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkroutetablesrtzaolschbagwuatsan2 [shape = none;label = <
+            <TABLE border="1" style="rounded">
+            <TR><TD colspan="3" border="0">rt-za-ols-chb-agw-uat-san-2</TD></TR>
+            <TR><TD>Route</TD><TD>NextHopType</TD><TD>NextHopIpAddress</TD></TR>
+            <TR><TD>0.0.0.0/0</TD><TD>Internet</TD><TD></TD></TR>
+            </TABLE>>;
+            ];
+    }
+            
+
+    subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkroutetablesrtzaolschboutdevsan1 {
+        style = solid;
+        color = black;
+        
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkroutetablesrtzaolschboutdevsan1 [shape = none;label = <
+            <TABLE border="1" style="rounded">
+            <TR><TD colspan="3" border="0">rt-za-ols-chb-out-dev-san-1</TD></TR>
+            <TR><TD>Route</TD><TD>NextHopType</TD><TD>NextHopIpAddress</TD></TR>
+            <TR><TD>0.0.0.0/0</TD><TD>VirtualAppliance</TD><TD>10.21.134.4</TD></TR><TR><TD>ApiManagement</TD><TD>Internet</TD><TD></TD></TR>
+            </TABLE>>;
+            ];
+    }
+            
+    ##### za-ols-chb-dev-1 - IP Groups #####
+    ##### za-ols-chb-dev-1 - Virtual Networks #####
+
+        # vnet-ols-chb-dev-san-1 - subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1
+        subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1 {
+            style = solid;
+            color = black;
+            node [color = white;];
+            subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1 [color = lightgray;label = "\nAddress Space(s):\n10.250.13.160/27\n10.250.14.0/26\n10.250.14.64/27\n10.250.14.128/25\n10.250.3.128/28\n10.250.0.128/28\n";image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\vnet.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbbkpdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbbkpdevsan1
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbbkpdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkroutetablesrtzaolschboutdevsan1
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbbkpdevsan1 [label = "\nsnet-ols-chb-bkp-dev-san-1\n10.250.13.160/27" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\snet.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbbkpdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkprivateendpointspersvolschbdevsan1 ;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbbkpdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkprivateendpointsepzaolschbclu ;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbbkpdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkprivateendpointsolschbdevpesan4 ;
+
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbbkpdevsan1
+
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan6 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan6
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan6 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkroutetablesrtzaolschboutdevsan1
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan6 [label = "\nsnet-ols-chb-dev-san-6\n10.250.14.144/28" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\snet.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan6
+
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan7 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan7
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan7 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkroutetablesrtzaolschboutdevsan1
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan7 [label = "\nsnet-ols-chb-dev-san-7\n10.250.14.160/28" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\snet.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan7
+
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan9 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan9
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan9 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkroutetablesrtzaolschboutdevsan1
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan9 [label = "\nsnet-ols-chb-dev-san-9\n10.250.14.192/28" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\snet.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan9
+
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan10 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan10
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan10 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkroutetablesrtzaolschboutdevsan1
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan10 [label = "\nsnet-ols-chb-dev-san-10\n10.250.14.208/28" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\snet.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan10
+
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan2 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan2
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan2 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkroutetablesrtzaolschboutdevsan1
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan2 [label = "\n\nsnet-ols-chb-dev-san-2\n10.250.14.0/27\n\nDelegated to:\n0" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\snet.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan2
+
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan3 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan3
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan3 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkroutetablesrtzaolschboutdevsan1
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan3 [label = "\n\nsnet-ols-chb-dev-san-3\n10.250.14.32/27\n\nDelegated to:\n0" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\snet.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan3
+
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan4 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan4
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan4 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkroutetablesrtzaolschboutdevsan1
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan4 [label = "\n\nsnet-ols-chb-dev-san-4\n10.250.14.64/27\n\nDelegated to:\n0" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\snet.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan4
+
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan13 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan13
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan13 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkroutetablesrtzaolschboutdevsan1
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan13 [label = "\nsnet-ols-chb-dev-san-13\n10.250.3.128/28" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\snet.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan13
+
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan12 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan12
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan12 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkroutetablesrtzaolschboutdevsan1
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan12 [label = "\nsnet-ols-chb-dev-san-12\n10.250.14.240/28" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\snet.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan12 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkprivateendpointspeolschbbedevsan12 ;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan12 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkprivateendpointspeolschbbedevsan131 ;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan12 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkprivateendpointspeolschbbedevsan123 ;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan12 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkprivateendpointspeolschbbedevsan124 ;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan12 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkprivateendpointspeolschbbedevsan122 ;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan12 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkprivateendpointspeapimolschbdevsan2 ;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan12 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkprivateendpointsstolschbdevpesan4 ;
+
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan12
+
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan8 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan8
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan8 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkroutetablesrtzaolschbagwdevsan1
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan8 [label = "\nsnet-ols-chb-dev-san-8\n10.250.14.176/28" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\snet.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan8
+
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan14 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan14
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan14 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkroutetablesrtzaolschboutdevsan1
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan14 [label = "\nsnet-ols-chb-dev-san-14\n10.250.0.128/28" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\snet.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan14 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkprivateendpointsstfileolschbdevpesan1 ;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan14 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkprivateendpointsstblobolschbdevpesan1 ;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan14 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkprivateendpointsstfileolschbdevpesan2 ;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan14 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkprivateendpointsstblobolschbdevpesan2 ;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan14 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkprivateendpointsstblobolschbdevpesan3 ;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan14 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkprivateendpointsstblobolschbdevpesan5 ;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan14 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkprivateendpointsstblobolschbdevpesan4 ;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan14 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkprivateendpointsstblobolschbdevpesan31 ;
+
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan14
+
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan11 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan11
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan11 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkroutetablesrtzaolschboutdevsan1
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan11 [label = "\nsnet-ols-chb-dev-san-11\n10.250.14.224/28" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\snet.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan11
+
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan5 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan5
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan5 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkroutetablesrtzaolschbagwuatsan2
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan5 [label = "\nsnet-ols-chb-dev-san-5\n10.250.14.128/28" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\snet.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan5
+
+            label = "vnet-ols-chb-dev-san-1";
+        }
+        
+    ##### za-ols-chb-dev-1 - VMs #####
+
+        # vm-ols-chb-be-dev-san-1 - subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftcomputevirtualmachinesvmolschbbedevsan1
+        subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftcomputevirtualmachinesvmolschbbedevsan1 {
+            style = solid;
+            color = black;
+            node [color = white;];
+                subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftcomputevirtualmachinesvmolschbbedevsan1 [label = "\nLocation: southafricanorth\nSKU: Standard_B2s\nZones: \nOS Type: Linux\nPublic IP: \nPrivate IP Address: 10.250.3.133\nExtensions: AADSSHLoginForLinux, AzureMonitorLinuxAgent, AzureNetworkWatcherExtension, AzurePolicyforLinux, enablevmAccess, MDE.Linux" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\vm.png";imagepos = "tc";labelloc = "b";height = 3.0;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftcomputevirtualmachinesvmolschbbedevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan13;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftcomputevirtualmachinesvmolschbbedevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsbuiltinidentityrgprovidersmicrosoftmanagedidentityuserassignedidentitiesbuiltinidentitysouthafricanorth;
+   label = "vm-ols-chb-be-dev-san-1";
+                }
+
+
+        # vmchbpvttstsan3 - subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftcomputevirtualmachinesvmchbpvttstsan3
+        subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftcomputevirtualmachinesvmchbpvttstsan3 {
+            style = solid;
+            color = black;
+            node [color = white;];
+                subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftcomputevirtualmachinesvmchbpvttstsan3 [label = "\nLocation: southafricanorth\nSKU: Standard_D4s_v4\nZones: \nOS Type: Windows\nPublic IP: \nPrivate IP Address: 10.250.14.196\nExtensions: AADLoginForWindows, AzureMonitorWindowsAgent, AzurePolicyforWindows, enablevmaccess, IaaSAntimalware, MDE.Windows" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\vm.png";imagepos = "tc";labelloc = "b";height = 3.0;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftcomputevirtualmachinesvmchbpvttstsan3 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan9;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftcomputevirtualmachinesvmchbpvttstsan3 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsbuiltinidentityrgprovidersmicrosoftmanagedidentityuserassignedidentitiesbuiltinidentitysouthafricanorth;
+   label = "vmchbpvttstsan3";
+                }
+
+    ##### za-ols-chb-dev-1 - Keyvaults #####
+
+        # kv-ols-chb-dev-san-1 - subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftkeyvaultvaultskvolschbdevsan1
+        subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftkeyvaultvaultskvolschbdevsan1 {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftkeyvaultvaultskvolschbdevsan1 [label = "\nLocation: southafricanorth\nSKU: standard\nSoft Delete Enabled: True\nRBAC Authorization Enabled: True\nPublic Network Access: Enabled\nPurge Protection Enabled: True" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\keyvault.png";imagepos = "tc";labelloc = "b";height = 2.5;];
+        
+            label = "kv-ols-chb-dev-san-1";
+        }
+        
+
+        # kv-ols-chb-dev-san-2 - subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftkeyvaultvaultskvolschbdevsan2
+        subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftkeyvaultvaultskvolschbdevsan2 {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftkeyvaultvaultskvolschbdevsan2 [label = "\nLocation: southafricanorth\nSKU: standard\nSoft Delete Enabled: True\nRBAC Authorization Enabled: True\nPublic Network Access: Enabled\nPurge Protection Enabled: True" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\keyvault.png";imagepos = "tc";labelloc = "b";height = 2.5;];
+        
+            label = "kv-ols-chb-dev-san-2";
+        }
+        
+    ##### za-ols-chb-dev-1 - Storage Accounts #####
+
+        # stolschbdevsan1 - subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftstoragestorageaccountsstolschbdevsan1
+        subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftstoragestorageaccountsstolschbdevsan1 {
+            style = solid;
+            color = black;
+            node [color = white;];
+                subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftstoragestorageaccountsstolschbdevsan1 [label = "\nLocation: southafricanorth\nSKU: Standard_LRS\nKind: StorageV2\nPublic Network Access: Enabled\nAccess Tier: Hot\nHierarchical Namespace Enabled: False\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\storage-account.png";imagepos = "tc";labelloc = "b";height = 2.5;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftstoragestorageaccountsstolschbdevsan1 -> systemobject[];
+   label = "stolschbdevsan1";
+                }
+
+
+        # stolschbdevsan2 - subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftstoragestorageaccountsstolschbdevsan2
+        subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftstoragestorageaccountsstolschbdevsan2 {
+            style = solid;
+            color = black;
+            node [color = white;];
+                subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftstoragestorageaccountsstolschbdevsan2 [label = "\nLocation: southafricanorth\nSKU: Standard_LRS\nKind: StorageV2\nPublic Network Access: Disabled\nAccess Tier: Hot\nHierarchical Namespace Enabled: False\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\storage-account.png";imagepos = "tc";labelloc = "b";height = 2.5;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftstoragestorageaccountsstolschbdevsan2 -> systemobject[];
+   label = "stolschbdevsan2";
+                }
+
+
+        # stolschbdevsan3 - subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftstoragestorageaccountsstolschbdevsan3
+        subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftstoragestorageaccountsstolschbdevsan3 {
+            style = solid;
+            color = black;
+            node [color = white;];
+                subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftstoragestorageaccountsstolschbdevsan3 [label = "\nLocation: southafricanorth\nSKU: Standard_LRS\nKind: StorageV2\nPublic Network Access: Disabled\nAccess Tier: Hot\nHierarchical Namespace Enabled: False\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\storage-account.png";imagepos = "tc";labelloc = "b";height = 2.5;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftstoragestorageaccountsstolschbdevsan3 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkprivateendpointsstblobolschbdevpesan31;
+   label = "stolschbdevsan3";
+                }
+
+
+        # stolschbdevsan4 - subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftstoragestorageaccountsstolschbdevsan4
+        subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftstoragestorageaccountsstolschbdevsan4 {
+            style = solid;
+            color = black;
+            node [color = white;];
+                subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftstoragestorageaccountsstolschbdevsan4 [label = "\nLocation: southafricanorth\nSKU: Standard_LRS\nKind: StorageV2\nPublic Network Access: Enabled\nAccess Tier: Hot\nHierarchical Namespace Enabled: False\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\storage-account.png";imagepos = "tc";labelloc = "b";height = 2.5;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftstoragestorageaccountsstolschbdevsan4 -> systemobject[];
+   label = "stolschbdevsan4";
+                }
+
+
+        # stolschbdevsan5 - subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftstoragestorageaccountsstolschbdevsan5
+        subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftstoragestorageaccountsstolschbdevsan5 {
+            style = solid;
+            color = black;
+            node [color = white;];
+                subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftstoragestorageaccountsstolschbdevsan5 [label = "\nLocation: southafricanorth\nSKU: Standard_LRS\nKind: StorageV2\nPublic Network Access: Disabled\nAccess Tier: Hot\nHierarchical Namespace Enabled: False\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\storage-account.png";imagepos = "tc";labelloc = "b";height = 2.5;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftstoragestorageaccountsstolschbdevsan5 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkprivateendpointsstblobolschbdevpesan5;
+   label = "stolschbdevsan5";
+                }
+
+    ##### za-ols-chb-dev-1 - Private Endpoints #####
+
+                     subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkprivateendpointspersvolschbdevsan1 [label = "\npe-rsv-ols-chb-dev-san-1\nrsv-ols-chb-dev-san-1\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\private-endpoint.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+                     subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkprivateendpointsstblobolschbdevpesan3 [label = "\nst-blob-ols-chb-dev-pe-san3\nstolschbdevsan2\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\private-endpoint.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+                     subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkprivateendpointsstblobolschbdevpesan31 [label = "\nst-blob-ols-chb-dev-pe-san3-1\nstolschbdevsan3\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\private-endpoint.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+                     subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkprivateendpointsstblobolschbdevpesan4 [label = "\nst-blob-ols-chb-dev-pe-san4\nstolschbdevsan4\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\private-endpoint.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+                     subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkprivateendpointsstblobolschbdevpesan5 [label = "\nst-blob-ols-chb-dev-pe-san5\nstolschbdevsan5\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\private-endpoint.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+                     subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkprivateendpointsepzaolschbclu [label = "\nep-za-ols-chb-clu\ncog-ols-chb-dev-san-1\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\private-endpoint.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+                     subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkprivateendpointsolschbdevpesan4 [label = "\nols-chb-dev-pe-san4\nstolschbdevsan4\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\private-endpoint.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+                     subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkprivateendpointspeapimolschbdevsan2 [label = "\npe-apim-ols-chb-dev-san-2\napim-ols-chb-dev-san-2\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\private-endpoint.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+                     subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkprivateendpointspeolschbbedevsan12 [label = "\npeolschbbedevsan12\ncosmos-za-ols-chb-dev-san-1\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\private-endpoint.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+                     subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkprivateendpointspeolschbbedevsan122 [label = "\npeolschbbedevsan12-2\nevhns-ols-chb-dev-san-2\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\private-endpoint.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+                     subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkprivateendpointspeolschbbedevsan123 [label = "\npeolschbbedevsan12-3\nevhns-ols-chb-dev-san-3\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\private-endpoint.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+                     subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkprivateendpointspeolschbbedevsan124 [label = "\npeolschbbedevsan12-4\nevhns-ols-chb-dev-san-4\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\private-endpoint.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+                     subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkprivateendpointspeolschbbedevsan131 [label = "\npeolschbbedevsan13-1\nevhns-ols-chb-dev-san-1\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\private-endpoint.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+                     subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkprivateendpointsstblobolschbdevpesan1 [label = "\nst-blob-ols-chb-dev-pe-san1\nstolschbdevsan1\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\private-endpoint.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+                     subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkprivateendpointsstblobolschbdevpesan2 [label = "\nst-blob-ols-chb-dev-pe-san2\nstolschbdevsan2\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\private-endpoint.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+                     subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkprivateendpointsstfileolschbdevpesan1 [label = "\nst-file-ols-chb-dev-pe-san1\nstolschbdevsan1\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\private-endpoint.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+                     subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkprivateendpointsstfileolschbdevpesan2 [label = "\nst-file-ols-chb-dev-pe-san2\nstolschbdevsan2\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\private-endpoint.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+                     subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkprivateendpointsstolschbdevpesan4 [label = "\nst-ols-chb-dev-pe-san4\nstolschbdevsan4\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\private-endpoint.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+    ##### za-ols-chb-dev-1 - Application Gateways #####
+
+        # agw-ols-chb-dev-san-1 - subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkapplicationgatewaysagwolschbdevsan1
+        subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkapplicationgatewaysagwolschbdevsan1 {
+            style = solid;
+            color = black;
+            node [color = white;];
+                subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkapplicationgatewaysagwolschbdevsan1 [label = "\nPolicy name: chatbot-waf-policy\nPrivate IP's: , 10.250.14.180\nSKU: WAF_v2\nZones: None\nSSL Certificates: sslpc-ols-chb-dev-san-1\nFrontend ports: 443, 8443\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\agw.png";imagepos = "tc";labelloc = "b";height = 2.5;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkapplicationgatewaysagwolschbdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan8;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkapplicationgatewaysagwolschbdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftmanagedidentityuserassignedidentitiesidolschbdevsan1;
+   label = "agw-ols-chb-dev-san-1";
+                }
+
+
+        # agw-ols-chb-dev-san-2 - subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkapplicationgatewaysagwolschbdevsan2
+        subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkapplicationgatewaysagwolschbdevsan2 {
+            style = solid;
+            color = black;
+            node [color = white;];
+                subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkapplicationgatewaysagwolschbdevsan2 [label = "\nPolicy name: waf-ols-chb-dev-san-2\nPrivate IP's: , 10.250.14.135\nSKU: WAF_v2\nZones: None\nSSL Certificates: None\nFrontend ports: 81, 8080, 8081\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\agw.png";imagepos = "tc";labelloc = "b";height = 2.5;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkapplicationgatewaysagwolschbdevsan2 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan5;
+   label = "agw-ols-chb-dev-san-2";
+                }
+
+    ##### za-ols-chb-dev-1 - Express Route Circuits #####
+    ##### za-ols-chb-dev-1 - Virtual WANs #####
+    ##### za-ols-chb-dev-1 - MySQL Flexible Servers #####
+    ##### za-ols-chb-dev-1 - PostgreSQL Servers #####
+    ##### za-ols-chb-dev-1 - CosmosDB Servers #####
+
+        # cosmos-za-ols-chb-dev-san-1 - subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftdocumentdbdatabaseaccountscosmoszaolschbdevsan1
+        subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftdocumentdbdatabaseaccountscosmoszaolschbdevsan1 {
+            style = solid;
+            color = black;
+            node [color = white;];
+                subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftdocumentdbdatabaseaccountscosmoszaolschbdevsan1 [label = "Version: 4.0\nLocations: South Africa North\nDefault Consistency Level: BoundedStaleness\nKind: MongoDB\nDatabase Account Offer Type: Standard\nEnable Analytical Storage: False\nVirtual Network Filter Enabled: True" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\cosmosdb.png";imagepos = "tc";labelloc = "b";height = 3.0;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftdocumentdbdatabaseaccountscosmoszaolschbdevsan1mongodbdatabasesmtn_conversationlogs [label = "\n\nName: mtn_conversationlogs\nDatabase Throughput: Unknown\n
+Collection     RU
+----------     --
+conversations 400
+
+\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\mongodb.png";imagepos = "tc";labelloc = "b";height = 3.0;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftdocumentdbdatabaseaccountscosmoszaolschbdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftdocumentdbdatabaseaccountscosmoszaolschbdevsan1mongodbdatabasesmtn_conversationlogs;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftdocumentdbdatabaseaccountscosmoszaolschbdevsan1mongodbdatabasesmtn_responses [label = "\n\nName: mtn_responses\nDatabase Throughput: Unknown\n
+Collection  RU
+----------  --
+action     400
+response   400
+country    400
+language   400
+
+\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\mongodb.png";imagepos = "tc";labelloc = "b";height = 3.0;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftdocumentdbdatabaseaccountscosmoszaolschbdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftdocumentdbdatabaseaccountscosmoszaolschbdevsan1mongodbdatabasesmtn_responses;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftdocumentdbdatabaseaccountscosmoszaolschbdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan12 [label = "Virtual Network Rule"; ];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftdocumentdbdatabaseaccountscosmoszaolschbdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan13 [label = "Virtual Network Rule"; ];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftdocumentdbdatabaseaccountscosmoszaolschbdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan3 [label = "Virtual Network Rule"; ];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftdocumentdbdatabaseaccountscosmoszaolschbdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan4 [label = "Virtual Network Rule"; ];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftdocumentdbdatabaseaccountscosmoszaolschbdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkprivateendpointspeolschbbedevsan12;
+   label = "cosmos-za-ols-chb-dev-san-1";
+                }
+
+    ##### za-ols-chb-dev-1 - Redis Servers #####
+
+        # redis-ols-chb-dev-san-1 - subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftcacheredisredisolschbdevsan1
+        subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftcacheredisredisolschbdevsan1 {
+            style = solid;
+            color = black;
+            node [color = white;];
+                subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftcacheredisredisolschbdevsan1 [label = "\nLocation: South Africa North\nSKU: Premium\nRedis Version: 6.0\nZones: \nShard Count: 1\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\redis.png";imagepos = "tc";labelloc = "b";height = 2.5;];
+   label = "redis-ols-chb-dev-san-1";
+                }
+
+    ##### za-ols-chb-dev-1 - Event Hubs #####
+
+        # evhns-ols-chb-dev-san-3 - subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan3
+        subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan3 {
+            style = solid;
+            color = black;
+            node [color = white;];
+                subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan3 [label = "\nLocation: southafricanorth\nSKU: Standard\nTier: Standard\nCapacity: 2\nZone Redundant: True" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\eventhub.png";imagepos = "tc";labelloc = "b";height = 2.5;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan3eventhubsevholschbdevsan31 [label = "\n\nLocation: southafricanorth\nName: evh-ols-chb-dev-san-31\nMessage Retention: \nPartition Count: 1\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\eventhub.png";imagepos = "tc";labelloc = "b";height = 2.0;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan3 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan3eventhubsevholschbdevsan31;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan3eventhubsevholschbdevsan32 [label = "\n\nLocation: southafricanorth\nName: evh-ols-chb-dev-san-32\nMessage Retention: \nPartition Count: 1\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\eventhub.png";imagepos = "tc";labelloc = "b";height = 2.0;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan3 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan3eventhubsevholschbdevsan32;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan3 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkprivateendpointspeolschbbedevsan123;
+   label = "evhns-ols-chb-dev-san-3";
+                }
+
+
+        # evhns-ols-chb-dev-san-2 - subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan2
+        subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan2 {
+            style = solid;
+            color = black;
+            node [color = white;];
+                subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan2 [label = "\nLocation: southafricanorth\nSKU: Standard\nTier: Standard\nCapacity: 2\nZone Redundant: True" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\eventhub.png";imagepos = "tc";labelloc = "b";height = 2.5;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan2eventhubsevholschbdevsan21 [label = "\n\nLocation: southafricanorth\nName: evh-ols-chb-dev-san-21\nMessage Retention: \nPartition Count: 1\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\eventhub.png";imagepos = "tc";labelloc = "b";height = 2.0;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan2 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan2eventhubsevholschbdevsan21;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan2eventhubsevholschbdevsan22 [label = "\n\nLocation: southafricanorth\nName: evh-ols-chb-dev-san-22\nMessage Retention: \nPartition Count: 1\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\eventhub.png";imagepos = "tc";labelloc = "b";height = 2.0;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan2 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan2eventhubsevholschbdevsan22;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan2eventhubsevholschbdevsan23 [label = "\n\nLocation: southafricanorth\nName: evh-ols-chb-dev-san-23\nMessage Retention: \nPartition Count: 1\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\eventhub.png";imagepos = "tc";labelloc = "b";height = 2.0;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan2 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan2eventhubsevholschbdevsan23;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan2eventhubsevholschbdevsan24 [label = "\n\nLocation: southafricanorth\nName: evh-ols-chb-dev-san-24\nMessage Retention: \nPartition Count: 1\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\eventhub.png";imagepos = "tc";labelloc = "b";height = 2.0;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan2 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan2eventhubsevholschbdevsan24;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan2eventhubsevholschbdevsan25 [label = "\n\nLocation: southafricanorth\nName: evh-ols-chb-dev-san-25\nMessage Retention: \nPartition Count: 1\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\eventhub.png";imagepos = "tc";labelloc = "b";height = 2.0;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan2 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan2eventhubsevholschbdevsan25;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan2 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkprivateendpointspeolschbbedevsan122;
+   label = "evhns-ols-chb-dev-san-2";
+                }
+
+
+        # evhns-ols-chb-dev-san-4 - subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan4
+        subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan4 {
+            style = solid;
+            color = black;
+            node [color = white;];
+                subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan4 [label = "\nLocation: southafricanorth\nSKU: Standard\nTier: Standard\nCapacity: 2\nZone Redundant: True" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\eventhub.png";imagepos = "tc";labelloc = "b";height = 2.5;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan4eventhubsevholschbdevsan41 [label = "\n\nLocation: southafricanorth\nName: evh-ols-chb-dev-san-41\nMessage Retention: \nPartition Count: 1\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\eventhub.png";imagepos = "tc";labelloc = "b";height = 2.0;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan4 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan4eventhubsevholschbdevsan41;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan4eventhubsevholschbdevsan42 [label = "\n\nLocation: southafricanorth\nName: evh-ols-chb-dev-san-42\nMessage Retention: \nPartition Count: 1\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\eventhub.png";imagepos = "tc";labelloc = "b";height = 2.0;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan4 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan4eventhubsevholschbdevsan42;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan4eventhubsevholschbdevsan43 [label = "\n\nLocation: southafricanorth\nName: evh-ols-chb-dev-san-43\nMessage Retention: \nPartition Count: 1\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\eventhub.png";imagepos = "tc";labelloc = "b";height = 2.0;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan4 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan4eventhubsevholschbdevsan43;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan4eventhubsevholschbdevsan44 [label = "\n\nLocation: southafricanorth\nName: evh-ols-chb-dev-san-44\nMessage Retention: \nPartition Count: 1\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\eventhub.png";imagepos = "tc";labelloc = "b";height = 2.0;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan4 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan4eventhubsevholschbdevsan44;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan4 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkprivateendpointspeolschbbedevsan124 subscriptions9017bf1a13cb4ef4ad5cf7fef767f8fbresourcegroupspreprodprovidersmicrosoftnetworkprivateendpointspreprodchatboteventhubprivateendpoint;
+   label = "evhns-ols-chb-dev-san-4";
+                }
+
+
+        # evhns-ols-chb-dev-san-1 - subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan1
+        subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan1 {
+            style = solid;
+            color = black;
+            node [color = white;];
+                subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan1 [label = "\nLocation: southafricanorth\nSKU: Standard\nTier: Standard\nCapacity: 2\nZone Redundant: True" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\eventhub.png";imagepos = "tc";labelloc = "b";height = 2.5;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan1eventhubsevholschbdevsan11 [label = "\n\nLocation: southafricanorth\nName: evh-ols-chb-dev-san-11\nMessage Retention: \nPartition Count: 1\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\eventhub.png";imagepos = "tc";labelloc = "b";height = 2.0;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan1eventhubsevholschbdevsan11;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan1eventhubsevholschbdevsan12 [label = "\n\nLocation: southafricanorth\nName: evh-ols-chb-dev-san-12\nMessage Retention: \nPartition Count: 1\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\eventhub.png";imagepos = "tc";labelloc = "b";height = 2.0;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan1eventhubsevholschbdevsan12;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan1eventhubsevholschbdevsan13 [label = "\n\nLocation: southafricanorth\nName: evh-ols-chb-dev-san-13\nMessage Retention: \nPartition Count: 1\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\eventhub.png";imagepos = "tc";labelloc = "b";height = 2.0;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan1eventhubsevholschbdevsan13;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan1eventhubsevholschbdevsan14 [label = "\n\nLocation: southafricanorth\nName: evh-ols-chb-dev-san-14\nMessage Retention: \nPartition Count: 1\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\eventhub.png";imagepos = "tc";labelloc = "b";height = 2.0;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan1eventhubsevholschbdevsan14;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan1eventhubsevholschbdevsan15 [label = "\n\nLocation: southafricanorth\nName: evh-ols-chb-dev-san-15\nMessage Retention: \nPartition Count: 1\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\eventhub.png";imagepos = "tc";labelloc = "b";height = 2.0;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan1eventhubsevholschbdevsan15;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan1eventhubsevholschbdevsan16 [label = "\n\nLocation: southafricanorth\nName: evh-ols-chb-dev-san-16\nMessage Retention: \nPartition Count: 1\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\eventhub.png";imagepos = "tc";labelloc = "b";height = 2.0;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan1eventhubsevholschbdevsan16;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan1eventhubsevholschbdevsan17 [label = "\n\nLocation: southafricanorth\nName: evh-ols-chb-dev-san-17\nMessage Retention: \nPartition Count: 1\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\eventhub.png";imagepos = "tc";labelloc = "b";height = 2.0;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan1eventhubsevholschbdevsan17;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan1eventhubsevholschbdevsan18 [label = "\n\nLocation: southafricanorth\nName: evh-ols-chb-dev-san-18\nMessage Retention: \nPartition Count: 1\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\eventhub.png";imagepos = "tc";labelloc = "b";height = 2.0;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan1eventhubsevholschbdevsan18;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan1eventhubsevholschbdevsan19 [label = "\n\nLocation: southafricanorth\nName: evh-ols-chb-dev-san-19\nMessage Retention: \nPartition Count: 1\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\eventhub.png";imagepos = "tc";labelloc = "b";height = 2.0;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan1eventhubsevholschbdevsan19;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan1eventhubsevholschbdevsan20 [label = "\n\nLocation: southafricanorth\nName: evh-ols-chb-dev-san-20\nMessage Retention: \nPartition Count: 1\n" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\eventhub.png";imagepos = "tc";labelloc = "b";height = 2.0;];
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan1eventhubsevholschbdevsan20;
+        subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosofteventhubnamespacesevhnsolschbdevsan1 -> subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworkprivateendpointspeolschbbedevsan131;
+   label = "evhns-ols-chb-dev-san-1";
+                }
+
+    ##### za-ols-chb-dev-1 - App Service Plans #####
+    ##### za-ols-chb-dev-1 - API Management Services #####
+    ##### za-ols-chb-dev-1 - AKS Clusters #####
+    ##### za-ols-chb-dev-1 - VMSS #####
+    ##### za-ols-chb-dev-1 - Managed Identities #####
+
+        # Built-In-Identity-southafricanorth - 
+        subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsbuiltinidentityrgprovidersmicrosoftmanagedidentityuserassignedidentitiesbuiltinidentitysouthafricanorth {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsbuiltinidentityrgprovidersmicrosoftmanagedidentityuserassignedidentitiesbuiltinidentitysouthafricanorth [label = "\nBuilt-In-Identity-southafricanorth\nLocation: southafricanorth" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\managed-identity.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "Built-In-Identity-southafricanorth";
+        }
+        
+
+        # id-ols-chb-dev-san-1 - 
+        subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftmanagedidentityuserassignedidentitiesidolschbdevsan1 {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftmanagedidentityuserassignedidentitiesidolschbdevsan1 [label = "\nid-ols-chb-dev-san-1\nLocation: southafricanorth" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\managed-identity.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "id-ols-chb-dev-san-1";
+        }
+        
+    ##### za-ols-chb-dev-1 - Azure Contiainer Registries #####
+    ##### za-ols-chb-dev-1 - SSH Keys #####
+    ##### za-ols-chb-dev-1 - NSG's #####
+
+        # nsg-ols-chb-bkp-dev-san-1 - subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbbkpdevsan1
+        subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbbkpdevsan1 {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbbkpdevsan1 [label = "\nnsg-ols-chb-bkp-dev-san-1\nLocation: southafricanorth" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\nsg.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "nsg-ols-chb-bkp-dev-san-1";
+        }
+        
+
+        # nsg-ols-chb-dev-san-10 - subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan10
+        subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan10 {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan10 [label = "\nnsg-ols-chb-dev-san-10\nLocation: southafricanorth" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\nsg.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "nsg-ols-chb-dev-san-10";
+        }
+        
+
+        # nsg-ols-chb-dev-san-11 - subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan11
+        subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan11 {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan11 [label = "\nnsg-ols-chb-dev-san-11\nLocation: southafricanorth" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\nsg.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "nsg-ols-chb-dev-san-11";
+        }
+        
+
+        # nsg-ols-chb-dev-san-12 - subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan12
+        subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan12 {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan12 [label = "\nnsg-ols-chb-dev-san-12\nLocation: southafricanorth" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\nsg.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "nsg-ols-chb-dev-san-12";
+        }
+        
+
+        # nsg-ols-chb-dev-san-13 - subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan13
+        subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan13 {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan13 [label = "\nnsg-ols-chb-dev-san-13\nLocation: southafricanorth" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\nsg.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "nsg-ols-chb-dev-san-13";
+        }
+        
+
+        # nsg-ols-chb-dev-san-14 - subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan14
+        subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan14 {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan14 [label = "\nnsg-ols-chb-dev-san-14\nLocation: southafricanorth" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\nsg.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "nsg-ols-chb-dev-san-14";
+        }
+        
+
+        # nsg-ols-chb-dev-san-2 - subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan2
+        subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan2 {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan2 [label = "\nnsg-ols-chb-dev-san-2\nLocation: southafricanorth" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\nsg.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "nsg-ols-chb-dev-san-2";
+        }
+        
+
+        # nsg-ols-chb-dev-san-3 - subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan3
+        subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan3 {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan3 [label = "\nnsg-ols-chb-dev-san-3\nLocation: southafricanorth" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\nsg.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "nsg-ols-chb-dev-san-3";
+        }
+        
+
+        # nsg-ols-chb-dev-san-4 - subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan4
+        subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan4 {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan4 [label = "\nnsg-ols-chb-dev-san-4\nLocation: southafricanorth" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\nsg.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "nsg-ols-chb-dev-san-4";
+        }
+        
+
+        # nsg-ols-chb-dev-san-5 - subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan5
+        subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan5 {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan5 [label = "\nnsg-ols-chb-dev-san-5\nLocation: southafricanorth" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\nsg.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "nsg-ols-chb-dev-san-5";
+        }
+        
+
+        # nsg-ols-chb-dev-san-6 - subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan6
+        subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan6 {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan6 [label = "\nnsg-ols-chb-dev-san-6\nLocation: southafricanorth" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\nsg.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "nsg-ols-chb-dev-san-6";
+        }
+        
+
+        # nsg-ols-chb-dev-san-7 - subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan7
+        subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan7 {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan7 [label = "\nnsg-ols-chb-dev-san-7\nLocation: southafricanorth" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\nsg.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "nsg-ols-chb-dev-san-7";
+        }
+        
+
+        # nsg-ols-chb-dev-san-8 - subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan8
+        subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan8 {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan8 [label = "\nnsg-ols-chb-dev-san-8\nLocation: southafricanorth" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\nsg.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "nsg-ols-chb-dev-san-8";
+        }
+        
+
+        # nsg-ols-chb-dev-san-9 - subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan9
+        subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan9 {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworknetworksecuritygroupsnsgolschbdevsan9 [label = "\nnsg-ols-chb-dev-san-9\nLocation: southafricanorth" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\nsg.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "nsg-ols-chb-dev-san-9";
+        }
+        
+
+        # vmchbpvttstsan3-nsg - subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworknetworksecuritygroupsvmchbpvttstsan3nsg
+        subgraph cluster_subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworknetworksecuritygroupsvmchbpvttstsan3nsg {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan2providersmicrosoftnetworknetworksecuritygroupsvmchbpvttstsan3nsg [label = "\nvmchbpvttstsan3-nsg\nLocation: southafricanorth" ; color = lightgray;image = "C:\Users\hannov\OneDrive - Microsoft\Dev\AzNetworkDiagram\icons\nsg.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "vmchbpvttstsan3-nsg";
+        }
+        
+    ##### za-ols-chb-dev-1 - VPN Connections #####
+
+    ##########################################################################################################
+    ##### za-ols-chb-dev-1 
+    ##### END
+    ##########################################################################################################
+
+
+    ##########################################################################################################
+    ##### RANKS
+    ##########################################################################################################
+
+    ### AddressSpace ranks
+    { rank=min; subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1 }
+ 
+
+    ### Subnets ranks
+    { rank=same; subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbbkpdevsan1; subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan6; subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan7; subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan9; subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan10; subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan2; subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan3; subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan4; subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan13; subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan12; subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan8; subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan14; subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan11; subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkvirtualnetworksvnetolschbdevsan1subnetssnetolschbdevsan5 }
+ 
+
+    ### Route table ranks
+    { rank=same; subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkroutetablesrtzaolschbagwdevsan1; subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkroutetablesrtzaolschbagwuatsan2; subscriptions3bb065d408d148388b477a7ac617ee5cresourcegroupsrgolschbdevsan1providersmicrosoftnetworkroutetablesrtzaolschboutdevsan1 }
+ 
+
+    ### vWAN ranks
+    { rank=same;  }
+ 
+
+    ### vWAN Hub ranks
+    { rank=same;  }
+ 
+
+    ### ER Circuit ranks
+    { rank=same;  }
+ 
+
+    ### VPN Site ranks
+    { rank=same;  }
+ 
+
+    ### IP Groups ranks
+    { rank=max;  }
+ 
+}

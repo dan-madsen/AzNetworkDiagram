@@ -184,7 +184,6 @@ function Export-AKSCluster {
         if ($vmssResources) {
             foreach ($vmss in $vmssResources) {
                 # Extract node pool name from the VMSS name/tags
-                $nodePoolName = $null
                 
                 # Method 1: Check in VMSS tags
                 if ($vmss.Tags -and $vmss.Tags.ContainsKey("aks-managed-poolName")) {
@@ -194,13 +193,18 @@ function Export-AKSCluster {
                 elseif ($vmss.Name -match "^aks-(.+?)-\d+-vmss$") {
                     $nodePoolName = $matches[1]
                 }
-                
-                # Try to find matching node pool in the AKS cluster
-                $matchingPool = $aks.AgentPoolProfiles | Where-Object { $_.Name -eq $nodePoolName }
-                $agentpoolid = $aksid +  $nodePoolName.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $vmssid = $vmss.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                else {
+                    # This VMSS is not an AKS VMSS
+                    $nodePoolName = $null
+                }
+                if ($null -ne $nodePoolName) {
+                    # Try to find matching node pool in the AKS cluster
+                    $matchingPool = $aks.AgentPoolProfiles | Where-Object { $_.Name -eq $nodePoolName }
+                    $agentpoolid = $aksid +  $nodePoolName.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $vmssid = $vmss.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
 
-                $data += "        $agentpoolid -> $vmssid;`n"
+                    $data += "        $agentpoolid -> $vmssid;`n"
+                }
             }
         }
         $data += "   label = `"$($Aks.Name)`";
@@ -614,9 +618,33 @@ function Export-CosmosDBAccount {
                 $dbs = Get-AzCosmosDBSqlDatabase -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -ErrorAction Stop
                 $iconname = "documentdb"
                 foreach ($db in $dbs) {
-                    $throughput = Get-AzCosmosDBSqlDatabaseThroughput -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -Name $db.Name -ErrorAction Stop
+                    $throughput = Get-AzCosmosDBSqlDatabaseThroughput -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -Name $db.Name -ErrorAction SilentlyContinue
+                    if ($null -eq $dbthroughput) {
+                        $dbthroughput = "Unknown"
+                    }   
+                    else {
+                        $dbthroughput = $dbthroughput.Throughput
+                    }
+                    $collection = Get-AzCosmosDBSqlContainer -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -DatabaseName $db.Name -ErrorAction SilentlyContinue
+                    $colthroughputs = $collection | ForEach-Object {
+                                [PSCustomObject]@{
+                                    Container = $_.Name
+                                    RU   = (Get-AzCosmosDBSqlContainerThroughput `
+                                                -ResourceGroupName $resourceGroupName `
+                                                -AccountName      $cosmosdbact.Name `
+                                                -DatabaseName     $db.Name `
+                                                -Name             $_.Name `
+                                                -ErrorAction      SilentlyContinue
+                                            ).Throughput
+                                }
+                            } | Format-Table Container, RU  | Out-String      
+
+                    if ($null -eq $colthroughputs) {
+                        $colthroughputs = "Unknown"
+                    }   
+
                     $dbid = $db.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                    $data += "        $($dbid) [label = `"\nName: $($db.Name)\nThroughput: $($throughput.Throughput)\n`" ; color = lightgray;image = `"$OutputPath\icons\$iconname.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];`n" 
+                    $data += "        $($dbid) [label = `"\n\nName: $($db.Name)\nDatabase Throughput: $dbthroughput\n$colthroughputs\n`" ; color = lightgray;image = `"$OutputPath\icons\$iconname.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n" 
                     $data += "        $cosmosdbactid -> $($dbid);`n"
                 }
             }
@@ -625,9 +653,33 @@ function Export-CosmosDBAccount {
                 $dbs = Get-AzCosmosDBGremlinDatabase -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -ErrorAction Stop
                 $iconname = "gremlin"
                 foreach ($db in $dbs) {
-                    $throughput = Get-AzCosmosDBGremlinGraphThroughput -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -Name $db.Name -ErrorAction Stop
+                    $throughput = Get-AzCosmosDBGremlinDatabaseThroughput -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -Name $db.Name -ErrorAction SilentlyContinue
+                    if ($null -eq $dbthroughput) {
+                        $dbthroughput = "Unknown"
+                    }   
+                    else {
+                        $dbthroughput = $dbthroughput.Throughput
+                    }
+                    $collection = Get-AzCosmosDBGremlinGraph -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -DatabaseName $db.Name -ErrorAction SilentlyContinue
+                    $colthroughputs = $collection | ForEach-Object {
+                                [PSCustomObject]@{
+                                    Graph = $_.Name
+                                    RU   = (Get-AzCosmosDBGremlinGraphThroughput `
+                                                -ResourceGroupName $resourceGroupName `
+                                                -AccountName      $cosmosdbact.Name `
+                                                -DatabaseName     $db.Name `
+                                                -Name             $_.Name `
+                                                -ErrorAction      SilentlyContinue
+                                            ).Throughput
+                                }
+                            } | Format-Table Graph, RU  | Out-String      
+
+                    if ($null -eq $colthroughputs) {
+                        $colthroughputs = "Unknown"
+                    }   
+
                     $dbid = $db.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                    $data += "        $($dbid) [label = `"\nName: $($db.Name)\nThroughput: $($throughput.Throughput)\n`" ; color = lightgray;image = `"$OutputPath\icons\$iconname.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];`n" 
+                    $data += "        $($dbid) [label = `"\n\nName: $($db.Name)\nDatabase Throughput: $dbthroughput\n$colthroughputs\n`" ; color = lightgray;image = `"$OutputPath\icons\$iconname.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n" 
                     $data += "        $cosmosdbactid -> $($dbid);`n"
                 }
             }
@@ -636,9 +688,16 @@ function Export-CosmosDBAccount {
                 $dbs = Get-AzCosmosDBTable -ResourceGroupName $$resourceGroupName -AccountName $cosmosdbact.Name -ErrorAction Stop
                 $iconname = "table"
                 foreach ($db in $dbs) {
-                    $throughput = Get-AzCosmosDBTableThroughput -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -Name $db.Name -ErrorAction Stop
+                    $throughput = Get-AzCosmosDBTableThroughput -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -Name $db.Name -ErrorAction SilentlyContinue
+                    if ($null -eq $dbthroughput) {
+                        $dbthroughput = "Unknown"
+                    }   
+                    else {
+                        $dbthroughput = $dbthroughput.Throughput
+                    }
+
                     $dbid = $db.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                    $data += "        $($dbid) [label = `"\nName: $($db.Name)\nThroughput: $($throughput.Throughput)\n`" ; color = lightgray;image = `"$OutputPath\icons\$iconname.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];`n" 
+                    $data += "        $($dbid) [label = `"\n\nName: $($db.Name)\nTable Throughput: $dbthroughput\n`" ; color = lightgray;image = `"$OutputPath\icons\$iconname.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n" 
                     $data += "        $cosmosdbactid -> $($dbid);`n"
                 }
             }   
@@ -647,9 +706,33 @@ function Export-CosmosDBAccount {
                 $dbs = Get-AzCosmosDBCassandraKeyspace -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -ErrorAction Stop
                 $iconname = "cassandra"
                 foreach ($db in $dbs) {
-                    $throughput = Get-AzCosmosDBCassandraKeyspaceThroughput -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -Name $db.Name -ErrorAction Stop
+                    $throughput = Get-AzCosmosDBCassandraKeyspaceThroughput -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -Name $db.Name -ErrorAction SilentlyContinue
+                    if ($null -eq $dbthroughput) {
+                        $dbthroughput = "Unknown"
+                    }   
+                    else {
+                        $dbthroughput = $dbthroughput.Throughput
+                    }
+                    $collection = Get-AzCosmosDBCassandraTable -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -DatabaseName $db.Name -ErrorAction SilentlyContinue
+                    $colthroughputs = $collection | ForEach-Object {
+                                [PSCustomObject]@{
+                                    Table = $_.Name
+                                    RU   = (Get-AzCosmosDBCassandraTableThroughput `
+                                                -ResourceGroupName $resourceGroupName `
+                                                -AccountName      $cosmosdbact.Name `
+                                                -DatabaseName     $db.Name `
+                                                -Name             $_.Name `
+                                                -ErrorAction      SilentlyContinue
+                                            ).Throughput
+                                }
+                            } | Format-Table Table, RU  | Out-String      
+
+                    if ($null -eq $colthroughputs) {
+                        $colthroughputs = "Unknown"
+                    }   
+
                     $dbid = $db.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                    $data += "        $($dbid) [label = `"\nName: $($db.Name)\nThroughput: $($throughput.Throughput)\n`" ; color = lightgray;image = `"$OutputPath\icons\$iconname.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];`n" 
+                    $data += "        $($dbid) [label = `"\n\nName: $($db.Name)\nKeyspace Throughput: $dbthroughput\n$colthroughputs\n`" ; color = lightgray;image = `"$OutputPath\icons\$iconname.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n" 
                     $data += "        $cosmosdbactid -> $($dbid);`n"
                 }
             }
@@ -687,7 +770,42 @@ function Export-PostgreSQLServer {
 }
 
 function Export-RedisServer {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$redis
+    )
+    try {
+        $redisid = $redis.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        
+        $data = "
+        # $($redis.Name) - $redisid
+        subgraph cluster_$redisid {
+            style = solid;
+            color = black;
+            node [color = white;];
+        "
 
+        $data += "        $redisid [label = `"\nLocation: $($redis.Location)\nSKU: $($redis.Sku)\nRedis Version: $($redis.RedisVersion)\nZones: $($redis.Zone -join ", ")\nShard Count: $($redis.ShardCount)\n`" ; color = lightgray;image = `"$OutputPath\icons\redis.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
+        $data += "`n"
+        if ($redis.PrivateEndpointConnection.PrivateEndpoint.Id) {
+            $peid = $redis.PrivateEndpointConnection.PrivateEndpoint.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $data += "        $redisid -> $peid;`n"
+        }
+        if ($redis.Identity.UserAssignedIdentities.Keys) {
+            foreach ($identity in $redis.Identity.UserAssignedIdentities.Keys) { 
+                $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower() 
+                $data += "        $redisid -> $managedIdentityId;`n"
+            } 
+        }
+        $data += "   label = `"$($redis.Name)`";
+                }`n"
+
+        Export-AddToFile -Data $data
+    }
+    catch {
+        Write-Host "Can't export Redis Cache: $($redis.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
 }
 
 function Export-SQLManagedInstance {
@@ -703,10 +821,91 @@ function Export-SQLDatabase {
 }
 
 function Export-EventHub {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$namespace
+    )
+    try {
+        $namespaceid = $namespace.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        
+        $data = "
+        # $($namespace.Name) - $namespaceid
+        subgraph cluster_$namespaceid {
+            style = solid;
+            color = black;
+            node [color = white;];
+        "
 
+        $data += "        $namespaceid [label = `"\nLocation: $($namespace.Location)\nSKU: $($namespace.SkuName)\nTier: $($namespace.SkuTier)\nCapacity: $($namespace.SkuCapacity)\nZone Redundant: $($namespace.ZoneRedundant)`" ; color = lightgray;image = `"$OutputPath\icons\eventhub.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
+        $data += "`n"
+
+        # iterate through all event hubs hosted on that namespace
+        Get-AzEventHub -NamespaceName $namespace.Name -ResourceGroupName $namespace.ResourceGroupName -ErrorAction SilentlyContinue |
+            ForEach-Object {
+                $eventhub = $_
+                $eventhubid = $_.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+
+                $data += "        $($eventhubid) [label = `"\n\nLocation: $($eventhub.Location)\nName: $($eventhub.Name)\nMessage Retention: $($eventhub.MessageRetentionInDays)\nPartition Count: $($eventhub.PartitionCount)\n`" ; color = lightgray;image = `"$OutputPath\icons\eventhub.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n" 
+                $data += "        $namespaceid -> $eventhubid;`n"
+            }
+        if ($namespace.PrivateEndpointConnection.PrivateEndpointId) {
+            $peid = $namespace.PrivateEndpointConnection.PrivateEndpointId.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $data += "        $namespaceid -> $peid;`n"
+        }
+        $data += "   label = `"$($namespace.Name)`";
+                }`n"    
+        Export-AddToFile -Data $data
+    } catch {
+        Write-Host "Can't export Event Hub Namespace: $($namespace.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
 }
 
 function Export-AppServicePlan {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$plan
+    )
+
+    try {
+        $resourceGroupName = $plan.Id.split("/")[4]
+        $planid = $plan.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $data = "
+        # $($plan.Name) - $planid
+        subgraph cluster_$planid {
+            style = solid;
+            color = black;
+            node [color = white;];
+        "
+        $data += "        $planid [label = `"\nLocation: $($plan.Location)\nSKU: $($plan.Sku.Name)\nTier: $($plan.Sku.Tier)\nKind: $($plan.Kind)\nCapacity: $($plan.Sku.Capacity)\nNumber of Apps: $($plan.NumberOfSites)\n`" ; color = lightgray;image = `"$OutputPath\icons\appplan.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
+        $data += "`n"
+
+        # iterate through all web apps hosted on that plan
+        Get-AzWebApp -ResourceGroupName $resourceGroupName -ErrorAction SilentlyContinue |
+            Where-Object { $_.ServerFarmId -eq $plan.Id } |
+            ForEach-Object {
+                $app = $_
+                $appid = $_.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+
+                $data += "        $($appid) [label = `"\n\nLocation: $($app.Location)\nName: $($app.Name)\nKind: $($app.Kind)\nHost Name: $($app.DefaultHostName)\n`" ; color = lightgray;image = `"$OutputPath\icons\appservices.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n" 
+                $data += "        $planid -> $appid;`n"
+
+                # Add links to Private Endpoints and Managed Identities
+                if ($app.Identity.UserAssignedIdentities.Keys) {
+                    foreach ($identity in $app.Identity.UserAssignedIdentities.Keys) { 
+                        $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower() 
+                        $data += "        $appid -> $managedIdentityId;`n"
+                    } 
+                }
+            }
+        $data += "   label = `"$($plan.Name)`";
+                }`n"
+        Export-AddToFile -Data $data
+    }
+    catch {
+        Write-Host "Can't export AppService Plan: $($plan.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
 
 }
 
@@ -1842,6 +2041,9 @@ function Confirm-Prerequisites {
         "agw.png",
         "aks-service.png",
         "aks-node-pool.png",
+        "appplan.png",
+        "appserviceplan.png",
+        "appservices.png",
         "azuresql.png",
         "firewallpolicy.png",
         "asp.png",
@@ -1858,6 +2060,7 @@ function Confirm-Prerequisites {
         "private-endpoint.png",
         "dnspr.png",
         "ergw.png",
+        "eventhub.png",
         "keyvault.png",
         "lgw.png",
         "managed-identity.png",
@@ -1867,6 +2070,7 @@ function Confirm-Prerequisites {
         "ipgroup.png",
         "LICENSE",
         "ng.png",
+        "redis.png",
         "rsv.png",
         "snet.png",
         "storage-account.png",
@@ -1962,6 +2166,8 @@ function Get-AzNetworkDiagram {
     } 
     
     Write-Output "Gathering information ..."
+    Update-AzConfig -DisplaySecretsWarning $false -Scope process | Out-Null
+    Update-AzConfig -DisplayBreakingChangeWarning $false -Scope process -AppliesTo Az.Accounts | Out-Null
 
     try {
         # Collect all vNet ID's in scope otherwise we can end up with 1 vNet peered to 1000 other vNets which are not in scope
@@ -2124,12 +2330,12 @@ function Get-AzNetworkDiagram {
             #}
 
             #SQL Servers
-            Write-Output "Collecting SQL Servers..."
-            Export-AddToFile "    ##### $subname - SQL Servers #####"
-            $sqlservers = Get-AzSqlServer -ErrorAction Stop
-            foreach ($sqlserver in $sqlservers) {
-                Export-SQLServer $sqlserver 
-            }
+            ##Write-Output "Collecting SQL Servers..."
+            #Export-AddToFile "    ##### $subname - SQL Servers #####"
+            ##$sqlservers = Get-AzSqlServer -ErrorAction Stop
+            #foreach ($sqlserver in $sqlservers) {
+            #    Export-SQLServer $sqlserver 
+            #}
             #SQL Databases
             #Write-Output "Collecting SQL Databases..."
             #Export-AddToFile "    ##### $subname - SQL Databases #####"
@@ -2141,9 +2347,9 @@ function Get-AzNetworkDiagram {
             #EventHubs
             Write-Output "Collecting Event Hubs..."
             Export-AddToFile "    ##### $subname - Event Hubs #####"
-            $eventhubs = Get-AzEventHubNamespace -ErrorAction Stop
-            foreach ($eventhub in $eventhubs) {
-                Export-EventHub $eventhub 
+            $namespaces = Get-AzEventHubNamespace -ErrorAction Stop
+            foreach ($namespace in $namespaces) {
+                Export-EventHub $namespace 
             }
 
             #App Service Plans
