@@ -89,14 +89,14 @@ This module will include in the diagram:
   - Storage Accounts
   - VM, VMSS
   - Keyvaults
+  - APIM
+  - MongoDB, MySQL, PostgreSQL
+  - SQL Server (logical server), Azure SQL, SQL Managed Instance
+  - EventHubs
+  - Redis Cache
+  - App Services
     
 # Work in progress...
-  - Support for
-    - APIM
-    - MongoDB, MySQL, PostgreSQL
-    - EventHub
-    - Redis
-    - App Services
   - Azure DevOps pipeline for automated runs, with output saved to storage account
     - Mail on changes?
 

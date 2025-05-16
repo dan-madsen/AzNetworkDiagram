@@ -65,7 +65,6 @@ function Export-dotHeader {
     # Rank (height in picture) support
     newrank = true;
     rankdir = TB;
-    ranksep=`"2.0 equally`"
     nodesep=`"1.0`"
     "
     Export-CreateFile -Data $Data
@@ -169,9 +168,10 @@ function Export-AKSCluster {
         }
         # Check for User Assign Identity
         if ($aks.Identity.UserAssignedIdentities.Keys) {
-            $identity = $aks.Identity.UserAssignedIdentities.Keys[0]
-            $userIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower()
-            $data += "        $aksid -> $userIdentityId;`n"
+            foreach ($identity in $aks.Identity.UserAssignedIdentities.Keys) { 
+                $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower() 
+                $data += "        $aksid -> $managedIdentityId;`n"
+            } 
         }
         # Check for Private Endpoints
         (get-azprivateEndpointConnection -PrivateLinkResourceId $aks.id).PrivateEndpoint.Id | ForEach-Object {
@@ -282,9 +282,10 @@ function Export-ApplicationGateway {
         $data += "        $agwid -> $agwSubnetId;`n"
 
         if ($agw.Identity.UserAssignedIdentities.Keys) {
-            $identity = $agw.Identity.UserAssignedIdentities.Keys[0]
-            $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower()
-            $data += "        $agwid -> $managedIdentityId;`n"
+            foreach ($identity in $agw.Identity.UserAssignedIdentities.Keys) { 
+                $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $data += "        $agwid -> $managedIdentityId;`n"
+            }
         }
         $data += "   label = `"$($agw.Name)`";
                 }`n"
@@ -487,9 +488,10 @@ function Export-VM {
         $subnetid = $nic.IpConfigurations[0].Subnet.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
         $data += "        $vmid -> $subnetid;`n"
         if ($vm.Identity.UserAssignedIdentities.Keys) {
-            $identity = $vm.Identity.UserAssignedIdentities.Keys[0]
-            $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower() 
-            $data += "        $vmid -> $managedIdentityId;`n"
+            foreach ($identity in $vm.Identity.UserAssignedIdentities.Keys) { 
+                $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $data += "        $vmid -> $managedIdentityId;`n"
+            }
         }
         $data += "   label = `"$($vm.Name)`";
                 }`n"
@@ -536,14 +538,23 @@ function Export-MySQLServer {
 
         $data += "        $mysqlid [label = `"\n\n\nLocation: $($mysql.Location)\nSKU: $($mysql.SkuName)\nTier: $($mysql.SkuTier.ToString())\nVersion: $($mysql.Version)\nLogin Admins:$sqladmins\nVM Size: $($properties.Sku.Name)\nAvailability Zone: $($mysql.AvailabilityZone)\nStandby Zone: $($mysql.HighAvailabilityStandbyAvailabilityZone)\nPublic Network Access: $($mysql.NetworkPublicNetworkAccess)`" ; color = lightgray;image = `"$OutputPath\icons\mysql.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.5;];"
         $data += "`n"
+        
+        $dbs = Get-AzMySqlFlexibleServerDatabase -ResourceGroupName $mysql.id.split("/")[4] -ServerName $mysql.Name -ErrorAction Stop
+        foreach ($db in $dbs) {
+            $dbid = $db.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $data += "        $($dbid) [label = `"\n\nName: $($db.Name)\n`" ; color = lightgray;image = `"$OutputPath\icons\db.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];`n" 
+            $data += "        $mysqlid -> $($dbid);`n"
+        }
+
         if ($properties.properties.network.delegatedSubnetResourceId  ) {
             $mysqlsubnetid = $properties.properties.network.delegatedSubnetResourceId.replace("-", "").replace("/", "").replace(".", "").ToLower()
             $data += "        $mysqlid -> $($mysqlsubnetid);`n"
         }
         if ($properties.Identity.UserAssignedIdentities.Keys) {
-            $identity = $properties.Identity.UserAssignedIdentities.Keys[0]
-            $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower() 
-            $data += "        $mysqlid -> $managedIdentityId;`n"
+            foreach ($identity in $properties.Identity.UserAssignedIdentities.Keys) { 
+                $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower() 
+                $data += "        $mysqlid -> $managedIdentityId;`n"
+            }
         }
         $data += "   label = `"$($mysql.Name)`";
                 }`n"
@@ -767,6 +778,58 @@ function Export-CosmosDBAccount {
     }
 }
 function Export-PostgreSQLServer {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$postgresql
+    )
+    try {
+        $postgresqlid = $postgresql.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        
+        $data = "
+        # $($postgresql.Name) - $postgresqlid
+        subgraph cluster_$postgresqlid {
+            style = solid;
+            color = black;
+            node [color = white;];
+        "
+
+        $resource = Get-AzResource -ResourceId $postgresql.Id -ErrorAction Stop
+        # General Purpose, D4ds_v5 (SkuName), 4 vCores, 16 GiB RAM, 128 GiB storage $postgresql.StorageSizeGb
+        $location = (Get-AzLocation | Where-Object DisplayName -eq $db.Location).Location 
+        $SkuCaps = Get-AzComputeResourceSku -Location $postgresql.Location | Where-Object { $_.Name -eq $skuName }
+        $iops = ($SkuCaps.Capabilities | Where-Object Name -eq "UncachedDiskIOPS").Value
+        $vCPUs = ($SkuCaps.Capabilities | Where-Object Name -eq "vCPUs").Value
+        $MemoryGB = ($SkuCaps.Capabilities | Where-Object Name -eq "MemoryGB").Value
+        $config = $postgresql.SkuTier.ToString() + ", " + $postgresql.SkuName + ", " + $vCPUs + " vCores, " + $MemoryGB + " GiB RAM, " + $postgresql.StorageSizeGb + " GiB storage"
+
+        $data += "        $postgresqlid [label = `"\nLocation: $($postgresql.Location)\nVersion: $($postgresql.Version.ToString()).$($postgresql.MinorVersion)\nAvailability Zone: $($postgresql.AvailabilityZone)\nConfiguration: $config\nMax IOPS: $iops\nPublic Network Access: $($postgresql.NetworkPublicNetworkAccess.ToString())`" ; color = lightgray;image = `"$OutputPath\icons\postgresql.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
+        $data += "`n"
+
+        $dbs = Get-AzPostgreSqlFlexibleServerDatabase -ResourceGroupName $postgresqlserver.id.split("/")[4] -ServerName $postgresqlserver.Name -ErrorAction Stop
+        foreach ($db in $dbs) {
+            $dbid = $db.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $data += "        $($dbid) [label = `"\n\nName: $($db.Name)\n`" ; color = lightgray;image = `"$OutputPath\icons\db.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];`n" 
+            $data += "        $postgresqlid -> $($dbid);`n"
+        }
+        if ($postgresql.NetworkDelegatedSubnetResourceId) {
+            $postgresqlsubnetid = $postgresql.NetworkDelegatedSubnetResourceId.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $data += "        $postgresqlid -> $($postgresqlsubnetid);`n"
+        }
+        if ($resource.Identity.UserAssignedIdentities.Keys) {
+            foreach ($identity in $resource.Identity.UserAssignedIdentities.Keys) { 
+                $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower() 
+                $data += "        $postgresqlid -> $managedIdentityId;`n"
+            } 
+        }
+        $data += "   label = `"$($postgresql.Name)`";
+                }`n"
+
+        Export-AddToFile -Data $data
+
+    } catch {
+        Write-Host "Can't export PostgreSQL Server: $($postgresql.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
 }
 
 function Export-RedisServer {
@@ -1552,23 +1615,24 @@ function Export-SubnetConfig {
                 #Public IPs associated
                 $ips = $NATGWobject.PublicIpAddresses
                 $ipsstring = ""
-                $ips.id | ForEach-Object {
-                    $rgname = $_.split("/")[4]
-                    $ipname = $_.split("/")[8]
-                    $publicip = (Get-AzPublicIpAddress -ResourceName $ipname -ResourceGroupName $rgname -ErrorAction Stop).IpAddress
-                    $ipsstring += "$ipname : $publicip \n"
+                if ($ips.id) {
+                    $ips.id | ForEach-Object {
+                        $rgname = $_.split("/")[4]
+                        $ipname = $_.split("/")[8]
+                        $publicip = (Get-AzPublicIpAddress -ResourceName $ipname -ResourceGroupName $rgname -ErrorAction Stop).IpAddress
+                        $ipsstring += "$ipname : $publicip \n"
+                    }
                 }
-
                 #Public IP prefixes associated
                 $ipprefixes = $NATGWobject.PublicIpPrefixes
                 $ipprefixesstring = ""
-                $ipprefixes.id | ForEach-Object {
-                    $rgname = $_.split("/")[4]
-                    $ipname = $_.split("/")[8]
-                    $prefix = (Get-AzPublicIpPrefix -ResourceName $ipname -ResourceGroupName $rgname -ErrorAction Stop).IPPrefix
-                    $ipprefixesstring += "$ipname : $prefix \n"
-                }
-            
+                if ($ipprefixes.id) {
+                    $ipprefixes.id | ForEach-Object {
+                        $rgname = $_.split("/")[4]
+                        $ipname = $_.split("/")[8]
+                        $ipprefixesstring += "$ipname : $ipprefixes \n"
+                    }
+                }   
                 $data += "        $NATGWID [color = lightgrey;label = `"\n\nName: $name\n\nPublic IP(s):\n$ipsstring\nPublic IP Prefix(es):\n$ipprefixesstring`";image = `"$OutputPath\icons\ng.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
                 $data += "        $id -> $NATGWID" + "`n"
 
@@ -2183,6 +2247,7 @@ function Confirm-Prerequisites {
         "computegalleries.png",
         "cosmosdb.png",
         "Connections.png",
+        "db.png",
         "documentdb.png",
         "ercircuit.png",
         "erport.png",
@@ -2201,6 +2266,7 @@ function Confirm-Prerequisites {
         "ipgroup.png",
         "LICENSE",
         "ng.png",
+        "postgresql.png",
         "redis.png",
         "rsv.png",
         "snet.png",
@@ -2299,7 +2365,7 @@ function Get-AzNetworkDiagram {
     
     Write-Output "Gathering information ..."
     Update-AzConfig -DisplaySecretsWarning $false -Scope process | Out-Null
-    Update-AzConfig -DisplayBreakingChangeWarning $false -Scope process -AppliesTo Az.Accounts | Out-Null
+    Update-AzConfig -DisplayBreakingChangeWarning $false -Scope process | Out-Null
 
     try {
         # Collect all vNet ID's in scope otherwise we can end up with 1 vNet peered to 1000 other vNets which are not in scope
@@ -2428,12 +2494,12 @@ function Get-AzNetworkDiagram {
             }
 
             #PostgreSQL Servers
-            #Write-Output "Collecting PostgreSQL Servers..."
-            #Export-AddToFile "    ##### $subname - PostgreSQL Servers #####"
-            #$postgresqlservers = Get-AzPostgreSqlServer -ErrorAction Stop
-            #foreach ($postgresqlserver in $postgresqlservers) {
-            #    Export-PostgreSQLServer $postgresqlserver 
-            #}
+            Write-Output "Collecting PostgreSQL Servers..."
+            Export-AddToFile "    ##### $subname - PostgreSQL Servers #####"
+            $postgresqlservers = Get-AzPostgreSqlFlexibleServer -ErrorAction Stop
+            foreach ($postgresqlserver in $postgresqlservers) {
+                Export-PostgreSQLServer $postgresqlserver 
+            }
 
             #CosmosDB Servers
             Write-Output "Collecting CosmosDB Servers..."
@@ -2454,6 +2520,7 @@ function Get-AzNetworkDiagram {
                 Export-RedisServer $redisserver 
             }
 
+            #SQL Managed Instances
             Write-Output "Collecting SQL Managed Instances..."
             Export-AddToFile "    ##### $subname - SQL Managed Instances #####"
             $sqlmanagedinstances = Get-AzSqlInstance -ErrorAction Stop
@@ -2461,7 +2528,7 @@ function Get-AzNetworkDiagram {
                 Export-SQLManagedInstance $sqlmanagedinstance 
             }
 
-            # list every Azure SQL logical server in the current subscription
+            #Azure SQL logical servers
             Write-Output "Collecting SQL Servers..."
             Export-AddToFile "    ##### $subname - SQL Servers #####"
             $sqlservers = Get-AzSqlServer -ErrorAction Stop
