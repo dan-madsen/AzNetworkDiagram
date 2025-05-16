@@ -813,11 +813,55 @@ function Export-SQLManagedInstance {
 }
 
 function Export-SQLServer {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$sqlserver
+    )
+    try {
+        $sqlserverid = $sqlserver.ResourceId.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        
+        $data = "
+        # $($sqlserver.ServerName) - $sqlserverid
+        subgraph cluster_$sqlserverid {
+            style = solid;
+            color = black;
+            node [color = white;];
+        "
 
-}
+        $data += "        $sqlserverid [label = `"\nLocation: $($sqlserver.Location)\nVersion: $($sqlserver.ServerVersion)\nEntra ID Admin: $($sqlserver.Administrators.Login)`" ; color = lightgray;image = `"$OutputPath\icons\sqlserver.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
+        $data += "`n"
 
-function Export-SQLDatabase {
+        # Iterate through all SQL databases hosted on that server
+        Get-AzSqlDatabase -ServerName $sqlserver.ServerName -ResourceGroupName $sqlserver.ResourceGroupName -ErrorAction SilentlyContinue |
+            ForEach-Object {
+                $db = $_
+                $dbid = $_.ResourceId.replace("-", "").replace("/", "").replace(".", "").ToLower()
 
+                if ($db.Edition -ne "System" -and $db.SkuName -ne "System") {   # Master databases
+                    # pricing tier , vCore-based DBs expose Family
+                    if ($db.Family) {
+                        $pricingTier = $db.Edition + " " + $db.Family + " " + $db.Capacity + " vCores"
+                    } else {
+                        $pricingTier = $db.Edition + " " + $db.ServiceObjectiveName + " " + $db.Capacity + " DTUs"
+                    }
+
+                    #Max storage size
+                    $gb = [math]::Round($db.MaxSizeBytes / 1GB, 2)   # 1 GB = 1 073 741 824 bytes
+
+                    $data += "        $($dbid) [label = `"\n\nLocation: $($db.Location)\nName: $($db.DatabaseName)\nPricing Tier: $pricingTier\nMax Size: $gb GB\nZone Redundant: $($db.ZoneRedundant)\nElastic Pool Name: $($db.ElasticPoolName)`" ; color = lightgray;image = `"$OutputPath\icons\sqldb.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n" 
+                    $data += "        $sqlserverid -> $($dbid);`n"
+                }
+            }
+
+        $data += "   label = `"$($sqlserver.ServerName)`";
+                }`n"
+
+        Export-AddToFile -Data $data
+    }
+    catch {
+        Write-Host "Can't export SQL Server: $($sqlserver.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
 }
 
 function Export-EventHub {
@@ -1002,14 +1046,24 @@ function Export-StorageAccount {
             color = black;
             node [color = white;];
         "
-
-        $data += "        $staid [label = `"\nLocation: $($storageaccount.Location)\nSKU: $($storageaccount.Sku.Name)\nKind: $($storageaccount.Kind)\nPublic Network Access: $($storageaccount.PublicNetworkAccess)\nAccess Tier: $($storageaccount.AccessTier)\nHierarchical Namespace Enabled: $($storageaccount.EnableHierarchicalNamespace)\n`" ; color = lightgray;image = `"$OutputPath\icons\storage-account.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
+        if ($storageaccount.PublicNetworkAccess -eq "Disabled") {
+            $PublicNetworkAccess = "Disabled"
+        }   
+        elseif ($storageaccount.NetworkRuleSet.DefaultAction -eq "Allow") {
+            $PublicNetworkAccess = "Enabled from all networks"
+        } else {
+            $PublicNetworkAccess = "Enabled from selected virtual`nnetworks and IP addresses"
+        }
+        $HierarchicalNamespace = $storageaccount.EnableHierarchicalNamespace ? "Enabled" : "Disabled"
+        $data += "        $staid [label = `"\nLocation: $($storageaccount.Location)\nSKU: $($storageaccount.Sku.Name)\nKind: $($storageaccount.Kind)\nPublic Network Access: $PublicNetworkAccess\nAccess Tier: $($storageaccount.AccessTier)\nHierarchical Namespace: $HierarchicalNamespace\n`" ; color = lightgray;image = `"$OutputPath\icons\storage-account.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
         $data += "`n"
-        $peid = Get-AzPrivateEndpointConnection -PrivateLinkResourceId $storageaccount.Id -ErrorAction Stop
+        $peids = Get-AzPrivateEndpointConnection -PrivateLinkResourceId $storageaccount.Id -ErrorAction Stop
         
-        if ($peid) {
-            $stapeid = $peid.PrivateEndpoint.Id.ToString().replace("-", "").replace("/", "").replace(".", "").ToLower()
-            $data += "        $staid -> $($stapeid);`n"
+        if ($peids) {
+            foreach ($peid in $peids) {
+                $stapeid = $peid.PrivateEndpoint.Id.ToString().replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $data += "        $staid -> $($stapeid);`n"
+            }
         }
         $data += "   label = `"$($storageaccount.StorageAccountName)`";
                 }`n"
@@ -2113,6 +2167,7 @@ function Confirm-Prerequisites {
         "storage-account.png",
         "sqldb.png",
         "sqlmi.png",
+        "sqlserver.png",
         "table.png",
         "vgw.png",
         "vm.png",
@@ -2333,12 +2388,12 @@ function Get-AzNetworkDiagram {
             }
 
             #PostgreSQL Servers
-            Write-Output "Collecting PostgreSQL Servers..."
-            Export-AddToFile "    ##### $subname - PostgreSQL Servers #####"
-            $postgresqlservers = Get-AzPostgreSqlServer -ErrorAction Stop
-            foreach ($postgresqlserver in $postgresqlservers) {
-                Export-PostgreSQLServer $postgresqlserver 
-            }
+            #Write-Output "Collecting PostgreSQL Servers..."
+            #Export-AddToFile "    ##### $subname - PostgreSQL Servers #####"
+            #$postgresqlservers = Get-AzPostgreSqlServer -ErrorAction Stop
+            #foreach ($postgresqlserver in $postgresqlservers) {
+            #    Export-PostgreSQLServer $postgresqlserver 
+            #}
 
             #CosmosDB Servers
             Write-Output "Collecting CosmosDB Servers..."
@@ -2358,7 +2413,7 @@ function Get-AzNetworkDiagram {
             foreach ($redisserver in $redisservers) {
                 Export-RedisServer $redisserver 
             }
-            #SQL Managed Instances
+
             #Write-Output "Collecting SQL Managed Instances..."
             #Export-AddToFile "    ##### $subname - SQL Managed Instances #####"
             #$sqlmanagedinstances = Get-AzSqlManagedInstance -ErrorAction Stop
@@ -2366,20 +2421,13 @@ function Get-AzNetworkDiagram {
             #    Export-SQLManagedInstance $sqlmanagedinstance 
             #}
 
-            #SQL Servers
-            ##Write-Output "Collecting SQL Servers..."
-            #Export-AddToFile "    ##### $subname - SQL Servers #####"
-            ##$sqlservers = Get-AzSqlServer -ErrorAction Stop
-            #foreach ($sqlserver in $sqlservers) {
-            #    Export-SQLServer $sqlserver 
-            #}
-            #SQL Databases
-            #Write-Output "Collecting SQL Databases..."
-            #Export-AddToFile "    ##### $subname - SQL Databases #####"
-            #$sqldatabases = Get-AzSqlDatabase -ErrorAction Stop
-            #foreach ($sqldatabase in $sqldatabases) {
-            #    Export-SQLDatabase $sqldatabase 
-            #}
+            # list every Azure SQL logical server in the current subscription
+            Write-Output "Collecting SQL Servers..."
+            Export-AddToFile "    ##### $subname - SQL Servers #####"
+            $sqlservers = Get-AzSqlServer -ErrorAction Stop
+            foreach ($sqlserver in $sqlservers) {
+                Export-SQLServer $sqlserver 
+            }
 
             #EventHubs
             Write-Output "Collecting Event Hubs..."
