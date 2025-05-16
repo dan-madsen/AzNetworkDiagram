@@ -809,7 +809,47 @@ function Export-RedisServer {
 }
 
 function Export-SQLManagedInstance {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$sqlmi
+    )
+    try {
+        $sqlmiid = $sqlmi.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        
+        $data = "
+        # $($sqlmi.ManagedInstanceName) - $sqlmiid
+        subgraph cluster_$sqlmiid {
+            style = solid;
+            color = black;
+            node [color = white;];
+        "
 
+        $data += "        $sqlmiid [label = `"\n\nLocation: $($sqlmi.Location)\nSKU: $($sqlmi.Sku.Tier) $($sqlmi.Sku.Family)\nVersion: $($sqlmi.DatabaseFormat)\nEntra Id Admin: $($sqlmi.Administrators.Login)\nvCores: $($sqlmi.VCores)\nStorage Size: $($sqlmi.StorageSizeInGB) GB\nZone Redundant: $($sqlmi.ZoneRedundant)\nPublic endpoint (data): $($sqlmi.PublicDataEndpointEnabled)`" ; color = lightgray;image = `"$OutputPath\icons\sqlmi.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.5;];"
+        $data += "`n"
+
+        Get-AzSqlInstanceDatabase -InstanceResourceId $sqlmi.Id -ErrorAction SilentlyContinue |
+            ForEach-Object {
+                $db = $_
+                $dbid = $_.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                
+                $retention = Get-AzSqlInstanceDatabaseBackupShortTermRetentionPolicy -ResourceGroupName $db.ResourceGroupName -InstanceName $db.ManagedInstanceName -DatabaseName $db.Name -ErrorAction SilentlyContinue
+                $data += "        $($dbid) [label = `"\n\nLocation: $($db.Location)\nName: $($db.DatabaseName)\nBackup retention: $($retention.RetentionDays) Days`" ; color = lightgray;image = `"$OutputPath\icons\sqlmidb.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n" 
+                $data += "        $sqlmiid -> $($dbid);`n"
+            }
+
+        if ($sqlmi.SubnetId) {
+            $sqlmisubnetid = $sqlmi.SubnetId.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $data += "        $sqlmiid -> $($sqlmisubnetid);`n"
+        }
+        $data += "   label = `"$($sqlmi.ManagedInstanceName)`";
+                }`n"
+
+        Export-AddToFile -Data $data
+    }
+    catch {
+        Write-Host "Can't export SQL Managed Instance: $($sqlmi.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
 }
 
 function Export-SQLServer {
@@ -1055,7 +1095,7 @@ function Export-StorageAccount {
             $PublicNetworkAccess = "Enabled from selected virtual`nnetworks and IP addresses"
         }
         $HierarchicalNamespace = $storageaccount.EnableHierarchicalNamespace ? "Enabled" : "Disabled"
-        $data += "        $staid [label = `"\nLocation: $($storageaccount.Location)\nSKU: $($storageaccount.Sku.Name)\nKind: $($storageaccount.Kind)\nPublic Network Access: $PublicNetworkAccess\nAccess Tier: $($storageaccount.AccessTier)\nHierarchical Namespace: $HierarchicalNamespace\n`" ; color = lightgray;image = `"$OutputPath\icons\storage-account.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
+        $data += "        $staid [label = `"\n\nLocation: $($storageaccount.Location)\nSKU: $($storageaccount.Sku.Name)\nKind: $($storageaccount.Kind)\nPublic Network Access: $PublicNetworkAccess\nAccess Tier: $($storageaccount.AccessTier)\nHierarchical Namespace: $HierarchicalNamespace\n`" ; color = lightgray;image = `"$OutputPath\icons\storage-account.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];"
         $data += "`n"
         $peids = Get-AzPrivateEndpointConnection -PrivateLinkResourceId $storageaccount.Id -ErrorAction Stop
         
@@ -2414,12 +2454,12 @@ function Get-AzNetworkDiagram {
                 Export-RedisServer $redisserver 
             }
 
-            #Write-Output "Collecting SQL Managed Instances..."
-            #Export-AddToFile "    ##### $subname - SQL Managed Instances #####"
-            #$sqlmanagedinstances = Get-AzSqlManagedInstance -ErrorAction Stop
-            #foreach ($sqlmanagedinstance in $sqlmanagedinstances) {
-            #    Export-SQLManagedInstance $sqlmanagedinstance 
-            #}
+            Write-Output "Collecting SQL Managed Instances..."
+            Export-AddToFile "    ##### $subname - SQL Managed Instances #####"
+            $sqlmanagedinstances = Get-AzSqlInstance -ErrorAction Stop
+            foreach ($sqlmanagedinstance in $sqlmanagedinstances) {
+                Export-SQLManagedInstance $sqlmanagedinstance 
+            }
 
             # list every Azure SQL logical server in the current subscription
             Write-Output "Collecting SQL Servers..."
