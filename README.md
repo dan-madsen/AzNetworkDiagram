@@ -48,6 +48,7 @@ PS> Install-Module -Name AzNetworkDiagram
 
 **-Tenant <tenantId>**
 
+**-Sanitize $bool** ($true/$false) - Sanitizes all names, locations, IP addresses and CIDR blocks. **Default: $false**
 
 ## Running the Powershell module
 **Examples:**
@@ -95,6 +96,7 @@ This module will include in the diagram:
   - EventHubs
   - Redis Cache
   - App Services
+  - Compute Galleries
     
 # Work in progress...
   - Azure DevOps pipeline for automated runs, with output saved to storage account

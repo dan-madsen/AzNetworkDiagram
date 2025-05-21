@@ -48,7 +48,147 @@ $ErrorActionPreference = 'Stop'
 $WarningPreference = 'Continue'
 $InformationPreference = 'Continue'
 
+function SanitizeLocation {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$Location
+    )
+    # Array of known planets, major moons, stars, and star systems (all lowercase, spaces replaced with dash)
+    $celestialBodies = @(
+        # Planets (Solar System)
+        "mercury", "venus", "earth", "mars", "jupiter", "saturn", "uranus", "neptune",
+
+        # Dwarf Planets (Solar System)
+        "pluto", "eris", "haumea", "makemake", "ceres",
+
+        # Major Moons (Solar System)
+        "moon", "phobos", "deimos", "io", "europa", "ganymede", "callisto",
+        "amalthea", "himalia", "elara", "pasiphae", "sinope", "lysithea", "carme", "ananke", "leda",
+        "mimas", "enceladus", "tethys", "dione", "rhea", "titan", "hyperion", "iapetus", "phoebe",
+        "miranda", "ariel", "umbriel", "titania", "oberon", "triton", "nereid", "charon", "hydra", "nix", "kerberos", "styx",
+
+        # Notable Stars
+        "sun", "sirius", "canopus", "arcturus", "alpha-centauri", "vega", "capella", "rigel", "procyon",
+        "achernar", "betelgeuse", "hadar", "altair", "aldebaran", "antares", "spica", "pollux", "fomalhaut",
+        "deneb", "mimosa", "regulus", "adhara", "castor", "gacrux", "shaula", "bellatrix", "elnath", "miaplacidus",
+
+        # Notable Star Systems
+        "alpha-centauri", "proxima-centauri", "barnard's-star", "luyten's-star", "wolf-359", "lalande-21185",
+        "sirius-system", "epsilon-eridani", "tau-ceti", "61-cygni", "altair-system", "vega-system", "trappist-1",
+
+        # Famous Exoplanets (selected)
+        "proxima-centauri-b", "kepler-22b", "kepler-452b", "hd-209458-b", "51-pegasi-b", "gliese-581g", "trappist-1e", "trappist-1f", "trappist-1g"
+    )
+    return $script:DoSanitize ? ($celestialBodies | Get-Random) : $Location
+}
+
+# Example usage:
+# $text = 'label = "my-label"; [label = "should-not-change"];'
+# $newText = Replace-LabelEqualsWithRandomWord $text
+# Write-Output $newText
+
+function SanitizeString {
+    param (
+        [string]$InputString
+    )
+
+    # Example usage:
+    # $randomIP = Get-RandomPrivateIPAddress
+    # Write-Output $randomIP
+    function Get-RandomPrivateIPAddress {
+        # Define private IP ranges
+        $privateRanges = @(
+            @{ Base = "10";      Min2 = 0;  Max2 = 255; Min3 = 0;  Max3 = 255; Min4 = 1;  Max4 = 254 },
+            @{ Base = "172";     Min2 = 16; Max2 = 31;  Min3 = 0;  Max3 = 255; Min4 = 1;  Max4 = 254 },
+            @{ Base = "192.168"; Min2 = 0;  Max2 = 0;   Min3 = 1;  Max3 = 254; Min4 = 1;  Max4 = 254 }
+        )
+
+        $range = Get-Random -InputObject $privateRanges
+        if ($range.Base -eq "10") {
+            return "$($range.Base).$((Get-Random -Min $range.Min2 -Max ($range.Max2+1))).$((Get-Random -Min $range.Min3 -Max ($range.Max3+1))).$((Get-Random -Min $range.Min4 -Max ($range.Max4+1)))"
+        } elseif ($range.Base -eq "172") {
+            return "$($range.Base).$((Get-Random -Min $range.Min2 -Max ($range.Max2+1))).$((Get-Random -Min $range.Min3 -Max ($range.Max3+1))).$((Get-Random -Min $range.Min4 -Max ($range.Max4+1)))"
+        } else {
+            return "$($range.Base).$((Get-Random -Min 1 -Max 255)).$((Get-Random -Min 1 -Max 255))"
+        }
+    }
+
+    if (-not $script:DoSanitize) {
+        return $InputString
+    }
+    # Regex: match 'label =' not preceded by '[' and followed by quoted string
+    # Check for IPv4 address
+    elseif ($InputString -match '^(?:\d{1,3}\.){3}\d{1,3}$') {
+        return Get-RandomPrivateIPAddress
+    }
+    # Check for CIDR notation
+    elseif ($InputString -match '^(?:\d{1,3}\.){3}\d{1,3}/\d{1,2}$') {
+        # Extract mask
+        $mask = $InputString.Split('/')[1]
+        $ip = Get-RandomPrivateIPAddress
+        return "$ip/$mask"
+    }
+    # Check for dashes
+    elseif ($InputString -match '-') {
+        # List of 3-letter lowercase words
+        $shortwords = @(
+            'cat','dog','sun','sky','red','fox','owl','bee','ant','bat','cow','pig','rat','hen','elk','ape','yak','emu','gnu','eel','ram','cod','jay','kit','lob','man','nut','owl','pan','qua','rob','sow','tan','urn','vet','was','yak','zip'
+        )
+
+        # Split the string by dashes
+        $parts = $InputString -split '-'
+        if ($parts.Count -le 2) {
+            return $InputString
+        }
+        $first = $parts[0]
+        $last = $parts[-1]
+        $middleCount = $parts.Count - 2
+        $middle = @()
+        for ($i = 0; $i -lt $middleCount; $i++) {
+            $middle += ($shortwords | Get-Random)
+        }
+        return ($first + '-' + ($middle -join '-') + '-' + $last)
+    }
+    # Check for alphanumerical only (no spaces, no dashes, no special chars)
+    elseif ($InputString -match '^[a-zA-Z0-9]+$') {
+        # Array of known car brands (major global brands, all lowercase, spaces replaced with dash)
+        $carBrands = @(
+            "acura", "alfa-romeo", "aston-martin", "audi", "bentley", "bmw", "bugatti", "buick", "cadillac", "chevrolet",
+            "chrysler", "citroen", "dacia", "daewoo", "daihatsu", "dodge", "ds-automobiles", "ferrari", "fiat", "fisker",
+            "ford", "genesis", "gmc", "great-wall", "haval", "holden", "honda", "hummer", "hyundai", "infiniti", "isuzu",
+            "jaguar", "jeep", "kia", "koenigsegg", "lada", "lamborghini", "lancia", "land-rover", "lexus", "lincoln",
+            "lotus", "lucid", "maserati", "mazda", "mclaren", "mercedes-benz", "mercury", "mini", "mitsubishi", "nissan",
+            "opel", "pagani", "peugeot", "polestar", "pontiac", "porsche", "proton", "ram", "renault", "rivian", "rolls-royce",
+            "saab", "saturn", "scion", "seat", "škoda", "smart", "ssangyong", "subaru", "suzuki", "tata", "tesla", "toyota",
+            "vauxhall", "volkswagen", "volvo", "wuling", "zotye"
+        )        
+        return $carBrands | Get-Random
+    } else {
+    # List of random words to choose from
+        $fruits = @(
+            "apple","apricot","avocado","banana","blackberry","blueberry","cantaloupe","cherry","coconut","cranberry",
+            "currant","date","dragonfruit","durian","elderberry","fig","gooseberry","grape","grapefruit","guava",
+            "honeydew","jackfruit","kiwi","kumquat","lemon","lime","lychee","mango","melon","mulberry",
+            "nectarine","orange","papaya","passionfruit","peach","pear","persimmon","pineapple","plum","pomegranate",
+            "quince","raspberry","starfruit","strawberry","tangerine","watermelon"
+        )
+        $words = @('alpha','bravo','charlie','delta','echo','foxtrot','golf','hotel','india','juliet','kilo','lima','mike','november','oscar','papa','quebec','romeo','sierra','tango','uniform','victor','whiskey','xray','yankee','zulu')
+        return ($fruits + $words) | Get-Random
+    }
+}
+
 ##### Functions for standard definitions #####
+<#
+.SYNOPSIS
+Exports the DOT file header for the network diagram.
+.DESCRIPTION
+This function writes the initial DOT syntax and global graph settings for the Azure network diagram.
+.PARAMETER None
+This function does not take any parameters.
+.EXAMPLE
+Export-dotHeader
+#>
 function Export-dotHeader {
     [CmdletBinding()]
 
@@ -70,6 +210,16 @@ function Export-dotHeader {
     Export-CreateFile -Data $Data
 }
 
+<#
+.SYNOPSIS
+Exports the DOT file footer with resource ranking for the network diagram.
+.DESCRIPTION
+This function writes the closing DOT syntax and resource ranking information for the Azure network diagram.
+.PARAMETER None
+This function does not take any parameters.
+.EXAMPLE
+Export-dotFooterRanking
+#>
 function Export-dotFooterRanking {
     Export-AddToFile -Data "`n    ##########################################################################################################"
     Export-AddToFile -Data "    ##### RANKS"
@@ -92,10 +242,30 @@ function Export-dotFooterRanking {
     Export-AddToFile "    { rank=max; $($script:rankipgroups -join '; ') }`n "        
 }
 
+<#
+.SYNOPSIS
+Exports the DOT file footer for the network diagram.
+.DESCRIPTION
+This function writes the closing DOT syntax for the Azure network diagram.
+.PARAMETER None
+This function does not take any parameters.
+.EXAMPLE
+Export-dotFooter
+#>
 function Export-dotFooter {
     Export-AddToFile -Data "}" #EOF
 }
 
+<#
+.SYNOPSIS
+Creates a new file for outputting the network diagram data.
+.DESCRIPTION
+This function creates a new output file for the Azure network diagram, overwriting any existing file with the same name.
+.PARAMETER None
+This function does not take any parameters.
+.EXAMPLE
+Export-CreateFile
+#>
 function Export-CreateFile {
     [CmdletBinding()]
     param([string]$Data)
@@ -103,6 +273,16 @@ function Export-CreateFile {
     $Data | Out-File -Encoding ASCII $OutputPath\AzNetworkDiagram.dot
 }
 
+<#
+.SYNOPSIS
+Appends data to the output file for the network diagram.
+.DESCRIPTION
+This function appends a string of data to the output file for the Azure network diagram.
+.PARAMETER Data
+The string data to append to the output file.
+.EXAMPLE
+Export-AddToFile -Data $data
+#>
 function Export-AddToFile {
     [CmdletBinding()]
     param([string]$Data)
@@ -110,6 +290,16 @@ function Export-AddToFile {
     $Data | Out-File -Encoding ASCII -Append $OutputPath\AzNetworkDiagram.dot
 }
 
+<#
+.SYNOPSIS
+Exports details of an AKS Cluster for inclusion in a network diagram.
+.DESCRIPTION
+This function processes an AKS Cluster object and formats its details for the Azure network diagram.
+.PARAMETER Aks
+The AKS Cluster object to process.
+.EXAMPLE
+Export-AKSCluster -Aks $Aks
+#>
 function Export-AKSCluster {
     [CmdletBinding()]
     param(
@@ -145,17 +335,19 @@ function Export-AKSCluster {
             color = black;
             node [color = white;];
         "
-
-        $data += "        $aksid [label = `"\nLocation: $($Aks.Location)\nVersion: $($Aks.KubernetesVersion)\nSKU Tier: $($Aks.Sku.Tier)\nPrivate Cluster: $($Aks.ApiServerAccessProfile.EnablePrivateCluster)\nDNS Service IP: $($Aks.DnsServiceIP)\nMax Agent Pools: $($Aks.MaxAgentPools)\nContainer Registry: $aksacr\nPod CIDR: $($Aks.NetworkProfile.PodCidr)\nService CIDR: $($Aks.NetworkProfile.ServiceCidr)\n`" ; color = lightgray;image = `"$OutputPath\icons\aks-service.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];"
+        $Location = SanitizeLocation $Aks.Location
+        $data += "        $aksid [label = `"\nLocation: $Location\nVersion: $($Aks.KubernetesVersion)\nSKU Tier: $($Aks.Sku.Tier)\nPrivate Cluster: $($Aks.ApiServerAccessProfile.EnablePrivateCluster)\nDNS Service IP: $($Aks.DnsServiceIP)\nMax Agent Pools: $($Aks.MaxAgentPools)\nContainer Registry: $aksacr\nPod CIDR: $($Aks.NetworkProfile.PodCidr)\nService CIDR: $($Aks.NetworkProfile.ServiceCidr)\n`" ; color = lightgray;image = `"$OutputPath\icons\aks-service.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];"
         
         #$Aks.PrivateLinkResources.PrivateLinkServiceId
 
         foreach ($agentpool in $Aks.AgentPoolProfiles) {
             $agentpoolid = $aksid +  $agentpool.Name.replace("-", "").replace("/", "").replace(".", "").ToLower()
-            $agentpoolsubnetid = $agentpool.VnetSubnetId.replace("-", "").replace("/", "").replace(".", "").ToLower()
             $data += "        $($agentpoolid) [label = `"\nName: $($agentpool.Name)\nMode: $($agentpool.Mode)\nZones: $($agentpool.AvailabilityZones)\nVM Size: $($agentpool.VmSize)\nMax Pods: $($agentpool.MaxPods)\nOS SKU: $($agentpool.OsSKU)\nAgent Pools: $($agentpool.MinCount) >= Pod Count <=  $($agentpool.MaxCount)\nEnable AutoScaling: $($agentpool.EnableAutoScaling)\nPublic IP: $($agentpool.EnableNodePublicIP)\n`" ; color = lightgray;image = `"$OutputPath\icons\aks-node-pool.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n" 
-            $data += "        $agentpoolid -> $agentpoolsubnetid;`n"
             $data += "        $aksid -> $agentpoolid;`n"
+            if ($agentpool.VnetSubnetId) {
+                $agentpoolsubnetid = $agentpool.VnetSubnetId.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $data += "        $agentpoolid -> $agentpoolsubnetid;`n"
+            }
         }
 
         if ($aksacr -ne "None") {
@@ -174,9 +366,12 @@ function Export-AKSCluster {
             } 
         }
         # Check for Private Endpoints
-        (get-azprivateEndpointConnection -PrivateLinkResourceId $aks.id).PrivateEndpoint.Id | ForEach-Object {
-            $peid = $_.replace("-", "").replace("/", "").replace(".", "").ToLower()
-            $data += "        $aksid -> $peid;`n"
+        $pvtendpoints = get-azprivateEndpointConnection -PrivateLinkResourceId $aks.id -ErrorAction SilentlyContinue
+        if ($pvtendpoints) {
+            foreach ($pe in $($pvtendpoints.PrivateEndpoint)) {
+                $peid = $pe.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $data += "        $aksid -> $peid [label = `"Private Endpoint`"; ];`n"
+            }
         }
         # Match VMSS to node pools
         $vmssResources = Get-AzVmss 
@@ -298,6 +493,16 @@ function Export-ApplicationGateway {
     }
 }
 
+<#
+.SYNOPSIS
+Exports details of a managed identity for inclusion in a network diagram.
+.DESCRIPTION
+This function processes a managed identity object and formats its details for the Azure network diagram.
+.PARAMETER managedIdentity
+The managed identity object to process.
+.EXAMPLE
+Export-ManagedIdentity -managedIdentity $identity
+#>
 function Export-ManagedIdentity {
     [CmdletBinding()]
     param (
@@ -307,6 +512,7 @@ function Export-ManagedIdentity {
     
     try {
         $id = $managedIdentity.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $Location = SanitizeLocation $managedIdentity.Location
         $data = "
         # $($managedIdentity.Name) - $managedIdentityId
         subgraph cluster_$id {
@@ -314,7 +520,7 @@ function Export-ManagedIdentity {
             color = black;
             node [color = white;];
 
-            $id [label = `"\n$($managedIdentity.Name)\nLocation: $($managedIdentity.Location)`" ; color = lightgray;image = `"$OutputPath\icons\managed-identity.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];
+            $id [label = `"\n$($managedIdentity.Name)\nLocation: $Location`" ; color = lightgray;image = `"$OutputPath\icons\managed-identity.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];
             label = `"$($managedIdentity.Name)`";
         }
         "
@@ -325,6 +531,16 @@ function Export-ManagedIdentity {
     }
 }
 
+<#
+.SYNOPSIS
+Exports details of a Network Security Group (NSG) for inclusion in a network diagram.
+.DESCRIPTION
+This function processes a Network Security Group object and formats its details for the Azure network diagram.
+.PARAMETER nsg
+The Network Security Group object to process.
+.EXAMPLE
+Export-NSG -nsg $nsg
+#>
 function Export-NSG {
     [CmdletBinding()]
     param (
@@ -334,6 +550,7 @@ function Export-NSG {
     
     try {
         $id = $nsg.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $Location = SanitizeLocation $nsg.Location
         $data = "
         # $($nsg.Name) - $id
         subgraph cluster_$id {
@@ -341,7 +558,7 @@ function Export-NSG {
             color = black;
             node [color = white;];
 
-            $id [label = `"\n$($nsg.Name)\nLocation: $($nsg.Location)`" ; color = lightgray;image = `"$OutputPath\icons\nsg.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];
+            $id [label = `"\n$($nsg.Name)\nLocation: $Location`" ; color = lightgray;image = `"$OutputPath\icons\nsg.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];
             label = `"$($nsg.Name)`";
         }
         "
@@ -351,6 +568,17 @@ function Export-NSG {
         Write-Host "Can't export NSG: $($nsg.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
     }
 }
+
+<#
+.SYNOPSIS
+Exports details of an SSH key for inclusion in a network diagram.
+.DESCRIPTION
+This function processes an SSH key object and formats its details for the Azure network diagram.
+.PARAMETER sshKey
+The SSH key object to process.
+.EXAMPLE
+Export-SSHKey -sshKey $sshKey
+#>
 function Export-SSHKey {
     [CmdletBinding()]
     param (
@@ -360,6 +588,7 @@ function Export-SSHKey {
     
     try {
         $id = $sshkey.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $Location = SanitizeLocation $sshkey.Location
         $data = "
         # $($sshkey.Name) - $id
         subgraph cluster_$id {
@@ -367,7 +596,7 @@ function Export-SSHKey {
             color = black;
             node [color = white;];
 
-            $id [label = `"\n$($sshkey.Name)\nLocation: $($sshkey.Location)`" ; color = lightgray;image = `"$OutputPath\icons\ssh-key.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];
+            $id [label = `"\n$($sshkey.Name)\nLocation: $Location`" ; color = lightgray;image = `"$OutputPath\icons\ssh-key.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];
             label = `"$($sshkey.Name)`";
         }
         "
@@ -378,6 +607,74 @@ function Export-SSHKey {
     }
 }
 
+function Export-ComputeGallery {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$computeGallery
+    )   
+    
+    try {
+        $id = $computeGallery.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $sharing = $computeGallery.SharingProfile.Permissions ? "Shared" : "Private"
+        $Location = SanitizeLocation $computeGallery.Location
+        $data = "
+        # $($computeGallery.Name) - $id
+        subgraph cluster_$id {
+            style = solid;
+            color = black;
+            node [color = white;];
+
+            $id [label = `"\nName: $($computeGallery.Name)\nLocation: $Location\nSharing Profile: $sharing`" ; color = lightgray;image = `"$OutputPath\icons\computegalleries.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n"
+            # Get all image definitions in the gallery
+
+        $imageDefinitions = Get-AzGalleryImageDefinition -ResourceGroupName $computeGallery.ResourceGroupName -GalleryName $computeGallery.Name -ErrorAction Stop
+        foreach ($imageDef in $imageDefinitions) {
+            # Get all image versions for the image definition
+            $imageVersions = Get-AzGalleryImageVersion -ResourceGroupName $computeGallery.ResourceGroupName -GalleryName $computeGallery.Name -GalleryImageDefinitionName $imageDef.Name -ErrorAction Stop
+            $versions = $imageVersions | Select-Object @{Name="Version";Expression={$_.Name}}, @{Name="TargetRegions";Expression={ $_.PublishingProfile.TargetRegions.Name -join ", " }} | Format-Table -AutoSize | Out-String
+
+            $imageDefId = $imageDef.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            #$data += "        $imageDefId [label = < \n\nName: $($imageDef.Name)\nOS Type: $($imageDef.OsType)\nOS State: $($imageDef.OsState)\nVM Generation: $($imageDef.HyperVGeneration)\n$versions\n 
+            $data += "        $imageDefId [label = < 
+                                        <TABLE border=`"0`" style=`"rounded`">
+                                        <TR><TD align=`"left`">Name</TD><TD align=`"left`">$($imageDef.Name)</TD></TR>
+                                        <TR><TD align=`"left`">OS Type</TD><TD align=`"left`">$($imageDef.OsType)</TD></TR>
+                                        <TR><TD align=`"left`">OS State</TD><TD align=`"left`">$($imageDef.OsState)</TD></TR>
+                                        <TR><TD align=`"left`">VM Generation</TD><TD align=`"left`">$($imageDef.HyperVGeneration)</TD></TR>
+                                        <TR><TD><BR/><BR/></TD></TR>
+                                        <TR><TD><B>Version</B></TD><TD><B>Target Regions</B></TD></TR>
+                                        "
+            foreach ($imageVersion in $imageVersions) {
+                $version = $imageVersion.Name
+                $targetRegions = $imageVersion.PublishingProfile.TargetRegions.Name -join ", "
+                $data += "<TR><TD>$version</TD><TD>$targetRegions</TD></TR>`n"
+            }                                        
+            $data += "                  </TABLE>>; color = lightgray;image = `"$OutputPath\icons\imagedef.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.5;];`n"
+            $data += "        $id -> $imageDefId;`n"
+        }
+        $data += "`n
+            label = `"$($computeGallery.Name)`";
+        }
+        "
+    
+        Export-AddToFile -Data $data
+    }
+    catch {
+        Write-Host "Can't export Compute Gallery: $($computeGallery.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+
+}
+<#
+.SYNOPSIS
+Exports details of an Azure Key Vault for inclusion in a network diagram.
+.DESCRIPTION
+This function processes a Key Vault object and formats its details for the Azure network diagram.
+.PARAMETER keyvault
+The Key Vault object to process.
+.EXAMPLE
+Export-Keyvault -keyvault $keyvault
+#>
 function Export-Keyvault {
     [CmdletBinding()]
     param (
@@ -387,6 +684,7 @@ function Export-Keyvault {
     
     try {
         $properties = Get-AzResource -ResourceId $keyvault.ResourceId -ErrorAction Stop
+        $Location = SanitizeLocation $keyvault.Location
         $id = $keyvault.ResourceId.replace("-", "").replace("/", "").replace(".", "").ToLower()
         $data = "
         # $($keyvault.VaultName) - $id
@@ -395,11 +693,11 @@ function Export-Keyvault {
             color = black;
             node [color = white;];
 
-            $id [label = `"\nLocation: $($keyvault.Location)\nSKU: $($properties.Properties.Sku.Name)\nSoft Delete Enabled: $($properties.Properties.enableSoftDelete)\nRBAC Authorization Enabled: $($properties.Properties.enableRbacAuthorization)\nPublic Network Access: $($properties.Properties.publicNetworkAccess)\nPurge Protection Enabled: $($properties.Properties.enablePurgeProtection)`" ; color = lightgray;image = `"$OutputPath\icons\keyvault.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];
+            $id [label = `"\nLocation: $Location\nSKU: $($properties.Properties.Sku.Name)\nSoft Delete Enabled: $($properties.Properties.enableSoftDelete)\nRBAC Authorization Enabled: $($properties.Properties.enableRbacAuthorization)\nPublic Network Access: $($properties.Properties.publicNetworkAccess)\nPurge Protection Enabled: $($properties.Properties.enablePurgeProtection)`" ; color = lightgray;image = `"$OutputPath\icons\keyvault.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];
         "
         if ($properties.Properties.privateEndpointConnections.properties.PrivateEndpoint.Id) {
             $peid = $properties.Properties.privateEndpointConnections.properties.PrivateEndpoint.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-            $data += "        $id -> $peid;`n"
+            $data += "        $id -> $peid [label = `"Private Endpoint`"; ];`n"
         }
         $data += "
             label = `"$($keyvault.VaultName)`";
@@ -412,6 +710,16 @@ function Export-Keyvault {
     }
 }
 
+<#
+.SYNOPSIS
+Exports details of a Virtual Machine Scale Set (VMSS) for inclusion in a network diagram.
+.DESCRIPTION
+This function processes a VMSS object and formats its details for the Azure network diagram.
+.PARAMETER vmss
+The Virtual Machine Scale Set object to process.
+.EXAMPLE
+Export-VMSS -vmss $vmss
+#>
 function Export-VMSS {
     [CmdletBinding()]
     param (
@@ -421,7 +729,7 @@ function Export-VMSS {
     
     try {
         $vmssid = $vmss.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-        
+        $Location = SanitizeLocation $vmss.Location
         $data = "
         # $($vmss.Name) - $vmssid
         subgraph cluster_$vmssid {
@@ -431,7 +739,7 @@ function Export-VMSS {
         "
         $extensions = $vmss.VirtualMachineProfile.ExtensionProfile.Extensions | ForEach-Object { $_.Name } | Join-String -Separator ", "
         
-        $data += "        $vmssid [label = `"\nLocation: $($vmss.Location)\nSKU: $($vmss.Sku.Name)\nCapacity: $($vmss.Sku.Capacity)\nZones: $($vmss.Zones)\nOS Type: $($vmss.StorageProfile.OsDisk.OsType)\nOrchestration Mode: $($vmss.OrchestrationMode)\nUpgrade Policy: $($vmss.UpgradePolicy)\nExtensions: $extensions`" ; color = lightgray;image = `"$OutputPath\icons\vmss.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];"
+        $data += "        $vmssid [label = `"\nLocation: $Location\nSKU: $($vmss.Sku.Name)\nCapacity: $($vmss.Sku.Capacity)\nZones: $($vmss.Zones)\nOS Type: $($vmss.StorageProfile.OsDisk.OsType)\nOrchestration Mode: $($vmss.OrchestrationMode)\nUpgrade Policy: $($vmss.UpgradePolicy)\nExtensions: $extensions`" ; color = lightgray;image = `"$OutputPath\icons\vmss.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];"
         $data += "`n"
 
         $sshid = (Get-AzSshKey | Where-Object { $_.publickey -eq $vmss.VirtualMachineProfile.OsProfile.LinuxConfiguration.Ssh.PublicKeys.KeyData }).Id
@@ -463,6 +771,16 @@ function Export-VMSS {
     }
 }
 
+<#
+.SYNOPSIS
+Exports details of a Virtual Machine (VM) for inclusion in a network diagram.
+.DESCRIPTION
+This function processes a VM object and formats its details for the Azure network diagram.
+.PARAMETER vm
+The Virtual Machine object to process.
+.EXAMPLE
+Export-VM -vm $vm
+#>
 function Export-VM {
     [CmdletBinding()]
     param (
@@ -472,7 +790,7 @@ function Export-VM {
     
     try {
         $vmid = $vm.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-        
+        $Location = SanitizeLocation $vm.Location
         $data = "
         # $($vm.Name) - $vmid
         subgraph cluster_$vmid {
@@ -483,7 +801,7 @@ function Export-VM {
         $extensions = $vm.Extensions | ForEach-Object { $_.Id.split("/")[-1] } | Join-String -Separator ", "
         $nic = Get-AzNetworkInterface -ResourceId $vm.NetworkProfile.NetworkInterfaces[0].Id -ErrorAction Stop
 
-        $data += "        $vmid [label = `"\nLocation: $($vm.Location)\nSKU: $($vm.HardwareProfile.VmSize)\nZones: $($vm.Zones)\nOS Type: $($vm.StorageProfile.OsDisk.OsType)\nPublic IP: $($nic.IpConfigurations[0].PublicIpAddress)\nPrivate IP Address: $($nic.IpConfigurations[0].PrivateIpAddress)\nExtensions: $extensions`" ; color = lightgray;image = `"$OutputPath\icons\vm.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];"
+        $data += "        $vmid [label = `"\nLocation: $Location\nSKU: $($vm.HardwareProfile.VmSize)\nZones: $($vm.Zones)\nOS Type: $($vm.StorageProfile.OsDisk.OsType)\nPublic IP: $($nic.IpConfigurations[0].PublicIpAddress)\nPrivate IP Address: $($nic.IpConfigurations[0].PrivateIpAddress)\nExtensions: $extensions`" ; color = lightgray;image = `"$OutputPath\icons\vm.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];"
         $data += "`n"
         $subnetid = $nic.IpConfigurations[0].Subnet.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
         $data += "        $vmid -> $subnetid;`n"
@@ -503,6 +821,16 @@ function Export-VM {
     }
 }
 
+<#
+.SYNOPSIS
+Exports details of a MySQL Flexible Server for inclusion in a network diagram.
+.DESCRIPTION
+This function processes a MySQL Flexible Server object and formats its details for the Azure network diagram.
+.PARAMETER mysql
+The MySQL Flexible Server object to process.
+.EXAMPLE
+Export-MySQLServer -mysql $mysql
+#>
 function Export-MySQLServer {
     [CmdletBinding()]
     param (
@@ -527,7 +855,7 @@ function Export-MySQLServer {
         # Get other server properties
         $mysqlid = $mysql.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
         $properties = Get-AzResource -ResourceId $mysql.id -ErrorAction Stop      
-
+        $Location = SanitizeLocation $mysql.Location
         $data = "
         # $($mysql.Name) - $mysqlid
         subgraph cluster_$mysqlid {
@@ -536,7 +864,7 @@ function Export-MySQLServer {
             node [color = white;];
         "
 
-        $data += "        $mysqlid [label = `"\n\n\nLocation: $($mysql.Location)\nSKU: $($mysql.SkuName)\nTier: $($mysql.SkuTier.ToString())\nVersion: $($mysql.Version)\nLogin Admins:$sqladmins\nVM Size: $($properties.Sku.Name)\nAvailability Zone: $($mysql.AvailabilityZone)\nStandby Zone: $($mysql.HighAvailabilityStandbyAvailabilityZone)\nPublic Network Access: $($mysql.NetworkPublicNetworkAccess)`" ; color = lightgray;image = `"$OutputPath\icons\mysql.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.5;];"
+        $data += "        $mysqlid [label = `"\n\n\nLocation: $Location\nSKU: $($mysql.SkuName)\nTier: $($mysql.SkuTier.ToString())\nVersion: $($mysql.Version)\nLogin Admins:$sqladmins\nVM Size: $($properties.Sku.Name)\nAvailability Zone: $($mysql.AvailabilityZone)\nStandby Zone: $($mysql.HighAvailabilityStandbyAvailabilityZone)\nPublic Network Access: $($mysql.NetworkPublicNetworkAccess)`" ; color = lightgray;image = `"$OutputPath\icons\mysql.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.5;];"
         $data += "`n"
         
         $dbs = Get-AzMySqlFlexibleServerDatabase -ResourceGroupName $mysql.id.split("/")[4] -ServerName $mysql.Name -ErrorAction Stop
@@ -567,6 +895,71 @@ function Export-MySQLServer {
     }
 }
 
+function Invoke-TableWriter {
+#    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [scriptblock]$GetDatabases,
+        [Parameter(Mandatory = $true)]
+        [scriptblock]$GetDBThroughput,
+        [Parameter(Mandatory = $true)]
+        [scriptblock]$GetCollections,
+        [Parameter(Mandatory = $true)]
+        [scriptblock]$GetColThrouput,
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$cosmosdbact,
+        [Parameter(Mandatory = $true)]
+        [string]$TypeName,
+        [Parameter(Mandatory = $true)]
+        [string]$iconname
+    )
+    $resourceGroupName = $cosmosdbact.Id.split("/")[4]
+    $data = ""
+    $dbs = & $GetDatabases -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -ErrorAction Stop
+    foreach ($db in $dbs) {
+        $dbthroughput = & $GetDBThroughput -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -Name $db.Name -ErrorAction SilentlyContinue
+        if ($null -eq $dbthroughput) {
+            $dbthroughput = "Unknown"
+        }   
+        else {
+            $dbthroughput = $dbthroughput.Throughput
+        }
+        $table = "<TABLE border=`"0`" style=`"rounded`">`n"
+        $table += "<TR><TD><BR/><BR/></TD></TR>`n"
+        $table += "<TR><TD align=`"left`">Name</TD><TD align=`"left`">$($db.Name)</TD></TR>`n"
+        $table += "<TR><TD align=`"left`">Database Throughput</TD><TD align=`"left`">$dbthroughput</TD></TR>`n"
+        $table += "<TR><TD><BR/><BR/></TD></TR>`n"
+        $table += "<TR><TD align=`"left`"><B>$TypeName</B></TD><TD align=`"left`"><B>RU</B></TD></TR><HR/>`n"
+        $collection = & $GetCollections -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -DatabaseName $db.Name -ErrorAction SilentlyContinue
+        $colthroughputs = $collection | ForEach-Object {
+            $collection = $_.Name
+            $RU = (& $GetColThrouput  `
+                        -ResourceGroupName $resourceGroupName `
+                        -AccountName      $cosmosdbact.Name `
+                        -DatabaseName     $db.Name `
+                        -Name             $_.Name `
+                        -ErrorAction      SilentlyContinue
+                    ).Throughput
+            $table += "<TR><TD align=`"left`">$collection</TD><TD align=`"left`">$RU</TD></TR>`n"
+        }
+        $table += "</TABLE>`n"
+        $dbid = $db.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $data += "        $dbid [label = < $table > ; color = lightgray;image = `"$OutputPath\icons\$iconname.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n"
+        $data += "        $cosmosdbactid -> $($dbid);`n"
+    }
+    return $data
+}
+
+<#
+.SYNOPSIS
+Exports details of a Cosmos DB account for inclusion in a network diagram.
+.DESCRIPTION
+This function processes a Cosmos DB account object and formats its details for the Azure network diagram.
+.PARAMETER cosmosdbact
+The Cosmos DB account object to process.
+.EXAMPLE
+Export-CosmosDBAccount -cosmosdbact $cosmosdbact
+#>
 function Export-CosmosDBAccount {
     [CmdletBinding()]
     param (
@@ -576,7 +969,7 @@ function Export-CosmosDBAccount {
     
     try {
         $cosmosdbactid = $cosmosdbact.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-        
+        $Locations = $($cosmosdbact.Locations.LocationName | ForEach-Object { SanitizeLocation $_ } -join ", ")
         $data = "
         # $($cosmosdbact.Name) - $cosmosdbactid
         subgraph cluster_$cosmosdbactid {
@@ -585,114 +978,42 @@ function Export-CosmosDBAccount {
             node [color = white;];
         "
 
-        $data += "        $cosmosdbactid [label = `"Version: $($cosmosdbact.ApiProperties.ServerVersion)\nLocations: $($cosmosdbact.Locations.LocationName -join ", ")\nDefault Consistency Level: $($cosmosdbact.ConsistencyPolicy.DefaultConsistencyLevel)\nKind: $($cosmosdbact.Kind)\nDatabase Account Offer Type: $($cosmosdbact.DatabaseAccountOfferType)\nEnable Analytical Storage: $($cosmosdbact.EnableAnalyticalStorage)\nVirtual Network Filter Enabled: $($cosmosdbact.IsVirtualNetworkFilterEnabled)`" ; color = lightgray;image = `"$OutputPath\icons\cosmosdb.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];"
+        $data += "        $cosmosdbactid [label = `"Version: $($cosmosdbact.ApiProperties.ServerVersion)\nLocations: $Locations\nDefault Consistency Level: $($cosmosdbact.ConsistencyPolicy.DefaultConsistencyLevel)\nKind: $($cosmosdbact.Kind)\nDatabase Account Offer Type: $($cosmosdbact.DatabaseAccountOfferType)\nEnable Analytical Storage: $($cosmosdbact.EnableAnalyticalStorage)\nVirtual Network Filter Enabled: $($cosmosdbact.IsVirtualNetworkFilterEnabled)`" ; color = lightgray;image = `"$OutputPath\icons\cosmosdb.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];"
         $data += "`n"
         $resourceGroupName = $cosmosdbact.Id.split("/")[4]
         switch ($cosmosdbact.Kind) {
             #MongoDB
             "MongoDB" {  
-                $dbs = Get-AzCosmosDBMongoDBDatabase -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -ErrorAction Stop
-                $iconname = "mongodb"
-                foreach ($db in $dbs) {
-                    $dbthroughput = Get-AzCosmosDBMongoDBDatabaseThroughput -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -Name $db.Name -ErrorAction SilentlyContinue
-                    if ($null -eq $dbthroughput) {
-                        $dbthroughput = "Unknown"
-                    }   
-                    else {
-                        $dbthroughput = $dbthroughput.Throughput
-                    }
-                    $collection = Get-AzCosmosDBMongoDBCollection -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -DatabaseName $db.Name -ErrorAction SilentlyContinue
-                    $colthroughputs = $collection | ForEach-Object {
-                                [PSCustomObject]@{
-                                    Collection = $_.Name
-                                    RU   = (Get-AzCosmosDBMongoDBCollectionThroughput `
-                                                -ResourceGroupName $resourceGroupName `
-                                                -AccountName      $cosmosdbact.Name `
-                                                -DatabaseName     $db.Name `
-                                                -Name             $_.Name `
-                                                -ErrorAction      SilentlyContinue
-                                            ).Throughput
-                                }
-                            } | Format-Table Collection, RU  | Out-String      
-
-                    if ($null -eq $colthroughputs) {
-                        $colthroughputs = "Unknown"
-                    }   
-
-                    $dbid = $db.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                    $data += "        $($dbid) [label = `"\n\nName: $($db.Name)\nDatabase Throughput: $dbthroughput\n$colthroughputs\n`" ; color = lightgray;image = `"$OutputPath\icons\$iconname.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n" 
-                    $data += "        $cosmosdbactid -> $($dbid);`n"
-                }
+                $data += Invoke-TableWriter `
+                            -GetDatabases { param($ResourceGroupName, $AccountName) Get-AzCosmosDBMongoDBDatabase -ResourceGroupName $ResourceGroupName -AccountName $AccountName -ErrorAction Stop} `
+                            -GetDBThroughput { param($ResourceGroupName, $AccountName, $Name) Get-AzCosmosDBMongoDBDatabaseThroughput -ResourceGroupName $ResourceGroupName -AccountName $AccountName -Name $Name -ErrorAction SilentlyContinue } `
+                            -GetCollections { param($ResourceGroupName, $AccountName, $DatabaseName) Get-AzCosmosDBMongoDBCollection -ResourceGroupName $ResourceGroupName -AccountName $AccountName -DatabaseName $DatabaseName -ErrorAction SilentlyContinue} `
+                            -GetColThrouput { param($ResourceGroupName, $AccountName, $DatabaseName, $Name) Get-AzCosmosDBMongoDBCollectionThroughput -ResourceGroupName $ResourceGroupName -AccountName $AccountName -DatabaseName $DatabaseName -Name $Name -ErrorAction SilentlyContinue} `
+                            -CosmosDbAct $cosmosdbact `
+                            -TypeName "Collection" `
+                            -IconName "mongodb"
             }
             # NoSQL
             "GlobalDocumentDB" { 
-                $dbs = Get-AzCosmosDBSqlDatabase -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -ErrorAction Stop
-                $iconname = "documentdb"
-                foreach ($db in $dbs) {
-                    $throughput = Get-AzCosmosDBSqlDatabaseThroughput -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -Name $db.Name -ErrorAction SilentlyContinue
-                    if ($null -eq $dbthroughput) {
-                        $dbthroughput = "Unknown"
-                    }   
-                    else {
-                        $dbthroughput = $dbthroughput.Throughput
-                    }
-                    $collection = Get-AzCosmosDBSqlContainer -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -DatabaseName $db.Name -ErrorAction SilentlyContinue
-                    $colthroughputs = $collection | ForEach-Object {
-                                [PSCustomObject]@{
-                                    Container = $_.Name
-                                    RU   = (Get-AzCosmosDBSqlContainerThroughput `
-                                                -ResourceGroupName $resourceGroupName `
-                                                -AccountName      $cosmosdbact.Name `
-                                                -DatabaseName     $db.Name `
-                                                -Name             $_.Name `
-                                                -ErrorAction      SilentlyContinue
-                                            ).Throughput
-                                }
-                            } | Format-Table Container, RU  | Out-String      
-
-                    if ($null -eq $colthroughputs) {
-                        $colthroughputs = "Unknown"
-                    }   
-
-                    $dbid = $db.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                    $data += "        $($dbid) [label = `"\n\nName: $($db.Name)\nDatabase Throughput: $dbthroughput\n$colthroughputs\n`" ; color = lightgray;image = `"$OutputPath\icons\$iconname.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n" 
-                    $data += "        $cosmosdbactid -> $($dbid);`n"
-                }
+                $data += Invoke-TableWriter `
+                            -GetDatabases { param($ResourceGroupName, $AccountName) Get-AzCosmosDBSqlDatabase -ResourceGroupName $ResourceGroupName -AccountName $AccountName -ErrorAction Stop} `
+                            -GetDBThroughput { param($ResourceGroupName, $AccountName, $Name) Get-AzCosmosDBSqlDatabaseThroughput -ResourceGroupName $ResourceGroupName -AccountName $AccountName -Name $Name -ErrorAction SilentlyContinue } `
+                            -GetCollections { param($ResourceGroupName, $AccountName, $DatabaseName) Get-AzCosmosDBSqlContainer -ResourceGroupName $ResourceGroupName -AccountName $AccountName -DatabaseName $DatabaseName -ErrorAction SilentlyContinue} `
+                            -GetColThrouput { param($ResourceGroupName, $AccountName, $DatabaseName, $Name) Get-AzCosmosDBSqlContainerThroughput -ResourceGroupName $ResourceGroupName -AccountName $AccountName -DatabaseName $DatabaseName -Name $Name -ErrorAction SilentlyContinue} `
+                            -CosmosDbAct $cosmosdbact `
+                            -TypeName "Container" `
+                            -IconName "documentdb"
             }
             #Gremlin
             "Gremlin" {  
-                $dbs = Get-AzCosmosDBGremlinDatabase -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -ErrorAction Stop
-                $iconname = "gremlin"
-                foreach ($db in $dbs) {
-                    $throughput = Get-AzCosmosDBGremlinDatabaseThroughput -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -Name $db.Name -ErrorAction SilentlyContinue
-                    if ($null -eq $dbthroughput) {
-                        $dbthroughput = "Unknown"
-                    }   
-                    else {
-                        $dbthroughput = $dbthroughput.Throughput
-                    }
-                    $collection = Get-AzCosmosDBGremlinGraph -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -DatabaseName $db.Name -ErrorAction SilentlyContinue
-                    $colthroughputs = $collection | ForEach-Object {
-                                [PSCustomObject]@{
-                                    Graph = $_.Name
-                                    RU   = (Get-AzCosmosDBGremlinGraphThroughput `
-                                                -ResourceGroupName $resourceGroupName `
-                                                -AccountName      $cosmosdbact.Name `
-                                                -DatabaseName     $db.Name `
-                                                -Name             $_.Name `
-                                                -ErrorAction      SilentlyContinue
-                                            ).Throughput
-                                }
-                            } | Format-Table Graph, RU  | Out-String      
-
-                    if ($null -eq $colthroughputs) {
-                        $colthroughputs = "Unknown"
-                    }   
-
-                    $dbid = $db.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                    $data += "        $($dbid) [label = `"\n\nName: $($db.Name)\nDatabase Throughput: $dbthroughput\n$colthroughputs\n`" ; color = lightgray;image = `"$OutputPath\icons\$iconname.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n" 
-                    $data += "        $cosmosdbactid -> $($dbid);`n"
-                }
+                $data += Invoke-TableWriter `
+                            -GetDatabases { param($ResourceGroupName, $AccountName) Get-AzCosmosDBGremlinDatabase -ResourceGroupName $ResourceGroupName -AccountName $AccountName -ErrorAction Stop} `
+                            -GetDBThroughput { param($ResourceGroupName, $AccountName, $Name) Get-AzCosmosDBGremlinDatabaseThroughput -ResourceGroupName $ResourceGroupName -AccountName $AccountName -Name $Name -ErrorAction SilentlyContinue } `
+                            -GetCollections { param($ResourceGroupName, $AccountName, $DatabaseName) Get-AzCosmosDBGremlinGraph -ResourceGroupName $ResourceGroupName -AccountName $AccountName -DatabaseName $DatabaseName -ErrorAction SilentlyContinue} `
+                            -GetColThrouput { param($ResourceGroupName, $AccountName, $DatabaseName, $Name) Get-AzCosmosDBGremlinGraphThroughput -ResourceGroupName $ResourceGroupName -AccountName $AccountName -DatabaseName $DatabaseName -Name $Name -ErrorAction SilentlyContinue} `
+                            -CosmosDbAct $cosmosdbact `
+                            -TypeName "Graph" `
+                            -IconName "gremlin"
             }
             #Table
             "Table" {  
@@ -714,38 +1035,14 @@ function Export-CosmosDBAccount {
             }   
             #Cassandra
             "Cassandra" { 
-                $dbs = Get-AzCosmosDBCassandraKeyspace -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -ErrorAction Stop
-                $iconname = "cassandra"
-                foreach ($db in $dbs) {
-                    $throughput = Get-AzCosmosDBCassandraKeyspaceThroughput -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -Name $db.Name -ErrorAction SilentlyContinue
-                    if ($null -eq $dbthroughput) {
-                        $dbthroughput = "Unknown"
-                    }   
-                    else {
-                        $dbthroughput = $dbthroughput.Throughput
-                    }
-                    $collection = Get-AzCosmosDBCassandraTable -ResourceGroupName $resourceGroupName -AccountName $cosmosdbact.Name -DatabaseName $db.Name -ErrorAction SilentlyContinue
-                    $colthroughputs = $collection | ForEach-Object {
-                                [PSCustomObject]@{
-                                    Table = $_.Name
-                                    RU   = (Get-AzCosmosDBCassandraTableThroughput `
-                                                -ResourceGroupName $resourceGroupName `
-                                                -AccountName      $cosmosdbact.Name `
-                                                -DatabaseName     $db.Name `
-                                                -Name             $_.Name `
-                                                -ErrorAction      SilentlyContinue
-                                            ).Throughput
-                                }
-                            } | Format-Table Table, RU  | Out-String      
-
-                    if ($null -eq $colthroughputs) {
-                        $colthroughputs = "Unknown"
-                    }   
-
-                    $dbid = $db.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                    $data += "        $($dbid) [label = `"\n\nName: $($db.Name)\nKeyspace Throughput: $dbthroughput\n$colthroughputs\n`" ; color = lightgray;image = `"$OutputPath\icons\$iconname.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n" 
-                    $data += "        $cosmosdbactid -> $($dbid);`n"
-                }
+                $data += Invoke-TableWriter `
+                            -GetDatabases { param($ResourceGroupName, $AccountName) Get-AzCosmosDBCassandraKeyspace -ResourceGroupName $ResourceGroupName -AccountName $AccountName -ErrorAction Stop} `
+                            -GetDBThroughput { param($ResourceGroupName, $AccountName, $Name) Get-AzCosmosDBCassandraKeyspaceThroughput -ResourceGroupName $ResourceGroupName -AccountName $AccountName -Name $Name -ErrorAction SilentlyContinue } `
+                            -GetCollections { param($ResourceGroupName, $AccountName, $DatabaseName) Get-AzCosmosDBCassandraTable -ResourceGroupName $ResourceGroupName -AccountName $AccountName -DatabaseName $DatabaseName -ErrorAction SilentlyContinue} `
+                            -GetColThrouput { param($ResourceGroupName, $AccountName, $DatabaseName, $Name) Get-AzCosmosDBCassandraTableThroughput -ResourceGroupName $ResourceGroupName -AccountName $AccountName -DatabaseName $DatabaseName -Name $Name -ErrorAction SilentlyContinue} `
+                            -CosmosDbAct $cosmosdbact `
+                            -TypeName "Table" `
+                            -IconName "cassandra"
             }
 
             default { 
@@ -761,7 +1058,7 @@ function Export-CosmosDBAccount {
         }
         if ($cosmosdbact.PrivateEndpointConnections.PrivateEndpoint.Id) {
             $peid = $cosmosdbact.PrivateEndpointConnections.PrivateEndpoint.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-            $data += "        $cosmosdbactid -> $peid;`n"
+            $data += "        $cosmosdbactid -> $peid [label = `"Private Endpoint`"; ];`n"
         }
         if ($cosmosdbact.Identity.UserAssignedIdentities.Keys) {
             foreach ($identity in $cosmosdbact.Identity.UserAssignedIdentities.Keys) { 
@@ -777,6 +1074,17 @@ function Export-CosmosDBAccount {
         Write-Host "Can't export Cosmos DB Account: $($cosmosdbact.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
     }
 }
+
+<#
+.SYNOPSIS
+Exports details of a PostgreSQL Flexible Server for inclusion in a network diagram.
+.DESCRIPTION
+This function processes a PostgreSQL Flexible Server object and formats its details for the Azure network diagram.
+.PARAMETER postgresql
+The PostgreSQL Flexible Server object to process.
+.EXAMPLE
+Export-PostgreSQLServer -postgresql $postgresql
+#>
 function Export-PostgreSQLServer {
     [CmdletBinding()]
     param (
@@ -796,14 +1104,14 @@ function Export-PostgreSQLServer {
 
         $resource = Get-AzResource -ResourceId $postgresql.Id -ErrorAction Stop
         # General Purpose, D4ds_v5 (SkuName), 4 vCores, 16 GiB RAM, 128 GiB storage $postgresql.StorageSizeGb
-        $location = (Get-AzLocation | Where-Object DisplayName -eq $db.Location).Location 
+        $Location = SanitizeLocation (Get-AzLocation | Where-Object DisplayName -eq $postgresql.Location).Location 
         $SkuCaps = Get-AzComputeResourceSku -Location $postgresql.Location | Where-Object { $_.Name -eq $skuName }
         $iops = ($SkuCaps.Capabilities | Where-Object Name -eq "UncachedDiskIOPS").Value
         $vCPUs = ($SkuCaps.Capabilities | Where-Object Name -eq "vCPUs").Value
         $MemoryGB = ($SkuCaps.Capabilities | Where-Object Name -eq "MemoryGB").Value
         $config = $postgresql.SkuTier.ToString() + ", " + $postgresql.SkuName + ", " + $vCPUs + " vCores, " + $MemoryGB + " GiB RAM, " + $postgresql.StorageSizeGb + " GiB storage"
 
-        $data += "        $postgresqlid [label = `"\nLocation: $($postgresql.Location)\nVersion: $($postgresql.Version.ToString()).$($postgresql.MinorVersion)\nAvailability Zone: $($postgresql.AvailabilityZone)\nConfiguration: $config\nMax IOPS: $iops\nPublic Network Access: $($postgresql.NetworkPublicNetworkAccess.ToString())`" ; color = lightgray;image = `"$OutputPath\icons\postgresql.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
+        $data += "        $postgresqlid [label = `"\nLocation: $Location\nVersion: $($postgresql.Version.ToString()).$($postgresql.MinorVersion)\nAvailability Zone: $($postgresql.AvailabilityZone)\nConfiguration: $config\nMax IOPS: $iops\nPublic Network Access: $($postgresql.NetworkPublicNetworkAccess.ToString())`" ; color = lightgray;image = `"$OutputPath\icons\postgresql.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
         $data += "`n"
 
         $dbs = Get-AzPostgreSqlFlexibleServerDatabase -ResourceGroupName $postgresqlserver.id.split("/")[4] -ServerName $postgresqlserver.Name -ErrorAction Stop
@@ -832,6 +1140,16 @@ function Export-PostgreSQLServer {
     }
 }
 
+<#
+.SYNOPSIS
+Exports details of a Redis server for inclusion in a network diagram.
+.DESCRIPTION
+This function processes a Redis server object and formats its details for the Azure network diagram.
+.PARAMETER redis
+The Redis server object to process.
+.EXAMPLE
+Export-RedisServer -redis $redis
+#>
 function Export-RedisServer {
     [CmdletBinding()]
     param (
@@ -840,7 +1158,7 @@ function Export-RedisServer {
     )
     try {
         $redisid = $redis.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-        
+        $Location = SanitizeLocation $redis.Location
         $data = "
         # $($redis.Name) - $redisid
         subgraph cluster_$redisid {
@@ -849,11 +1167,11 @@ function Export-RedisServer {
             node [color = white;];
         "
 
-        $data += "        $redisid [label = `"\nLocation: $($redis.Location)\nSKU: $($redis.Sku)\nRedis Version: $($redis.RedisVersion)\nZones: $($redis.Zone -join ", ")\nShard Count: $($redis.ShardCount)\n`" ; color = lightgray;image = `"$OutputPath\icons\redis.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
+        $data += "        $redisid [label = `"\nLocation: $Location\nSKU: $($redis.Sku)\nRedis Version: $($redis.RedisVersion)\nZones: $($redis.Zone -join ", ")\nShard Count: $($redis.ShardCount)\n`" ; color = lightgray;image = `"$OutputPath\icons\redis.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
         $data += "`n"
         if ($redis.PrivateEndpointConnection.PrivateEndpoint.Id) {
             $peid = $redis.PrivateEndpointConnection.PrivateEndpoint.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-            $data += "        $redisid -> $peid;`n"
+            $data += "        $redisid -> $peid [label = `"Private Endpoint`"; ];`n"
         }
         if ($redis.Identity.UserAssignedIdentities.Keys) {
             foreach ($identity in $redis.Identity.UserAssignedIdentities.Keys) { 
@@ -871,6 +1189,16 @@ function Export-RedisServer {
     }
 }
 
+<#
+.SYNOPSIS
+Exports details of a SQL Managed Instance for inclusion in a network diagram.
+.DESCRIPTION
+This function processes a SQL Managed Instance object and formats its details for the Azure network diagram.
+.PARAMETER sqlmi
+The SQL Managed Instance object to process.
+.EXAMPLE
+Export-SQLManagedInstance -sqlmi $sqlmi
+#>
 function Export-SQLManagedInstance {
     [CmdletBinding()]
     param (
@@ -879,7 +1207,7 @@ function Export-SQLManagedInstance {
     )
     try {
         $sqlmiid = $sqlmi.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-        
+        $Location = SanitizeLocation $sqlmi.Location
         $data = "
         # $($sqlmi.ManagedInstanceName) - $sqlmiid
         subgraph cluster_$sqlmiid {
@@ -888,16 +1216,16 @@ function Export-SQLManagedInstance {
             node [color = white;];
         "
 
-        $data += "        $sqlmiid [label = `"\n\nLocation: $($sqlmi.Location)\nSKU: $($sqlmi.Sku.Tier) $($sqlmi.Sku.Family)\nVersion: $($sqlmi.DatabaseFormat)\nEntra Id Admin: $($sqlmi.Administrators.Login)\nvCores: $($sqlmi.VCores)\nStorage Size: $($sqlmi.StorageSizeInGB) GB\nZone Redundant: $($sqlmi.ZoneRedundant)\nPublic endpoint (data): $($sqlmi.PublicDataEndpointEnabled)`" ; color = lightgray;image = `"$OutputPath\icons\sqlmi.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.5;];"
+        $data += "        $sqlmiid [label = `"\n\nLocation: $Location\nSKU: $($sqlmi.Sku.Tier) $($sqlmi.Sku.Family)\nVersion: $($sqlmi.DatabaseFormat)\nEntra Id Admin: $($sqlmi.Administrators.Login)\nvCores: $($sqlmi.VCores)\nStorage Size: $($sqlmi.StorageSizeInGB) GB\nZone Redundant: $($sqlmi.ZoneRedundant)\nPublic endpoint (data): $($sqlmi.PublicDataEndpointEnabled)`" ; color = lightgray;image = `"$OutputPath\icons\sqlmi.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.5;];"
         $data += "`n"
 
         Get-AzSqlInstanceDatabase -InstanceResourceId $sqlmi.Id -ErrorAction SilentlyContinue |
             ForEach-Object {
                 $db = $_
                 $dbid = $_.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                
+                $Location = SanitizeLocation $db.Location
                 $retention = Get-AzSqlInstanceDatabaseBackupShortTermRetentionPolicy -ResourceGroupName $db.ResourceGroupName -InstanceName $db.ManagedInstanceName -DatabaseName $db.Name -ErrorAction SilentlyContinue
-                $data += "        $($dbid) [label = `"\n\nLocation: $($db.Location)\nName: $($db.DatabaseName)\nBackup retention: $($retention.RetentionDays) Days`" ; color = lightgray;image = `"$OutputPath\icons\sqlmidb.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n" 
+                $data += "        $($dbid) [label = `"\n\nLocation: $Location\nName: $($db.DatabaseName)\nBackup retention: $($retention.RetentionDays) Days`" ; color = lightgray;image = `"$OutputPath\icons\sqlmidb.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n" 
                 $data += "        $sqlmiid -> $($dbid);`n"
             }
 
@@ -915,6 +1243,16 @@ function Export-SQLManagedInstance {
     }
 }
 
+<#
+.SYNOPSIS
+Exports details of a SQL Server for inclusion in a network diagram.
+.DESCRIPTION
+This function processes a SQL Server object and formats its details for the Azure network diagram.
+.PARAMETER sqlserver
+The SQL Server object to process.
+.EXAMPLE
+Export-SQLServer -sqlserver $sqlserver
+#>
 function Export-SQLServer {
     [CmdletBinding()]
     param (
@@ -923,7 +1261,7 @@ function Export-SQLServer {
     )
     try {
         $sqlserverid = $sqlserver.ResourceId.replace("-", "").replace("/", "").replace(".", "").ToLower()
-        
+        $Location = SanitizeLocation $sqlserver.Location
         $data = "
         # $($sqlserver.ServerName) - $sqlserverid
         subgraph cluster_$sqlserverid {
@@ -932,7 +1270,7 @@ function Export-SQLServer {
             node [color = white;];
         "
 
-        $data += "        $sqlserverid [label = `"\nLocation: $($sqlserver.Location)\nVersion: $($sqlserver.ServerVersion)\nEntra ID Admin: $($sqlserver.Administrators.Login)`" ; color = lightgray;image = `"$OutputPath\icons\sqlserver.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
+        $data += "        $sqlserverid [label = `"\nLocation: $Location\nVersion: $($sqlserver.ServerVersion)\nEntra ID Admin: $($sqlserver.Administrators.Login)`" ; color = lightgray;image = `"$OutputPath\icons\sqlserver.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
         $data += "`n"
 
         # Iterate through all SQL databases hosted on that server
@@ -951,8 +1289,8 @@ function Export-SQLServer {
 
                     #Max storage size
                     $gb = [math]::Round($db.MaxSizeBytes / 1GB, 2)   # 1 GB = 1 073 741 824 bytes
-
-                    $data += "        $($dbid) [label = `"\n\nLocation: $($db.Location)\nName: $($db.DatabaseName)\nPricing Tier: $pricingTier\nMax Size: $gb GB\nZone Redundant: $($db.ZoneRedundant)\nElastic Pool Name: $($db.ElasticPoolName)`" ; color = lightgray;image = `"$OutputPath\icons\sqldb.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n" 
+                    $Location = SanitizeLocation $db.Location
+                    $data += "        $($dbid) [label = `"\n\nLocation: $Location\nName: $($db.DatabaseName)\nPricing Tier: $pricingTier\nMax Size: $gb GB\nZone Redundant: $($db.ZoneRedundant)\nElastic Pool Name: $($db.ElasticPoolName)`" ; color = lightgray;image = `"$OutputPath\icons\sqldb.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n" 
                     $data += "        $sqlserverid -> $($dbid);`n"
                 }
             }
@@ -967,6 +1305,16 @@ function Export-SQLServer {
     }
 }
 
+<#
+.SYNOPSIS
+Exports details of an Event Hub namespace for inclusion in a network diagram.
+.DESCRIPTION
+This function processes an Event Hub namespace object and formats its details for the Azure network diagram.
+.PARAMETER namespace
+The Event Hub namespace object to process.
+.EXAMPLE
+Export-EventHub -namespace $namespace
+#>
 function Export-EventHub {
     [CmdletBinding()]
     param (
@@ -975,7 +1323,7 @@ function Export-EventHub {
     )
     try {
         $namespaceid = $namespace.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-        
+        $Location = SanitizeLocation $namespace.Location
         $data = "
         # $($namespace.Name) - $namespaceid
         subgraph cluster_$namespaceid {
@@ -984,7 +1332,7 @@ function Export-EventHub {
             node [color = white;];
         "
 
-        $data += "        $namespaceid [label = `"\nLocation: $($namespace.Location)\nSKU: $($namespace.SkuName)\nTier: $($namespace.SkuTier)\nCapacity: $($namespace.SkuCapacity)\nZone Redundant: $($namespace.ZoneRedundant)`" ; color = lightgray;image = `"$OutputPath\icons\eventhub.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
+        $data += "        $namespaceid [label = `"\nLocation: $Location\nSKU: $($namespace.SkuName)\nTier: $($namespace.SkuTier)\nCapacity: $($namespace.SkuCapacity)\nZone Redundant: $($namespace.ZoneRedundant)`" ; color = lightgray;image = `"$OutputPath\icons\eventhub.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
         $data += "`n"
 
         # iterate through all event hubs hosted on that namespace
@@ -992,13 +1340,13 @@ function Export-EventHub {
             ForEach-Object {
                 $eventhub = $_
                 $eventhubid = $_.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-
-                $data += "        $($eventhubid) [label = `"\n\nLocation: $($eventhub.Location)\nName: $($eventhub.Name)\nMessage Retention: $($eventhub.MessageRetentionInDays)\nPartition Count: $($eventhub.PartitionCount)\n`" ; color = lightgray;image = `"$OutputPath\icons\eventhub.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n" 
+                $Location = SanitizeLocation $eventhub.Location
+                $data += "        $($eventhubid) [label = `"\n\nLocation: $Location\nName: $($eventhub.Name)\nMessage Retention: $($eventhub.MessageRetentionInDays)\nPartition Count: $($eventhub.PartitionCount)\n`" ; color = lightgray;image = `"$OutputPath\icons\eventhub.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n" 
                 $data += "        $namespaceid -> $eventhubid;`n"
             }
         if ($namespace.PrivateEndpointConnection.PrivateEndpointId) {
             $peid = $namespace.PrivateEndpointConnection.PrivateEndpointId.replace("-", "").replace("/", "").replace(".", "").ToLower()
-            $data += "        $namespaceid -> $peid;`n"
+            $data += "        $namespaceid -> $peid [label = `"Private Endpoint`"; ];`n"
         }
         $data += "   label = `"$($namespace.Name)`";
                 }`n"    
@@ -1008,6 +1356,16 @@ function Export-EventHub {
     }
 }
 
+<#
+.SYNOPSIS
+Exports details of an App Service Plan for inclusion in a network diagram.
+.DESCRIPTION
+This function processes an App Service Plan object and formats its details for the Azure network diagram.
+.PARAMETER plan
+The App Service Plan object to process.
+.EXAMPLE
+Export-AppServicePlan -plan $plan
+#>
 function Export-AppServicePlan {
     [CmdletBinding()]
     param (
@@ -1018,6 +1376,7 @@ function Export-AppServicePlan {
     try {
         $resourceGroupName = $plan.Id.split("/")[4]
         $planid = $plan.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $Location = SanitizeLocation $plan.Location
         $data = "
         # $($plan.Name) - $planid
         subgraph cluster_$planid {
@@ -1025,7 +1384,7 @@ function Export-AppServicePlan {
             color = black;
             node [color = white;];
         "
-        $data += "        $planid [label = `"\nLocation: $($plan.Location)\nSKU: $($plan.Sku.Name)\nTier: $($plan.Sku.Tier)\nKind: $($plan.Kind)\nCapacity: $($plan.Sku.Capacity)\nNumber of Apps: $($plan.NumberOfSites)\n`" ; color = lightgray;image = `"$OutputPath\icons\appplan.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
+        $data += "        $planid [label = `"\nLocation: $Location\nSKU: $($plan.Sku.Name)\nTier: $($plan.Sku.Tier)\nKind: $($plan.Kind)\nCapacity: $($plan.Sku.Capacity)\nNumber of Apps: $($plan.NumberOfSites)\n`" ; color = lightgray;image = `"$OutputPath\icons\appplan.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
         $data += "`n"
 
         # iterate through all web apps hosted on that plan
@@ -1034,8 +1393,9 @@ function Export-AppServicePlan {
             ForEach-Object {
                 $app = $_
                 $appid = $_.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $Location = SanitizeLocation $app.Location
 
-                $data += "        $($appid) [label = `"\n\nLocation: $($app.Location)\nName: $($app.Name)\nKind: $($app.Kind)\nHost Name: $($app.DefaultHostName)\n`" ; color = lightgray;image = `"$OutputPath\icons\appservices.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n" 
+                $data += "        $($appid) [label = `"\n\nLocation: $Location\nName: $($app.Name)\nKind: $($app.Kind)\nHost Name: $($app.DefaultHostName)\n`" ; color = lightgray;image = `"$OutputPath\icons\appservices.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n" 
                 $data += "        $planid -> $appid;`n"
 
                 # Add links to Private Endpoints and Managed Identities
@@ -1056,6 +1416,16 @@ function Export-AppServicePlan {
 
 }
 
+<#
+.SYNOPSIS
+Exports details of an API Management (APIM) instance for inclusion in a network diagram.
+.DESCRIPTION
+This function processes an APIM object and formats its details for the Azure network diagram.
+.PARAMETER apim
+The API Management object to process.
+.EXAMPLE
+Export-APIM -apim $apim
+#>
 function Export-APIM {
     [CmdletBinding()]
     param (
@@ -1064,7 +1434,7 @@ function Export-APIM {
     )
     try {
         $apimid = $apim.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-        
+        $Location = SanitizeLocation $apim.Location
         $data = "
         # $($apim.Name) - $apimid
         subgraph cluster_$apimid {
@@ -1076,7 +1446,7 @@ function Export-APIM {
         $prodCount = (Get-AzApiManagementProduct -Context $apimCtx -ErrorAction SilentlyContinue).Count
         $apiCount  = (Get-AzApiManagementApi     -Context $apimCtx -ErrorAction SilentlyContinue).Count
 
-        $data += "        $apimid [label = `"\nLocation: $($apim.Location)\nSKU: $($apim.Sku)\nPlatform Version: $($apim.PlatformVersion)\nPublic IP Addresses: $($apim.PublicIPAddresses)\nPrivate IP Addresses: $($apim.PrivateIPAddresses)\nCapacity: $($apim.Capacity)\nZone: $($apim.Zone)\nPublic Network Access: $($apim.PublicNetworkAccess)\nProducts: $prodCount\nAPI's: $apiCount\nVirtual Network: $($apim.VpnType)`" ; color = lightgray;image = `"$OutputPath\icons\apim.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
+        $data += "        $apimid [label = `"\nLocation: $Location\nSKU: $($apim.Sku)\nPlatform Version: $($apim.PlatformVersion)\nPublic IP Addresses: $($apim.PublicIPAddresses)\nPrivate IP Addresses: $($apim.PrivateIPAddresses)\nCapacity: $($apim.Capacity)\nZone: $($apim.Zone)\nPublic Network Access: $($apim.PublicNetworkAccess)\nProducts: $prodCount\nAPI's: $apiCount\nVirtual Network: $($apim.VpnType)`" ; color = lightgray;image = `"$OutputPath\icons\apim.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
         $data += "`n"
         if ($apim.VirtualNetwork.SubnetResourceId) {
             $subnetid = $apim.VirtualNetwork.SubnetResourceId.replace("-", "").replace("/", "").replace(".", "").ToLower()
@@ -1084,7 +1454,7 @@ function Export-APIM {
         }
         if ($apim.PrivateEndpointConnections.Id) {
             $peid = $apim.PrivateEndpointConnections.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-            $data += "        $apimid -> $peid;`n"
+            $data += "        $apimid -> $peid [label = `"Private Endpoint`"; ];`n"
         }
         $data += "   label = `"$($apim.Name)`";
                 }`n"
@@ -1096,6 +1466,16 @@ function Export-APIM {
     }
 }
 
+<#
+.SYNOPSIS
+Exports details of an Azure Container Registry (ACR) for inclusion in a network diagram.
+.DESCRIPTION
+This function processes an Azure Container Registry object and formats its details for the Azure network diagram.
+.PARAMETER acr
+The Azure Container Registry object to process.
+.EXAMPLE
+Export-ACR -acr $acr
+#>
 function Export-ACR {
     [CmdletBinding()]
     param (
@@ -1105,7 +1485,7 @@ function Export-ACR {
     
     try {
         $acrid = $acr.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-        
+        $Location = SanitizeLocation $acr.Location
         $data = "
         # $($acr.Name) - $acrid
         subgraph cluster_$acrid {
@@ -1115,11 +1495,11 @@ function Export-ACR {
         "
 
 
-        $data += "        $acrid [label = `"\nName: $($acr.Name))\nLocation: $($acr.Location)\nSKU: $($acr.SkuName.ToString())\nZone Redundancy: $($acr.ZoneRedundancy.ToString())\nPublic Network Access: $($acr.PublicNetworkAccess.ToString())\n`" ; color = lightgray;image = `"$OutputPath\icons\acr.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
+        $data += "        $acrid [label = `"\nACR Name: $($acr.Name)\nLocation: $Location\nSKU: $($acr.SkuName.ToString())\nZone Redundancy: $($acr.ZoneRedundancy.ToString())\nPublic Network Access: $($acr.PublicNetworkAccess.ToString())\n`" ; color = lightgray;image = `"$OutputPath\icons\acr.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
         $data += "`n"
         if ($acr.PrivateEndpointConnection.PrivateEndpointId) {
             $acrpeid = $acr.PrivateEndpointConnection.PrivateEndpointId.ToString().replace("-", "").replace("/", "").replace(".", "").ToLower()
-            $data += "        $acrid -> $($acrpeid);`n"
+            $data += "        $acrid -> $($acrpeid) [label = `"Private Endpoint`"; ];`n"
         }
         $data += "   label = `"$($acr.Name)`";
                 }`n"
@@ -1132,6 +1512,16 @@ function Export-ACR {
     }
 }
 
+<#
+.SYNOPSIS
+Exports details of a Storage Account for inclusion in a network diagram.
+.DESCRIPTION
+This function processes a Storage Account object and formats its details for the Azure network diagram.
+.PARAMETER storageaccount
+The Storage Account object to process.
+.EXAMPLE
+Export-StorageAccount -storageaccount $storageaccount
+#>
 function Export-StorageAccount {
     [CmdletBinding()]
     param (
@@ -1141,7 +1531,7 @@ function Export-StorageAccount {
     
     try {
         $staid = $storageaccount.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-        
+        $Location = SanitizeLocation $storageaccount.Location
         $data = "
         # $($storageaccount.StorageAccountName) - $staid
         subgraph cluster_$staid {
@@ -1158,14 +1548,14 @@ function Export-StorageAccount {
             $PublicNetworkAccess = "Enabled from selected virtual`nnetworks and IP addresses"
         }
         $HierarchicalNamespace = $storageaccount.EnableHierarchicalNamespace ? "Enabled" : "Disabled"
-        $data += "        $staid [label = `"\n\nLocation: $($storageaccount.Location)\nSKU: $($storageaccount.Sku.Name)\nKind: $($storageaccount.Kind)\nPublic Network Access: $PublicNetworkAccess\nAccess Tier: $($storageaccount.AccessTier)\nHierarchical Namespace: $HierarchicalNamespace\n`" ; color = lightgray;image = `"$OutputPath\icons\storage-account.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];"
+        $data += "        $staid [label = `"\n\nLocation: $Location\nSKU: $($storageaccount.Sku.Name)\nKind: $($storageaccount.Kind)\nPublic Network Access: $PublicNetworkAccess\nAccess Tier: $($storageaccount.AccessTier)\nHierarchical Namespace: $HierarchicalNamespace\n`" ; color = lightgray;image = `"$OutputPath\icons\storage-account.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];"
         $data += "`n"
         $peids = Get-AzPrivateEndpointConnection -PrivateLinkResourceId $storageaccount.Id -ErrorAction Stop
         
         if ($peids) {
             foreach ($peid in $peids) {
                 $stapeid = $peid.PrivateEndpoint.Id.ToString().replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $data += "        $staid -> $($stapeid);`n"
+                $data += "        $staid -> $($stapeid) [label = `"Private Endpoint`"; ];`n"
             }
         }
         $data += "   label = `"$($storageaccount.StorageAccountName)`";
@@ -1292,7 +1682,7 @@ function Export-Hub {
     )
     $hubname = $hub.Name
     $id = $hub.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-    $location = $hub.Location
+    $location = SanitizeLocation $hub.Location
     $sku = $hub.Sku
     $AddressPrefix = $hub.AddressPrefix
     $HubRoutingPreference = $hub.HubRoutingPreference
@@ -1571,7 +1961,7 @@ function Export-SubnetConfig {
                 }
                 default { 
                     ##### Subnet delegations #####
-                    # Might be moved to subnet switch "default" ???
+                    # Might be moved to subnet switch "default" ??? 
                     # Just change the icon, or maybe a line with "Delegation info" ?
                     $subnetDelegationName = $subnet.Delegations.Name
                     
@@ -1593,7 +1983,7 @@ function Export-SubnetConfig {
                     $data += "`n"
                     foreach ($pe in $subnet.PrivateEndpoints) {
                         $peid = $pe.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                        $data += "        $id -> $peid ;`n"
+                        $data += "        $id -> $peid [label = `"Private Endpoint`"; ] ;`n"
                     }
                 }
             }
@@ -1775,7 +2165,7 @@ This example processes the specified Virtual WAN and exports its details for inc
     $ResourceGroupName = $vwan.ResourceGroupName
     $AllowVnetToVnetTraffic = $vwan.AllowVnetToVnetTraffic
     $AllowBranchToBranchTraffic = $vwan.AllowBranchToBranchTraffic
-    $Location = $vwan.Location
+    $Location = SanitizeLocation $vwan.Location
 
     try {
         Write-Host "Exporting vWAN: $vwanname"
@@ -1850,7 +2240,7 @@ function Export-ExpressRouteCircuit {
         $erportid = $erport.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
         $erportname = $erport.Name.ToLower()
         $ServiceProviderName = "N/A"
-        $Peeringlocation = $erport.PeeringLocation
+        $Peeringlocation = SanitizeLocation $erport.PeeringLocation
         $Bandwidth = $erport.ProvisionedBandwidthInGbps.ToString() + " Gbps"
         $BillingType = $erport.BillingType
         $Encapsulation = $er.Encapsulation
@@ -1996,11 +2386,11 @@ function Export-RouteTable {
         style = solid;
         color = black;
         
-        $id [shape = none;label = <
-            <TABLE border=`"1`" style=`"rounded`">
-            <TR><TD colspan=`"3`" border=`"0`">$routetableName</TD></TR>
-            <TR><TD>Route</TD><TD>NextHopType</TD><TD>NextHopIpAddress</TD></TR>
-            "
+        $id [label = <
+            <TABLE border=`"0`" style=`"rounded`">
+            <TR><TD colspan=`"3`" border=`"0`"><B>$routetableName</B></TD></TR>
+            <TR><TD><B>Route</B></TD><TD><B>NextHopType</B></TD><TD><B>NextHopIpAddress</B></TD></TR>
+            <HR/>"
     
     # Individual Routes        
     $data = ""
@@ -2009,7 +2399,7 @@ function Export-RouteTable {
         $addressprefix = $route.AddressPrefix
         $nexthoptype = $route.NextHopType
         $nexthopip = $route.NextHopIpAddress
-        $data = $data + "<TR><TD>$addressprefix</TD><TD>$nexthoptype</TD><TD>$nexthopip</TD></TR>"
+        $data = $data + "<TR><TD align=`"left`">$addressprefix</TD><TD align=`"left`">$nexthoptype</TD><TD align=`"left`">$nexthopip</TD></TR>"
     }
 
     # End table
@@ -2257,6 +2647,8 @@ function Confirm-Prerequisites {
         "dnspr.png",
         "ergw.png",
         "eventhub.png",
+        "imagedef.png",
+        "imagedefversions.png",
         "keyvault.png",
         "lgw.png",
         "managed-identity.png",
@@ -2326,7 +2718,9 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)]
         [bool]$EnableRanking = $true,
         [Parameter(Mandatory = $false)]
-        [string]$TenantId = $null
+        [string]$TenantId = $null,
+        [Parameter(Mandatory = $false)]
+        [bool]$Sanitize = $false
     )
 
     Write-Output "Checking prerequisites ..."
@@ -2345,6 +2739,7 @@ function Get-AzNetworkDiagram {
     $script:PDNSREpIp = $null
     $script:PDNSRId = $null
     $script:AllInScopevNetIds = @()
+    $script:DoSanitize = $Sanitize
 
     ##### Data collection / Execution #####
 
@@ -2370,6 +2765,8 @@ function Get-AzNetworkDiagram {
     try {
         # Collect all vNet ID's in scope otherwise we can end up with 1 vNet peered to 1000 other vNets which are not in scope
         # Errors will appear like: dot: graph is too large for cairo-renderer bitmaps. Scaling by 0.324583 to fit
+        
+        #$AzureRegions = Get-AzLocation | Select-Object DisplayName, Location | Sort-Object DisplayName
 
         $Subscriptions | ForEach-Object {
             # Set Context
@@ -2388,7 +2785,7 @@ function Get-AzNetworkDiagram {
             ### RTs
             Write-Output "Collecting Route Tables..."
             Export-AddToFile "    ##### $subname - Route Tables #####"
-            $routetables = Get-AzRouteTable -ErrorAction Stop | Where-Object { ($_.SubnetsText -ne "[]") }
+            $routetables = Get-AzRouteTable -ErrorAction Stop 
             $routetables | ForEach-Object {
                 $routetable = $_
                 Export-RouteTable $routetable
@@ -2567,6 +2964,14 @@ function Get-AzNetworkDiagram {
             foreach ($akscluster in $aksclusters) {
                 Export-AKSCluster $akscluster
             }   
+
+            #Compute Galleries
+            Write-Output "Collecting Compute Galleries..."
+            Export-AddToFile "    ##### $subname - Compute Galleries #####"
+            $computeGalleries = Get-AzGallery -ErrorAction Stop
+            foreach ($computeGallery in $computeGalleries) {
+                Export-ComputeGallery $computeGallery
+            }
 
             #VMSSs
             Write-Output "Collecting VMSS..."
