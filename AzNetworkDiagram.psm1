@@ -681,8 +681,7 @@ function Export-SubnetConfig {
                             Default { $iconname = "snet" }
                         }
                         $data = $data + "        $id [label = `"\n\n$name\n$AddressPrefix\n\nDelegated to:\n$subnetDelegationName`" ; color = lightgray;image = `"$OutputPath\icons\$iconname.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
-                    }
-                    else {
+                    } else {
                         # No Delegation
                         $data = $data + "        $id [label = `"\n$name\n$AddressPrefix`" ; color = lightgray;image = `"$OutputPath\icons\snet.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
                     }
