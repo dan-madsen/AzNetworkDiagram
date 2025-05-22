@@ -133,8 +133,7 @@ function Export-AKSCluster {
         if ($null -ne $acrRoleAssignments) {
             $aksacr = $acrRoleAssignments.Scope.split("/")[-1] 
             $aksacrid = $acrRoleAssignments.Scope.replace("-", "").replace("/", "").replace(".", "").ToLower()
-        }
-        else {
+        } else {
             $aksacr = "None"
             $aksacrid = ""
         }
@@ -158,7 +157,6 @@ function Export-AKSCluster {
             $data += "        $($agentpoolid) [label = `"\nName: $($agentpool.Name)\nMode: $($agentpool.Mode)\nZones: $($agentpool.AvailabilityZones)\nVM Size: $($agentpool.VmSize)\nMax Pods: $($agentpool.MaxPods)\nOS SKU: $($agentpool.OsSKU)\nAgent Pools: $($agentpool.MinCount) >= Pod Count <=  $($agentpool.MaxCount)\nEnable AutoScaling: $($agentpool.EnableAutoScaling)\nPublic IP: $($agentpool.EnableNodePublicIP)\n`" ; color = lightgray;image = `"$OutputPath\icons\aks-node-pool.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n" 
             $data += "        $agentpoolid -> $agentpoolsubnetid;`n"
             $data += "        $aksid -> $agentpoolid;`n"
-
         }
         $data += "`n"
         if ($aksacr -ne "None") {
@@ -167,8 +165,7 @@ function Export-AKSCluster {
         $data += "   label = `"$($Aks.Name)`";
                 }`n"
         Export-AddToFile -Data $data
-    }
-    catch {
+    } catch {
         Write-Host "Can't export AKS Cluster: $($Aks.name)" $_.Exception.Message
     }
 }
@@ -210,27 +207,23 @@ function Export-ApplicationGateway {
         $skuname = $agw.Sku.Name
         if ($agw.SslCertificates) {
             $sslcerts = $agw.SslCertificates.Name -join ", "
-        }
-        else {
+        } else {
             $sslcerts = "None"
         }
         if ($agw.FrontendIPConfigurations.PrivateIPAddress) {
             $pvtips = $agw.FrontendIPConfigurations.PrivateIPAddress -join ", "
-        }
-        else {
+        } else {
             $pvtips = "None"
         }
         $polname = $agw.FirewallPolicy.Id.split("/")[-1]
         if ($agw.Zones) {
             $zones = $agw.Zones -join ","
-        }
-        else {
+        } else {
             $zones = "None"
         }
         if ($agw.FrontendPorts) {
             $feports = $agw.FrontendPorts.Port -join ", "
-        }
-        else {
+        } else {
             $feports = "None"
         }
 
@@ -242,8 +235,7 @@ function Export-ApplicationGateway {
 
         Export-AddToFile $data
 
-    }
-    catch {
+    } catch {
         Write-Host "Can't export Application Gateway: $($agw.name)" $_.Exception.Message
     }
 }
@@ -277,8 +269,7 @@ function Export-ACR {
 
         Export-AddToFile $data
 
-    }
-    catch {
+    } catch {
         Write-Host "Can't export ACR: $($acr.name)" $_.Exception.Message
     }
 }
@@ -422,8 +413,7 @@ function Export-Hub {
                 node [color = white;];
             "
             $data += "        $HubvNetID [label = `"\n\n$hubname\nLocation: $location\nSKU: $sku\nAddress Prefix: $AddressPrefix\nHub Routing Preference: $HubRoutingPreference`" ; color = lightgray;image = `"$OutputPath\icons\vWAN-Hub.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
-        }
-        else {
+        } else {
             $data += "        $id [label = `"\n$hubname\nLocation: $location\nSKU: $sku\nAddress Prefix: $AddressPrefix\nHub Routing Preference: $HubRoutingPreference`" ; color = lightgray;image = `"$OutputPath\icons\vWAN-Hub.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
             $headid = $id
         }
@@ -496,8 +486,7 @@ function Export-Hub {
         $data += $footer
 
         return $data
-    }
-    catch {
+    } catch {
         Write-Error "Can't export Hub: $($hub.name)" $_.Exception.Message
         return $null
     }
@@ -745,8 +734,7 @@ function Export-SubnetConfig {
 
             }
         }
-    }
-    catch {
+    } catch {
         Write-Host "Can't export Subnet: $($subnet.name)" $_.Exception.Message
     }
     return $data
@@ -851,8 +839,7 @@ function Export-vnet {
         "
         $alldata = $header + $vnetdata + $subnetdata + $footer + $dnsprdata
         Export-AddToFile -Data $alldata
-    }
-    catch {
+    } catch {
         Write-Error "Can't export VNet: $($vnet.name)" $_.Exception.Message 
     }
 }
@@ -916,8 +903,7 @@ function Export-vWAN {
             $alldata = $header + $vwandata + $hubdata + $footer
             Export-AddToFile -Data $alldata
         }            
-    }
-    catch {
+    } catch {
         Write-Error "Can't export Hub: $($hub.name)" $_.Exception.Message
     }
 }
@@ -1217,8 +1203,7 @@ function Export-VPNConnection {
         elseif ($connection.VirtualNetworkGateway2) {
             $lgwid = $connection.VirtualNetworkGateway2.id.replace("-", "").replace("/", "").replace("`"", "").ToLower()
             $lgwname = $connection.VirtualNetworkGateway2.id.split("/")[-1]
-        }
-        else {
+        } else {
             $lgwid = 0
         }
         $data = "    $lgwid [color = lightgrey;label = `"\n\nGateway: $lgwname\nConnection Name: $lgwconnectionname\nConnection Type: $lgconnectionType\n`""
@@ -1233,11 +1218,9 @@ function Export-VPNConnection {
     if ($connection.Peer -and $vpngwid -ne 0) {
         $peerid = $connection.Peer.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
         $data += "`n    $vpngwid -> $peerid`n"
-    }
-    elseif ($lgwid -ne 0 -and $vpngwid -ne 0) {
+    } elseif ($lgwid -ne 0 -and $vpngwid -ne 0) {
         $data += "`n    $vpngwid -> $lgwid`n"
-    }
-    else {
+    } else {
         $data += "`n"
     }
     Export-AddToFile -Data $data
@@ -1285,8 +1268,7 @@ function Export-PrivateEndpoint {
         
         $data = "`n                     $peid [label = `"\n$pedetails`" ; color = lightgray;image = `"$OutputPath\icons\private-endpoint.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
         Export-AddToFile -Data $data
-    }
-    catch {
+    } catch {
         Write-Error "Can't export Private Endpoint: $($pe.Name)" $_.Exception.Message
     }
 }
@@ -1311,8 +1293,7 @@ function Confirm-Prerequisites {
         if ($null -eq $dot) {
             Write-Error "dot.exe executable not found - please install Graphiz (https://graphviz.org), and/or ensure `"dot.exe`" is in `"`$PATH`" !"
         }
-    }
-    catch {
+    } catch {
         Write-Error "dot.exe executable not found - please install Graphiz (https://graphviz.org), and/or ensure `"dot.exe`" is in `"`$PATH`" !"
     }
     
@@ -1320,8 +1301,7 @@ function Confirm-Prerequisites {
     try {
         import-module az.network -DisableNameChecking
         import-module az.accounts
-    }
-    catch {
+    } catch {
         Write-Output "Please install the following PowerShell modules, using install-module: Az.Network + Az.Accounts"
         Write-Output ""
         Write-Output "Ie:"
@@ -1438,12 +1418,10 @@ function Get-AzNetworkDiagram {
     try {
         if ($TenantId) {
             if ( $null -eq $Subscriptions ) { $Subscriptions = (Get-AzSubscription -TenantId $TenantId -ErrorAction Stop | Where-Object -Property State -eq "Enabled").Id }
-        }
-        else {
+        } else {
             if ( $null -eq $Subscriptions ) { $Subscriptions = (Get-AzSubscription -ErrorAction Stop | Where-Object -Property State -eq "Enabled").Id }
         }
-    }
-    catch {
+    } catch {
         Write-Error "No available subscriptions within active AzContext - missing permissions? " $_.Exception.Message
         return
     } 
@@ -1620,8 +1598,7 @@ function Get-AzNetworkDiagram {
                 }
             }
         }
-    }
-    catch {
+    } catch {
         Write-Error "Error while collecting data from subscription: $subid" $_.Exception.Message
         return
     }
