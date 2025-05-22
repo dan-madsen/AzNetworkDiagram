@@ -545,8 +545,7 @@ function Export-VirtualGateway {
         
         }
         $data += "        $GatewayId [color = lightgray;label = `"\n\nName: $GatewayName`\n\nPublic IP(s):\n$gwips`";image = `"$OutputPath\icons\vgw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
-    }
-    elseif ($gwtype -eq "ExpressRoute") {
+    } elseif ($gwtype -eq "ExpressRoute") {
         $data += "        $GatewayId [color = lightgray;label = `"\nName: $GatewayName`";image = `"$OutputPath\icons\ergw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
     }
     $data += "`n"
