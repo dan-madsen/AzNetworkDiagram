@@ -48,6 +48,8 @@ PS> Install-Module -Name AzNetworkDiagram
 
 **-Tenant <tenantId>**
 
+**-OnlyCoreNetwork** ($true/$false) - if $true/enabled, only cores network resources are processed - ie. non-network resources are skipped for a cleaner diagram.
+
 
 ## Running the Powershell module
 **Examples:**
