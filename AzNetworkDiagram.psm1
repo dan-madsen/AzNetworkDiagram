@@ -320,8 +320,7 @@ function Export-AzureFirewall {
                 $PublicIps += (Get-AzPublicIpAddress -ResourceGroupName $publicIpRG -Name $publicIpName -ErrorAction Stop).IpAddress
             }
         }
-    }
-    else {
+    } else {
         # Hub Integrated Azure Firewall
         $PrivateIPAddress = $azFW.HubIPAddresses.PrivateIPAddress
         $PublicIPs = ""
@@ -935,8 +934,7 @@ function Export-ExpressRouteCircuit {
         $Bandwidth = $er.ServiceProviderProperties.BandwidthInMbps.ToString() + " Mbps"
         $BillingType = "N/A"
         $Encapsulation = "N/A"
-    }
-    else {
+    } else {
         # ExpressRoute Direct
         $erport = Get-AzExpressRoutePort -ResourceId $er.ExpressRoutePort.Id -ErrorAction Stop
         $erportid = $erport.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
@@ -961,8 +959,7 @@ function Export-ExpressRouteCircuit {
             $linkname = $link.Name.ToLower()
             if ($link.MacSecConfig.SciState -eq "Enabled") {
                 $macsec = "Enabled"
-            }
-            else {
+            } else {
                 $macsec = "Disabled"
             }
 
@@ -1181,8 +1178,7 @@ function Export-VPNConnection {
         $vpngwid = $connection.VirtualNetworkGateway1.id.replace("-", "").replace("/", "").replace(".", "").replace("`"", "").ToLower()
         $data = "    $vpngwid [color = lightgrey;label = `"\n\nLocal GW: $lgwname\nConnection Name: $lgwconnectionname\nConnection Type: $lgconnectionType\n`""
         $lgwid = 0
-    }
-    else {
+    } else {
         $vpngwid = 0
 
         if ($connection.LocalNetworkGateway2) {
@@ -1435,8 +1431,7 @@ function Get-AzNetworkDiagram {
             $subid = $_
             if ($TenantId) {
                 $context = Set-AzContext -Subscription $subid -Tenant $TenantId -ErrorAction Stop
-            }
-            else {
+            } else {
                 $context = Set-AzContext -Subscription $subid -ErrorAction Stop
             }
             $subname = $context.Subscription.Name
