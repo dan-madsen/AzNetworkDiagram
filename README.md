@@ -50,7 +50,7 @@ PS> Install-Module -Name AzNetworkDiagram
 
 **-Sanitize $bool** ($true/$false) - Sanitizes all names, locations, IP addresses and CIDR blocks. **Default: $false**
 
-**-Prefix "<string>"** - Adds a prefix to the output file name. For example is cases where you want to do multiple automated runs then the file names will have the prefix per run that you specify. **Default: No Prefix**
+**-Prefix <string>** - Adds a prefix to the output file name. For example is cases where you want to do multiple automated runs then the file names will have the prefix per run that you specify. **Default: No Prefix**
 
 ## Running the Powershell module
 **Examples:**
