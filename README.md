@@ -1,5 +1,6 @@
 # Introduction 
-The **Get-AzNetworkDiagram** (Powershell)Cmdlet visualizes Azure networking utilizing Graphviz and the "DOT", diagram-as-code language to export a PDF and PNG with a network digram containing:
+The **Get-AzNetworkDiagram** (Powershell)Cmdlet visualizes Azure networking (and other relevant resources) utilizing Graphviz and the "DOT", diagram-as-code language to export a PDF, SVG and PNG with a network digram containing:
+  - Subscriptions
   - VNets, including:
     - VNet peerings
     - Subnets
@@ -9,14 +10,43 @@ The **Get-AzNetworkDiagram** (Powershell)Cmdlet visualizes Azure networking util
         - Associated Route Tables
         - A * will be added to the subnet name, if a subnet is delegated. Commonly used delegations will be given a proper icon
         - A # will be added to the subnet name, in case an NSG is associated
+  - vNets & Subnets & Delegations
+  - VPN Gateway
+  - NAT Gateway
+  - Bastion
+  - Route Tables
+  - NSG's
+  - Application Gateways
+  - Express Routes Circuits and ER Direct ports & Links
+  - vWAN's & Hubs
+  - Azure Firewall
+    - IP Groups
+  - Private Endpoints
+  - SSH Keys
+  - ACR
+  - AKS
+  - Storage Accounts
+  - VM, VMSS
+  - Keyvaults
+  - APIM
+  - MongoDB, MySQL, PostgreSQL
+  - SQL Server (logical server), Azure SQL, SQL Managed Instance
+  - EventHubs
+  - Redis Cache
+  - App Services
+  - Compute Galleries
 
-The idea is _not_ to diagram everything - but enough to get an overview of routing across the entire network environment, with documentation and troubleshooting in mind.
+The idea was _not_ to diagram everything - but enough to get an overview of routing across the entire network environment, with documentation and troubleshooting in mind. But good ideas and contributions emerged - it is now quite capable of documentating quite a bit of resourse types.
 
 ```diff
 - Disclaimer: I take no resposibility for any actions caused by this script!
 ```
 
-# Demo output, version 0.3.1:
+# Demo output
+**Demo outputs are available in the "DemoOutput" folder.**
+
+Version 0.3.1:
+
 ![Demo output](https://github.com/dan-madsen/AzNetworkDiagram/blob/main/DemoOutput/Demo.png)  
 
 
@@ -58,7 +88,7 @@ PS> Install-Module -Name AzNetworkDiagram
 ## Running the Powershell module
 **Examples:**
 ```diff
-PS> Get-AzNetworkDiagram [-Subscriptions "subid1","subid2","..."] [-OutputPath C:\temp\] [-EnableRanking $true]
+PS> Get-AzNetworkDiagram [-Tenant tenantId] [-Subscriptions "subid1","subid2","..."] [-OutputPath C:\temp\] [-EnableRanking $true] [-OnlyCoreNetwork $true] [-Sanitize $true] [-Prefix prefixstring]
 
 PS> Get-AzNetworkDiagram 
 ```
@@ -103,9 +133,5 @@ This module will include in the diagram:
   - App Services
   - Compute Galleries
     
-# Work in progress...
-  - Azure DevOps pipeline for automated runs, with output saved to storage account
-    - Mail on changes?
-
 # Issues, bugs, comments and ideas
 Please submit using the issues option in GitHub

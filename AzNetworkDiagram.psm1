@@ -1,4 +1,5 @@
 #Requires -Version 7.0
+#Requires -Modules Az.Accounts, Az.Network
 <#
   .SYNOPSIS
   Creates a Network Diagram of your Azure networking infrastructure.
@@ -21,20 +22,32 @@
   .PARAMETER OutputPath
   -OutputPath specifies the path for the DOT-based output file. If unset - current working directory will be used.
 
+  .PARAMETER Tenant
+  -Tenant "tenantId" Specifies the tenant Id to be used in all subscription authentication. Handy when you have multiple tenants to work with. Default: current tenant
+
   .PARAMETER Subscriptions
   -Subscriptions "subid1","subid2","..."** - a list of subscriptions in scope for the digram. Default is all available subscriptions.
 
   .PARAMETER EnableRanking
   -EnableRanking $true ($true/$false) - enable ranking (equal hight in the output) of certain resource types. For larger networks, this might be worth a shot. **Default: $true**
 
+  .PARAMETER Sanitize
+  -Sanitize $bool ($true/$false) - Sanitizes all names, locations, IP addresses and CIDR blocks. Default: $false
+
+  .PARAMETER Prefix
+  -Prefix "string" - Adds a prefix to the output file name. For example is cases where you want to do multiple automated runs then the file names will have the prefix per run that you specify. Default: No Prefix
+
+  .PARAMETER OnlyCoreNetwork
+  -OnlyCoreNetwork ($true/$false) - if $true/enabled, only cores network resources are processed - ie. non-network resources are skipped for a cleaner diagram.  
+
   .INPUTS
   None. It will however require previous authentication to Azure
 
   .OUTPUTS
-  None. .\Get-AzNetworkDiagram.psm1 doesn't generate any output (Powershell-wise). File based out will be save in the OutputPath
+  None. .\Get-AzNetworkDiagram.psm1 doesn't generate any output (Powershell-wise). File based output will be save in the OutputPath, if set - otherwise to current working directory
 
   .EXAMPLE
-  PS> Get-AzNetworkDiagram [-Subscriptions "subid1","subid2","..."] [-OutputPath C:\temp\] [-EnableRanking $true]
+  PS> Get-AzNetworkDiagram [-Tenant tenantId] [-Subscriptions "subid1","subid2","..."] [-OutputPath C:\temp\] [-EnableRanking $true] [-OnlyCoreNetwork $true] [-Sanitize $true] [-Prefix prefixstring]
   PS> .\Get-AzNetworkDiagram 
 
   .LINK
@@ -2939,7 +2952,7 @@ function Get-AzNetworkDiagram {
             }
 
             ### vNets (incl. subnets)
-            Write-Output "Collecting vNets..."
+            Write-Output "Collecting vNets, and associated informations..."
             Export-AddToFile "    ##### $subname - Virtual Networks #####"
             $vnets = Get-AzVirtualNetwork -ErrorAction Stop
             if ($null -ne $vnets.id) {
