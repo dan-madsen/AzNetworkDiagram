@@ -1,3 +1,4 @@
+#Requires -Version 7.0
 <#
   .SYNOPSIS
   Creates a Network Diagram of your Azure networking infrastructure.
