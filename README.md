@@ -52,6 +52,9 @@ PS> Install-Module -Name AzNetworkDiagram
 
 **-Prefix "string"** - Adds a prefix to the output file name. For example is cases where you want to do multiple automated runs then the file names will have the prefix per run that you specify. **Default: No Prefix**
 
+**-OnlyCoreNetwork** ($true/$false) - if $true/enabled, only cores network resources are processed - ie. non-network resources are skipped for a cleaner diagram.
+
+
 ## Running the Powershell module
 **Examples:**
 ```diff

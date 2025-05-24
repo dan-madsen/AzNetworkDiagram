@@ -1433,6 +1433,7 @@ function Export-AppServicePlan {
             color = black;
             node [color = white;];
         "
+
         $data += "        $planid [label = `"\nLocation: $Location\nSKU: $($plan.Sku.Name)\nTier: $($plan.Sku.Tier)\nKind: $($plan.Kind)\nCapacity: $($plan.Sku.Capacity)\nNumber of Apps: $($plan.NumberOfSites)\n`" ; color = lightgray;image = `"$OutputPath\icons\appplan.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
         $data += "`n"
 
@@ -1787,7 +1788,7 @@ function Export-Hub {
             $data += "`n    $headid -> $vgwId;"
 
             # Connections
-            $VpnSites = Get-AzVPNSite -ResourceGroupName $hub.ResourceGroupName  -ErrorAction Stop | Where-Object { $_.VirtualWan.id -eq $hub.virtualwan.id}
+            $VpnSites = Get-AzVPNSite -ResourceGroupName $hub.ResourceGroupName  -ErrorAction Stop | Where-Object { $_.VirtualWan.id -eq $hub.virtualwan.id }
             # Get the VPN connections from this gateway
             $vpnConnections = $vpngw.Connections
 
@@ -1816,7 +1817,7 @@ function Export-Hub {
             $data += "`n    $headid -> $ergwId;"
             $peerings = $ergw.ExpressRouteConnections.ExpressRouteCircuitPeering.id
             foreach ($peering in $peerings) {
-                $peeringId = $peering.replace("-", "").replace("/", "").replace(".", "").replace("peeringsAzurePrivatePeering","").ToLower()
+                $peeringId = $peering.replace("-", "").replace("/", "").replace(".", "").replace("peeringsAzurePrivatePeering", "").ToLower()
                 $data += "`n    $ergwId -> $peeringId ;"
             }
         }
@@ -1873,8 +1874,7 @@ PS> Export-VirtualGateway -GatewayName "MyGateway" -ResourceGroupName "MyResourc
 This example processes the specified Virtual Network Gateway and exports its details for inclusion in a network diagram.
 
 #>
-function Export-VirtualGateway 
-{
+function Export-VirtualGateway {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -2216,8 +2216,7 @@ PS> Export-vWAN -vwan $vWAN
 This example processes the specified Virtual WAN and exports its details for inclusion in a network diagram.
 
 #>
- function Export-vWAN
- {
+function Export-vWAN {
     [CmdletBinding()]
     param ([PSCustomObject[]]$vwan)
 
@@ -2267,9 +2266,9 @@ This example processes the specified Virtual WAN and exports its details for inc
     catch {
         Write-Error "Can't export Hub: $($hub.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
     }
- }
+}
 
- <#
+<#
 .SYNOPSIS
 Exports details of an ExpressRoute Circuit for inclusion in a network diagram.
 
@@ -2297,7 +2296,8 @@ function Export-ExpressRouteCircuit {
         $Bandwidth = $er.ServiceProviderProperties.BandwidthInMbps.ToString() + " Mbps"
         $BillingType = "N/A"
         $Encapsulation = "N/A"
-    } else {        # ExpressRoute Direct
+    } else {
+        # ExpressRoute Direct
         $erport = Get-AzExpressRoutePort -ResourceId $er.ExpressRoutePort.Id -ErrorAction Stop
         $erportid = $erport.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
         $erportname = SanitizeString $erport.Name.ToLower()
@@ -2578,8 +2578,7 @@ function Export-VPNConnection {
         elseif ($connection.VirtualNetworkGateway2) {
             $lgwid = $connection.VirtualNetworkGateway2.id.replace("-", "").replace("/", "").replace("`"", "").ToLower()
             $lgwname = $connection.VirtualNetworkGateway2.id.split("/")[-1]
-        }
-        else {
+        } else {
             $lgwid = 0
         }
         $data = "    $lgwid [color = lightgrey;label = `"\n\nGateway: $(SanitizeString $lgwname)\nConnection Name: $(SanitizeString $lgwconnectionname)\nConnection Type: $lgconnectionType\n`""
@@ -2594,11 +2593,9 @@ function Export-VPNConnection {
     if ($connection.Peer -and $vpngwid -ne 0) {
         $peerid = $connection.Peer.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
         $data += "`n    $vpngwid -> $peerid`n"
-    }
-    elseif ($lgwid -ne 0 -and $vpngwid -ne 0) {
+    } elseif ($lgwid -ne 0 -and $vpngwid -ne 0) {
         $data += "`n    $vpngwid -> $lgwid`n"
-    }
-    else {
+    } else {
         $data += "`n"
     }
     Export-AddToFile -Data $data
@@ -2702,7 +2699,7 @@ function Confirm-Prerequisites {
 
     # Icons available?
     if (! (Test-Path "$OutputPath\icons") ) { Write-Output "Downloading icons to $OutputPath\icons\ ... " ; New-Item -Path "$OutputPath" -Name "icons" -ItemType "directory" | Out-null }
-    $icons =  @(
+    $icons = @(
         "acr.png",
         "afw.png",
         "agw.png",
@@ -2806,7 +2803,11 @@ function Get-AzNetworkDiagram {
         [string]$Prefix = $null,
         [Parameter(Mandatory = $false)]
         [bool]$Sanitize = $false
+        [Parameter(Mandatory = $false)] [bool]$OnlyCoreNetwork = $false
     )
+
+    # Remove trailing "\" from path
+    $OutputPath = $OutputPath.TrimEnd('\')
 
     Write-Output "Checking prerequisites ..."
     Confirm-Prerequisites
@@ -2942,13 +2943,15 @@ function Get-AzNetworkDiagram {
             }
 
             # Application Gateways
-            Write-Output "Collecting Application Gateways..."
-            Export-AddToFile "    ##### $subname - Application Gateways #####"
-            $agws = Get-AzApplicationGateway -ErrorAction Stop
-            foreach ($agw in $agws) {
-                Export-ApplicationGateway $agw
+            if ( -not $OnlyCoreNetwork ) {
+                Write-Output "Collecting Application Gateways..."
+                Export-AddToFile "    ##### $subname - Application Gateways #####"
+                $agws = Get-AzApplicationGateway -ErrorAction Stop
+                foreach ($agw in $agws) {
+                    Export-ApplicationGateway $agw
+                }
             }
-
+        
             #Express Route Circuits
             Write-Output "Collecting Express Route Circuits..."
             Export-AddToFile "    ##### $subname - Express Route Circuits #####"
@@ -3043,12 +3046,14 @@ function Get-AzNetworkDiagram {
             }
 
             #AKS
-            Write-Output "Collecting AKS Clusters..."
-            Export-AddToFile "    ##### $subname - AKS Clusters #####"
-            $aksclusters = Get-AzAksCluster -ErrorAction Stop
-            foreach ($akscluster in $aksclusters) {
-                Export-AKSCluster $akscluster
-            }   
+            if ( -not $OnlyCoreNetwork ) {
+                Write-Output "Collecting AKS Clusters..."
+                Export-AddToFile "    ##### $subname - AKS Clusters #####"
+                $aksclusters = Get-AzAksCluster -ErrorAction Stop
+                foreach ($akscluster in $aksclusters) {
+                    Export-AKSCluster $akscluster
+                }   
+            }
 
             #Compute Galleries
             Write-Output "Collecting Compute Galleries..."
@@ -3117,8 +3122,8 @@ function Get-AzNetworkDiagram {
         }
         
         # vNet Peerings
-        Write-Output "Connecting in-scope peered vNets..."
-        foreach($InScopevNetId in $script:AllInScopevNetIds) {
+        Write-Output "`nConnecting in-scope peered vNets..."
+        foreach ($InScopevNetId in $script:AllInScopevNetIds) {
             $vnetname = $InScopevNetId.split("/")[-1]
             $vnetsub = $InScopevNetId.split("/")[2]
             $vnetrg = $InScopevNetId.split("/")[4]
@@ -3129,7 +3134,8 @@ function Get-AzNetworkDiagram {
             if ($Subscriptions.IndexOf($vnetsub) -ge 0) {
                 if ($TenantId) {
                     $context = Set-AzContext -Subscription $vnetsub -Tenant $TenantId -ErrorAction Stop
-                } else {
+                }
+                else {
                     $context = Set-AzContext -Subscription $vnetsub -ErrorAction Stop
                 }
                 $vnet = Get-AzVirtualNetwork -name $vnetname -ResourceGroupName $vnetrg -ErrorAction Stop
