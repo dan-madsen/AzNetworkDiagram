@@ -42,11 +42,15 @@ PS> Install-Module -Name AzNetworkDiagram
 ## Runtime options
 **-OutputPath <path>** - set output directory. Default: "."
 
-**-Subscriptions "<subid1>","<subid2>","..."** - a list of subscriptions in scope for the digram
+**-Subscriptions "subid1","subid2","subname","..."** - a list of subscriptions in scope for the diagram. They can be names or Id's
 
 **-EnableRanking $bool** ($true/$false) - enable ranking (equal hight in the output) of certain resource types. For larger networks, this might be worth a shot. **Default: $true**
 
-**-Tenant <tenantId>**
+**-Tenant "tenantId"** Specifies the tenant Id to be used in all subscription authentication. Handy when you have multiple tenants to work with. **Default: current tenant**
+
+**-Sanitize $bool** ($true/$false) - Sanitizes all names, locations, IP addresses and CIDR blocks. **Default: $false**
+
+**-Prefix "string"** - Adds a prefix to the output file name. For example is cases where you want to do multiple automated runs then the file names will have the prefix per run that you specify. **Default: No Prefix**
 
 **-OnlyCoreNetwork** ($true/$false) - if $true/enabled, only cores network resources are processed - ie. non-network resources are skipped for a cleaner diagram.
 
@@ -85,20 +89,21 @@ This module will include in the diagram:
   - NAT Gateway
   - Bastion
   - Private Endpoints
+  - SSH Keys
+  - ACR
+  - AKS
+  - Storage Accounts
+  - VM, VMSS
+  - Keyvaults
+  - APIM
+  - MongoDB, MySQL, PostgreSQL
+  - SQL Server (logical server), Azure SQL, SQL Managed Instance
+  - EventHubs
+  - Redis Cache
+  - App Services
+  - Compute Galleries
     
 # Work in progress...
-  - Support for
-    - SSH Keys
-    - APIM
-    - ACR
-    - AKS
-    - Storage Accounts
-    - VM, VMSS
-    - Keyvaults
-    - MongoDB, MySQL, PostgreSQL
-    - EventHub
-    - Redis
-    - App Services
   - Azure DevOps pipeline for automated runs, with output saved to storage account
     - Mail on changes?
 
