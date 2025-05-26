@@ -1,5 +1,5 @@
 #Requires -Version 7.0
-#Requires -Modules Az.Accounts, Az.Network
+#Requires -Modules Az
 <#
   .SYNOPSIS
   Creates a Network Diagram of your Azure networking infrastructure.
@@ -2743,70 +2743,73 @@ function Confirm-Prerequisites {
     $context = Get-AzContext  -ErrorAction Stop
     if ($null -eq $context) { 
         Write-Output "Please make sure you are logged in to Azure using Login-AzAccount, and that permissions are granted to resources within scope."
-        Write-Output "A login window should appear - hint: they may hide behind active windows!"
+        Write-Output "A login window should appear - hint: it may hide behind active windows!"
         Login-AzAccount
     }
 
     # Icons available?
     if (! (Test-Path "$OutputPath\icons") ) { Write-Output "Downloading icons to $OutputPath\icons\ ... " ; New-Item -Path "$OutputPath" -Name "icons" -ItemType "directory" | Out-null }
     $icons = @(
+        "LICENSE",
         "acr.png",
         "afw.png",
         "agw.png",
-        "aks-service.png",
         "aks-node-pool.png",
+        "aks-service.png",
         "apim.png",
         "appplan.png",
-        "appserviceplan.png",
+        #"appserviceplan.png",
         "appservices.png",
-        "azuresql.png",
-        "firewallpolicy.png",
-        "asp.png",
+        #"azuresql.png",
         "bas.png",
         "cassandra.png",
         "computegalleries.png",
+        #"Connections.png",
         "cosmosdb.png",
-        "Connections.png",
         "db.png",
+        #"DNSforwardingruleset.png",
+        "dnspr.png",
         "documentdb.png",
         "ercircuit.png",
-        "erport.png",
-        "gremlin.png",
-        "peerings.png",
-        "private-endpoint.png",
-        "dnspr.png",
         "ergw.png",
+        "erport.png",
         "eventhub.png",
+        "firewallpolicy.png",
+        "gremlin.png",
         "imagedef.png",
-        "imagedefversions.png",
+        #"imagedefversions.png",
+        "ipgroup.png",
         "keyvault.png",
-        "lgw.png",
+        #"lgw.png",
         "managed-identity.png",
-        "mariadb.png",
+        #"mariadb.png",
         "mongodb.png",
         "mysql.png",
-        "ipgroup.png",
-        "LICENSE",
         "ng.png",
+        "nsg.png",
+        "peerings.png",
         "postgresql.png",
+        "private-endpoint.png",
+        #"privatednszone.png",
         "redis.png",
-        "rsv.png",
+        #"RouteTable.png", #Table-only output
+        #"rsv.png",
         "snet.png",
-        "storage-account.png",
         "sqldb.png",
         "sqlmi.png",
+        "sqlmidb.png",
         "sqlserver.png",
-        "table.png",
+        "ssh-key.png",
+        "storage-account.png",
+        #"table.png",
+        "vWAN-Hub.png",
+        "vWAN.png",
         "vgw.png",
         "vm.png",
         "vmss.png",
-        "vnet.png",
         "VPN-Site.png",
-        "VPN-User.png",
-        "VPN-Site.png",
-        "VPN-User.png",
-        "vWAN.png",
-        "vWAN-Hub.png"
+        #"VPN-User.png",
+        "vnet.png"
     )
     
     $icons | ForEach-Object {
