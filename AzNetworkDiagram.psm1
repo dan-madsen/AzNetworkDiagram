@@ -2801,7 +2801,7 @@ function Confirm-Prerequisites {
         "sqlserver.png",
         "ssh-key.png",
         "storage-account.png",
-        #"table.png",
+        "table.png",
         "vWAN-Hub.png",
         "vWAN.png",
         "vgw.png",
