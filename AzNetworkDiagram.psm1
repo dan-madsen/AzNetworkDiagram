@@ -1881,7 +1881,7 @@ function Export-Hub {
         $data += "`n    $vWANId -> $headid [label = `"vWAN Hub`"];"
         $footer = "
         label = `"$Name`";
-        }# Export-Hub
+        }
         "
         $data += $footer
 
@@ -2048,7 +2048,7 @@ function Export-SubnetConfig {
                         $data += "        $id [label = `"\n\n$name\n$AddressPrefix`" ; color = lightgray; image = `"$OutputPath\icons\afw.png`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; " 
 
                         $data += Export-AzureFirewall -FirewallId $AzFWid -ResourceGroupName $AzFWrg
-                        $AzFWDotId = $AzFWid.replace("- ", "").replace(" / ", "").replace(".", "").ToLower()
+                        $AzFWDotId = $AzFWid.replace("- ", "").replace("/", "").replace(".", "").ToLower()
                         $data += "`n    $id -> $azFWDotId"
                     }
                 }
@@ -2162,15 +2162,15 @@ Exports details of a virtual network (VNet) for inclusion in a network diagram.
 .DESCRIPTION
 The `Export-vnet` function processes a specified virtual network object, retrieves its details, and formats the data for inclusion in a network diagram. It visualizes the VNet's name, address spaces, subnets, associated private DNS resolvers, and other configurations.
 
-        .PARAMETER vnet
-        Specifies the virtual network object to be processed.
+.PARAMETER vnet
+Specifies the virtual network object to be processed.
 
-        .EXAMPLE
-        PS> Export-vnet -vnet $vnet
+.EXAMPLE
+PS> Export-vnet -vnet $vnet
 
-        This example processes the specified virtual network and exports its details for inclusion in a network diagram.
+This example processes the specified virtual network and exports its details for inclusion in a network diagram.
 
-        #>
+#>
 function Export-vnet {
     [CmdletBinding()]
     param ([PSCustomObject[]]$vnet)
@@ -2311,7 +2311,7 @@ function Export-vWAN {
             $vwandata = "    $id [color = lightgray;label = `"\n$vWANDetails`";image = `"$OutputPath\icons\vwan.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n"
             $footer = "
                 label = `"$Name`";
-            }#Export-vWAN
+            }
             "
             $alldata = $header + $vwandata + $footer
         
