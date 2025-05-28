@@ -1,5 +1,5 @@
 #Requires -Version 7.0
-#Requires -Modules Az
+#Requires -Modules Az.Accounts, Az.Network, Az.Compute, Az.KeyVault, Az.Storage, Az.MySql, Az.PostgreSql, Az.CosmosDB, Az.RedisCache, Az.Sql, Az.EventHub, Az.Websites, Az.ApiManagement, Az.ContainerRegistry, Az.ManagedServiceIdentity, Az.Resources)
 <#
   .SYNOPSIS
   Creates a Network Diagram of your Azure networking infrastructure.
