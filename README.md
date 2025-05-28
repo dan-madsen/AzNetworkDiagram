@@ -43,7 +43,7 @@ The idea was _not_ to diagram everything - but enough to get an overview of rout
 ```
 
 # Demo output
-**Demo outputs are available in the "DemoOutput" folder.**
+**Additional demo outputs are available in the "DemoOutput" folder.**
 
 Version 0.3.1:
 
