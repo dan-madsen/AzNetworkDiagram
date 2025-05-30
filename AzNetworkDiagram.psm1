@@ -1775,6 +1775,7 @@ function Export-Hub {
         [PSCustomObject[]]$hub
     )
     $hubname = $hub.Name
+    $hubrgname = $hub.ResourceGroupName
     $Name = SanitizeString $hubname
     $id = $hub.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
     $location = SanitizeLocation $hub.Location
@@ -1813,13 +1814,14 @@ function Export-Hub {
         $script:rankvwanhubs += $headid
 
         # Hub Items
-
         if ($null -ne $hub.VpnGateway) {
             $vgwId = $hub.VpnGateway.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
             $vgwName = $hub.VpnGateway.id.split("/")[-1]
+            $vgwNameShort = $vgwName.split("-")[1, 2, 3] -join ("-")
             $vpngw = Get-AzVpnGateway -ResourceGroupName $hub.ResourceGroupName -Name $vgwName -ErrorAction Stop
+            
             $data += "`n"
-            $data += "        $vgwId [label = `"\n\n$(SanitizeString $vgwName)\nScale Units: $($vpngw.VpnGatewayScaleUnit)\nPublic IP(s):\n$(($vpngw.IpConfigurations.PublicIpAddress | ForEach-Object {SanitizeString $_}) -join ",")\n`" ; color = lightgray;image = `"$OutputPath\icons\vgw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+            $data += "        $vgwId [label = `"\n\n$(SanitizeString $vgwNameShort)\nScale Units: $($vpngw.VpnGatewayScaleUnit)\nPublic IP(s):\n$(($vpngw.IpConfigurations.PublicIpAddress | ForEach-Object {SanitizeString $_}) -join ",")\n`" ; color = lightgray;image = `"$OutputPath\icons\vgw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
             $data += "`n    $headid -> $vgwId;"
 
             # Connections
@@ -1837,12 +1839,14 @@ function Export-Hub {
                     $vpnsiteId = $siteId.replace("-", "").replace("/", "").replace(".", "").ToLower()
                     $script:rankvpnsites += $vpnsiteId
                     $vpnsiteName = SanitizeString $VpnSite.Name
+                    $peerip = $vpnSite.VpnSiteLinks.IpAddress
                     $data += "`n"
-                    $data += "        $vpnsiteId [label = `"\n\n\n$(SanitizeString $vpnsiteName)\nAddressPrefixes: $($VpnSite.AddressSpace.AddressPrefixes | ForEach-Object {SanitizeString $_})\nDevice Vendor: $($VpnSite.DeviceProperties.DeviceVendor)\nLink Speed: $($VpnSite.VpnSiteLinks.LinkProperties.LinkSpeedInMbps) Mbps\nLinks: $($VpnSite.VpnSiteLinks.count)\n`" ; color = lightgray;image = `"$OutputPath\icons\VPN-Site.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+                    $data += "        $vpnsiteId [label = `"\n\n$(SanitizeString $vpnsiteName)\nDevice Vendor: $($VpnSite.DeviceProperties.DeviceVendor)\nLink Speed: $($VpnSite.VpnSiteLinks.LinkProperties.LinkSpeedInMbps) Mbps\nLinks: $($VpnSite.VpnSiteLinks.count)\n\nPeer IP: $peerip\nAddressPrefixes: $($VpnSite.AddressSpace.AddressPrefixes | ForEach-Object {SanitizeString $_})\n`" ; color = lightgray;image = `"$OutputPath\icons\VPN-Site.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
                     $data += "`n    $vgwId -> $vpnsiteId;"
                 }
             }
         }
+
         if ($null -ne $hub.ExpressRouteGateway) {
             $ergwId = $hub.ExpressRouteGateway.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
             $ergwName = $hub.ExpressRouteGateway.id.split("/")[-1]
@@ -1862,13 +1866,21 @@ function Export-Hub {
             $p2sgwNameShort = $p2sgwName.split("-")[1, 2, 3] -join ("-")
             $p2sgw = Get-AzP2sVpnGateway -ResourceName $p2sgwName
             $cidr = $p2sgw.P2SConnectionConfigurations.VpnClientAddressPool.AddressPrefixes
+
             $configname = $p2sgw.P2SConnectionConfigurations.Name
             $configid = $p2sgw.P2SConnectionConfigurations.Id
-            $protocol = $gw.VpnClientConfiguration.VpnClientProtocols
-            $auth = $gw.VpnClientConfiguration.VpnAuthenticationTypes
+            
+            $vpnserverconfigs = Get-AzVpnServerConfiguration -ResourceGroupName $hubrgname
+            $vpnserverconfig = ''
+            foreach ( $config in $vpnserverconfigs ) { 
+                if ( $config.P2SVpnGateways.id -eq $p2sgw.id ) { $vpnserverconfig = $config }
+            }
+                     
+            $protocol = $vpnserverconfig.VpnProtocols
+            $auth = $vpnserverconfig.VpnAuthenticationTypes
             
             $data += "`n"
-            $data += "        $p2sgwId [label = `"\n\n\n$(SanitizeString $p2sgwNameShort)\nP2S Address Prefix: $cidr`" ; color = lightgray;image = `"$OutputPath\icons\VPN-User.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+            $data += "        $p2sgwId [label = `"\n\n$(SanitizeString $p2sgwNameShort)\nProtocol: $protocol, Auth: $auth\nP2S Address Prefixes: $(SanitizeString $($cidr -join ", "))`" ; color = lightgray;image = `"$OutputPath\icons\VPN-User.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
             $data += "`n    $headid -> $p2sgwId;"
         }
         if ($null -ne $hub.AzureFirewall) {
@@ -2072,7 +2084,7 @@ function Export-SubnetConfig {
                     
                     #GW DOT
                     if ($subnet.IpConfigurations.Id) { 
-                        $gwid = $subnet.IpConfigurations.Id.split("/ipConfigurations/vnetGatewayConfig")[0].replace("-", "").replace("/", "").replace(".", "").ToLower()
+                        $gwid = $subnet.IpConfigurations.Id.split("/ipConfigurations/")[0].replace("-", "").replace("/", "").replace(".", "").ToLower()
                         $gwname = $subnet.IpConfigurations.Id.split("/")[8].ToLower()
                         $gwrg = $subnet.IpConfigurations.Id.split("/")[4].ToLower()
                         $data += Export-VirtualGateway -GatewayName $gwname -ResourceGroupName $gwrg -GatewayId $gwid -HeadId $id
@@ -2623,15 +2635,17 @@ function Export-VPNConnection {
     $lgwconnectionname = $name
     $lgconnectionType = $connection.ConnectionType
 
+    # VPN GW 1
     if ($connection.VirtualNetworkGateway1) {
         $lgwname = $connection.VirtualNetworkGateway1.id.split("/")[-1]
         $vpngwid = $connection.VirtualNetworkGateway1.id.replace("-", "").replace("/", "").replace(".", "").replace("`"", "").ToLower()
         $data = "    $vpngwid [color = lightgrey;label = `"\n\nLocal GW: $(SanitizeString $lgwname)\nConnection Name: $(SanitizeString $lgwconnectionname)\nConnection Type: $lgconnectionType\n`""
         $lgwid = 0
     }
-    else {
-        $vpngwid = 0
+    #else {
+    #    $vpngwid = 0
 
+        # LGW set - S2S
         if ($connection.LocalNetworkGateway2) {
             $lgwid = $connection.LocalNetworkGateway2.id.replace("-", "").replace("/", "").replace(".", "").replace("`"", "").ToLower()
             $lgwname = $connection.LocalNetworkGateway2.id.split("/")[-1]
@@ -2645,6 +2659,7 @@ function Export-VPNConnection {
                 $lgwsubnets += "$prefix \n"
             }
         }
+        #Vnet-Vnet
         elseif ($connection.VirtualNetworkGateway2) {
             $lgwid = $connection.VirtualNetworkGateway2.id.replace("-", "").replace("/", "").replace("`"", "").ToLower()
             $lgwname = $connection.VirtualNetworkGateway2.id.split("/")[-1]
@@ -2652,19 +2667,23 @@ function Export-VPNConnection {
         else {
             $lgwid = 0
         }
-        $data = "    $lgwid [color = lightgrey;label = `"\n\nGateway: $(SanitizeString $lgwname)\nConnection Name: $(SanitizeString $lgwconnectionname)\nConnection Type: $lgconnectionType\n`""
+
+        $data = "    $lgwid [color = lightgrey;label = `"\n\nGateway: $(SanitizeString $lgwname)\nConnection Name: $(SanitizeString $lgwconnectionname)\nConnection Type: $lgconnectionType\n"
+
         if ($connection.LocalNetworkGateway2) {
-            $data += "Peer IP:$(SanitizeString $lgwip)\n\nStatic remote subnet(s):\n$lgwsubnets`";"
+            $data += "Peer IP:$(SanitizeString $lgwip)\n\nStatic remote subnet(s):\n$(SanitizeString $($lgwsubnets -join "\n"))`""
         }
-    }
+    #}
 
     #DOT
     $data += ";image = `"$OutputPath\icons\VPN-Site.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];"
 
+    # Peer
     if ($connection.Peer -and $vpngwid -ne 0) {
         $peerid = $connection.Peer.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
         $data += "`n    $vpngwid -> $peerid`n"
     }
+    # VPN
     elseif ($lgwid -ne 0 -and $vpngwid -ne 0) {
         $data += "`n    $vpngwid -> $lgwid`n"
     }
