@@ -2060,7 +2060,7 @@ function Export-SubnetConfig {
                         $data += "        $id [label = `"\n\n$name\n$AddressPrefix`" ; color = lightgray; image = `"$OutputPath\icons\afw.png`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; " 
 
                         $data += Export-AzureFirewall -FirewallId $AzFWid -ResourceGroupName $AzFWrg
-                        $AzFWDotId = $AzFWid.replace("- ", "").replace("/", "").replace(".", "").ToLower()
+                        $AzFWDotId = $AzFWid.replace("-", "").replace("/", "").replace(".", "").ToLower()
                         $data += "`n    $id -> $azFWDotId"
                     }
                 }
@@ -2156,7 +2156,7 @@ function Export-SubnetConfig {
                     }
                 }   
                 $data += "        $NATGWID [color = lightgrey; label = `"\n\nName: $(SanitizeString $name)\n\nPublic IP(s):\n$ipsstring\nPublic IP Prefix(es):\n$ipprefixesstring`"; image = `"$OutputPath\icons\ng.png`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; "
-                $data += "        $id - > $NATGWID" + "`n"
+                $data += "        $id -> $NATGWID" + "`n"
 
             }
         }
@@ -2671,7 +2671,7 @@ function Export-VPNConnection {
         $data = "    $lgwid [color = lightgrey;label = `"\n\nGateway: $(SanitizeString $lgwname)\nConnection Name: $(SanitizeString $lgwconnectionname)\nConnection Type: $lgconnectionType\n"
 
         if ($connection.LocalNetworkGateway2) {
-            $data += "Peer IP:$(SanitizeString $lgwip)\n\nStatic remote subnet(s):\n$(SanitizeString $($lgwsubnets -join "\n"))`""
+            $data += "Peer IP:$(SanitizeString $lgwip)\n\nStatic remote subnet(s):\n$(($lgwsubnets | ForEach-Object {SanitizeString $_}) -join ",")`""
         }
     #}
 
