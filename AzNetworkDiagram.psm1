@@ -262,6 +262,8 @@ function Export-dotFooterRanking {
     Export-AddToFile "    { rank=min; $($script:rankvnetaddressspaces -join '; ') }`n "
     Export-AddToFile -Data "`n    ### Subnets ranks"
     Export-AddToFile "    { rank=same; $($script:ranksubnets -join '; ') }`n "
+    Export-AddToFile -Data "`n    ### Virtual Network Gateways ranks"
+    Export-AddToFile "    { rank=same; $($script:rankvgws -join '; ') }`n "
     Export-AddToFile -Data "`n    ### Route table ranks"
     Export-AddToFile "    { rank=same; $($script:rankrts -join '; ') }`n "
     Export-AddToFile -Data "`n    ### vWAN ranks"
@@ -1946,6 +1948,8 @@ function Export-VirtualGateway {
     $gw = Get-AzVirtualNetworkGateway -ResourceGroupName $ResourceGroupName -ResourceName $GatewayName -ErrorAction Stop
     $gwtype = $gw.Gatewaytype
 
+    $script:rankvgws += $GatewayId
+
     # ER vs VPN GWs are handled differently
     if ($gwtype -eq "Vpn" ) {
         $gwipobjetcs = $gw.IpConfigurations.PublicIpAddress
@@ -2083,11 +2087,13 @@ function Export-SubnetConfig {
                     $data += "`n"
                     
                     #GW DOT
-                    if ($subnet.IpConfigurations.Id) { 
-                        $gwid = $subnet.IpConfigurations.Id.split("/ipConfigurations/")[0].replace("-", "").replace("/", "").replace(".", "").ToLower()
-                        $gwname = $subnet.IpConfigurations.Id.split("/")[8].ToLower()
-                        $gwrg = $subnet.IpConfigurations.Id.split("/")[4].ToLower()
-                        $data += Export-VirtualGateway -GatewayName $gwname -ResourceGroupName $gwrg -GatewayId $gwid -HeadId $id
+                    if ($subnet.IpConfigurations.Id) {
+                        foreach ($subnet in $subnet.IpConfigurations.Id) {
+                            $gwid = $subnet.split("/ipConfigurations/")[0].replace("-", "").replace("/", "").replace(".", "").ToLower()
+                            $gwname = $subnet.split("/")[8].ToLower()
+                            $gwrg = $subnet.split("/")[4].ToLower()
+                            $data += Export-VirtualGateway -GatewayName $gwname -ResourceGroupName $gwrg -GatewayId $gwid -HeadId $id
+                        }
                     }
                 }
                 default { 
@@ -2616,18 +2622,18 @@ function Export-IpGroup {
 Exports details of a VPN connection and its associated gateways.
 
 .DESCRIPTION
-The `Export-VPNConnection` function processes a specified VPN connection object, retrieves details about the associated virtual network gateway or local network gateway, and formats the data for inclusion in a network diagram. It visualizes the connection type, peer information, and static remote subnets if applicable.
+The `Export-Connection` function processes a specified VPN/ER connection object, retrieves details about the associated virtual network gateway or local network gateway, and formats the data for inclusion in a network diagram. It visualizes the connection type, peer information, and static remote subnets if applicable.
 
 .PARAMETER connection
-Specifies the VPN connection object to be processed.
+Specifies the VPN/ER connection object to be processed.
 
 .EXAMPLE
-PS> Export-VPNConnection -connection $vpnConnection
+PS> Export-Connection -connection $vpnConnection
 
 This example processes the specified VPN connection and exports its details for inclusion in a network diagram.
 
 #>
-function Export-VPNConnection {
+function Export-Connection {
     [CmdletBinding()]
     param ([PSCustomObject[]]$connection)
 
@@ -2635,55 +2641,59 @@ function Export-VPNConnection {
     $lgwconnectionname = $name
     $lgconnectionType = $connection.ConnectionType
 
-    # VPN GW 1
+    ### Logic description
+    # VirtualNetworkGateway1 - always set
+    # VirtualNetworkGateway2 - if set = VNET2VNET
+    # $connection.LocalNetworkGateway2 - if set = Site2Site VPN
+    # $connection.Peer - if set = ER Circuit connection
+
+    if ($connection.VirtualNetworkGateway2) { $VNET2VNET=$true }
+    if ($connection.LocalNetworkGateway2) { $S2S=$true }
+    if ($connection.Peer) { $ER=true }
+
+    # VPN GW 1, connection source endpoint, always set - Not added to DOT, as it is defined in VNet definition
     if ($connection.VirtualNetworkGateway1) {
         $lgwname = $connection.VirtualNetworkGateway1.id.split("/")[-1]
         $vpngwid = $connection.VirtualNetworkGateway1.id.replace("-", "").replace("/", "").replace(".", "").replace("`"", "").ToLower()
-        $data = "    $vpngwid [color = lightgrey;label = `"\n\nLocal GW: $(SanitizeString $lgwname)\nConnection Name: $(SanitizeString $lgwconnectionname)\nConnection Type: $lgconnectionType\n`""
+        #$data = "    $vpngwid [color = lightgrey;label = `"\n\nLocal GW: $(SanitizeString $lgwname)\nConnection Name: $(SanitizeString $lgwconnectionname)\nConnection Type: $lgconnectionType\n`""
         $lgwid = 0
     }
-    #else {
-    #    $vpngwid = 0
-
-        # LGW set - S2S
-        if ($connection.LocalNetworkGateway2) {
-            $lgwid = $connection.LocalNetworkGateway2.id.replace("-", "").replace("/", "").replace(".", "").replace("`"", "").ToLower()
-            $lgwname = $connection.LocalNetworkGateway2.id.split("/")[-1]
-            $lgwrg = $connection.LocalNetworkGateway2.id.split("/")[4]
-            $lgwobject = (Get-AzLocalNetworkGateway -ResourceGroupName $lgwrg -name $lgwname -ErrorAction Stop)
-            $lgwip = $lgwobject.GatewayIpAddress
-            $lgwsubnetsarray = $lgwobject.addressSpaceText | ConvertFrom-Json
-            $lgwsubnets = ""
-            $lgwsubnetsarray.AddressPrefixes | ForEach-Object {
-                $prefix = SanitizeString $_
-                $lgwsubnets += "$prefix \n"
-            }
+    else {
+        $vpngwid = 0
+    }
+    
+    # LGW set - S2S
+    if ($S2S) {
+        $lgwid = $connection.LocalNetworkGateway2.id.replace("-", "").replace("/", "").replace(".", "").replace("`"", "").ToLower()
+        $lgwname = $connection.LocalNetworkGateway2.id.split("/")[-1]
+        $lgwrg = $connection.LocalNetworkGateway2.id.split("/")[4]
+        $lgwobject = (Get-AzLocalNetworkGateway -ResourceGroupName $lgwrg -name $lgwname -ErrorAction Stop)
+        $lgwip = $lgwobject.GatewayIpAddress
+        $lgwsubnetsarray = $lgwobject.addressSpaceText | ConvertFrom-Json
+        $lgwsubnets = ""
+        $lgwsubnetsarray.AddressPrefixes | ForEach-Object {
+            $prefix = SanitizeString $_
+            $lgwsubnets += "$prefix \n"
         }
-        #Vnet-Vnet
-        elseif ($connection.VirtualNetworkGateway2) {
-            $lgwid = $connection.VirtualNetworkGateway2.id.replace("-", "").replace("/", "").replace("`"", "").ToLower()
-            $lgwname = $connection.VirtualNetworkGateway2.id.split("/")[-1]
-        }
-        else {
-            $lgwid = 0
-        }
-
         $data = "    $lgwid [color = lightgrey;label = `"\n\nGateway: $(SanitizeString $lgwname)\nConnection Name: $(SanitizeString $lgwconnectionname)\nConnection Type: $lgconnectionType\n"
-
-        if ($connection.LocalNetworkGateway2) {
-            $data += "Peer IP:$(SanitizeString $lgwip)\n\nStatic remote subnet(s):\n$(($lgwsubnets | ForEach-Object {SanitizeString $_}) -join ",")`""
-        }
-    #}
-
-    #DOT
-    $data += ";image = `"$OutputPath\icons\VPN-Site.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];"
-
-    # Peer
-    if ($connection.Peer -and $vpngwid -ne 0) {
+        $data += "Peer IP:$(SanitizeString $lgwip)\n\nStatic remote subnet(s):\n$(($lgwsubnets | ForEach-Object {SanitizeString $_}) -join ",")"
+        $data += "`";image = `"$OutputPath\icons\VPN-Site.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];"
+    } 
+    elseif ($VNET2VNET) {
+        $lgwid = $connection.VirtualNetworkGateway2.id.replace("-", "").replace("/", "").replace("`"", "").replace(".", "").ToLower()
+        $lgwname = $connection.VirtualNetworkGateway2.id.split("/")[-1]
+    }
+    else {
+        #ER
+        $lgwid = 0
+    }
+  
+    # ER (Peer set = ER Circuit - circuit defined seperately)
+    if ($ER -and $vpngwid -ne 0) {
         $peerid = $connection.Peer.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
         $data += "`n    $vpngwid -> $peerid`n"
     }
-    # VPN
+    # VPN or VNet2VNet
     elseif ($lgwid -ne 0 -and $vpngwid -ne 0) {
         $data += "`n    $vpngwid -> $lgwid`n"
     }
@@ -2913,6 +2923,7 @@ function Get-AzNetworkDiagram {
     #Rank (visual) in diagram
     $script:rankrts = @()
     $script:ranksubnets = @()
+    $script:rankvgws = @()
     $script:rankvnetaddressspaces = @()
     $script:rankvwans = @()
     $script:rankvwanhubs = @()
@@ -3020,15 +3031,15 @@ function Get-AzNetworkDiagram {
             }
 
             #VPN Connections
-            Write-Output "Collecting VPN Connections..."
-            Export-AddToFile "    ##### $subname - VPN Connections #####"
+            Write-Output "Collecting VPN/ER Connections..."
+            Export-AddToFile "    ##### $subname - VPN/ER Connections #####"
             $VPNConnections = Get-AzResource | Where-Object { $_.ResourceType -eq "Microsoft.Network/connections" }
             $VPNConnections | ForEach-Object {
                 $connection = $_
                 $resname = $connection.Name
                 $rgname = $connection.ResourceGroupName
                 $connection = Get-AzVirtualNetworkGatewayConnection -name $resname -ResourceGroupName $rgname -ErrorAction Stop
-                Export-VPNConnection $connection
+                Export-Connection $connection
             }
 
             #Express Route Circuits
