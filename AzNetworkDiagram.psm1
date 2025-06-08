@@ -2116,7 +2116,7 @@ function Export-SubnetConfig {
                     }
                     else {
                         # No Delegation
-                        $data = $data + "        $id [label = `"\n$(SanitizeString $name)\n$AddressPrefix`" ; color = lightgray; image = `"$OutputPath\icons\snet.png`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; " 
+                        $data = $data + "        $id [label = `"\n\n$(SanitizeString $name)\n$AddressPrefix`" ; color = lightgray; image = `"$OutputPath\icons\snet.png`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; " 
                     }
                     $data += "`n"
                     foreach ($pe in $subnet.PrivateEndpoints) {
