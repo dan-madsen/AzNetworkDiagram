@@ -3279,7 +3279,7 @@ function Get-AzNetworkDiagram {
         $OutputFileName += $Prefix + "-"
     }
     $OutputFileName += "AzNetworkDiagram"
-    Write-Output "Generating $OutputFileName.pdf ..."
+    Write-Output "`nGenerating $OutputFileName.pdf ..."
     dot -q1 -Tpdf $OutputPath\AzNetworkDiagram.dot -o "$OutputFileName.pdf"
     Write-Output "Generating $OutputFileName.png ..."
     dot -q1 -Tpng $OutputPath\AzNetworkDiagram.dot -o "$OutputFileName.png"
