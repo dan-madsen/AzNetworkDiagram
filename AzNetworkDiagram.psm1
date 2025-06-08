@@ -2676,7 +2676,7 @@ function Export-Connection {
             $lgwsubnets += "$prefix \n"
         }
         $data = "    $lgwid [color = lightgrey;label = `"\n\nGateway: $(SanitizeString $lgwname)\nConnection Name: $(SanitizeString $lgwconnectionname)\nConnection Type: $lgconnectionType\n"
-        $data += "Peer IP:$(SanitizeString $lgwip)\n\nStatic remote subnet(s):\n$(($lgwsubnets | ForEach-Object {SanitizeString $_}) -join ",")"
+        $data += "Peer IP:$(SanitizeString $lgwip)\n\nStatic remote subnet(s):\n$lgwsubnets"
         $data += "`";image = `"$OutputPath\icons\VPN-Site.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];"
     } 
     elseif ($VNET2VNET) {
