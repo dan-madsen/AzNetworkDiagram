@@ -2649,7 +2649,7 @@ function Export-Connection {
 
     if ($connection.VirtualNetworkGateway2) { $VNET2VNET=$true }
     if ($connection.LocalNetworkGateway2) { $S2S=$true }
-    if ($connection.Peer) { $ER=true }
+    if ($connection.Peer) { $ER=$true }
 
     # VPN GW 1, connection source endpoint, always set - Not added to DOT, as it is defined in VNet definition
     if ($connection.VirtualNetworkGateway1) {
