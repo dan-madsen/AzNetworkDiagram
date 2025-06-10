@@ -1791,12 +1791,11 @@ function Export-Hub {
         # Hub details
         $data = "
             # $Name - $id
-            subgraph cluster_$headid {
+            subgraph cluster_$id {
                 style = solid;
                 color = black;
                 node [color = white;];
             "
-
 
         # Find out the Hub's own vNet
         if ($null -ne $hub.VirtualNetworkConnections) {
