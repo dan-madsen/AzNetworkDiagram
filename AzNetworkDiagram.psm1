@@ -2411,7 +2411,7 @@ function Export-ExpressRouteCircuit {
             $erportdata += "
                             $linkid [shape = none;label = <
                                 <TABLE border=`"1`" style=`"rounded`" align=`"left`">
-                                <tr><td colspan=`"2`" border=`"0`">$linkname</td></tr>
+                                <tr><td colspan=`"2`" border=`"0`"><b>$linkname</b><hr/></td></tr>
                                 <tr><td>Router Name</td><td>$($link.RouterName)</td></tr>
                                 <tr><td>Interface Name</td><td>$($link.InterfaceName)</td></tr>
                                 <tr><td>Patch Panel Id</td><td>$($link.PatchPanelId)</td></tr>
