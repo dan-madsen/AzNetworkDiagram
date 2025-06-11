@@ -2535,6 +2535,7 @@ function Export-RouteTable {
             style = solid;
             color = black;
             
+            $id [image = `"$OutputPath\icons\RouteTable.png`";imagepos = `"tc`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];
             $id [label = <
                 <TABLE border=`"0`" style=`"rounded`">
                 <TR><TD colspan=`"3`" border=`"0`"><B>$routetableName</B></TD></TR>
@@ -2846,7 +2847,7 @@ function Confirm-Prerequisites {
         "private-endpoint.png",
         #"privatednszone.png",
         "redis.png",
-        #"RouteTable.png", #Table-only output
+        "RouteTable.png",
         #"rsv.png",
         "snet.png",
         "sqldb.png",
