@@ -2472,7 +2472,7 @@ function Export-ExpressRouteCircuit {
         $PrimaryPeerAddressPrefix = SanitizeString $peering.PrimaryPeerAddressPrefix
         $SecondaryPeerAddressPrefix = SanitizeString $peering.SecondaryPeerAddressPrefix
         #$VlanId = SanitizeString $peering.VlanId
-        $VlanId = SanitizeString (Get-AzExpressRouteCircuit $er | Get-AzExpressRouteCircuitPeeringConfig).VlanId
+        $VlanId = SanitizeString ($er | Get-AzExpressRouteCircuitPeeringConfig).VlanId
 
         # DOT
         $PeeringData = $PeeringData + "
