@@ -1,5 +1,6 @@
 #Requires -Version 7.0
 #Requires -Modules Az.Accounts, Az.Network, Az.Compute, Az.KeyVault, Az.Storage, Az.MySql, Az.PostgreSql, Az.CosmosDB, Az.RedisCache, Az.Sql, Az.EventHub, Az.Websites, Az.ApiManagement, Az.ContainerRegistry, Az.ManagedServiceIdentity, Az.Resources)
+#Fixed
 <#
   .SYNOPSIS
   Creates a Network Diagram of your Azure networking infrastructure.
@@ -2386,7 +2387,7 @@ function Export-ExpressRouteCircuit {
         $Peeringlocation = SanitizeLocation $erport.PeeringLocation
         $Bandwidth = $erport.ProvisionedBandwidthInGbps.ToString() + " Gbps"
         $BillingType = $erport.BillingType
-        $Encapsulation = $er.Encapsulation
+        $Encapsulation = $erport.Encapsulation
         $Location = SanitizeLocation $erport.Location
 
         $erportdata = "
@@ -2410,14 +2411,15 @@ function Export-ExpressRouteCircuit {
 
             $erportdata += "
                             $linkid [shape = none;label = <
-                                <TABLE border=`"1`" style=`"rounded`" align=`"left`">
-                                <tr><td colspan=`"2`" border=`"0`"><b>$linkname</b><hr/></td></tr>
-                                <tr><td>Router Name</td><td>$($link.RouterName)</td></tr>
-                                <tr><td>Interface Name</td><td>$($link.InterfaceName)</td></tr>
-                                <tr><td>Patch Panel Id</td><td>$($link.PatchPanelId)</td></tr>
-                                <tr><td>Rack Id</td><td>$($link.RackId)</td></tr>
-                                <tr><td>Connector Type</td><td>$($link.ConnectorType)</td></tr>
-                                <tr><td>MACSEC</td><td>$macsec</td></tr>
+                                <TABLE border=`"0`" style=`"rounded`">
+                                <TR><TD colspan=`"2`" border=`"0`"><B>$linkname</B></TD></TR>
+                                <HR/><TR><TD align=`"left`">Router Name</TD><TD align=`"left`">$($link.RouterName)</TD></TR>
+                                <TR><TD align=`"left`">Interface Name</TD><TD align=`"left`">$($link.InterfaceName)</TD></TR>
+                                <TR><TD align=`"left`">Patch Panel Id</TD><TD align=`"left`">$($link.PatchPanelId)</TD></TR>
+                                <TR><TD align=`"left`">Rack Id</TD><TD align=`"left`">$($link.RackId)</TD></TR>
+                                <TR><TD align=`"left`">Connector Type</TD><TD align=`"left`">$($link.ConnectorType)</TD></TR>
+                                <TR><TD align=`"left`">Encapsulation</TD><TD align=`"left`">$Encapsulation</TD></TR>
+                                <TR><TD align=`"left`">MACSEC</TD><TD align=`"left`">$macsec</TD></TR>
                                 </TABLE>>;
                                 ];
                             $erportid -> $linkid;
@@ -2444,13 +2446,12 @@ function Export-ExpressRouteCircuit {
         $id [label = `"\nName: $ername\nLocation: $Location`" ; color = lightgray;image = `"$OutputPath\icons\ercircuit.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.5;];
         $id [shape = none;label = <
             <TABLE border=`"1`" style=`"rounded`">
-            <tr><td>SKU Tier</td><td>$skuTier</td></tr>
-            <tr><td>SKU Family</td><td>$skuFamily</td></tr>
-            <tr><td>Billing Type</td><td>$BillingType</td></tr>
-            <tr><td>Provider</td><td>$ServiceProviderName</td></tr>
-            <tr><td>Location</td><td>$Peeringlocation</td></tr>
-            <tr><td>Bandwidth</td><td>$Bandwidth</td></tr>
-            <tr><td>Encapsulation</td><td>$Encapsulation</td></tr>
+            <TR><TD>SKU Tier</TD><TD>$skuTier</TD></TR>
+            <TR><TD>SKU Family</TD><TD>$skuFamily</TD></TR>
+            <TR><TD>Billing Type</TD><TD>$BillingType</TD></TR>
+            <TR><TD>Provider</TD><TD>$ServiceProviderName</TD></TR>
+            <TR><TD>Location</TD><TD>$Peeringlocation</TD></TR>
+            <TR><TD>Bandwidth</TD><TD>$Bandwidth</TD></TR>
     "
     $script:rankercircuits += $id
     # End table
@@ -2485,10 +2486,10 @@ function Export-ExpressRouteCircuit {
                 $peeringId [label = `"\n$peeringName`" ; color = lightgray;image = `"$OutputPath\icons\peerings.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];
                 $peeringId [shape = none;label = <
                     <TABLE border=`"1`" style=`"rounded`" align=`"left`">
-                    <tr><td>Peering Type</td><td COLSPAN=`"2`">$peeringType</td></tr>
-                    <tr><td>Address Prefixes</td><td>$PrimaryPeerAddressPrefix</td><td>$SecondaryPeerAddressPrefix</td></tr>
-                    <tr><td>ASN Azure/Peer</td><td>$AzureASN</td><td>$PeerASN</td></tr>
-                    <tr><td>VlanId</td><td colspan=`"2`">$VlanId</td></tr>
+                    <TR><TD>Peering Type</TD><TD COLSPAN=`"2`">$peeringType</TD></TR>
+                    <TR><TD>Address Prefixes</TD><TD>$PrimaryPeerAddressPrefix</TD><TD>$SecondaryPeerAddressPrefix</TD></TR>
+                    <TR><TD>ASN Azure/Peer</TD><TD>$AzureASN</TD><TD>$PeerASN</TD></TR>
+                    <TR><TD>VlanId</TD><TD colspan=`"2`">$VlanId</TD></TR>
                     </TABLE>>;
                     ];
 
@@ -2535,7 +2536,6 @@ function Export-RouteTable {
             style = solid;
             color = black;
             
-            $id [image = `"$OutputPath\icons\RouteTable.png`";imagepos = `"tc`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];
             $id [label = <
                 <TABLE border=`"0`" style=`"rounded`">
                 <TR><TD colspan=`"3`" border=`"0`"><B>$routetableName</B></TD></TR>
@@ -2563,7 +2563,7 @@ function Export-RouteTable {
         # End table
         $footer = "
                 </TABLE>>;
-                ];
+                image = `"$OutputPath\icons\RouteTable.png`";imagepos = `"tc`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];
         }
                 "
         $alldata = $header + $data + $footer
