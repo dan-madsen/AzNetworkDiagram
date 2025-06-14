@@ -2102,7 +2102,7 @@ function Export-SubnetConfig {
                         # Delegated
                         $iconname = ""
                         switch ($subnetDelegationName) {
-                            "Microsoft.Web/serverFarms" { $iconname = "asp" }
+                            "Microsoft.Web/serverFarms" { $iconname = "appplan" }
                             "Microsoft.Sql/managedInstances" { $iconname = "sqlmi" } 
                             "Microsoft.Network/dnsResolvers" { $iconname = "dnspr" }
                             Default { $iconname = "snet" }
@@ -2953,6 +2953,11 @@ function Get-AzNetworkDiagram {
     Write-Output "Gathering information ..."
     Update-AzConfig -DisplaySecretsWarning $false -Scope process | Out-Null
     Update-AzConfig -DisplayBreakingChangeWarning $false -Scope process | Out-Null
+
+    # No subscriptions available?
+    if ( $null -eq $Subscriptions ) {
+        throw  "No available subscriptions within active AzContext - missing permissions?"
+    }
 
     try {
         # Collect all vNet ID's in scope otherwise we can end up with 1 vNet peered to 1000 other vNets which are not in scope
