@@ -692,8 +692,8 @@ function Export-ComputeGallery {
             node [color = white;];
 
             $id [label = `"\nName: $Name\nLocation: $Location\nSharing Profile: $sharing`" ; color = lightgray;image = `"$OutputPath\icons\computegalleries.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n"
+        
         # Get all image definitions in the gallery
-
         $imageDefinitions = Get-AzGalleryImageDefinition -ResourceGroupName $computeGallery.ResourceGroupName -GalleryName $computeGallery.Name -ErrorAction Stop
         foreach ($imageDef in $imageDefinitions) {
             # Get all image versions for the image definition
@@ -701,7 +701,6 @@ function Export-ComputeGallery {
             $versions = $imageVersions | Select-Object @{Name = "Version"; Expression = { $_.Name } }, @{Name = "TargetRegions"; Expression = { $_.PublishingProfile.TargetRegions.Name -join ", " } } | Format-Table -AutoSize | Out-String
 
             $imageDefId = $imageDef.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-            #$data += "        $imageDefId [label = < \n\nName: $($imageDef.Name)\nOS Type: $($imageDef.OsType)\nOS State: $($imageDef.OsState)\nVM Generation: $($imageDef.HyperVGeneration)\n$versions\n 
             $data += "        $imageDefId [label = < 
                                         <TABLE border=`"0`" style=`"rounded`">
                                         <TR><TD align=`"left`">Name</TD><TD align=`"left`">$($imageDef.Name)</TD></TR>
@@ -2042,7 +2041,6 @@ function Export-SubnetConfig {
             $routetableid = $subnet.RouteTableText.ToLower()
             if ($routetableid -ne "null" ) { $routetableid = (($subnet.RouteTableText | ConvertFrom-Json).id).replace("-", "").replace("/", "").replace(".", "").ToLower() }
             if ($routetableid -ne "null" ) { $data += "        $id -> $routetableid" + "`n" }
-            # Moved route table association from just before NATGW
 
             ### Private subnet - ie. no default outbound internet access ###
             $subnetDefaultOutBoundAccess = $subnet.DefaultOutboundAccess #(false if activated)
@@ -2098,13 +2096,10 @@ function Export-SubnetConfig {
                 }
                 default { 
                     ##### Subnet delegations #####
-                    # Might be moved to subnet switch "default" ??? 
-                    # Just change the icon, or maybe a line with "Delegation info" ?
                     $subnetDelegationName = $subnet.Delegations.Name
                     
                     if ( $null -ne $subnetDelegationName ) {
                         # Delegated
-
                         $iconname = ""
                         switch ($subnetDelegationName) {
                             "Microsoft.Web/serverFarms" { $iconname = "asp" }
@@ -2473,7 +2468,6 @@ function Export-ExpressRouteCircuit {
         $PrimaryPeerAddressPrefix = SanitizeString $peering.PrimaryPeerAddressPrefix
         $SecondaryPeerAddressPrefix = SanitizeString $peering.SecondaryPeerAddressPrefix
         $VlanId = SanitizeString $peering.VlanId
-        #$VlanId = SanitizeString ($er | Get-AzExpressRouteCircuitPeeringConfig).VlanId
 
         # DOT
         $PeeringData = $PeeringData + "
@@ -2781,6 +2775,7 @@ function Confirm-Prerequisites {
     }
     
     # Load Powershell modules
+    # This block is probably not neccesary anymore, as all modules are stated as required
     try {
         import-module az.network -DisableNameChecking
         import-module az.accounts
@@ -2862,9 +2857,9 @@ function Confirm-Prerequisites {
         "vgw.png",
         "vm.png",
         "vmss.png",
+        "vnet.png",
         "VPN-Site.png",
-        #"VPN-User.png",
-        "vnet.png"
+        "VPN-User.png"
     )
     
     $icons | ForEach-Object {
