@@ -1,5 +1,6 @@
 #Requires -Version 7.0
 #Requires -Modules Az.Accounts, Az.Network, Az.Compute, Az.KeyVault, Az.Storage, Az.MySql, Az.PostgreSql, Az.CosmosDB, Az.RedisCache, Az.Sql, Az.EventHub, Az.Websites, Az.ApiManagement, Az.ContainerRegistry, Az.ManagedServiceIdentity, Az.Resources)
+
 <#
   .SYNOPSIS
   Creates a Network Diagram of your Azure networking infrastructure.
@@ -262,6 +263,8 @@ function Export-dotFooterRanking {
     Export-AddToFile "    { rank=min; $($script:rankvnetaddressspaces -join '; ') }`n "
     Export-AddToFile -Data "`n    ### Subnets ranks"
     Export-AddToFile "    { rank=same; $($script:ranksubnets -join '; ') }`n "
+    Export-AddToFile -Data "`n    ### Virtual Network Gateways ranks"
+    Export-AddToFile "    { rank=same; $($script:rankvgws -join '; ') }`n "
     Export-AddToFile -Data "`n    ### Route table ranks"
     Export-AddToFile "    { rank=same; $($script:rankrts -join '; ') }`n "
     Export-AddToFile -Data "`n    ### vWAN ranks"
@@ -689,8 +692,8 @@ function Export-ComputeGallery {
             node [color = white;];
 
             $id [label = `"\nName: $Name\nLocation: $Location\nSharing Profile: $sharing`" ; color = lightgray;image = `"$OutputPath\icons\computegalleries.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n"
+        
         # Get all image definitions in the gallery
-
         $imageDefinitions = Get-AzGalleryImageDefinition -ResourceGroupName $computeGallery.ResourceGroupName -GalleryName $computeGallery.Name -ErrorAction Stop
         foreach ($imageDef in $imageDefinitions) {
             # Get all image versions for the image definition
@@ -698,7 +701,6 @@ function Export-ComputeGallery {
             $versions = $imageVersions | Select-Object @{Name = "Version"; Expression = { $_.Name } }, @{Name = "TargetRegions"; Expression = { $_.PublishingProfile.TargetRegions.Name -join ", " } } | Format-Table -AutoSize | Out-String
 
             $imageDefId = $imageDef.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-            #$data += "        $imageDefId [label = < \n\nName: $($imageDef.Name)\nOS Type: $($imageDef.OsType)\nOS State: $($imageDef.OsState)\nVM Generation: $($imageDef.HyperVGeneration)\n$versions\n 
             $data += "        $imageDefId [label = < 
                                         <TABLE border=`"0`" style=`"rounded`">
                                         <TR><TD align=`"left`">Name</TD><TD align=`"left`">$($imageDef.Name)</TD></TR>
@@ -1775,6 +1777,7 @@ function Export-Hub {
         [PSCustomObject[]]$hub
     )
     $hubname = $hub.Name
+    $hubrgname = $hub.ResourceGroupName
     $Name = SanitizeString $hubname
     $id = $hub.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
     $location = SanitizeLocation $hub.Location
@@ -1783,9 +1786,16 @@ function Export-Hub {
     $HubRoutingPreference = $hub.HubRoutingPreference
 
     try {
-        Write-Host "Exporting Hub: $hubname"
+        Write-Host "Exporting vWAN Hub: $hubname"
         # DOT
         # Hub details
+        $data = "
+            # $Name - $id
+            subgraph cluster_$id {
+                style = solid;
+                color = black;
+                node [color = white;];
+            "
 
         # Find out the Hub's own vNet
         if ($null -ne $hub.VirtualNetworkConnections) {
@@ -1795,13 +1805,7 @@ function Export-Hub {
             $HubvNetID = $vnet.VirtualNetworkPeerings.RemoteVirtualNetwork.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
             $headid = $HubvNetID
             $script:AllInScopevNetIds += $vnet.VirtualNetworkPeerings.RemoteVirtualNetwork.id
-            $data = "
-            # $Name - $id
-            subgraph cluster_$headid {
-                style = solid;
-                color = black;
-                node [color = white;];
-            "
+
             $data += "        $HubvNetID [label = `"\n\n$Name\nLocation: $location\nSKU: $sku\nAddress Prefix: $(SanitizeString $AddressPrefix)\nHub Routing Preference: $HubRoutingPreference`" ; color = lightgray;image = `"$OutputPath\icons\vWAN-Hub.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
         }
         else {
@@ -1811,13 +1815,14 @@ function Export-Hub {
         $script:rankvwanhubs += $headid
 
         # Hub Items
-
         if ($null -ne $hub.VpnGateway) {
             $vgwId = $hub.VpnGateway.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
             $vgwName = $hub.VpnGateway.id.split("/")[-1]
+            $vgwNameShort = $vgwName.split("-")[1, 2, 3] -join ("-")
             $vpngw = Get-AzVpnGateway -ResourceGroupName $hub.ResourceGroupName -Name $vgwName -ErrorAction Stop
+            
             $data += "`n"
-            $data += "        $vgwId [label = `"\n\n$(SanitizeString $vgwName)\nScale Units: $($vpngw.VpnGatewayScaleUnit)\nPublic IP(s):\n$(($vpngw.IpConfigurations.PublicIpAddress | ForEach-Object {SanitizeString $_}) -join ",")\n`" ; color = lightgray;image = `"$OutputPath\icons\vgw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+            $data += "        $vgwId [label = `"\n\n$(SanitizeString $vgwNameShort)\nScale Units: $($vpngw.VpnGatewayScaleUnit)\nPublic IP(s):\n$(($vpngw.IpConfigurations.PublicIpAddress | ForEach-Object {SanitizeString $_}) -join ",")\n`" ; color = lightgray;image = `"$OutputPath\icons\vgw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
             $data += "`n    $headid -> $vgwId;"
 
             # Connections
@@ -1835,12 +1840,14 @@ function Export-Hub {
                     $vpnsiteId = $siteId.replace("-", "").replace("/", "").replace(".", "").ToLower()
                     $script:rankvpnsites += $vpnsiteId
                     $vpnsiteName = SanitizeString $VpnSite.Name
+                    $peerip = $vpnSite.VpnSiteLinks.IpAddress
                     $data += "`n"
-                    $data += "        $vpnsiteId [label = `"\n\n\n$(SanitizeString $vpnsiteName)\nAddressPrefixes: $($VpnSite.AddressSpace.AddressPrefixes | ForEach-Object {SanitizeString $_})\nDevice Vendor: $($VpnSite.DeviceProperties.DeviceVendor)\nLink Speed: $($VpnSite.VpnSiteLinks.LinkProperties.LinkSpeedInMbps) Mbps\nLinks: $($VpnSite.VpnSiteLinks.count)\n`" ; color = lightgray;image = `"$OutputPath\icons\VPN-Site.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+                    $data += "        $vpnsiteId [label = `"\n\n$(SanitizeString $vpnsiteName)\nDevice Vendor: $($VpnSite.DeviceProperties.DeviceVendor)\nLink Speed: $($VpnSite.VpnSiteLinks.LinkProperties.LinkSpeedInMbps) Mbps\nLinks: $($VpnSite.VpnSiteLinks.count)\n\nPeer IP: $(SanitizeString $peerip)\nAddressPrefixes: $(($VpnSite.AddressSpace.AddressPrefixes | ForEach-Object {SanitizeString $_}) -join ",")\n`" ; color = lightgray;image = `"$OutputPath\icons\VPN-Site.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
                     $data += "`n    $vgwId -> $vpnsiteId;"
                 }
             }
         }
+
         if ($null -ne $hub.ExpressRouteGateway) {
             $ergwId = $hub.ExpressRouteGateway.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
             $ergwName = $hub.ExpressRouteGateway.id.split("/")[-1]
@@ -1857,8 +1864,24 @@ function Export-Hub {
         if ($null -ne $hub.P2SVpnGateway) {
             $p2sgwId = $hub.P2SVpnGateway.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
             $p2sgwName = $hub.P2SVpnGateway.id.split("/")[-1]
+            $p2sgwNameShort = $p2sgwName.split("-")[1, 2, 3] -join ("-")
+            $p2sgw = Get-AzP2sVpnGateway -ResourceName $p2sgwName
+            $cidr = $p2sgw.P2SConnectionConfigurations.VpnClientAddressPool.AddressPrefixes
+
+            $configname = $p2sgw.P2SConnectionConfigurations.Name
+            $configid = $p2sgw.P2SConnectionConfigurations.Id
+            
+            $vpnserverconfigs = Get-AzVpnServerConfiguration -ResourceGroupName $hubrgname
+            $vpnserverconfig = ''
+            foreach ( $config in $vpnserverconfigs ) { 
+                if ( $config.P2SVpnGateways.id -eq $p2sgw.id ) { $vpnserverconfig = $config }
+            }
+                     
+            $protocol = $vpnserverconfig.VpnProtocols
+            $auth = $vpnserverconfig.VpnAuthenticationTypes
+            
             $data += "`n"
-            $data += "        $p2sgwId [label = `"\n\n\n$(SanitizeString $p2sgwName)\n`" ; color = lightgray;image = `"$OutputPath\icons\ergw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+            $data += "        $p2sgwId [label = `"\n\n$(SanitizeString $p2sgwNameShort)\nProtocol: $protocol, Auth: $auth\nP2S Address Prefixes: $(($cidr | ForEach-Object {SanitizeString $_}) -join ", ")`" ; color = lightgray;image = `"$OutputPath\icons\VPN-User.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
             $data += "`n    $headid -> $p2sgwId;"
         }
         if ($null -ne $hub.AzureFirewall) {
@@ -1924,6 +1947,8 @@ function Export-VirtualGateway {
     $gw = Get-AzVirtualNetworkGateway -ResourceGroupName $ResourceGroupName -ResourceName $GatewayName -ErrorAction Stop
     $gwtype = $gw.Gatewaytype
 
+    $script:rankvgws += $GatewayId
+
     # ER vs VPN GWs are handled differently
     if ($gwtype -eq "Vpn" ) {
         $gwipobjetcs = $gw.IpConfigurations.PublicIpAddress
@@ -1936,13 +1961,28 @@ function Export-VirtualGateway {
         
         }
         $data += "        $GatewayId [color = lightgray;label = `"\n\nName: $(SanitizeString $GatewayName)`\n\nPublic IP(s):\n$gwips`";image = `"$OutputPath\icons\vgw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
+
+        # Get P2S conf, if configured
+        $protocol = $gw.VpnClientConfiguration.VpnClientProtocols
+        $cidr = $gw.VpnClientConfiguration.VpnClientAddressPool.AddressPrefixes
+        $auth = $gw.VpnClientConfiguration.VpnAuthenticationTypes
+        $customroutes = $gw.CustomRoutes.AddressPrefixes
+
+        if ($null -ne $auth) {
+            #P2S config present
+            $data += "        ${GatewayId}P2S [color = lightgray;label = `"\n\nProtocol: $protocol, Auth: $auth\nP2S Address Prefix: $(SanitizeString $cidr)\nCustom routes: $(($customroutes | ForEach-Object {SanitizeString $_}) -join ",")`"; image = `"$OutputPath\icons\VPN-User.png`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; "
+            $data += "        $GatewayId -> ${GatewayId}P2S"
+        } 
     }
     elseif ($gwtype -eq "ExpressRoute") {
-        $data += "        $GatewayId [color = lightgray;label = `"\nName: $(SanitizeString $GatewayName)`";image = `"$OutputPath\icons\ergw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
+        $data += "        $GatewayId [color = lightgray; label = `"\nName: $(SanitizeString $GatewayName)`"; image = `"$OutputPath\icons\ergw.png`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; "
     }
     $data += "`n"
     $data += "        $HeadId -> $GatewayId"
     $data += "`n"
+
+    return $data
+
 }
 
 <#
@@ -2001,7 +2041,6 @@ function Export-SubnetConfig {
             $routetableid = $subnet.RouteTableText.ToLower()
             if ($routetableid -ne "null" ) { $routetableid = (($subnet.RouteTableText | ConvertFrom-Json).id).replace("-", "").replace("/", "").replace(".", "").ToLower() }
             if ($routetableid -ne "null" ) { $data += "        $id -> $routetableid" + "`n" }
-            # Moved route table association from just before NATGW
 
             ### Private subnet - ie. no default outbound internet access ###
             $subnetDefaultOutBoundAccess = $subnet.DefaultOutboundAccess #(false if activated)
@@ -2020,7 +2059,7 @@ function Export-SubnetConfig {
                         $AzFWid = $subnet.IpConfigurations.Id.ToLower().split("/azurefirewallipconfigurations/ipconfig1")[0]
                         $AzFWrg = $subnet.IpConfigurations.id.split("/")[4]
 
-                        $data += "        $id [label = `"\n\n$name\n$AddressPrefix`" ; color = lightgray;image = `"$OutputPath\icons\afw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+                        $data += "        $id [label = `"\n\n$name\n$AddressPrefix`" ; color = lightgray; image = `"$OutputPath\icons\afw.png`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; " 
 
                         $data += Export-AzureFirewall -FirewallId $AzFWid -ResourceGroupName $AzFWrg
                         $AzFWDotId = $AzFWid.replace("-", "").replace("/", "").replace(".", "").ToLower()
@@ -2031,54 +2070,53 @@ function Export-SubnetConfig {
                     if ($subnet.IpConfigurations.Id) { 
                         $AzBastionName = SanitizeString $subnet.IpConfigurations.Id.split("/")[8].ToLower()
                     
-                        $data += "        $id [label = `"\n\n$name\n$AddressPrefix\nName: $AzBastionName`" ; color = lightgray;image = `"$OutputPath\icons\bas.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+                        $data += "        $id [label = `"\n\n$name\n$AddressPrefix\nName: $AzBastionName`" ; color = lightgray; image = `"$OutputPath\icons\bas.png`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; " 
                     }
                 }
                 "AppGatewaySubnet" { 
                     if ($subnet.IpConfigurations.Id) { 
                         $AppGatewayName = SanitizeString $subnet.IpConfigurations.Id.split("/")[8].ToLower()
                     
-                        $data += "        $id [label = `"\n\n$name\n$AddressPrefix\nName: $AppGatewayName`" ; color = lightgray;image = `"$OutputPath\icons\agw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+                        $data += "        $id [label = `"\n\n$name\n$AddressPrefix\nName: $AppGatewayName`" ; color = lightgray; image = `"$OutputPath\icons\agw.png`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; " 
                     }
                 }
                 "GatewaySubnet" { 
-                    $data += "        $id [label = `"\n\n$name\n$AddressPrefix`" ; color = lightgray;image = `"$OutputPath\icons\vgw.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+                    $data += "        $id [label = `"\n\n$name\n$AddressPrefix`" ; color = lightgray; image = `"$OutputPath\icons\vgw.png`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; " 
                     $data += "`n"
                     
                     #GW DOT
-                    if ($subnet.IpConfigurations.Id) { 
-                        $gwid = $subnet.IpConfigurations.Id.split("/ipConfigurations/vnetGatewayConfig")[0]
-                        $gwname = $subnet.IpConfigurations.Id.split("/")[8].ToLower()
-                        $gwrg = $subnet.IpConfigurations.Id.split("/")[4].ToLower()
-                        Export-VirtualGateway -GatewayName $gwname -ResourceGroupName $gwrg -GatewayId $gwid -HeadId $id
+                    if ($subnet.IpConfigurations.Id) {
+                        foreach ($subnet in $subnet.IpConfigurations.Id) {
+                            $gwid = $subnet.split("/ipConfigurations/")[0].replace("-", "").replace("/", "").replace(".", "").ToLower()
+                            $gwname = $subnet.split("/")[8].ToLower()
+                            $gwrg = $subnet.split("/")[4].ToLower()
+                            $data += Export-VirtualGateway -GatewayName $gwname -ResourceGroupName $gwrg -GatewayId $gwid -HeadId $id
+                        }
                     }
                 }
                 default { 
                     ##### Subnet delegations #####
-                    # Might be moved to subnet switch "default" ??? 
-                    # Just change the icon, or maybe a line with "Delegation info" ?
                     $subnetDelegationName = $subnet.Delegations.Name
                     
                     if ( $null -ne $subnetDelegationName ) {
                         # Delegated
-
                         $iconname = ""
                         switch ($subnetDelegationName) {
-                            "Microsoft.Web/serverFarms" { $iconname = "asp" }
+                            "Microsoft.Web/serverFarms" { $iconname = "appplan" }
                             "Microsoft.Sql/managedInstances" { $iconname = "sqlmi" } 
                             "Microsoft.Network/dnsResolvers" { $iconname = "dnspr" }
                             Default { $iconname = "snet" }
                         }
-                        $data = $data + "        $id [label = `"\n\n$(SanitizeString $name)\n$AddressPrefix\n\nDelegated to:\n$subnetDelegationName`" ; color = lightgray;image = `"$OutputPath\icons\$iconname.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+                        $data = $data + "        $id [label = `"\n\n$(SanitizeString $name)\n$AddressPrefix\n\nDelegated to:\n$subnetDelegationName`" ; color = lightgray; image = `"$OutputPath\icons\$iconname.png`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; " 
                     }
                     else {
                         # No Delegation
-                        $data = $data + "        $id [label = `"\n$(SanitizeString $name)\n$AddressPrefix`" ; color = lightgray;image = `"$OutputPath\icons\snet.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+                        $data = $data + "        $id [label = `"\n\n$(SanitizeString $name)\n$AddressPrefix`" ; color = lightgray; image = `"$OutputPath\icons\snet.png`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; " 
                     }
                     $data += "`n"
                     foreach ($pe in $subnet.PrivateEndpoints) {
                         $peid = $pe.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                        $data += "        $id -> $peid [label = `"Private Endpoint`"; ] ;`n"
+                        $data += "        $id -> $peid [label = `"Private Endpoint`"; ] ; `n"
                     }
                 }
             }
@@ -2118,7 +2156,7 @@ function Export-SubnetConfig {
                         $ipprefixesstring += "$ipname : $ipprefixes \n"
                     }
                 }   
-                $data += "        $NATGWID [color = lightgrey;label = `"\n\nName: $(SanitizeString $name)\n\nPublic IP(s):\n$ipsstring\nPublic IP Prefix(es):\n$ipprefixesstring`";image = `"$OutputPath\icons\ng.png`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
+                $data += "        $NATGWID [color = lightgrey; label = `"\n\nName: $(SanitizeString $name)\n\nPublic IP(s):\n$ipsstring\nPublic IP Prefix(es):\n$ipprefixesstring`"; image = `"$OutputPath\icons\ng.png`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; "
                 $data += "        $id -> $NATGWID" + "`n"
 
             }
@@ -2344,7 +2382,7 @@ function Export-ExpressRouteCircuit {
         $Peeringlocation = SanitizeLocation $erport.PeeringLocation
         $Bandwidth = $erport.ProvisionedBandwidthInGbps.ToString() + " Gbps"
         $BillingType = $erport.BillingType
-        $Encapsulation = $er.Encapsulation
+        $Encapsulation = $erport.Encapsulation
         $Location = SanitizeLocation $erport.Location
 
         $erportdata = "
@@ -2368,14 +2406,15 @@ function Export-ExpressRouteCircuit {
 
             $erportdata += "
                             $linkid [shape = none;label = <
-                                <TABLE border=`"1`" style=`"rounded`" align=`"left`">
-                                <tr><td colspan=`"2`" border=`"0`">$linkname</td></tr>
-                                <tr><td>Router Name</td><td>$($link.RouterName)</td></tr>
-                                <tr><td>Interface Name</td><td>$($link.InterfaceName)</td></tr>
-                                <tr><td>Patch Panel Id</td><td>$($link.PatchPanelId)</td></tr>
-                                <tr><td>Rack Id</td><td>$($link.RackId)</td></tr>
-                                <tr><td>Connector Type</td><td>$($link.ConnectorType)</td></tr>
-                                <tr><td>MACSEC</td><td>$macsec</td></tr>
+                                <TABLE border=`"0`" style=`"rounded`">
+                                <TR><TD colspan=`"2`" border=`"0`"><B>$linkname</B></TD></TR>
+                                <HR/><TR><TD align=`"left`">Router Name</TD><TD align=`"left`">$($link.RouterName)</TD></TR>
+                                <TR><TD align=`"left`">Interface Name</TD><TD align=`"left`">$($link.InterfaceName)</TD></TR>
+                                <TR><TD align=`"left`">Patch Panel Id</TD><TD align=`"left`">$($link.PatchPanelId)</TD></TR>
+                                <TR><TD align=`"left`">Rack Id</TD><TD align=`"left`">$($link.RackId)</TD></TR>
+                                <TR><TD align=`"left`">Connector Type</TD><TD align=`"left`">$($link.ConnectorType)</TD></TR>
+                                <TR><TD align=`"left`">Encapsulation</TD><TD align=`"left`">$Encapsulation</TD></TR>
+                                <TR><TD align=`"left`">MACSEC</TD><TD align=`"left`">$macsec</TD></TR>
                                 </TABLE>>;
                                 ];
                             $erportid -> $linkid;
@@ -2402,13 +2441,12 @@ function Export-ExpressRouteCircuit {
         $id [label = `"\nName: $ername\nLocation: $Location`" ; color = lightgray;image = `"$OutputPath\icons\ercircuit.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.5;];
         $id [shape = none;label = <
             <TABLE border=`"1`" style=`"rounded`">
-            <tr><td>SKU Tier</td><td>$skuTier</td></tr>
-            <tr><td>SKU Family</td><td>$skuFamily</td></tr>
-            <tr><td>Billing Type</td><td>$BillingType</td></tr>
-            <tr><td>Provider</td><td>$ServiceProviderName</td></tr>
-            <tr><td>Location</td><td>$Peeringlocation</td></tr>
-            <tr><td>Bandwidth</td><td>$Bandwidth</td></tr>
-            <tr><td>Encapsulation</td><td>$Encapsulation</td></tr>
+            <TR><TD>SKU Tier</TD><TD>$skuTier</TD></TR>
+            <TR><TD>SKU Family</TD><TD>$skuFamily</TD></TR>
+            <TR><TD>Billing Type</TD><TD>$BillingType</TD></TR>
+            <TR><TD>Provider</TD><TD>$ServiceProviderName</TD></TR>
+            <TR><TD>Location</TD><TD>$Peeringlocation</TD></TR>
+            <TR><TD>Bandwidth</TD><TD>$Bandwidth</TD></TR>
     "
     $script:rankercircuits += $id
     # End table
@@ -2442,10 +2480,10 @@ function Export-ExpressRouteCircuit {
                 $peeringId [label = `"\n$peeringName`" ; color = lightgray;image = `"$OutputPath\icons\peerings.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];
                 $peeringId [shape = none;label = <
                     <TABLE border=`"1`" style=`"rounded`" align=`"left`">
-                    <tr><td>Peering Type</td><td COLSPAN=`"2`">$peeringType</td></tr>
-                    <tr><td>Address Prefixes</td><td>$PrimaryPeerAddressPrefix</td><td>$SecondaryPeerAddressPrefix</td></tr>
-                    <tr><td>ASN Azure/Peer</td><td>$AzureASN</td><td>$PeerASN</td></tr>
-                    <tr><td>VlanId</td><td colspan=`"2`">$VlanId</td></tr>
+                    <TR><TD>Peering Type</TD><TD COLSPAN=`"2`">$peeringType</TD></TR>
+                    <TR><TD>Address Prefixes</TD><TD>$PrimaryPeerAddressPrefix</TD><TD>$SecondaryPeerAddressPrefix</TD></TR>
+                    <TR><TD>ASN Azure/Peer</TD><TD>$AzureASN</TD><TD>$PeerASN</TD></TR>
+                    <TR><TD>VlanId</TD><TD colspan=`"2`">$VlanId</TD></TR>
                     </TABLE>>;
                     ];
 
@@ -2519,7 +2557,7 @@ function Export-RouteTable {
         # End table
         $footer = "
                 </TABLE>>;
-                ];
+                image = `"$OutputPath\icons\RouteTable.png`";imagepos = `"tc`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];
         }
                 "
         $alldata = $header + $data + $footer
@@ -2579,18 +2617,18 @@ function Export-IpGroup {
 Exports details of a VPN connection and its associated gateways.
 
 .DESCRIPTION
-The `Export-VPNConnection` function processes a specified VPN connection object, retrieves details about the associated virtual network gateway or local network gateway, and formats the data for inclusion in a network diagram. It visualizes the connection type, peer information, and static remote subnets if applicable.
+The `Export-Connection` function processes a specified VPN/ER connection object, retrieves details about the associated virtual network gateway or local network gateway, and formats the data for inclusion in a network diagram. It visualizes the connection type, peer information, and static remote subnets if applicable.
 
 .PARAMETER connection
-Specifies the VPN connection object to be processed.
+Specifies the VPN/ER connection object to be processed.
 
 .EXAMPLE
-PS> Export-VPNConnection -connection $vpnConnection
+PS> Export-Connection -connection $vpnConnection
 
 This example processes the specified VPN connection and exports its details for inclusion in a network diagram.
 
 #>
-function Export-VPNConnection {
+function Export-Connection {
     [CmdletBinding()]
     param ([PSCustomObject[]]$connection)
 
@@ -2598,48 +2636,59 @@ function Export-VPNConnection {
     $lgwconnectionname = $name
     $lgconnectionType = $connection.ConnectionType
 
+    ### Logic description
+    # VirtualNetworkGateway1 - always set
+    # VirtualNetworkGateway2 - if set = VNET2VNET
+    # $connection.LocalNetworkGateway2 - if set = Site2Site VPN
+    # $connection.Peer - if set = ER Circuit connection
+
+    if ($connection.VirtualNetworkGateway2) { $VNET2VNET=$true }
+    if ($connection.LocalNetworkGateway2) { $S2S=$true }
+    if ($connection.Peer) { $ER=$true }
+
+    # VPN GW 1, connection source endpoint, always set - Not added to DOT, as it is defined in VNet definition
     if ($connection.VirtualNetworkGateway1) {
         $lgwname = $connection.VirtualNetworkGateway1.id.split("/")[-1]
         $vpngwid = $connection.VirtualNetworkGateway1.id.replace("-", "").replace("/", "").replace(".", "").replace("`"", "").ToLower()
-        $data = "    $vpngwid [color = lightgrey;label = `"\n\nLocal GW: $(SanitizeString $lgwname)\nConnection Name: $(SanitizeString $lgwconnectionname)\nConnection Type: $lgconnectionType\n`""
+        #$data = "    $vpngwid [color = lightgrey;label = `"\n\nLocal GW: $(SanitizeString $lgwname)\nConnection Name: $(SanitizeString $lgwconnectionname)\nConnection Type: $lgconnectionType\n`""
         $lgwid = 0
     }
     else {
         $vpngwid = 0
-
-        if ($connection.LocalNetworkGateway2) {
-            $lgwid = $connection.LocalNetworkGateway2.id.replace("-", "").replace("/", "").replace(".", "").replace("`"", "").ToLower()
-            $lgwname = $connection.LocalNetworkGateway2.id.split("/")[-1]
-            $lgwrg = $connection.LocalNetworkGateway2.id.split("/")[4]
-            $lgwobject = (Get-AzLocalNetworkGateway -ResourceGroupName $lgwrg -name $lgwname -ErrorAction Stop)
-            $lgwip = $lgwobject.GatewayIpAddress
-            $lgwsubnetsarray = $lgwobject.addressSpaceText | ConvertFrom-Json
-            $lgwsubnets = ""
-            $lgwsubnetsarray.AddressPrefixes | ForEach-Object {
-                $prefix = SanitizeString $_
-                $lgwsubnets += "$prefix \n"
-            }
-        }
-        elseif ($connection.VirtualNetworkGateway2) {
-            $lgwid = $connection.VirtualNetworkGateway2.id.replace("-", "").replace("/", "").replace("`"", "").ToLower()
-            $lgwname = $connection.VirtualNetworkGateway2.id.split("/")[-1]
-        }
-        else {
-            $lgwid = 0
-        }
-        $data = "    $lgwid [color = lightgrey;label = `"\n\nGateway: $(SanitizeString $lgwname)\nConnection Name: $(SanitizeString $lgwconnectionname)\nConnection Type: $lgconnectionType\n`""
-        if ($connection.LocalNetworkGateway2) {
-            $data += "Peer IP:$(SanitizeString $lgwip)\n\nStatic remote subnet(s):\n$lgwsubnets`";"
-        }
     }
-
-    #DOT
-    $data += ";image = `"$OutputPath\icons\VPN-Site.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];"
-
-    if ($connection.Peer -and $vpngwid -ne 0) {
+    
+    # LGW set - S2S
+    if ($S2S) {
+        $lgwid = $connection.LocalNetworkGateway2.id.replace("-", "").replace("/", "").replace(".", "").replace("`"", "").ToLower()
+        $lgwname = $connection.LocalNetworkGateway2.id.split("/")[-1]
+        $lgwrg = $connection.LocalNetworkGateway2.id.split("/")[4]
+        $lgwobject = (Get-AzLocalNetworkGateway -ResourceGroupName $lgwrg -name $lgwname -ErrorAction Stop)
+        $lgwip = $lgwobject.GatewayIpAddress
+        $lgwsubnetsarray = $lgwobject.addressSpaceText | ConvertFrom-Json
+        $lgwsubnets = ""
+        $lgwsubnetsarray.AddressPrefixes | ForEach-Object {
+            $prefix = SanitizeString $_
+            $lgwsubnets += "$prefix \n"
+        }
+        $data = "    $lgwid [color = lightgrey;label = `"\n\nGateway: $(SanitizeString $lgwname)\nConnection Name: $(SanitizeString $lgwconnectionname)\nConnection Type: $lgconnectionType\n"
+        $data += "Peer IP:$(SanitizeString $lgwip)\n\nStatic remote subnet(s):\n$lgwsubnets"
+        $data += "`";image = `"$OutputPath\icons\VPN-Site.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];"
+    } 
+    elseif ($VNET2VNET) {
+        $lgwid = $connection.VirtualNetworkGateway2.id.replace("-", "").replace("/", "").replace("`"", "").replace(".", "").ToLower()
+        $lgwname = $connection.VirtualNetworkGateway2.id.split("/")[-1]
+    }
+    else {
+        #ER
+        $lgwid = 0
+    }
+  
+    # ER (Peer set = ER Circuit - circuit defined seperately)
+    if ($ER -and $vpngwid -ne 0) {
         $peerid = $connection.Peer.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
         $data += "`n    $vpngwid -> $peerid`n"
     }
+    # VPN or VNet2VNet
     elseif ($lgwid -ne 0 -and $vpngwid -ne 0) {
         $data += "`n    $vpngwid -> $lgwid`n"
     }
@@ -2726,6 +2775,7 @@ function Confirm-Prerequisites {
     }
     
     # Load Powershell modules
+    # This block is probably not neccesary anymore, as all modules are stated as required
     try {
         import-module az.network -DisableNameChecking
         import-module az.accounts
@@ -2792,7 +2842,7 @@ function Confirm-Prerequisites {
         "private-endpoint.png",
         #"privatednszone.png",
         "redis.png",
-        #"RouteTable.png", #Table-only output
+        "RouteTable.png",
         #"rsv.png",
         "snet.png",
         "sqldb.png",
@@ -2807,9 +2857,9 @@ function Confirm-Prerequisites {
         "vgw.png",
         "vm.png",
         "vmss.png",
+        "vnet.png",
         "VPN-Site.png",
-        #"VPN-User.png",
-        "vnet.png"
+        "VPN-User.png"
     )
     
     $icons | ForEach-Object {
@@ -2869,6 +2919,7 @@ function Get-AzNetworkDiagram {
     #Rank (visual) in diagram
     $script:rankrts = @()
     $script:ranksubnets = @()
+    $script:rankvgws = @()
     $script:rankvnetaddressspaces = @()
     $script:rankvwans = @()
     $script:rankvwanhubs = @()
@@ -2902,6 +2953,11 @@ function Get-AzNetworkDiagram {
     Write-Output "Gathering information ..."
     Update-AzConfig -DisplaySecretsWarning $false -Scope process | Out-Null
     Update-AzConfig -DisplayBreakingChangeWarning $false -Scope process | Out-Null
+
+    # No subscriptions available?
+    if ( $null -eq $Subscriptions ) {
+        throw  "No available subscriptions within active AzContext - missing permissions?"
+    }
 
     try {
         # Collect all vNet ID's in scope otherwise we can end up with 1 vNet peered to 1000 other vNets which are not in scope
@@ -2976,15 +3032,15 @@ function Get-AzNetworkDiagram {
             }
 
             #VPN Connections
-            Write-Output "Collecting VPN Connections..."
-            Export-AddToFile "    ##### $subname - VPN Connections #####"
+            Write-Output "Collecting VPN/ER Connections..."
+            Export-AddToFile "    ##### $subname - VPN/ER Connections #####"
             $VPNConnections = Get-AzResource | Where-Object { $_.ResourceType -eq "Microsoft.Network/connections" }
             $VPNConnections | ForEach-Object {
                 $connection = $_
                 $resname = $connection.Name
                 $rgname = $connection.ResourceGroupName
                 $connection = Get-AzVirtualNetworkGatewayConnection -name $resname -ResourceGroupName $rgname -ErrorAction Stop
-                Export-VPNConnection $connection
+                Export-Connection $connection
             }
 
             #Express Route Circuits
@@ -3224,7 +3280,7 @@ function Get-AzNetworkDiagram {
         $OutputFileName += $Prefix + "-"
     }
     $OutputFileName += "AzNetworkDiagram"
-    Write-Output "Generating $OutputFileName.pdf ..."
+    Write-Output "`nGenerating $OutputFileName.pdf ..."
     dot -q1 -Tpdf $OutputPath\AzNetworkDiagram.dot -o "$OutputFileName.pdf"
     Write-Output "Generating $OutputFileName.png ..."
     dot -q1 -Tpng $OutputPath\AzNetworkDiagram.dot -o "$OutputFileName.png"
