@@ -2666,8 +2666,8 @@ function Export-Connection {
         $lgwip = $lgwobject.GatewayIpAddress
         $lgwFQDN = $lgwobject.Fqdn
 
-        $lgwConnectionInfo = ''
-        if ( $null -eq $lgwip ) { $lgwConnectionInfo = $lgwFQDN } else { $lgwConnectionInfo = $lgwip }
+        $lgwPeerInfo = ''
+        if ( $null -eq $lgwip ) { $lgwPeerInfo = $lgwFQDN } else { $lgwPeerInfo = $lgwip }
 
         $lgwsubnetsarray = $lgwobject.addressSpaceText | ConvertFrom-Json
         $lgwsubnets = ""
@@ -2676,7 +2676,7 @@ function Export-Connection {
             $lgwsubnets += "$prefix \n"
         }
         $data = "    $lgwid [color = lightgrey;label = `"\n\nGateway: $(SanitizeString $lgwname)\nConnection Name: $(SanitizeString $lgwconnectionname)\nConnection Type: $lgconnectionType\n"
-        $data += "Peer : $(SanitizeString $lgwConnectionInfo)\n\nStatic remote subnet(s):\n$lgwsubnets"
+        $data += "Peer : $(SanitizeString $lgwPeerInfo)\n\nStatic remote subnet(s):\n$lgwsubnets"
         $data += "`";image = `"$OutputPath\icons\VPN-Site.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];"
     } 
     elseif ($VNET2VNET) {
