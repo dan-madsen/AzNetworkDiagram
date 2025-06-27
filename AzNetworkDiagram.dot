@@ -1,0 +1,873 @@
+digraph AzNetworkDiagram {
+    # Colors
+    colorscheme=pastel19;
+    bgcolor=9;
+
+    fontname="Arial,sans-serif"
+    node [colorscheme=x11; fontname="Arial,sans-serif"]
+    edge [fontname="Arial,sans-serif"]
+    
+    # Ability for peerings arrows/connections to end at border
+    compound = true;
+    #concentrate = true;
+    clusterrank = local;
+    
+    # Rank (height in picture) support
+    newrank = true;
+    rankdir = TB;
+    nodesep="1.0"
+    
+
+    ##########################################################################################################
+    ##### gp-sws-mmn-prd-1 
+    ##########################################################################################################
+
+    ##### gp-sws-mmn-prd-1 - Route Tables #####
+
+        subgraph cluster_subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkroutetablesrtgpswsmmnagwprdsan3 {
+            style = solid;
+            colorscheme = purples9;
+            bgcolor = 5;
+            margin = 0;
+            node [colorscheme = purples9; shape = box; color = 5; margin = 0;];
+            
+            subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkroutetablesrtgpswsmmnagwprdsan3 [label = <
+                <TABLE border="0" style="rounded">
+                <TR><TD border="0" align="left"><BR/><BR/><B>rt-urn-nut-vet-zip-sky-was-3</B></TD></TR>
+                <TR><TD border="0" align="left">Location: enceladus<BR/><BR/></TD></TR>
+                <TR><TD><B>Route</B></TD><TD><B>NextHopType</B></TD><TD><B>NextHopIpAddress</B></TD></TR>
+                <HR/><TR><TD align="left">10.177.220.80/0</TD><TD align="left">Internet</TD><TD align="left"></TD></TR><TR><TD align="left">10.164.246.243/23</TD><TD align="left">VirtualAppliance</TD><TD align="left">172.30.228.229</TD></TR><TR><TD align="left">192.168.223.82/24</TD><TD align="left">VirtualAppliance</TD><TD align="left">192.168.210.85</TD></TR><TR><TD align="left">172.18.224.189/25</TD><TD align="left">VirtualAppliance</TD><TD align="left">192.168.27.226</TD></TR><TR><TD align="left">192.168.86.57/26</TD><TD align="left">VirtualAppliance</TD><TD align="left">10.184.198.105</TD></TR><TR><TD align="left">10.92.86.18/27</TD><TD align="left">VirtualAppliance</TD><TD align="left">10.47.212.172</TD></TR><TR><TD align="left">192.168.99.140/28</TD><TD align="left">VirtualAppliance</TD><TD align="left">172.24.51.136</TD></TR><TR><TD align="left">10.179.91.109/28</TD><TD align="left">VirtualAppliance</TD><TD align="left">192.168.86.104</TD></TR><TR><TD align="left">192.168.112.136/24</TD><TD align="left">VirtualAppliance</TD><TD align="left">192.168.34.17</TD></TR><TR><TD align="left">172.19.69.232/24</TD><TD align="left">VirtualAppliance</TD><TD align="left">172.17.15.97</TD></TR><TR><TD align="left">172.25.33.233/24</TD><TD align="left">VirtualAppliance</TD><TD align="left">10.249.235.56</TD></TR><TR><TD align="left">10.167.19.3/24</TD><TD align="left">VirtualAppliance</TD><TD align="left">192.168.32.99</TD></TR><TR><TD align="left">192.168.206.49/24</TD><TD align="left">VirtualAppliance</TD><TD align="left">10.207.164.174</TD></TR><TR><TD align="left">192.168.167.146/21</TD><TD align="left">VirtualAppliance</TD><TD align="left">172.26.156.56</TD></TR><TR><TD align="left">172.21.117.55/22</TD><TD align="left">VirtualAppliance</TD><TD align="left">10.176.197.85</TD></TR><TR><TD align="left">10.134.39.12/21</TD><TD align="left">VirtualAppliance</TD><TD align="left">10.173.7.254</TD></TR><TR><TD align="left">192.168.171.18/22</TD><TD align="left">VirtualAppliance</TD><TD align="left">10.153.197.21</TD></TR><TR><TD align="left">10.24.247.162/22</TD><TD align="left">VirtualAppliance</TD><TD align="left">10.72.64.49</TD></TR><TR><TD align="left">192.168.140.90/23</TD><TD align="left">VirtualAppliance</TD><TD align="left">10.117.162.180</TD></TR><TR><TD align="left">10.220.56.31/26</TD><TD align="left">VirtualAppliance</TD><TD align="left">10.144.197.115</TD></TR><TR><TD align="left">192.168.112.74/26</TD><TD align="left">VirtualAppliance</TD><TD align="left">192.168.174.190</TD></TR><TR><TD align="left">172.22.235.9/25</TD><TD align="left">VirtualAppliance</TD><TD align="left">192.168.40.108</TD></TR>
+                </TABLE>>;
+                image = "C:\Dev\AzNetworkDiagram\icons\RouteTable.png";imagepos = "tr"; labelloc = "b";height = 2.5;];
+        }
+                
+
+        subgraph cluster_subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkroutetablesrtgpswsmmnoutprdsan1 {
+            style = solid;
+            colorscheme = purples9;
+            bgcolor = 5;
+            margin = 0;
+            node [colorscheme = purples9; shape = box; color = 5; margin = 0;];
+            
+            subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkroutetablesrtgpswsmmnoutprdsan1 [label = <
+                <TABLE border="0" style="rounded">
+                <TR><TD border="0" align="left"><BR/><BR/><B>rt-zip-fox-elk-gnu-ape-bee-1</B></TD></TR>
+                <TR><TD border="0" align="left">Location: spica<BR/><BR/></TD></TR>
+                <TR><TD><B>Route</B></TD><TD><B>NextHopType</B></TD><TD><B>NextHopIpAddress</B></TD></TR>
+                <HR/><TR><TD align="left">192.168.175.201/0</TD><TD align="left">VirtualAppliance</TD><TD align="left">10.190.184.53</TD></TR>
+                </TABLE>>;
+                image = "C:\Dev\AzNetworkDiagram\icons\RouteTable.png";imagepos = "tr"; labelloc = "b";height = 2.5;];
+        }
+                
+    ##### gp-sws-mmn-prd-1 - IP Groups #####
+    ##### gp-sws-mmn-prd-1 - Virtual Networks #####
+
+        # vnet-rat-yak-tan-dog-1 - subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1
+        subgraph cluster_subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1 {
+            style = solid;
+            colorscheme = pastel19 ;
+            bgcolor = 3;
+            node [colorscheme = rdylgn11 ; style = filled;];
+            subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1 [fillcolor = 10; fontcolor = white; label = "\nLocation: titan\nAddress Space(s):\n192.168.191.108/27\n172.19.221.83/27\n192.168.15.233/24\n172.28.119.67/25\n10.168.0.126/27\n";image = "C:\Dev\AzNetworkDiagram\icons\vnet.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan2 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworknetworksecuritygroupsnsgswsmmnprdsan2
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan2 [label = "\n\nsnet-vet-elk-kit-bee-2\n10.213.66.138/27" ; fillcolor = 9; image = "C:\Dev\AzNetworkDiagram\icons\snet.png"; imagepos = "tc"; labelloc = "b"; height = 1.5; ]; 
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan2 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkprivateendpointspepappcsswsmmnprdsan1 [label = "Private Endpoint"; ] ; 
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan2 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkprivateendpointspepcrswsmmnprdsan1registry0 [label = "Private Endpoint"; ] ; 
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan2 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkprivateendpointspepdbactswsmmnprdsan1 [label = "Private Endpoint"; ] ; 
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan2 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkprivateendpointspepdbactswsmmnprdsan3 [label = "Private Endpoint"; ] ; 
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan2 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkprivateendpointspepdbactswsmymprdsan1 [label = "Private Endpoint"; ] ; 
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan2 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkprivateendpointspepsqlswsmmnprdsan1 [label = "Private Endpoint"; ] ; 
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan2 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkprivateendpointspepstswsmmnprdsan1 [label = "Private Endpoint"; ] ; 
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan2 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkprivateendpointspepstswsmmnprdsan2 [label = "Private Endpoint"; ] ; 
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan2 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkprivateendpointsprpadfswsmmnprdsan2 [label = "Private Endpoint"; ] ; 
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan2 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkprivateendpointsprpdbactswsmmnprdsan2 [label = "Private Endpoint"; ] ; 
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan2 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkprivateendpointsprpfuncswsmmnprdsan1 [label = "Private Endpoint"; ] ; 
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan2 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkprivateendpointsprpstswsmmnprdsan2 [label = "Private Endpoint"; ] ; 
+
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan2
+
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan1 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworknetworksecuritygroupsnsgswsmmnprdsan1
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan1 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkroutetablesrtgpswsmmnoutprdsan1
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan1 [label = "\n\nsnet-nut-vet-sow-owl-1\n172.25.41.77/27" ; fillcolor = 9; image = "C:\Dev\AzNetworkDiagram\icons\snet.png"; imagepos = "tc"; labelloc = "b"; height = 1.5; ]; 
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan1 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkprivateendpointsprpadfswsmmnprdsan1 [label = "Private Endpoint"; ] ; 
+
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan1
+
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan4 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworknetworksecuritygroupsnsgswsmmnprdsan4
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan4 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkroutetablesrtgpswsmmnoutprdsan1
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan4 [label = "\n\nsnet-cod-fox-tan-sow-4\n172.20.29.79/25" ; fillcolor = 9; image = "C:\Dev\AzNetworkDiagram\icons\snet.png"; imagepos = "tc"; labelloc = "b"; height = 1.5; ]; 
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan4 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftnetworkprivateendpointskubeapiserver [label = "Private Endpoint"; ] ; 
+
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan4
+
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan3 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworknetworksecuritygroupsnsgswsmmnprdsan3
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan3 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkroutetablesrtgpswsmmnagwprdsan3
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan3 [label = "\n\nsnet-pig-hen-zip-pan-3\n172.16.218.202/24" ; fillcolor = 9; image = "C:\Dev\AzNetworkDiagram\icons\snet.png"; imagepos = "tc"; labelloc = "b"; height = 1.5; ]; 
+
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan3
+
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan5 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworknetworksecuritygroupsnsgswsmmnprdsan5
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan5 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkroutetablesrtgpswsmmnoutprdsan1
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan5 [label = "\n\nsnet-ape-was-zip-lob-5\n10.206.58.31/27\n\nDelegated to:\ndelegation" ; fillcolor = 3; image = "C:\Dev\AzNetworkDiagram\icons\snet.png"; imagepos = "tc"; labelloc = "b"; height = 1.5; ]; 
+
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan5
+
+            label = "vnet-rat-yak-tan-dog-1";
+        }
+        
+    ##### gp-sws-mmn-prd-1 - NSG's #####
+
+        # nsg-sws-mmn-prd-san-1 - subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworknetworksecuritygroupsnsgswsmmnprdsan1
+        subgraph cluster_subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworknetworksecuritygroupsnsgswsmmnprdsan1 {
+            style = solid;
+            bgcolor = 8;
+            node [colorscheme = rdylgn11; style = filled;];
+
+            subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworknetworksecuritygroupsnsgswsmmnprdsan1 [label = "\nnsg-man-elk-jay-dog-1\nLocation: trappist-1" ; fillcolor = 8;image = "C:\Dev\AzNetworkDiagram\icons\nsg.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "nsg-man-elk-jay-dog-1";
+        }
+        
+
+        # nsg-sws-mmn-prd-san-2 - subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworknetworksecuritygroupsnsgswsmmnprdsan2
+        subgraph cluster_subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworknetworksecuritygroupsnsgswsmmnprdsan2 {
+            style = solid;
+            bgcolor = 8;
+            node [colorscheme = rdylgn11; style = filled;];
+
+            subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworknetworksecuritygroupsnsgswsmmnprdsan2 [label = "\nnsg-emu-man-cat-cow-2\nLocation: vega" ; fillcolor = 8;image = "C:\Dev\AzNetworkDiagram\icons\nsg.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "nsg-emu-man-cat-cow-2";
+        }
+        
+
+        # nsg-sws-mmn-prd-san-3 - subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworknetworksecuritygroupsnsgswsmmnprdsan3
+        subgraph cluster_subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworknetworksecuritygroupsnsgswsmmnprdsan3 {
+            style = solid;
+            bgcolor = 8;
+            node [colorscheme = rdylgn11; style = filled;];
+
+            subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworknetworksecuritygroupsnsgswsmmnprdsan3 [label = "\nnsg-bee-elk-elk-ant-3\nLocation: titania" ; fillcolor = 8;image = "C:\Dev\AzNetworkDiagram\icons\nsg.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "nsg-bee-elk-elk-ant-3";
+        }
+        
+
+        # nsg-sws-mmn-prd-san-4 - subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworknetworksecuritygroupsnsgswsmmnprdsan4
+        subgraph cluster_subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworknetworksecuritygroupsnsgswsmmnprdsan4 {
+            style = solid;
+            bgcolor = 8;
+            node [colorscheme = rdylgn11; style = filled;];
+
+            subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworknetworksecuritygroupsnsgswsmmnprdsan4 [label = "\nnsg-man-owl-kit-sun-4\nLocation: deneb" ; fillcolor = 8;image = "C:\Dev\AzNetworkDiagram\icons\nsg.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "nsg-man-owl-kit-sun-4";
+        }
+        
+
+        # nsg-sws-mmn-prd-san-5 - subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworknetworksecuritygroupsnsgswsmmnprdsan5
+        subgraph cluster_subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworknetworksecuritygroupsnsgswsmmnprdsan5 {
+            style = solid;
+            bgcolor = 8;
+            node [colorscheme = rdylgn11; style = filled;];
+
+            subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworknetworksecuritygroupsnsgswsmmnprdsan5 [label = "\nnsg-urn-rat-zip-tan-5\nLocation: trappist-1g" ; fillcolor = 8;image = "C:\Dev\AzNetworkDiagram\icons\nsg.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "nsg-urn-rat-zip-tan-5";
+        }
+        
+
+        # aks-agentpool-28169477-nsg - subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftnetworknetworksecuritygroupsaksagentpool28169477nsg
+        subgraph cluster_subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftnetworknetworksecuritygroupsaksagentpool28169477nsg {
+            style = solid;
+            bgcolor = 8;
+            node [colorscheme = rdylgn11; style = filled;];
+
+            subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftnetworknetworksecuritygroupsaksagentpool28169477nsg [label = "\naks-jay-was-nsg\nLocation: amalthea" ; fillcolor = 8;image = "C:\Dev\AzNetworkDiagram\icons\nsg.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "aks-jay-was-nsg";
+        }
+        
+    ##### gp-sws-mmn-prd-1 - VPN/ER Connections #####
+    ##### gp-sws-mmn-prd-1 - Express Route Circuits #####
+    ##### gp-sws-mmn-prd-1 - Virtual WANs #####
+    ##### gp-sws-mmn-prd-1 - Private Endpoints #####
+
+                     subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkprivateendpointspepappcsswsmmnprdsan1 [colorscheme = rdylgn11; color = 1; fontcolor = white; label = "\npep-ant-dog-yak-sun-vet-1\nappcs-gnu-gnu-rob-emu-2\n" ; image = "C:\Dev\AzNetworkDiagram\icons\private-endpoint.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+                     subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkprivateendpointspepcrswsmmnprdsan1registry0 [colorscheme = rdylgn11; color = 1; fontcolor = white; label = "\npep-rat-rat-0\nporsche\n" ; image = "C:\Dev\AzNetworkDiagram\icons\private-endpoint.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+                     subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkprivateendpointspepdbactswsmmnprdsan1 [colorscheme = rdylgn11; color = 1; fontcolor = white; label = "\npep-qua-tan-sun-eel-ape-1\ndbact-owl-pig-owl-nut-1\n" ; image = "C:\Dev\AzNetworkDiagram\icons\private-endpoint.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+                     subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkprivateendpointspepdbactswsmmnprdsan3 [colorscheme = rdylgn11; color = 1; fontcolor = white; label = "\npep-gnu-sky-zip-sun-pan-3\ndbact-rob-was-was-hen-3\n" ; image = "C:\Dev\AzNetworkDiagram\icons\private-endpoint.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+                     subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkprivateendpointspepdbactswsmymprdsan1 [colorscheme = rdylgn11; color = 1; fontcolor = white; label = "\npep-yak-owl-sun-qua-man-1\ndbact-cod-zip-qua-cod-1\n" ; image = "C:\Dev\AzNetworkDiagram\icons\private-endpoint.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+                     subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkprivateendpointspepsqlswsmmnprdsan1 [colorscheme = rdylgn11; color = 1; fontcolor = white; label = "\npep-hen-ape-elk-sow-zip-1\nsql-was-rat-ant-pan-1\n" ; image = "C:\Dev\AzNetworkDiagram\icons\private-endpoint.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+                     subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkprivateendpointspepstswsmmnprdsan1 [colorscheme = rdylgn11; color = 1; fontcolor = white; label = "\ndog--pan\nproton\n" ; image = "C:\Dev\AzNetworkDiagram\icons\private-endpoint.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+                     subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkprivateendpointspepstswsmmnprdsan2 [colorscheme = rdylgn11; color = 1; fontcolor = white; label = "\nbee--ant\nsubaru\n" ; image = "C:\Dev\AzNetworkDiagram\icons\private-endpoint.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+                     subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkprivateendpointsprpadfswsmmnprdsan1 [colorscheme = rdylgn11; color = 1; fontcolor = white; label = "\nprp-zip-cow-pan-eel-emu-1\nadf-sow-tan-man-cat-1\n" ; image = "C:\Dev\AzNetworkDiagram\icons\private-endpoint.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+                     subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkprivateendpointsprpadfswsmmnprdsan2 [colorscheme = rdylgn11; color = 1; fontcolor = white; label = "\nprp-vet-vet-bee-pig-sky-2\nadf-man-eel-lob-bee-1\n" ; image = "C:\Dev\AzNetworkDiagram\icons\private-endpoint.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+                     subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkprivateendpointsprpdbactswsmmnprdsan2 [colorscheme = rdylgn11; color = 1; fontcolor = white; label = "\nprp-nut-cod-pan-ant-sow-2\ndbact-man-sow-owl-yak-2\n" ; image = "C:\Dev\AzNetworkDiagram\icons\private-endpoint.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+                     subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkprivateendpointsprpfuncswsmmnprdsan1 [colorscheme = rdylgn11; color = 1; fontcolor = white; label = "\nprp-lob-qua-yak-emu-nut-1\nfunc-kit-yak-rob-urn-1\n" ; image = "C:\Dev\AzNetworkDiagram\icons\private-endpoint.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+                     subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkprivateendpointsprpstswsmmnprdsan2 [colorscheme = rdylgn11; color = 1; fontcolor = white; label = "\nwas--ape\ndacia\n" ; image = "C:\Dev\AzNetworkDiagram\icons\private-endpoint.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+
+                     subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftnetworkprivateendpointskubeapiserver [colorscheme = rdylgn11; color = 1; fontcolor = white; label = "\nsun--cow\naks-cat-eel-cat-ape-1\n" ; image = "C:\Dev\AzNetworkDiagram\icons\private-endpoint.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+    ##### gp-sws-mmn-prd-1 - VMs #####
+
+        # mercury - subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftcomputevirtualmachinesvmmmnrdpprdsan1
+        subgraph cluster_subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftcomputevirtualmachinesvmmmnrdpprdsan1 {
+            style = solid;
+            colorscheme = blues9;
+            bgcolor = 3;
+            node [colorscheme = blues9; ];
+                subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftcomputevirtualmachinesvmmmnrdpprdsan1 [label = "\nLocation: adhara\nSKU: Standard_D2s_v3\nZones: 1\nOS Type: Windows\nPublic IP: \nPrivate IP Address: 172.30.233.136\nExtensions: AADLogin, AzureMonitorWindowsAgent, AzureNetworkWatcherExtension, AzurePolicyforWindows, IaaSAntimalware, MDE.Windows" ; image = "C:\Dev\AzNetworkDiagram\icons\vm.png";imagepos = "tc";labelloc = "b";height = 3.0;];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftcomputevirtualmachinesvmmmnrdpprdsan1 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan2;
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftcomputevirtualmachinesvmmmnrdpprdsan1 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsbuiltinidentityrgprovidersmicrosoftmanagedidentityuserassignedidentitiesbuiltinidentitysouthafricanorth;
+   label = "mercury";
+                }
+
+    ##### gp-sws-mmn-prd-1 - Keyvaults #####
+    ##### gp-sws-mmn-prd-1 - Storage Accounts #####
+
+        # buick - subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftstoragestorageaccountsstswsmmnprdsan1
+        subgraph cluster_subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftstoragestorageaccountsstswsmmnprdsan1 {
+            style = solid;
+            margin = 0;
+            colorscheme = bugn9;
+            bgcolor = 2;
+            node [colorscheme = bugn9; color = 2; margin = 0;];
+
+                subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftstoragestorageaccountsstswsmmnprdsan1 [label = "\n\nLocation: jupiter\nSKU: Standard_RAGRS\nKind: StorageV2\nPublic Network Access: Disabled\nAccess Tier: Hot\nHierarchical Namespace: Disabled\n" ; image = "C:\Dev\AzNetworkDiagram\icons\storage-account.png";imagepos = "tc";labelloc = "b";height = 3.0;];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftstoragestorageaccountsstswsmmnprdsan1 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkprivateendpointspepstswsmmnprdsan2 [label = "Private Endpoint"; ];
+   label = "buick";
+                }
+
+
+        # hyundai - subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftstoragestorageaccountsstswsmmnprdsan2
+        subgraph cluster_subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftstoragestorageaccountsstswsmmnprdsan2 {
+            style = solid;
+            margin = 0;
+            colorscheme = bugn9;
+            bgcolor = 2;
+            node [colorscheme = bugn9; color = 2; margin = 0;];
+
+                subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftstoragestorageaccountsstswsmmnprdsan2 [label = "\n\nLocation: phobos\nSKU: Standard_RAGRS\nKind: StorageV2\nPublic Network Access: Disabled\nAccess Tier: Hot\nHierarchical Namespace: Disabled\n" ; image = "C:\Dev\AzNetworkDiagram\icons\storage-account.png";imagepos = "tc";labelloc = "b";height = 3.0;];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftstoragestorageaccountsstswsmmnprdsan2 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkprivateendpointsprpstswsmmnprdsan2 [label = "Private Endpoint"; ];
+   label = "hyundai";
+                }
+
+    ##### gp-sws-mmn-prd-1 - Application Gateways #####
+
+        # agw-tan-ram-urn-ram-1 - subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkapplicationgatewaysagwswsmmnprdsan1
+        subgraph cluster_subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkapplicationgatewaysagwswsmmnprdsan1 {
+            style = solid;
+            colorscheme = gnbu9;
+            bgcolor = 5;
+            margin = 0;
+            node [colorscheme = gnbu9; margin = 0;];
+                subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkapplicationgatewaysagwswsmmnprdsan1 [label = "\nLocation: vega-system\nPolicy name: waf-owl-ape-pig-sun-1\nIPs: 10.154.64.3 (Public), 192.168.130.66 (Private)\nSKU: WAF_v2\nZones: 1,2,3\nSSL Certificates: Wildcard-jay-rob-dog-com\nFrontend ports: 443\n" ; image = "C:\Dev\AzNetworkDiagram\icons\agw.png";imagepos = "tc";labelloc = "b";height = 3.0;];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkapplicationgatewaysagwswsmmnprdsan1 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan3;
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkapplicationgatewaysagwswsmmnprdsan1 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftmanagedidentityuserassignedidentitiesidswsmmnprdsan1;
+   label = "agw-tan-ram-urn-ram-1";
+                }
+
+    ##### gp-sws-mmn-prd-1 - MySQL Flexible Servers #####
+    ##### gp-sws-mmn-prd-1 - PostgreSQL Servers #####
+    ##### gp-sws-mmn-prd-1 - CosmosDB Servers #####
+
+        # dbact-emu-owl-sun-kit-1 - subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmymprdsan1
+        subgraph cluster_subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmymprdsan1 {
+            style = solid;
+            bgcolor = 4;
+            node [color = black;];
+                subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmymprdsan1 [label = "Version: 7.0\nLocations: eris\nDefault Consistency Level: Session\nKind: MongoDB\nDatabase Account Offer Type: Standard\nEnable Analytical Storage: False\nVirtual Network Filter Enabled: False" ; image = "C:\Dev\AzNetworkDiagram\icons\cosmosdb.png";imagepos = "tc";labelloc = "b";height = 3.0;];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmymprdsan1mongodbdatabasespushnotification [label = < <TABLE border="0" style="rounded">
+<TR><TD><BR/><BR/></TD></TR>
+<TR><TD align="left">Name</TD><TD align="left">saab</TD></TR>
+<TR><TD align="left">Database Throughput</TD><TD align="left">Unknown</TD></TR>
+<TR><TD><BR/><BR/></TD></TR>
+<TR><TD align="left"><B>Collection</B></TD><TD align="left"><B>RU</B></TD></TR><HR/>
+<TR><TD align="left">porsche</TD><TD align="left">500</TD></TR>
+</TABLE>
+ > ; image = "C:\Dev\AzNetworkDiagram\icons\mongodb.png";imagepos = "tc";labelloc = "b";height = 3.0;];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmymprdsan1 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmymprdsan1mongodbdatabasespushnotification;
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmymprdsan1mongodbdatabasesprodprofiledb [label = < <TABLE border="0" style="rounded">
+<TR><TD><BR/><BR/></TD></TR>
+<TR><TD align="left">Name</TD><TD align="left">daihatsu</TD></TR>
+<TR><TD align="left">Database Throughput</TD><TD align="left">Unknown</TD></TR>
+<TR><TD><BR/><BR/></TD></TR>
+<TR><TD align="left"><B>Collection</B></TD><TD align="left"><B>RU</B></TD></TR><HR/>
+<TR><TD align="left">ram</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">quince</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">victor</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">pagani</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">ds-automobiles</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">kilo</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">currant</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">yankee</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">victor</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">oscar</TD><TD align="left">500</TD></TR>
+</TABLE>
+ > ; image = "C:\Dev\AzNetworkDiagram\icons\mongodb.png";imagepos = "tc";labelloc = "b";height = 3.0;];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmymprdsan1 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmymprdsan1mongodbdatabasesprodprofiledb;
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmymprdsan1mongodbdatabasesprodrewardsdb [label = < <TABLE border="0" style="rounded">
+<TR><TD><BR/><BR/></TD></TR>
+<TR><TD align="left">Name</TD><TD align="left">opel</TD></TR>
+<TR><TD align="left">Database Throughput</TD><TD align="left">Unknown</TD></TR>
+<TR><TD><BR/><BR/></TD></TR>
+<TR><TD align="left"><B>Collection</B></TD><TD align="left"><B>RU</B></TD></TR><HR/>
+<TR><TD align="left">porsche</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">golf</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">plum</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">delta</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">hummer</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">cantaloupe</TD><TD align="left">500</TD></TR>
+</TABLE>
+ > ; image = "C:\Dev\AzNetworkDiagram\icons\mongodb.png";imagepos = "tc";labelloc = "b";height = 3.0;];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmymprdsan1 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmymprdsan1mongodbdatabasesprodrewardsdb;
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmymprdsan1mongodbdatabasesprodhelpdb [label = < <TABLE border="0" style="rounded">
+<TR><TD><BR/><BR/></TD></TR>
+<TR><TD align="left">Name</TD><TD align="left">jeep</TD></TR>
+<TR><TD align="left">Database Throughput</TD><TD align="left">Unknown</TD></TR>
+<TR><TD><BR/><BR/></TD></TR>
+<TR><TD align="left"><B>Collection</B></TD><TD align="left"><B>RU</B></TD></TR><HR/>
+<TR><TD align="left">passionfruit</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">pineapple</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">oscar</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">kiwi</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">victor</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">gooseberry</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">jackfruit</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">bravo</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">elderberry</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">strawberry</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">mango</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">currant</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">grape</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">november</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">zulu</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">sierra</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">strawberry</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">passionfruit</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">kumquat</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">foxtrot</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">peach</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">india</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">kiwi</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">tangerine</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">mike</TD><TD align="left">500</TD></TR>
+</TABLE>
+ > ; image = "C:\Dev\AzNetworkDiagram\icons\mongodb.png";imagepos = "tc";labelloc = "b";height = 3.0;];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmymprdsan1 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmymprdsan1mongodbdatabasesprodhelpdb;
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmymprdsan1mongodbdatabasesprodsubscriptiondb [label = < <TABLE border="0" style="rounded">
+<TR><TD><BR/><BR/></TD></TR>
+<TR><TD align="left">Name</TD><TD align="left">lada</TD></TR>
+<TR><TD align="left">Database Throughput</TD><TD align="left">Unknown</TD></TR>
+<TR><TD><BR/><BR/></TD></TR>
+<TR><TD align="left"><B>Collection</B></TD><TD align="left"><B>RU</B></TD></TR><HR/>
+<TR><TD align="left">daihatsu</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">mitsubishi</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">starfruit</TD><TD align="left">500</TD></TR>
+</TABLE>
+ > ; image = "C:\Dev\AzNetworkDiagram\icons\mongodb.png";imagepos = "tc";labelloc = "b";height = 3.0;];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmymprdsan1 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmymprdsan1mongodbdatabasesprodsubscriptiondb;
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmymprdsan1mongodbdatabasesprodnemdb [label = < <TABLE border="0" style="rounded">
+<TR><TD><BR/><BR/></TD></TR>
+<TR><TD align="left">Name</TD><TD align="left">mercedes-benz</TD></TR>
+<TR><TD align="left">Database Throughput</TD><TD align="left">Unknown</TD></TR>
+<TR><TD><BR/><BR/></TD></TR>
+<TR><TD align="left"><B>Collection</B></TD><TD align="left"><B>RU</B></TD></TR><HR/>
+<TR><TD align="left">foxtrot</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">date</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">melon</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">grapefruit</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">apricot</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">guava</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">plum</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">golf</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">fig</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">oscar</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">juliet</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">papa</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">coconut</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">delta</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">kumquat</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">elderberry</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">zulu</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">gooseberry</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">apricot</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">kiwi</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">sierra</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">oscar</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">november</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">papa</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">blackberry</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">tango</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">apple</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">foxtrot</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">sierra</TD><TD align="left">1000</TD></TR>
+<TR><TD align="left">melon</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">quince</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">peach</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">jackfruit</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">apple</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">kumquat</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">romeo</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">durian</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">banana</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">peach</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">tango</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">papa</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">xray</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">golf</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">pineapple</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">passionfruit</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">charlie</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">quebec</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">mulberry</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">gooseberry</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">guava</TD><TD align="left">500</TD></TR>
+<TR><TD align="left">gooseberry</TD><TD align="left">500</TD></TR>
+</TABLE>
+ > ; image = "C:\Dev\AzNetworkDiagram\icons\mongodb.png";imagepos = "tc";labelloc = "b";height = 3.0;];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmymprdsan1 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmymprdsan1mongodbdatabasesprodnemdb;
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmymprdsan1 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkprivateendpointspepdbactswsmymprdsan1 [label = "Private Endpoint"; ];
+   label = "dbact-emu-owl-sun-kit-1";
+                }
+
+
+        # dbact-elk-nut-was-pan-2 - subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan2
+        subgraph cluster_subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan2 {
+            style = solid;
+            bgcolor = 4;
+            node [color = black;];
+                subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan2 [label = "Version: \nLocations: wolf-359\nDefault Consistency Level: Session\nKind: GlobalDocumentDB\nDatabase Account Offer Type: Standard\nEnable Analytical Storage: False\nVirtual Network Filter Enabled: False" ; image = "C:\Dev\AzNetworkDiagram\icons\cosmosdb.png";imagepos = "tc";labelloc = "b";height = 3.0;];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan2sqldatabasespushnotificationeventsdb [label = < <TABLE border="0" style="rounded">
+<TR><TD><BR/><BR/></TD></TR>
+<TR><TD align="left">Name</TD><TD align="left">bmw</TD></TR>
+<TR><TD align="left">Database Throughput</TD><TD align="left">Unknown</TD></TR>
+<TR><TD><BR/><BR/></TD></TR>
+<TR><TD align="left"><B>Container</B></TD><TD align="left"><B>RU</B></TD></TR><HR/>
+<TR><TD align="left">genesis</TD><TD align="left"></TD></TR>
+</TABLE>
+ > ; image = "C:\Dev\AzNetworkDiagram\icons\documentdb.png";imagepos = "tc";labelloc = "b";height = 3.0;];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan2 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan2sqldatabasespushnotificationeventsdb;
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan2sqldatabasesschedulednotificationsdb [label = < <TABLE border="0" style="rounded">
+<TR><TD><BR/><BR/></TD></TR>
+<TR><TD align="left">Name</TD><TD align="left">mercury</TD></TR>
+<TR><TD align="left">Database Throughput</TD><TD align="left">Unknown</TD></TR>
+<TR><TD><BR/><BR/></TD></TR>
+<TR><TD align="left"><B>Container</B></TD><TD align="left"><B>RU</B></TD></TR><HR/>
+<TR><TD align="left">pontiac</TD><TD align="left"></TD></TR>
+</TABLE>
+ > ; image = "C:\Dev\AzNetworkDiagram\icons\documentdb.png";imagepos = "tc";labelloc = "b";height = 3.0;];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan2 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan2sqldatabasesschedulednotificationsdb;
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan2 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkprivateendpointsprpdbactswsmmnprdsan2 [label = "Private Endpoint"; ];
+   label = "dbact-elk-nut-was-pan-2";
+                }
+
+
+        # dbact-ram-tan-eel-yak-1 - subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan1
+        subgraph cluster_subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan1 {
+            style = solid;
+            bgcolor = 4;
+            node [color = black;];
+                subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan1 [label = "Version: 7.0\nLocations: vega-system\nDefault Consistency Level: Session\nKind: MongoDB\nDatabase Account Offer Type: Standard\nEnable Analytical Storage: False\nVirtual Network Filter Enabled: False" ; image = "C:\Dev\AzNetworkDiagram\icons\cosmosdb.png";imagepos = "tc";labelloc = "b";height = 3.0;];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan1mongodbdatabasesprodsubscriptiondb [label = < <TABLE border="0" style="rounded">
+<TR><TD><BR/><BR/></TD></TR>
+<TR><TD align="left">Name</TD><TD align="left">genesis</TD></TR>
+<TR><TD align="left">Database Throughput</TD><TD align="left">Unknown</TD></TR>
+<TR><TD><BR/><BR/></TD></TR>
+<TR><TD align="left"><B>Collection</B></TD><TD align="left"><B>RU</B></TD></TR><HR/>
+<TR><TD align="left">guava</TD><TD align="left">100</TD></TR>
+</TABLE>
+ > ; image = "C:\Dev\AzNetworkDiagram\icons\mongodb.png";imagepos = "tc";labelloc = "b";height = 3.0;];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan1 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan1mongodbdatabasesprodsubscriptiondb;
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan1 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkprivateendpointspepdbactswsmmnprdsan1 [label = "Private Endpoint"; ];
+   label = "dbact-ram-tan-eel-yak-1";
+                }
+
+
+        # dbact-cod-elk-yak-jay-3 - subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan3
+        subgraph cluster_subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan3 {
+            style = solid;
+            bgcolor = 4;
+            node [color = black;];
+                subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan3 [label = "Version: 7.0\nLocations: regulus\nDefault Consistency Level: Session\nKind: MongoDB\nDatabase Account Offer Type: Standard\nEnable Analytical Storage: False\nVirtual Network Filter Enabled: False" ; image = "C:\Dev\AzNetworkDiagram\icons\cosmosdb.png";imagepos = "tc";labelloc = "b";height = 3.0;];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan3mongodbdatabasesprodrewardsdb [label = < <TABLE border="0" style="rounded">
+<TR><TD><BR/><BR/></TD></TR>
+<TR><TD align="left">Name</TD><TD align="left">haval</TD></TR>
+<TR><TD align="left">Database Throughput</TD><TD align="left">Unknown</TD></TR>
+<TR><TD><BR/><BR/></TD></TR>
+<TR><TD align="left"><B>Collection</B></TD><TD align="left"><B>RU</B></TD></TR><HR/>
+<TR><TD align="left">ferrari</TD><TD align="left"></TD></TR>
+<TR><TD align="left">honeydew</TD><TD align="left"></TD></TR>
+<TR><TD align="left">victor</TD><TD align="left"></TD></TR>
+<TR><TD align="left">november</TD><TD align="left"></TD></TR>
+<TR><TD align="left">wuling</TD><TD align="left"></TD></TR>
+</TABLE>
+ > ; image = "C:\Dev\AzNetworkDiagram\icons\mongodb.png";imagepos = "tc";labelloc = "b";height = 3.0;];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan3 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan3mongodbdatabasesprodrewardsdb;
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan3mongodbdatabasespushnotification [label = < <TABLE border="0" style="rounded">
+<TR><TD><BR/><BR/></TD></TR>
+<TR><TD align="left">Name</TD><TD align="left">ford</TD></TR>
+<TR><TD align="left">Database Throughput</TD><TD align="left">Unknown</TD></TR>
+<TR><TD><BR/><BR/></TD></TR>
+<TR><TD align="left"><B>Collection</B></TD><TD align="left"><B>RU</B></TD></TR><HR/>
+<TR><TD align="left">wuling</TD><TD align="left"></TD></TR>
+<TR><TD align="left">chevrolet</TD><TD align="left"></TD></TR>
+</TABLE>
+ > ; image = "C:\Dev\AzNetworkDiagram\icons\mongodb.png";imagepos = "tc";labelloc = "b";height = 3.0;];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan3 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan3mongodbdatabasespushnotification;
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan3mongodbdatabasesprodhelpdb [label = < <TABLE border="0" style="rounded">
+<TR><TD><BR/><BR/></TD></TR>
+<TR><TD align="left">Name</TD><TD align="left">rolls-royce</TD></TR>
+<TR><TD align="left">Database Throughput</TD><TD align="left">Unknown</TD></TR>
+<TR><TD><BR/><BR/></TD></TR>
+<TR><TD align="left"><B>Collection</B></TD><TD align="left"><B>RU</B></TD></TR><HR/>
+<TR><TD align="left">smart</TD><TD align="left"></TD></TR>
+</TABLE>
+ > ; image = "C:\Dev\AzNetworkDiagram\icons\mongodb.png";imagepos = "tc";labelloc = "b";height = 3.0;];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan3 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan3mongodbdatabasesprodhelpdb;
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan3mongodbdatabasesprodsubscriptiondb [label = < <TABLE border="0" style="rounded">
+<TR><TD><BR/><BR/></TD></TR>
+<TR><TD align="left">Name</TD><TD align="left">isuzu</TD></TR>
+<TR><TD align="left">Database Throughput</TD><TD align="left">Unknown</TD></TR>
+<TR><TD><BR/><BR/></TD></TR>
+<TR><TD align="left"><B>Collection</B></TD><TD align="left"><B>RU</B></TD></TR><HR/>
+<TR><TD align="left">mercedes-benz</TD><TD align="left"></TD></TR>
+</TABLE>
+ > ; image = "C:\Dev\AzNetworkDiagram\icons\mongodb.png";imagepos = "tc";labelloc = "b";height = 3.0;];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan3 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan3mongodbdatabasesprodsubscriptiondb;
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan3mongodbdatabasesprodprofiledb [label = < <TABLE border="0" style="rounded">
+<TR><TD><BR/><BR/></TD></TR>
+<TR><TD align="left">Name</TD><TD align="left">audi</TD></TR>
+<TR><TD align="left">Database Throughput</TD><TD align="left">Unknown</TD></TR>
+<TR><TD><BR/><BR/></TD></TR>
+<TR><TD align="left"><B>Collection</B></TD><TD align="left"><B>RU</B></TD></TR><HR/>
+<TR><TD align="left">november</TD><TD align="left"></TD></TR>
+<TR><TD align="left">ram</TD><TD align="left"></TD></TR>
+<TR><TD align="left">bmw</TD><TD align="left"></TD></TR>
+<TR><TD align="left">guava</TD><TD align="left"></TD></TR>
+<TR><TD align="left">durian</TD><TD align="left"></TD></TR>
+</TABLE>
+ > ; image = "C:\Dev\AzNetworkDiagram\icons\mongodb.png";imagepos = "tc";labelloc = "b";height = 3.0;];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan3 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan3mongodbdatabasesprodprofiledb;
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan3mongodbdatabasesprodnemdb [label = < <TABLE border="0" style="rounded">
+<TR><TD><BR/><BR/></TD></TR>
+<TR><TD align="left">Name</TD><TD align="left">lucid</TD></TR>
+<TR><TD align="left">Database Throughput</TD><TD align="left">Unknown</TD></TR>
+<TR><TD><BR/><BR/></TD></TR>
+<TR><TD align="left"><B>Collection</B></TD><TD align="left"><B>RU</B></TD></TR><HR/>
+<TR><TD align="left">toyota</TD><TD align="left"></TD></TR>
+</TABLE>
+ > ; image = "C:\Dev\AzNetworkDiagram\icons\mongodb.png";imagepos = "tc";labelloc = "b";height = 3.0;];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan3 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan3mongodbdatabasesprodnemdb;
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftdocumentdbdatabaseaccountsdbactswsmmnprdsan3 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkprivateendpointspepdbactswsmmnprdsan3 [label = "Private Endpoint"; ];
+   label = "dbact-cod-elk-yak-jay-3";
+                }
+
+    ##### gp-sws-mmn-prd-1 - Redis Servers #####
+    ##### gp-sws-mmn-prd-1 - SQL Managed Instances #####
+    ##### gp-sws-mmn-prd-1 - SQL Servers #####
+
+        # sql-cow-cat-sow-cat-1 - subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftsqlserverssqlswsmmnprdsan1
+        subgraph cluster_subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftsqlserverssqlswsmmnprdsan1 {
+            style = solid;
+            bgcolor = 4;
+            
+            node [color = white;];
+                subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftsqlserverssqlswsmmnprdsan1 [label = "\nLocation: enceladus\nVersion: 12.0\nEntra ID Admin: bravo" ; image = "C:\Dev\AzNetworkDiagram\icons\sqlserver.png";imagepos = "tc";labelloc = "b";height = 2.0;];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftsqlserverssqlswsmmnprdsan1databaseszmbdbswsmmnprdsan1 [label = "\n\nLocation: venus\nName: zmbdb-owl-gnu-cow-cow-1\nPricing Tier: GeneralPurpose Gen5 4 vCores\nMax Size: 300 GB\nZone Redundant: False\nElastic Pool Name: " ; image = "C:\Dev\AzNetworkDiagram\icons\sqldb.png";imagepos = "tc";labelloc = "b";height = 2.0;];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftsqlserverssqlswsmmnprdsan1 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftsqlserverssqlswsmmnprdsan1databaseszmbdbswsmmnprdsan1;
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftsqlserverssqlswsmmnprdsan1databasesswzdbswsmmnprdsan1 [label = "\n\nLocation: elara\nName: swzdb-vet-gnu-cow-urn-1\nPricing Tier: GeneralPurpose Gen5 2 vCores\nMax Size: 150 GB\nZone Redundant: False\nElastic Pool Name: " ; image = "C:\Dev\AzNetworkDiagram\icons\sqldb.png";imagepos = "tc";labelloc = "b";height = 2.0;];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftsqlserverssqlswsmmnprdsan1 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftsqlserverssqlswsmmnprdsan1databasesswzdbswsmmnprdsan1;
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftsqlserverssqlswsmmnprdsan1databasescmrdbswsmmnprdsan1 [label = "\n\nLocation: phobos\nName: cmrdb-owl-bee-qua-owl-1\nPricing Tier: GeneralPurpose Gen5 4 vCores\nMax Size: 250 GB\nZone Redundant: False\nElastic Pool Name: " ; image = "C:\Dev\AzNetworkDiagram\icons\sqldb.png";imagepos = "tc";labelloc = "b";height = 2.0;];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftsqlserverssqlswsmmnprdsan1 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftsqlserverssqlswsmmnprdsan1databasescmrdbswsmmnprdsan1;
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftsqlserverssqlswsmmnprdsan1databasescivdbswsmmnprdsan1 [label = "\n\nLocation: umbriel\nName: civdb-fox-dog-cat-ape-1\nPricing Tier: GeneralPurpose Gen5 4 vCores\nMax Size: 250 GB\nZone Redundant: False\nElastic Pool Name: " ; image = "C:\Dev\AzNetworkDiagram\icons\sqldb.png";imagepos = "tc";labelloc = "b";height = 2.0;];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftsqlserverssqlswsmmnprdsan1 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftsqlserverssqlswsmmnprdsan1databasescivdbswsmmnprdsan1;
+   label = "sql-cow-cat-sow-cat-1";
+                }
+
+    ##### gp-sws-mmn-prd-1 - Event Hubs #####
+    ##### gp-sws-mmn-prd-1 - App Service Plans #####
+
+        # plan-fox-bee-cod-urn-1 - subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftwebserverfarmsplanswsmmnprdsan1
+        subgraph cluster_subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftwebserverfarmsplanswsmmnprdsan1 {
+            style = solid;
+            bgcolor = 1;
+            
+            node [color = black;];
+                subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftwebserverfarmsplanswsmmnprdsan1 [label = "\nLocation: io\nSKU: EP1\nTier: ElasticPremium\nKind: elastic\nCapacity: 1\nNumber of Apps: 1\n" ; image = "C:\Dev\AzNetworkDiagram\icons\appplan.png";imagepos = "tc";labelloc = "b";height = 2.5;];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftwebsitesfuncswsmmnprdsan1 [label = "\n\nLocation: deimos\nName: func-red-urn-cat-lob-1\nKind: functionapp\nHost Name: func-bat-bee-ape-ram-emu-vet-net\n" ; image = "C:\Dev\AzNetworkDiagram\icons\appservices.png";imagepos = "tc";labelloc = "b";height = 2.0;];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftwebserverfarmsplanswsmmnprdsan1 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftwebsitesfuncswsmmnprdsan1;
+   label = "plan-fox-bee-cod-urn-1";
+                }
+
+    ##### gp-sws-mmn-prd-1 - API Management Services #####
+    ##### gp-sws-mmn-prd-1 - AKS Clusters #####
+
+        # aks-qua-sun-ape-was-1 - subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftcontainerservicemanagedclustersaksswsmmnprdsan1
+        subgraph cluster_subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftcontainerservicemanagedclustersaksswsmmnprdsan1 {
+            style = solid;
+            bgcolor = 8;
+            
+            node [color = 8;];
+                subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftcontainerservicemanagedclustersaksswsmmnprdsan1 [label = "\nLocation: leda\nVersion: 1.29.7\nSKU Tier: Standard\nPrivate Cluster: True\nDNS Service IP: \nMax Agent Pools: 100\nContainer Registry: crswsmmnprdsan1\nPod CIDR: 172.31.144.204/16\nService CIDR: 10.95.57.197/16\n" ; color = 8;image = "C:\Dev\AzNetworkDiagram\icons\aks-service.png";imagepos = "tc";labelloc = "b";height = 3.0;];        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftcontainerservicemanagedclustersaksswsmmnprdsan1systempool [label = "\nName: nissan\nMode: System\nZones: 1 2 3\nVM Size: Standard_DS2_v2\nMax Pods: 30\nOS SKU: Ubuntu\nAgent Pools: 1 >= Pod Count <=  2\nEnable AutoScaling: True\nPublic IP: \n" ; color = 7;image = "C:\Dev\AzNetworkDiagram\icons\aks-node-pool.png";imagepos = "tc";labelloc = "b";height = 3.0;];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftcontainerservicemanagedclustersaksswsmmnprdsan1 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftcontainerservicemanagedclustersaksswsmmnprdsan1systempool [label = "Node Pool"];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftcontainerservicemanagedclustersaksswsmmnprdsan1systempool -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan4;
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftcontainerservicemanagedclustersaksswsmmnprdsan1appusrpool [label = "\nName: great-wall\nMode: User\nZones: 1 2 3\nVM Size: Standard_E4ds_v5\nMax Pods: 30\nOS SKU: Ubuntu\nAgent Pools: 1 >= Pod Count <=  5\nEnable AutoScaling: True\nPublic IP: \n" ; color = 7;image = "C:\Dev\AzNetworkDiagram\icons\aks-node-pool.png";imagepos = "tc";labelloc = "b";height = 3.0;];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftcontainerservicemanagedclustersaksswsmmnprdsan1 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftcontainerservicemanagedclustersaksswsmmnprdsan1appusrpool [label = "Node Pool"];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftcontainerservicemanagedclustersaksswsmmnprdsan1appusrpool -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan4;
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftcontainerservicemanagedclustersaksswsmmnprdsan1 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftcontainerregistryregistriescrswsmmnprdsan1 [label = "Container Registry"];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftcontainerservicemanagedclustersaksswsmmnprdsan1 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftcomputesshpublickeyssshkswsmmnprdsan1;
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftcontainerservicemanagedclustersaksswsmmnprdsan1 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftmanagedidentityuserassignedidentitiesidswsmmnprdsan2;
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftcontainerservicemanagedclustersaksswsmmnprdsan1 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftnetworkprivateendpointskubeapiserver [label = "Private Endpoint"; ];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftcontainerservicemanagedclustersaksswsmmnprdsan1appusrpool -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftcomputevirtualmachinescalesetsaksappusrpool20836351vmss [label = "VM Scale Set"];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftcontainerservicemanagedclustersaksswsmmnprdsan1systempool -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftcomputevirtualmachinescalesetsakssystempool99308177vmss [label = "VM Scale Set"];
+   label = "aks-qua-sun-ape-was-1";
+                }
+
+    ##### gp-sws-mmn-prd-1 - Compute Galleries #####
+
+        # honeydew - subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftcomputegalleriesakssecuritypatchedvhd_90cb0b320363b0e6
+        subgraph cluster_subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftcomputegalleriesakssecuritypatchedvhd_90cb0b320363b0e6 {
+            style = solid;
+            margin = 0;
+            colorscheme = purd9;
+            bgcolor = 3;
+            color = black;
+            node [colorscheme = purd9; fillcolor = 4; margin = 0; style = "filled";];
+
+            subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftcomputegalleriesakssecuritypatchedvhd_90cb0b320363b0e6 [fillcolor = 5; label = "\nName: honeydew\nLocation: deimos\nSharing Profile: Private" ; image = "C:\Dev\AzNetworkDiagram\icons\computegalleries.png";imagepos = "tc";labelloc = "b";height = 2.0;];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftcomputegalleriesakssecuritypatchedvhd_90cb0b320363b0e6imagesaksubuntu2204gen2containerd202407220 [label = < 
+                                        <TABLE border="0" style="rounded">
+                                        <TR><TD align="left">Name</TD><TD align="left">AKSUbuntu-2204gen2containerd-202407.22.0</TD></TR>
+                                        <TR><TD align="left">OS Type</TD><TD align="left">Linux</TD></TR>
+                                        <TR><TD align="left">OS State</TD><TD align="left">Generalized</TD></TR>
+                                        <TR><TD align="left">VM Generation</TD><TD align="left">V2</TD></TR>
+                                        <TR><TD><BR/><BR/></TD></TR>
+                                        <TR><TD><B>Version</B></TD><TD><B>Target Regions</B></TD></TR>
+                                        <TR><TD>2024.07.29</TD><TD>South Africa North</TD></TR>
+<TR><TD>2024.08.12</TD><TD>South Africa North</TD></TR>
+<TR><TD>2024.08.27</TD><TD>South Africa North</TD></TR>
+<TR><TD>2024.09.04</TD><TD>South Africa North</TD></TR>
+<TR><TD>2024.09.13</TD><TD>South Africa North</TD></TR>
+<TR><TD>2024.09.23</TD><TD>South Africa North</TD></TR>
+<TR><TD>2024.10.02</TD><TD>South Africa North</TD></TR>
+<TR><TD>2024.10.12</TD><TD>South Africa North</TD></TR>
+<TR><TD>2024.10.20</TD><TD>South Africa North</TD></TR>
+<TR><TD>2024.11.14</TD><TD>South Africa North</TD></TR>
+<TR><TD>2024.12.05</TD><TD>South Africa North</TD></TR>
+<TR><TD>2025.01.05</TD><TD>South Africa North</TD></TR>
+<TR><TD>2025.01.15</TD><TD>South Africa North</TD></TR>
+<TR><TD>2025.01.22</TD><TD>South Africa North</TD></TR>
+<TR><TD>2025.02.03</TD><TD>South Africa North</TD></TR>
+<TR><TD>2025.02.10</TD><TD>South Africa North</TD></TR>
+<TR><TD>2025.02.24</TD><TD>South Africa North</TD></TR>
+<TR><TD>2025.03.03</TD><TD>South Africa North</TD></TR>
+<TR><TD>2025.03.10</TD><TD>South Africa North</TD></TR>
+                  </TABLE>>; image = "C:\Dev\AzNetworkDiagram\icons\imagedef.png";imagepos = "tc";labelloc = "b";height = 3.5;];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftcomputegalleriesakssecuritypatchedvhd_90cb0b320363b0e6 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftcomputegalleriesakssecuritypatchedvhd_90cb0b320363b0e6imagesaksubuntu2204gen2containerd202407220;
+
+
+            label = "honeydew";
+        }
+        
+    ##### gp-sws-mmn-prd-1 - VMSS #####
+
+        # aks-ape-nut-vmss - subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftcomputevirtualmachinescalesetsaksappusrpool20836351vmss
+        subgraph cluster_subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftcomputevirtualmachinescalesetsaksappusrpool20836351vmss {
+            style = solid;
+            colorscheme = blues9;
+            bgcolor = 2;
+            node [colorscheme = blues9; color = 2;];
+                subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftcomputevirtualmachinescalesetsaksappusrpool20836351vmss [label = "\nLocation: rigel\nSKU: Standard_E4ds_v5\nCapacity: 1\nZones: 1 2 3\nOS Type: \nOrchestration Mode: Uniform\nUpgrade Policy: Microsoft.Azure.Management.Compute.Models.UpgradePolicy\nExtensions: vmssCSE, aks-appusrpool-20836351-vmss-AKSLinuxBilling, AKSLinuxExtension" ; image = "C:\Dev\AzNetworkDiagram\icons\vmss.png";imagepos = "tc";labelloc = "b";height = 3.0;];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftcomputevirtualmachinescalesetsaksappusrpool20836351vmss -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftcomputesshpublickeyssshkswsmmnprdsan1;
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftcomputevirtualmachinescalesetsaksappusrpool20836351vmss -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftmanagedidentityuserassignedidentitiesaksswsmmnprdsan1agentpool;
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftcomputevirtualmachinescalesetsaksappusrpool20836351vmss -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftmanagedidentityuserassignedidentitiesazurekeyvaultsecretsprovideraksswsmmnprdsan1;
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftcomputevirtualmachinescalesetsaksappusrpool20836351vmss -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftmanagedidentityuserassignedidentitiesazurepolicyaksswsmmnprdsan1;
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftcomputevirtualmachinescalesetsaksappusrpool20836351vmss -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan4;
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftcomputevirtualmachinescalesetsaksappusrpool20836351vmss -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftnetworknetworksecuritygroupsaksagentpool28169477nsg;
+   label = "aks-ape-nut-vmss";
+        }
+
+
+        # aks-gnu-cat-vmss - subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftcomputevirtualmachinescalesetsakssystempool99308177vmss
+        subgraph cluster_subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftcomputevirtualmachinescalesetsakssystempool99308177vmss {
+            style = solid;
+            colorscheme = blues9;
+            bgcolor = 2;
+            node [colorscheme = blues9; color = 2;];
+                subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftcomputevirtualmachinescalesetsakssystempool99308177vmss [label = "\nLocation: wolf-359\nSKU: Standard_DS2_v2\nCapacity: 1\nZones: 1 2 3\nOS Type: \nOrchestration Mode: Uniform\nUpgrade Policy: Microsoft.Azure.Management.Compute.Models.UpgradePolicy\nExtensions: vmssCSE, aks-systempool-99308177-vmss-AKSLinuxBilling, AKSLinuxExtension" ; image = "C:\Dev\AzNetworkDiagram\icons\vmss.png";imagepos = "tc";labelloc = "b";height = 3.0;];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftcomputevirtualmachinescalesetsakssystempool99308177vmss -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftcomputesshpublickeyssshkswsmmnprdsan1;
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftcomputevirtualmachinescalesetsakssystempool99308177vmss -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftmanagedidentityuserassignedidentitiesaksswsmmnprdsan1agentpool;
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftcomputevirtualmachinescalesetsakssystempool99308177vmss -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftmanagedidentityuserassignedidentitiesazurekeyvaultsecretsprovideraksswsmmnprdsan1;
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftcomputevirtualmachinescalesetsakssystempool99308177vmss -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftmanagedidentityuserassignedidentitiesazurepolicyaksswsmmnprdsan1;
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftcomputevirtualmachinescalesetsakssystempool99308177vmss -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan4;
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftcomputevirtualmachinescalesetsakssystempool99308177vmss -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftnetworknetworksecuritygroupsaksagentpool28169477nsg;
+   label = "aks-gnu-cat-vmss";
+        }
+
+    ##### gp-sws-mmn-prd-1 - Managed Identities #####
+
+        # id-gnu-sun-man-pig-1 - 
+        subgraph cluster_subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftmanagedidentityuserassignedidentitiesidswsmmnprdsan1 {
+            style = solid;
+            colorscheme = blues9;
+            bgcolor = 3;
+            margin = 0;
+            node [colorscheme = blues9; color = 3; margin = 0;];
+
+            subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftmanagedidentityuserassignedidentitiesidswsmmnprdsan1 [label = "\nid-gnu-sun-man-pig-1\nLocation: ariel"; image = "C:\Dev\AzNetworkDiagram\icons\managed-identity.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "id-gnu-sun-man-pig-1";
+        }
+        
+
+        # id-lob-sky-ram-bat-2 - 
+        subgraph cluster_subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftmanagedidentityuserassignedidentitiesidswsmmnprdsan2 {
+            style = solid;
+            colorscheme = blues9;
+            bgcolor = 3;
+            margin = 0;
+            node [colorscheme = blues9; color = 3; margin = 0;];
+
+            subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftmanagedidentityuserassignedidentitiesidswsmmnprdsan2 [label = "\nid-lob-sky-ram-bat-2\nLocation: miranda"; image = "C:\Dev\AzNetworkDiagram\icons\managed-identity.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "id-lob-sky-ram-bat-2";
+        }
+        
+
+        # azurekeyvaultsecretsprovider-cod-was-lob-emu-red-1 - 
+        subgraph cluster_subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftmanagedidentityuserassignedidentitiesazurekeyvaultsecretsprovideraksswsmmnprdsan1 {
+            style = solid;
+            colorscheme = blues9;
+            bgcolor = 3;
+            margin = 0;
+            node [colorscheme = blues9; color = 3; margin = 0;];
+
+            subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftmanagedidentityuserassignedidentitiesazurekeyvaultsecretsprovideraksswsmmnprdsan1 [label = "\nazurekeyvaultsecretsprovider-cod-was-lob-emu-red-1\nLocation: alpha-centauri"; image = "C:\Dev\AzNetworkDiagram\icons\managed-identity.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "azurekeyvaultsecretsprovider-cod-was-lob-emu-red-1";
+        }
+        
+
+        # azurepolicy-pig-man-ant-urn-cat-1 - 
+        subgraph cluster_subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftmanagedidentityuserassignedidentitiesazurepolicyaksswsmmnprdsan1 {
+            style = solid;
+            colorscheme = blues9;
+            bgcolor = 3;
+            margin = 0;
+            node [colorscheme = blues9; color = 3; margin = 0;];
+
+            subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftmanagedidentityuserassignedidentitiesazurepolicyaksswsmmnprdsan1 [label = "\nazurepolicy-pig-man-ant-urn-cat-1\nLocation: 51-pegasi-b"; image = "C:\Dev\AzNetworkDiagram\icons\managed-identity.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "azurepolicy-pig-man-ant-urn-cat-1";
+        }
+        
+
+        # aks-nut-emu-sun-ram-urn-agentpool - 
+        subgraph cluster_subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftmanagedidentityuserassignedidentitiesaksswsmmnprdsan1agentpool {
+            style = solid;
+            colorscheme = blues9;
+            bgcolor = 3;
+            margin = 0;
+            node [colorscheme = blues9; color = 3; margin = 0;];
+
+            subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2_aks_aksswsmmnprdsan1_nodesprovidersmicrosoftmanagedidentityuserassignedidentitiesaksswsmmnprdsan1agentpool [label = "\naks-nut-emu-sun-ram-urn-agentpool\nLocation: gliese-581g"; image = "C:\Dev\AzNetworkDiagram\icons\managed-identity.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "aks-nut-emu-sun-ram-urn-agentpool";
+        }
+        
+
+        # Built-ape-rob-southafricanorth - 
+        subgraph cluster_subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsbuiltinidentityrgprovidersmicrosoftmanagedidentityuserassignedidentitiesbuiltinidentitysouthafricanorth {
+            style = solid;
+            colorscheme = blues9;
+            bgcolor = 3;
+            margin = 0;
+            node [colorscheme = blues9; color = 3; margin = 0;];
+
+            subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsbuiltinidentityrgprovidersmicrosoftmanagedidentityuserassignedidentitiesbuiltinidentitysouthafricanorth [label = "\nBuilt-ape-rob-southafricanorth\nLocation: wolf-359"; image = "C:\Dev\AzNetworkDiagram\icons\managed-identity.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "Built-ape-rob-southafricanorth";
+        }
+        
+    ##### gp-sws-mmn-prd-1 - Azure Container Registries #####
+
+        # ssangyong - subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftcontainerregistryregistriescrswsmmnprdsan1
+        subgraph cluster_subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftcontainerregistryregistriescrswsmmnprdsan1 {
+            style = solid;
+            margin = 0;
+            colorscheme = orrd9;
+            bgcolor = 2;
+            node [colorscheme = orrd9; color = 2; margin = 0;];
+                subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftcontainerregistryregistriescrswsmmnprdsan1 [label = "\nACR Name: ssangyong\nLocation: callisto\nSKU: Premium\nZone Redundancy: Disabled\nPublic Network Access: Disabled\n" ; image = "C:\Dev\AzNetworkDiagram\icons\acr.png";imagepos = "tc";labelloc = "b";height = 2.5;];
+        subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftcontainerregistryregistriescrswsmmnprdsan1 -> subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftnetworkprivateendpointspepcrswsmmnprdsan1registry0 [label = "Private Endpoint"; ];
+   label = "ssangyong";
+                }
+
+    ##### gp-sws-mmn-prd-1 - SSH Keys #####
+
+        # sshk-zip-yak-cat-man-1 - subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftcomputesshpublickeyssshkswsmmnprdsan1
+        subgraph cluster_subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftcomputesshpublickeyssshkswsmmnprdsan1 {
+            style = solid;
+            margin = 0;
+            colorscheme = blues9;
+            bgcolor = 4;
+            node [colorscheme = blues9; color = 4; margin = 0;];
+
+            subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan2providersmicrosoftcomputesshpublickeyssshkswsmmnprdsan1 [label = "\nsshk-zip-yak-cat-man-1\nLocation: barnard's-star" ; image = "C:\Dev\AzNetworkDiagram\icons\ssh-key.png";imagepos = "tc";labelloc = "b";height = 1.5;];
+            label = "sshk-zip-yak-cat-man-1";
+        }
+        
+
+    ##########################################################################################################
+    ##### gp-sws-mmn-prd-1 
+    ##### END
+    ##########################################################################################################
+
+
+    ##########################################################################################################
+    ##### RANKS
+    ##########################################################################################################
+
+    ### AddressSpace ranks
+    { rank=min; subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1 }
+ 
+
+    ### Subnets ranks
+    { rank=same; subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan2; subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan1; subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan4; subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan3; subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkvirtualnetworksvnetswsmmnprdsan1subnetssnetswsmmnprdsan5 }
+ 
+
+    ### Route table ranks
+    { rank=same; subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkroutetablesrtgpswsmmnagwprdsan3; subscriptions5245ca57a7cc416b92ada1944b1d2d45resourcegroupsrgswsmmnprdsan1providersmicrosoftnetworkroutetablesrtgpswsmmnoutprdsan1 }
+ 
+    subgraph clusterLegend {
+                    style = solid;
+                    margin = 0;
+                    colorscheme = rdpu7;
+                    bgcolor = 1;
+                    node [colorscheme = rdpu7;color = 1; margin = 0; style=none];
+
+                    l1 [color = 1; label = < <TABLE border="0" style="rounded">
+                                <TR><TD colspan="2" border="0"><FONT POINT-SIZE="25"><B>Legend</B></FONT></TD></TR>
+                            <TR><TD align="left"><IMG SCALE="TRUE" SRC="C:\Dev\AzNetworkDiagram\icons\aks-service.png"/></TD><TD align="left">AKS Cluster</TD></TR>
+                <TR><TD align="left"><IMG SCALE="TRUE" SRC="C:\Dev\AzNetworkDiagram\icons\appplan.png"/></TD><TD align="left">App Service Plan</TD></TR>
+                <TR><TD align="left"><IMG SCALE="TRUE" SRC="C:\Dev\AzNetworkDiagram\icons\agw.png"/></TD><TD align="left">Application Gateway</TD></TR>
+                <TR><TD align="left"><IMG SCALE="TRUE" SRC="C:\Dev\AzNetworkDiagram\icons\acr.png"/></TD><TD align="left">Azure Container Registry</TD></TR>
+                <TR><TD align="left"><IMG SCALE="TRUE" SRC="C:\Dev\AzNetworkDiagram\icons\computegalleries.png"/></TD><TD align="left">Compute Gallery</TD></TR>
+                <TR><TD align="left"><IMG SCALE="TRUE" SRC="C:\Dev\AzNetworkDiagram\icons\cosmosdb.png"/></TD><TD align="left">CosmosDB Account</TD></TR>
+                <TR><TD align="left"><IMG SCALE="TRUE" SRC="C:\Dev\AzNetworkDiagram\icons\managed-identity.png"/></TD><TD align="left">Managed Identity</TD></TR>
+                <TR><TD align="left"><IMG SCALE="TRUE" SRC="C:\Dev\AzNetworkDiagram\icons\nsg.png"/></TD><TD align="left">Network Security Group</TD></TR>
+                <TR><TD align="left"><IMG SCALE="TRUE" SRC="C:\Dev\AzNetworkDiagram\icons\private-endpoint.png"/></TD><TD align="left">Private Endpoint</TD></TR>
+                <TR><TD align="left"><IMG SCALE="TRUE" SRC="C:\Dev\AzNetworkDiagram\icons\RouteTable.png"/></TD><TD align="left">Route Table</TD></TR>
+                <TR><TD align="left"><IMG SCALE="TRUE" SRC="C:\Dev\AzNetworkDiagram\icons\sqlserver.png"/></TD><TD align="left">SQL Server</TD></TR>
+                <TR><TD align="left"><IMG SCALE="TRUE" SRC="C:\Dev\AzNetworkDiagram\icons\ssh-key.png"/></TD><TD align="left">SSH Key</TD></TR>
+                <TR><TD align="left"><IMG SCALE="TRUE" SRC="C:\Dev\AzNetworkDiagram\icons\storage-account.png"/></TD><TD align="left">Storage Account</TD></TR>
+                <TR><TD align="left"><IMG SCALE="TRUE" SRC="C:\Dev\AzNetworkDiagram\icons\snet.png"/></TD><TD align="left">Subnet</TD></TR>
+                <TR><TD align="left"><IMG SCALE="TRUE" SRC="C:\Dev\AzNetworkDiagram\icons\vmss.png"/></TD><TD align="left">Virtual Machine Scale Set</TD></TR>
+                <TR><TD align="left"><IMG SCALE="TRUE" SRC="C:\Dev\AzNetworkDiagram\icons\vm.png"/></TD><TD align="left">Virtual Machine</TD></TR>
+                <TR><TD align="left"><IMG SCALE="TRUE" SRC="C:\Dev\AzNetworkDiagram\icons\vnet.png"/></TD><TD align="left">Virtual Network</TD></TR>
+                </TABLE>>]; 
+            }
+            { rank=max; l1; }
+    }
