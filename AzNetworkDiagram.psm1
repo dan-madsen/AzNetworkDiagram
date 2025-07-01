@@ -386,28 +386,33 @@ function Export-AKSCluster {
         [Parameter(Mandatory = $true)]
         [PSCustomObject]$Aks
     )
-
     try {
         # Check if ACR integration is enabled and which ACRs are attached
         #$Aks.IdentityProfile.kubeletidentity.ClientId
-        $roleAssignments = Get-AzRoleAssignment -ObjectId $Aks.IdentityProfile.kubeletidentity.ObjectId -ErrorAction Stop
-
-        # Filter for ACR-related role assignments
-        $acrRoleAssignments = $roleAssignments | Where-Object { 
-            $_.Scope -like "*/Microsoft.ContainerRegistry/registries/*" -and 
-            ($_.RoleDefinitionName -eq "AcrPull" -or $_.RoleDefinitionName -eq "AcrPush")
-        }
-
-        # Display the linked ACRs
-        if ($null -ne $acrRoleAssignments) {
-            $aksacr = $acrRoleAssignments.Scope.split("/")[-1] 
-            $aksacrid = $acrRoleAssignments.Scope.replace("-", "").replace("/", "").replace(".", "").ToLower()
-        }
-        else {
+        if ($null -eq $Aks.IdentityProfile.kubeletidentity.ObjectId) {
+            # No kubelet identity found for AKS cluster $($Aks.Name). Skipping ACR role assignment check.
             $aksacr = "None"
             $aksacrid = ""
-        }
+        } else {
+            # Get role assignments for the AKS cluster's kubelet identity
+            $roleAssignments = Get-AzRoleAssignment -ObjectId $Aks.IdentityProfile.kubeletidentity.ObjectId -ErrorAction Stop
 
+            # Filter for ACR-related role assignments
+            $acrRoleAssignments = $roleAssignments | Where-Object { 
+                $_.Scope -like "*/Microsoft.ContainerRegistry/registries/*" -and 
+                ($_.RoleDefinitionName -eq "AcrPull" -or $_.RoleDefinitionName -eq "AcrPush")
+            }
+
+            # Display the linked ACRs
+            if ($null -ne $acrRoleAssignments) {
+                $aksacr = $acrRoleAssignments.Scope.split("/")[-1] 
+                $aksacrid = $acrRoleAssignments.Scope.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            }
+            else {
+                $aksacr = "None"
+                $aksacrid = ""
+            }
+        }
         $aksid = $Aks.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
         $Name = SanitizeString $Aks.Name
         $data = "
@@ -1075,7 +1080,7 @@ function Invoke-TableWriter {
         }
         $table += "</TABLE>`n"
         $dbid = $db.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-        $data += "        $dbid [label = < $table > ; image = `"$OutputPath\icons\$iconname.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n"
+        $data += "        $dbid [shape = box; label = < $table > ; image = `"$OutputPath\icons\$iconname.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n"
         $data += "        $cosmosdbactid -> $($dbid);`n"
     }
     return $data
@@ -1161,7 +1166,7 @@ function Export-CosmosDBAccount {
                     }
 
                     $dbid = $db.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                    $data += "        $($dbid) [label = `"\n\nName: $(SanitizeString $db.Name)\nTable Throughput: $dbthroughput\n`" ; image = `"$OutputPath\icons\$iconname.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n" 
+                    $data += "        $($dbid) [shape = box; label = `"\n\nName: $(SanitizeString $db.Name)\nTable Throughput: $dbthroughput\n`" ; image = `"$OutputPath\icons\$iconname.png`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n" 
                     $data += "        $cosmosdbactid -> $($dbid);`n"
                 }
             }   
@@ -1593,8 +1598,18 @@ function Export-APIM {
         $apimCtx = New-AzApiManagementContext -ResourceGroupName $apim.ResourceGroupName -ServiceName $apim.name
         $prodCount = (Get-AzApiManagementProduct -Context $apimCtx -ErrorAction SilentlyContinue).Count
         $apiCount = (Get-AzApiManagementApi     -Context $apimCtx -ErrorAction SilentlyContinue).Count
-        $PublicIPAddresses = ($apim.PublicIPAddresses | Foreach-Object { SanitizeString $_ }) -join ", "
-        $PrivateIPAddresses = ($apim.PrivateIPAddresses | Foreach-Object { SanitizeString $_ }) -join ", "
+        if ($null -eq $apim.PublicIPAddresses) {
+            $PublicIPAddresses = "None"
+        }
+        else {
+            $PublicIPAddresses = $apim.PublicIPAddresses
+        }
+        if ($null -eq $apim.PrivateIPAddresses) {
+            $PrivateIPAddresses = "None"
+        }
+        else {
+            $PrivateIPAddresses = $apim.PrivateIPAddresses
+        }
 
         $data += "        $apimid [label = `"\nLocation: $Location\nSKU: $($apim.Sku)\nPlatform Version: $($apim.PlatformVersion)\nPublic IP Addresses: $PublicIPAddresses\nPrivate IP Addresses: $PrivateIPAddresses\nCapacity: $($apim.Capacity)\nZone: $($apim.Zone)\nPublic Network Access: $($apim.PublicNetworkAccess)\nProducts: $prodCount\nAPI's: $apiCount\nVirtual Network: $($apim.VpnType)`" ; image = `"$OutputPath\icons\apim.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
         $data += "`n"
@@ -2832,6 +2847,78 @@ function Export-PrivateEndpoint {
     }
 }
 
+function Export-ContainerAppEnv
+{
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$containerAppEnvironment
+    )
+
+    $envName = SanitizeString $containerAppEnvironment.Name
+    $id = $containerAppEnvironment.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+    $location = SanitizeLocation $containerAppEnvironment.Location
+    $staticIP = $containerAppEnvironment.StaticIp ? $(SanitizeString $containerAppEnvironment.StaticIp) : "N/A"
+    $EnvironmentType = $null -eq $containerAppEnvironment.WorkloadProfile? "Consumption Only" : "Unknown"
+
+    try {
+        $script:rankcontainerappenv += $id
+
+        $header = "
+        # $envName - $id
+        subgraph cluster_$id {
+            style = solid;
+            colorscheme = blues9 ;
+            bgcolor = 2;
+            node [colorscheme = blues9 ; style = filled;];
+        "
+        
+        $envdata = "    $id [fillcolor = 3; fontcolor = black; label = `"\nName: $envname\nLocation: $location\nZone Redundant: $($containerAppEnvironment.ZoneRedundant)\nEnvironment Type: $EnvironmentType\nStatic IP: $staticIP`";image = `"$OutputPath\icons\containerappenv.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];`n"
+        $acas =  Get-AzContainerApp | where-object { $_.EnvironmentId -eq $containerAppEnvironment.id }
+        if ($acas) {
+            $script:rankcontainerapps += $id
+            # Export each Container App in the environment
+            foreach ($aca in $acas) {
+                $acaName = SanitizeString $aca.Name
+                $acaId = $aca.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $acaLocation = SanitizeLocation $aca.Location
+                $AppEnvironmentType = $null -eq $aca.WorkloadProfileName? "Consumption Only" : "Unknown"
+                if ($nul -ne $aca.TemplateContainer) {
+                    $acaImage = $aca.TemplateContainer.Image
+                    $acaAppName = $aca.TemplateContainer.Name
+                    $acaCpu = $aca.TemplateContainer.ResourceCpu
+                    $acaMemory = $aca.TemplateContainer.ResourceMemory
+                    $acaStorage = $aca.TemplateContainer.ResourceEphemeralStorage
+                }
+                else {
+                    $acaImage = "Unknown"
+                    $acaAppName = "Unknown"
+                    $acaCpu = "Unknown"
+                    $acaMemory = "Unknown"
+                    $acaStorage = "Unknown"
+                }
+
+                $acaDetails = "Name: $acaName\nLocation: $acaLocation\nEnvironment Type: $AppEnvironmentType\nApp Name: $acaAppName\nApp Image: $acaImage\nApp CPU: $acaCpu Cores\nApp Memory: $acaMemory\nApp Storage: $acaStorage\nOutbound IP Address: $($aca.OutboundIPAddress -join ', ')\n"
+                
+                # DOT
+                $envdata += "    $acaId [fillcolor = 4; label = `"\n$acaDetails`";image = `"$OutputPath\icons\containerapp.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n"
+                $envdata += "    $id -> $acaId [ltail = cluster_$id; lhead = cluster_$acaId;];`n"
+            }
+        }
+
+        # End subgraph
+        $footer = "
+            label = `"$envName`";
+        }
+        "
+        
+        Export-AddToFile -Data ($header + $envdata + $footer)
+    }
+    catch {
+        Write-Error "Can't export Container App Environment: $($containerAppEnvironment.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+}
+
 <#
 .SYNOPSIS
 Confirms that all prerequisites are met for generating the Azure network diagram.
@@ -2845,7 +2932,6 @@ function Confirm-Prerequisites {
     $ErrorActionPreference = 'Stop'
 
     if (! (Test-Path $OutputPath)) {}
-
     # dot.exe executable
     try {
         $dot = (get-command dot.exe).Path
@@ -2871,7 +2957,6 @@ function Confirm-Prerequisites {
         Write-Error "Install-Module Az.Network"
     }
 
-
     # Azure authentication verification
     $context = Get-AzContext  -ErrorAction Stop
     if ($null -eq $context) { 
@@ -2879,7 +2964,6 @@ function Confirm-Prerequisites {
         Write-Output "A login window should appear - hint: it may hide behind active windows!"
         Login-AzAccount
     }
-
     # Icons available?
     if (! (Test-Path "$OutputPath\icons") ) { Write-Output "Downloading icons to $OutputPath\icons\ ... " ; New-Item -Path "$OutputPath" -Name "icons" -ItemType "directory" | Out-null }
     $icons = @(
@@ -2897,6 +2981,9 @@ function Confirm-Prerequisites {
         "bas.png",
         "cassandra.png",
         "computegalleries.png",
+        "containerapp.png",
+        "containerappenv.png",
+        "containerapps.png",
         #"Connections.png",
         "cosmosdb.png",
         "db.png",
@@ -2948,6 +3035,7 @@ function Confirm-Prerequisites {
     $icons | ForEach-Object {
         if (! (Test-Path "$OutputPath\icons\$_") ) { Invoke-WebRequest "https://github.com/dan-madsen/AzNetworkDiagram/raw/refs/heads/main/icons/$_" -OutFile "$OutputPath\icons\$_" }
     }
+    
 }
 
 function Get-DOTExecutable {
@@ -3019,7 +3107,6 @@ function Get-AzNetworkDiagram {
 
     Write-Output "Checking prerequisites ..."
     Confirm-Prerequisites
-
     ##### Global runtime vars #####
     #Rank (visual) in diagram
     $script:rankrts = @()
@@ -3041,7 +3128,6 @@ function Get-AzNetworkDiagram {
 
     # Run program and collect data through powershell commands
     Export-dotHeader
-
     # Set subscriptions to every accessible subscription, if unset
     try {
         if ($TenantId) {
@@ -3055,7 +3141,6 @@ function Get-AzNetworkDiagram {
         Write-Error "No available subscriptions within active AzContext - missing permissions? " $_.Exception.Message
         return
     } 
-    
     Write-Output "Gathering information ..."
     Update-AzConfig -DisplaySecretsWarning $false -Scope process | Out-Null
     Update-AzConfig -DisplayBreakingChangeWarning $false -Scope process | Out-Null
@@ -3070,14 +3155,14 @@ function Get-AzNetworkDiagram {
         # Errors will appear like: dot: graph is too large for cairo-renderer bitmaps. Scaling by 0.324583 to fit
         
         #$AzureRegions = Get-AzLocation | Select-Object DisplayName, Location | Sort-Object DisplayName
-
         $Subscriptions | ForEach-Object {
             # Set Context
             if ($TenantId) {
-                $context = Set-AzContext -Subscription $_ -Tenant $TenantId -ErrorAction Stop
+                # If TenantId is specified, use it to set the context               
+                $context = Set-AzContext -Subscription $_ -Tenant $TenantId -Force -ErrorAction Stop
             }
             else {
-                $context = Set-AzContext -Subscription $_ -ErrorAction Stop
+                $context = Set-AzContext -Subscription $_ -Force -ErrorAction Stop
             }
             $subid = $context.Subscription.Id
             $subname = $context.Subscription.Name
@@ -3410,6 +3495,18 @@ function Get-AzNetworkDiagram {
                         Export-SSHKey $sshkey
                     }
                 }
+
+                #Container App Environments
+                Write-Output "Collecting Container App Environments..."
+                Export-AddToFile "    ##### $subname - Container App Environments #####"
+                $containerAppEnvironments = Get-AzContainerAppManagedEnv -ErrorAction Stop
+                if ($null -ne $containerAppEnvironments) {
+                    $Script:Legend += ,@("Container App Environment","containerappenv.png")
+                    foreach ($containerAppEnvironment in $containerAppEnvironments) {
+                        Export-ContainerAppEnv $containerAppEnvironment
+                    }
+                }
+
             }
 
             Export-AddToFile "`n    ##########################################################################################################"
