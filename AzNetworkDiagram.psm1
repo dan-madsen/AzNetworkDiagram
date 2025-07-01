@@ -2847,6 +2847,62 @@ function Export-PrivateEndpoint {
     }
 }
 
+function Export-ContainerGroup
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$containerGroup
+    )
+
+    $name = SanitizeString $containerGroup.Name
+    $id = $containerGroup.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+    $location = SanitizeLocation $containerGroup.Location
+    $script:rankcontainergroups += $id
+
+    try {
+        $header = "
+        # $name - $id
+        subgraph cluster_$id {
+            style = solid;
+            colorscheme = bupu9;
+            bgcolor = 2;
+            node [colorscheme = bupu9; style = filled;];
+        "
+        
+        $instanceIP = (SanitizeString $containerGroup.IPAddress.IP) + " ($($containerGroup.IPAddressType.ToString()))"
+        $instanceOS = $containerGroup.OSType.ToString()
+        $instanceZone = $null -eq $containerGroup.Zone ? "None" : $containerGroup.Zone
+        $instanceSku = $containerGroup.sku.ToString()
+
+        $data = "    $id [fillcolor = 3; fontcolor = black; label = `"\nName: $name\nLocation: $location\nOS Type: $instanceOS\nIP Address: $instanceIP\nZone: $instanceZone\nSKU: $instanceSku`";image = `"$OutputPath\icons\containerinstance.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];`n"
+        
+        $contId = 0;
+        foreach($container in $containerGroup.Container) {
+            $containerName = SanitizeString $container.Name
+            $containerImage = SanitizeString $container.Image
+            $containerCpu = $container.RequestCpu
+            $containerMemory = $container.RequestMemoryInGb
+            $containerGpu = $null -eq $container.RequestGpuCount ? "0" : $container.RequestGpuCount 
+            $containerPorts = ($container.Port | ForEach-Object { "$($_.Port)/$($_.Protocol)" }) -join ', '     
+            
+            # DOT
+            $data += "    $id$contId [fillcolor = 4; label = `"\n\nName: $containerName\nImage: $containerImage\nCPU: $containerCpu Cores\nMemory: $containerMemory Gb\nGPU's: $containerGpu\nPorts: $containerPorts`";image = `"$OutputPath\icons\containers.png`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];`n"
+            $data += "    $id -> $id$contId [ltail = cluster_$id; lhead = cluster_$id$contId;];`n"
+            $contId += 1;
+        }
+        # DOT
+        if ($null -ne $containerGroup.SubnetId) {
+            $subnetid = $containerGroup.SubnetId.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $data += "    $id -> $subnetId;`n"
+        }
+        Export-AddToFile -Data ($header + $data + "label = `"$name`";}")
+    }
+    catch {
+        Write-Error "Can't export Container Group: $($containerGroup.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+}
+
 function Export-ContainerAppEnv
 {
     [CmdletBinding()]
@@ -2984,6 +3040,8 @@ function Confirm-Prerequisites {
         "containerapp.png",
         "containerappenv.png",
         "containerapps.png",
+        "containerinstance.png",
+        "containers.png",
         #"Connections.png",
         "cosmosdb.png",
         "db.png",
@@ -3282,6 +3340,18 @@ function Get-AzNetworkDiagram {
 
             # Skip the rest of the resource types, if -OnlyCoreNetwork was set to true, at runtime
             if ( -not $OnlyCoreNetwork ) {
+
+                #Container Instances
+                Write-Output "Collecting Container Instances..."
+                Export-AddToFile "    ##### $subname - Container Instances #####"
+                $containerGroups = Get-AzContainerGroup -ErrorAction Stop
+                if ($null -ne $containerGroups) {   
+                    $Script:Legend += ,@("Containers","containers.png")
+                    $Script:Legend += ,@("Container Instance","containerinstance.png")
+                    foreach ($containerGroup in $containerGroups) {
+                        Export-ContainerGroup $containerGroup
+                    }
+                }
                 ### VMs
                 Write-Output "Collecting VMs..."
                 Export-AddToFile "    ##### $subname - VMs #####"

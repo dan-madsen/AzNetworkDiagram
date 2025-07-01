@@ -134,6 +134,8 @@ This module will include in the diagram:
   - Redis Cache
   - App Services
   - Compute Galleries
-    
+  - Azure Container Apps
+  - Azure Container Instances
+
 # Issues, bugs, comments and ideas
 Please submit using the issues option in GitHub
