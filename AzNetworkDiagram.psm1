@@ -3006,6 +3006,7 @@ function Confirm-Prerequisites {
         import-module az.accounts
     }
     catch {
+        Write-Output "Can't import modules at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
         Write-Output "Please install the following PowerShell modules, using install-module: Az.Network + Az.Accounts"
         Write-Output ""
         Write-Output "Ie:"
