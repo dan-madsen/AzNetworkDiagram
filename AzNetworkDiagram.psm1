@@ -3617,11 +3617,12 @@ function Get-AzNetworkDiagram {
 
         ##### Generate diagram #####
         # Generate diagram using Graphviz
-        $OutputFileName = $OutputPath + "\"
+        $OutputFileName = "AzNetworkDiagram"
         if ($Prefix) {
-            $OutputFileName += $Prefix + "-"
+            $OutputFileName = $Prefix + "-" + $OutputFileName
         }
-        $OutputFileName += "AzNetworkDiagram"
+        $OutputFileName = Join-Path $OutputPath -ChildPath $OutputFileName  # OS-safe, works on Linux as well as Windows
+
     #    dot -q1 -Tpdf $OutputPath\AzNetworkDiagram.dot -o "$OutputFileName.pdf"
 
         $DOT = (Get-DOTExecutable).Fullname
