@@ -2999,21 +2999,6 @@ function Confirm-Prerequisites {
         Write-Error "dot application executable not found - please install Graphiz (https://graphviz.org), and/or ensure `"dot`" is in `"`$PATH`" !"
     }
     
-    # Load Powershell modules
-    # This block is probably not neccesary anymore, as all modules are stated as required
-    try {
-        import-module az.network -DisableNameChecking
-        import-module az.accounts
-    }
-    catch {
-        Write-Output "Can't import modules at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
-        Write-Output "Please install the following PowerShell modules, using install-module: Az.Network + Az.Accounts"
-        Write-Output ""
-        Write-Output "Ie:"
-        Write-Output "Install-Module Az.Accounts"
-        Write-Error "Install-Module Az.Network"
-    }
-
     # Azure authentication verification
     $context = Get-AzContext  -ErrorAction Stop
     if ($null -eq $context) { 
