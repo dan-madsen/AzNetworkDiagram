@@ -2990,13 +2990,13 @@ function Confirm-Prerequisites {
     if (! (Test-Path $OutputPath)) {}
     # dot.exe executable
     try {
-        $dot = (get-command dot.exe).Path
+        $dot = (Get-DOTExecutable).Fullname
         if ($null -eq $dot) {
-            Write-Error "dot.exe executable not found - please install Graphiz (https://graphviz.org), and/or ensure `"dot.exe`" is in `"`$PATH`" !"
+            Write-Error "dot application executable not found - please install Graphiz (https://graphviz.org), and/or ensure `"dot`" is in `"`$PATH`" !"
         }
     }
     catch {
-        Write-Error "dot.exe executable not found - please install Graphiz (https://graphviz.org), and/or ensure `"dot.exe`" is in `"`$PATH`" !"
+        Write-Error "dot application executable not found - please install Graphiz (https://graphviz.org), and/or ensure `"dot`" is in `"`$PATH`" !"
     }
     
     # Load Powershell modules
@@ -3097,18 +3097,21 @@ function Confirm-Prerequisites {
 }
 
 function Get-DOTExecutable {
-    
-    $PossibleGraphVizPaths = @(
-        'C:\Program Files\NuGet\Packages\Graphviz*\dot.exe',
-        'C:\program files*\GraphViz*\bin\dot.exe',
-        '/usr/local/bin/dot',
-        '/usr/bin/dot',
-        '/opt/homebrew/bin/dot'
-    )
-    $PossibleGraphVizPaths += (Get-Command -Type Application -Name dot).Source
+    try {
+        $PossibleGraphVizPaths = @(
+            'C:\Program Files\NuGet\Packages\Graphviz*\dot.exe',
+            'C:\program files*\GraphViz*\bin\dot.exe',
+            '/usr/local/bin/dot',
+            '/usr/bin/dot',
+            '/opt/homebrew/bin/dot'
+        )
+        $PossibleGraphVizPaths += (Get-Command -Type Application -Name dot).Source
 
-    $GraphViz = Resolve-Path -path $PossibleGraphVizPaths -ErrorAction SilentlyContinue | Get-Item | Where-Object BaseName -eq 'dot' | Select-Object -First 1
-
+        $GraphViz = Resolve-Path -path $PossibleGraphVizPaths -ErrorAction SilentlyContinue | Get-Item | Where-Object BaseName -eq 'dot' | Select-Object -First 1
+    }
+    catch {
+        $GraphViz = $null
+    }
     return $GraphViz
 }
 
