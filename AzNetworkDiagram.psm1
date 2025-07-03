@@ -3670,12 +3670,13 @@ function Get-AzNetworkDiagram {
             Write-Output "`nGenerating $OutputFileName.$format ..."
             #GenerateDotFile -OutputPath $OutputPath -OutputFileName $OutputFileName -Format $OutputFormat
             $DOTFileName = Join-Path $OutputPath -ChildPath "AzNetworkDiagram.dot"
-            $arguments = "-T$format $DOTFileName -o $OutputFileName.$format"
+            $arguments = "-v -T$format $DOTFileName -o $OutputFileName.$format"
             $errorOutput = $( $output = & $DOT $esc $arguments) 2>&1
             # Check the exit code and error output
             if ($LastExitCode -ne 0) {
                 Write-Host "The executable failed with exit code: $LastExitCode"
                 Write-Host "Error details: $errorOutput"
+                Write-Host "Output: $output"
             }
         }
     } catch {
