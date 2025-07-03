@@ -3630,7 +3630,8 @@ function Get-AzNetworkDiagram {
         foreach ($format in $OutputFormat) {
             Write-Output "`nGenerating $OutputFileName.$format ..."
             #GenerateDotFile -OutputPath $OutputPath -OutputFileName $OutputFileName -Format $OutputFormat
-            $arguments = "-T$format $OutputPath\AzNetworkDiagram.dot -o $OutputFileName.$format"
+            $DOTFileName = Join-Path $OutputPath -ChildPath "AzNetworkDiagram.dot"
+            $arguments = "-T$format $DOTFileName -o $OutputFileName.$format"
             $errorOutput = $( $output = & $DOT $esc $arguments) 2>&1
             # Check the exit code and error output
             if ($LastExitCode -ne 0) {
