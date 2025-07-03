@@ -2442,7 +2442,7 @@ function Export-vWAN {
         
             # Convert addressSpace prefixes from array to string
             $vWANDetails = "Virtual WAN Type: $VirtualWANType\nLocation: $Location\nAllow Vnet to Vnet Traffic: $AllowVnetToVnetTraffic\nAllow Branch to Branch Traffic: $AllowBranchToBranchTraffic"
-            $ImagePath = Join-Path $OutputPath "icons" "vwan.png"
+            $ImagePath = Join-Path $OutputPath "icons" "vWAN.png"
             $vwandata = "    $id [label = `"\n$vWANDetails`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n"
             $footer = "
                 label = `"$Name`";
