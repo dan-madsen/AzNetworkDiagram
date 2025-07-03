@@ -319,7 +319,7 @@ function Export-dotFooter {
                     margin = 0;
                     colorscheme = rdpu7;
                     bgcolor = 1;
-                    node [colorscheme = rdpu7;color = 1; margin = 0; style=none];
+                    node [colorscheme = rdpu7;color = 1; margin = 0; ];
 
                     l1 [color = 1; label = < <TABLE border=`"0`" style=`"rounded`">
                                 <TR><TD colspan=`"2`" border=`"0`"><FONT POINT-SIZE=`"25`"><B>Legend</B></FONT></TD></TR>
@@ -2512,7 +2512,7 @@ function Export-ExpressRouteCircuit {
             style = solid;
             colorscheme = rdpu9 ;
             bgcolor = 3;
-            node [style = none; colorscheme = rdpu9 ; color = 3; ];
+            node [colorscheme = rdpu9 ; color = 3; ];
     
             $erportid [label = `"\nName: $erportname\nLocation: $Location\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];
         "
@@ -2560,7 +2560,7 @@ function Export-ExpressRouteCircuit {
         style = solid;
         colorscheme = rdpu9 ;
         bgcolor = 2;
-        node [style = none; colorscheme = rdpu9 ; color = 2; ];
+        node [colorscheme = rdpu9 ; color = 2; ];
 
         $id [label = `"\nName: $ername\nLocation: $Location`" ; image = `"$ImagePath`";imagepos = `"tc`"; labelloc = `"b`";height = 3.5;];
         $id [shape = none;label = <
@@ -2601,7 +2601,7 @@ function Export-ExpressRouteCircuit {
                 style = solid;
                 colorscheme = rdpu9;
                 bgcolor = 4;
-                node [style = none; colorscheme = rdpu9 ; color = 4; ];
+                node [colorscheme = rdpu9 ; color = 4; ];
         
                 $peeringId [label = `"\n$peeringName`" ; image = `"$ImagePath`";imagepos = `"tc`"; labelloc = `"b`";height = 2.5;];
                 $peeringId [shape = none;label = <
