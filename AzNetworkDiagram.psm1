@@ -1776,6 +1776,7 @@ function Export-Hub {
         [Parameter(Mandatory = $true)]
         [PSCustomObject[]]$hub
     )
+    $vwanname = $hub.VirtualWan.id.Split("/")[-1]
     $hubname = $hub.Name
     $hubrgname = $hub.ResourceGroupName
     $Name = SanitizeString $hubname
@@ -1786,7 +1787,7 @@ function Export-Hub {
     $HubRoutingPreference = $hub.HubRoutingPreference
 
     try {
-        Write-Host "Exporting vWAN Hub: $hubname"
+        Write-Host "Exporting vWAN Hub: $vwanname/$hubname"
         # DOT
         # Hub details
         $data = "
@@ -1801,7 +1802,14 @@ function Export-Hub {
         if ($null -ne $hub.VirtualNetworkConnections) {
             $vnetname = ($hub.VirtualNetworkConnections[0].RemoteVirtualNetwork.id).Split("/")[-1]
             $vnetrg = ($hub.VirtualNetworkConnections[0].RemoteVirtualNetwork.id).Split("/")[4]
+            
+            # In cases where first VNet connection is from another subscription - changing context is necessary, temporarily
+            $currentcontext = (Get-AzContext).Subscription.Id
+            $tempcontext = ($hub.VirtualNetworkConnections[0].RemoteVirtualNetwork.id).Split("/")[2]
+            $null = Set-AzContext $tempcontext
             $vnet = Get-AzVirtualNetwork -name $vnetname -ResourceGroupName $vnetrg -ErrorAction Stop
+            $null = Set-AzContext $currentcontext
+                        
             $HubvNetID = $vnet.VirtualNetworkPeerings.RemoteVirtualNetwork.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
             $headid = $HubvNetID
             $script:AllInScopevNetIds += $vnet.VirtualNetworkPeerings.RemoteVirtualNetwork.id
