@@ -39,13 +39,13 @@ The **Get-AzNetworkDiagram** (Powershell)Cmdlet visualizes Azure networking (and
 The idea was _not_ to diagram everything - but enough to get an overview of routing across the entire network environment, with documentation and troubleshooting in mind. But good ideas and contributions emerged - it is now quite capable of documentating quite a bit of resourse types.
 
 ```diff
-- Disclaimer: I take no resposibility for any actions caused by this script!
+- Disclaimer: We take no resposibility for any actions caused by this script!
 ```
 
 # Demo output
 **Additional demo outputs are available in the "DemoOutput" folder.**
 
-Version 0.3.1:
+Version 1.0.1:
 
 ![Demo output](https://github.com/dan-madsen/AzNetworkDiagram/blob/main/DemoOutput/Demo.png)  
 
@@ -60,13 +60,13 @@ It can also be installed using "Winget", but that will _NOT_ add the executable 
 # Getting started 
 ## Install from Github repo 
 Clone repository, switch to the cloned directory, then:
-```code
-PS> Import-Module .\AzNetworkDiagram.psm1
+```powershell
+Import-Module .\AzNetworkDiagram.psm1
 ```
 
 ## Install using PSGallery
-```code
-PS> Install-Module -Name AzNetworkDiagram
+```powershell
+Install-Module -Name AzNetworkDiagram
 ```
 
 ## Runtime options
@@ -107,7 +107,9 @@ In Hub-Spoke and vWAN environments only resources in scope are depicted to avoid
 If links to other resources exist then these links are drawn too. For example, if the vWAN Firewall has a DNS proxy enabled which points to a Private DNS Resolver then that link will be displayed too. If an IP Group is used in a Firewall Policy then that link is also displayed.
 
 # Currently Supported Resources
-This module will include in the diagram:
+The module is now compatible with both Ubuntu and Windows so you can run it successfully on either system. The requirement of having Graphviz installed exists on both platforms. You can look into the YAML file in the pipeline example on how to install Graphviz on Ubuntu unattended.
+
+This module will include in the diagram in separate colors:
   - Subscriptions
   - vNets & Subnets & Delegations
   - Route Tables
@@ -136,6 +138,16 @@ This module will include in the diagram:
   - Compute Galleries
   - Azure Container Apps
   - Azure Container Instances
+
+# Pipeline Runs
+An example ADO pipeline YAML file has been added with support Powershell scripts. This pipeline does the following:
+  - It assumes you have a Wiki in use for your project
+  - It pulls this Wiki and the azNetworkDiagram repo on the standard runner
+  - Installs GraphViz and Powershell modules
+  - Then generates diagrams using the AzNetworkDiagram and generates Markdown files using the PSDocs Powershell module
+  - Pushes the generated markdown files into the Wiki
+  - The cron schedule example shows how to make it run regularly on a schedule.
+  - There are links in the code to show where you can get more detailed information if you want to modify your output
 
 # Issues, bugs, comments and ideas
 Please submit using the issues option in GitHub
