@@ -63,6 +63,30 @@ $ErrorActionPreference = 'Stop'
 $WarningPreference = 'Continue'
 $InformationPreference = 'Continue'
 
+<#
+.SYNOPSIS
+Sanitizes a given string by replacing sensitive or identifiable information with randomized or predefined values.
+
+.DESCRIPTION
+The `SanitizeString` function processes an input string and replaces sensitive or identifiable information such as IP addresses, CIDR blocks, numerical strings, and alphanumeric strings with randomized or predefined values. It is designed to anonymize data for use in diagrams or reports. The function also handles specific patterns like dashes, dots, and alphanumerical strings, ensuring consistent sanitization.
+
+.PARAMETER InputString
+The string to be sanitized. This can include IP addresses, CIDR blocks, numerical strings, or alphanumeric strings.
+
+.EXAMPLE
+PS> $sanitizedString = SanitizeString -InputString "192.168.1.1"
+PS> Write-Output $sanitizedString
+10.0.0.1
+
+This example sanitizes the input IP address "192.168.1.1" and replaces it with a randomized private IP address.
+
+.EXAMPLE
+PS> $sanitizedString = SanitizeString -InputString "my-sensitive-data"
+PS> Write-Output $sanitizedString
+apple
+
+This example sanitizes the input string "my-sensitive-data" and replaces it with a random word.
+#>
 function SanitizeLocation {
     [CmdletBinding()]
     param (
@@ -97,12 +121,30 @@ function SanitizeLocation {
     )
     return $script:DoSanitize ? ($celestialBodies | Get-Random) : $Location
 }
+<#
+.SYNOPSIS
+Sanitizes a given string by replacing sensitive or identifiable information with randomized or predefined values.
 
-# Example usage:
-# $text = 'label = "my-label"; [label = "should-not-change"];'
-# $newText = Replace-LabelEqualsWithRandomWord $text
-# Write-Output $newText
+.DESCRIPTION
+The `SanitizeString` function processes an input string and replaces sensitive or identifiable information such as IP addresses, CIDR blocks, numerical strings, and alphanumeric strings with randomized or predefined values. It is designed to anonymize data for use in diagrams or reports. The function also handles specific patterns like dashes, dots, and alphanumerical strings, ensuring consistent sanitization.
 
+.PARAMETER InputString
+The string to be sanitized. This can include IP addresses, CIDR blocks, numerical strings, or alphanumeric strings.
+
+.EXAMPLE
+PS> $sanitizedString = SanitizeString -InputString "192.168.1.1"
+PS> Write-Output $sanitizedString
+10.0.0.1
+
+This example sanitizes the input IP address "192.168.1.1" and replaces it with a randomized private IP address.
+
+.EXAMPLE
+PS> $sanitizedString = SanitizeString -InputString "my-sensitive-data"
+PS> Write-Output $sanitizedString
+apple
+
+This example sanitizes the input string "my-sensitive-data" and replaces it with a random word.
+#>
 function SanitizeString {
     [CmdletBinding()]
     param (
@@ -2881,6 +2923,22 @@ function Export-PrivateEndpoint {
     }
 }
 
+<#
+.SYNOPSIS
+Exports details of an Azure Container Group for inclusion in a network diagram.
+
+.DESCRIPTION
+The `Export-ContainerGroup` function processes a specified Azure Container Group object, retrieves its details, and formats the data for inclusion in a network diagram. It visualizes the container group's name, location, OS type, IP address, zone, SKU, and associated containers with their configurations.
+
+.PARAMETER containerGroup
+Specifies the Azure Container Group object to be processed. This parameter is mandatory.
+
+.EXAMPLE
+PS> $containerGroup = Get-AzContainerGroup -Name "MyContainerGroup" -ResourceGroupName "MyResourceGroup"
+PS> Export-ContainerGroup -containerGroup $containerGroup
+
+This example retrieves an Azure Container Group object and exports its details for inclusion in a network diagram.
+#>
 function Export-ContainerGroup
 {
     [CmdletBinding()]
@@ -2939,6 +2997,22 @@ function Export-ContainerGroup
     }
 }
 
+<#
+.SYNOPSIS
+Exports details of an Azure Container App Environment for inclusion in a network diagram.
+
+.DESCRIPTION
+The `Export-ContainerAppEnv` function processes a specified Azure Container App Environment object, retrieves its details, and formats the data for inclusion in a network diagram. It visualizes the environment's name, location, static IP, zone redundancy, environment type, and associated container apps.
+
+.PARAMETER containerAppEnvironment
+Specifies the Azure Container App Environment object to be processed. This parameter is mandatory.
+
+.EXAMPLE
+PS> $containerAppEnv = Get-AzContainerAppEnvironment -Name "MyEnvironment" -ResourceGroupName "MyResourceGroup"
+PS> Export-ContainerAppEnv -containerAppEnvironment $containerAppEnv
+
+This example retrieves an Azure Container App Environment object and exports its details for inclusion in a network diagram.
+#>
 function Export-ContainerAppEnv
 {
     [CmdletBinding()]
@@ -3121,6 +3195,22 @@ function Confirm-Prerequisites {
     
 }
 
+<#
+.SYNOPSIS
+Retrieves the path to the Graphviz `dot` executable.
+
+.DESCRIPTION
+The `Get-DOTExecutable` function searches for the Graphviz `dot` executable in common installation paths across Windows, Linux, and macOS. It also checks the system's PATH environment variable for the executable. If found, the function returns the full path to the `dot` executable; otherwise, it returns `$null`.
+
+.PARAMETER None
+This function does not take any parameters.
+
+.EXAMPLE
+PS> $dotPath = Get-DOTExecutable
+PS> if ($null -eq $dotPath) { Write-Host "Graphviz 'dot' executable not found." } else { Write-Host "Graphviz 'dot' found at: $dotPath" }
+
+This example retrieves the path to the Graphviz `dot` executable and prints a message indicating whether it was found.
+#>
 function Get-DOTExecutable {
     try {
         $PossibleGraphVizPaths = @(
