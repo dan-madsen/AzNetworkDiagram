@@ -227,7 +227,12 @@ Export-dotHeader
 function Export-dotHeader {
     [CmdletBinding()]
 
+    $date=Get-Date
+    $tenant = (Get-AzContext).Tenant
+    $tenantName = (get-azcontext).account.id.split('@')[1]
+
     $Data = "digraph G {
+    label = `"Date: $date\nTenant: $tenantName - $tenant\n\nCreated by: AzNetworkDiagram $ver`"
     fontname=`"Arial,sans-serif`"
     node [fontname=`"Arial,sans-serif`"]
     edge [fontname=`"Arial,sans-serif`"]
@@ -1787,7 +1792,7 @@ function Export-Hub {
     $HubRoutingPreference = $hub.HubRoutingPreference
 
     try {
-        Write-Host "Exporting vWAN Hub: $vwanname/$hubname"
+        Write-Host "Collecting vWAN Hub info: $vwanname/$hubname"
         # DOT
         # Hub details
         $data = "
@@ -2077,9 +2082,8 @@ function Export-SubnetConfig {
                 "AzureBastionSubnet" { 
                     if ($subnet.IpConfigurations.Id) { 
                         $AzBastionName = SanitizeString $subnet.IpConfigurations.Id.split("/")[8].ToLower()
-                    
+                    } else {$AzBastionName = "Not Deployed" }
                         $data += "        $id [label = `"\n\n$name\n$AddressPrefix\nName: $AzBastionName`" ; color = lightgray; image = `"$OutputPath\icons\bas.png`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; " 
-                    }
                 }
                 "AppGatewaySubnet" { 
                     if ($subnet.IpConfigurations.Id) { 
@@ -2314,7 +2318,7 @@ function Export-vWAN {
     $Location = SanitizeLocation $vwan.Location
 
     try {
-        Write-Host "Exporting vWAN: $vwanname"
+        Write-Host "Collecting vWAN info: $vwanname"
         $script:rankvwans += $id
         $hubs = Get-AzVirtualHub -ResourceGroupName $ResourceGroupName -ErrorAction Stop | Where-Object { $($_.VirtualWAN.id) -eq $($vwan.id) }
         if ($null -ne $hubs) {
@@ -2924,6 +2928,18 @@ function Get-AzNetworkDiagram {
 
     # Remove trailing "\" from path
     $OutputPath = $OutputPath.TrimEnd('\')
+
+    #Version info
+    $module = Get-Module AzNetworkDiagram 
+    $vermajor = $module.Version.Major
+    $verminor = $module.Version.Minor
+    $verbuild = $module.Version.Build
+    $ver = "${vermajor}.${verminor}.${verbuild}"
+
+    if ( $ver -eq "0.0.-1" ) { $ver = "(Non-PSGallery version)" } # Module loaded from file - not from PSGallery
+    elseif ( $ver -eq ".." ) { $ver = "(Non-PSGallery version)" } # Module not imported - ran directly from .psm1 file ?
+    else { $ver = v${$ver} }
+    Write-Output "AzNetworkDigram ${ver} - Starting ...`n"
 
     Write-Output "Checking prerequisites ..."
     Confirm-Prerequisites
