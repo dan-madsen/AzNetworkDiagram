@@ -163,7 +163,7 @@ function SanitizeString {
     }
     # TenantId
     elseif ($InputString -match '(\w{8}-\w{4}-\w{4}-\w{4}-\w{12})') {
-        return "xxxxxxxx-zzzz-yyyy-zzzz-vvvvvvvvvvvv" 
+        return "xxxxxxxx-yyyy-zzzz-cccc-vvvvvvvvvvvv" 
     }
     # Check for dashes and dots
     elseif ($InputString -match '[-.]') {
