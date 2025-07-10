@@ -160,7 +160,12 @@ function SanitizeString {
         $length = $InputString.Length
         return -join (1..$length | ForEach-Object { Get-Random -Minimum 0 -Maximum 10 })
 
-    }    # Check for dashes and dots
+    }
+    # TenantId
+    elseif ($InputString -match '(\w{8}-\w{4}-\w{4}-\w{4}-\w{12})') {
+        return "xxxxxxxx-zzzz-yyyy-zzzz-vvvvvvvvvvvv" 
+    }
+    # Check for dashes and dots
     elseif ($InputString -match '[-.]') {
         # List of 3-letter lowercase words
         $shortwords = @(
@@ -228,11 +233,11 @@ function Export-dotHeader {
     [CmdletBinding()]
 
     $date=Get-Date
-    $tenant = (Get-AzContext).Tenant
-    $tenantName = (get-azcontext).account.id.split('@')[1]
+    $tenantDisplayName = SanitizeString (Get-AzContext).account.id.split('@')[1]
+    $tenantDisplayId = SanitizeString (Get-AzContext).Tenant.Id
 
     $Data = "digraph G {
-    label = `"Date: $date\nTenant: $tenantName - $tenant\n\nCreated by: AzNetworkDiagram $ver`"
+    label = `"Date: $date\nTenant: $tenantDisplayName - ${TenantDisplayId}\n\nCreated by: AzNetworkDiagram $ver`"
     fontname=`"Arial,sans-serif`"
     node [fontname=`"Arial,sans-serif`"]
     edge [fontname=`"Arial,sans-serif`"]
