@@ -149,5 +149,12 @@ An example ADO pipeline YAML file has been added with support Powershell scripts
   - The cron schedule example shows how to make it run regularly on a schedule.
   - There are links in the code to show where you can get more detailed information if you want to modify your output
 
+# Changelog
+## v1.1
+- 1
+- 2
+## v1.0.2
+## v1.0.1
+
 # Issues, bugs, comments and ideas
 Please submit using the issues option in GitHub

@@ -373,6 +373,7 @@ function Export-dotFooter {
                     colorscheme = rdpu7;
                     bgcolor = 1;
                     node [colorscheme = rdpu7;color = 1; margin = 0; ];
+                    label = `"`";
 
                     l1 [color = 1; label = < <TABLE border=`"0`" style=`"rounded`">
                                 <TR><TD colspan=`"2`" border=`"0`"><FONT POINT-SIZE=`"25`"><B>Legend</B></FONT></TD></TR>
@@ -2005,7 +2006,7 @@ function Export-Hub {
                     $peerip = $vpnSite.VpnSiteLinks.IpAddress
                     $ImagePath = Join-Path $OutputPath "icons" "VPN-Site.png"
                     $data += "`n"
-                    $data += "        $vpnsiteId [label = `"\n\n$(SanitizeString $vpnsiteName)\nDevice Vendor: $($VpnSite.DeviceProperties.DeviceVendor)\nLink Speed: $($VpnSite.VpnSiteLinks.LinkProperties.LinkSpeedInMbps) Mbps\nLinks: $($VpnSite.VpnSiteLinks.count)\n\nPeer IP: $(SanitizeString $peerip)\nAddressPrefixes: $(($VpnSite.AddressSpace.AddressPrefixes | ForEach-Object {SanitizeString $_}) -join ",")\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+                    $data += "        $vpnsiteId [label = `"\n\n$(SanitizeString $vpnsiteName)\nDevice Vendor: $($VpnSite.DeviceProperties.DeviceVendor)\nLink Speed: $($VpnSite.VpnSiteLinks.LinkProperties.LinkSpeedInMbps) Mbps\nLinks: $($VpnSite.VpnSiteLinks.count)\n\nPeer : $(SanitizeString $peerip)\nAddressPrefixes: $(($VpnSite.AddressSpace.AddressPrefixes | ForEach-Object {SanitizeString $_}) -join ",")\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
                     $data += "`n    $vgwId -> $vpnsiteId;"
                 }
             }
@@ -2225,11 +2226,12 @@ function Export-SubnetConfig {
             # Support for different types of subnets (AzFW, Bastion etc.)
             # DOT
             switch ($name) {
-                "AzureFirewallSubnet" { 
+                "AzureFirewallSubnet" {
+                    $ImagePath = Join-Path $OutputPath "icons" "afw.png" 
                     if ($subnet.IpConfigurations.Id) {
+                        #Firewall deployed
                         $AzFWid = $subnet.IpConfigurations.Id.ToLower().split("/azurefirewallipconfigurations/ipconfig1")[0]
                         $AzFWrg = $subnet.IpConfigurations.id.split("/")[4]
-                        $ImagePath = Join-Path $OutputPath "icons" "afw.png"
 
                         $data += "        $id [label = `"\n\n$name\n$AddressPrefix`" ; fillcolor = 9; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; " 
 
@@ -2237,12 +2239,16 @@ function Export-SubnetConfig {
                         $AzFWDotId = $AzFWid.replace("-", "").replace("/", "").replace(".", "").ToLower()
                         $data += "`n    $id -> $azFWDotId"
                     }
+                    else {
+                        # No firewall deployed
+                        $data += "        $id [label = `"\n\n$name\n$AddressPrefix\nName: Not deployed`" ; fillcolor = 9; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; "
+                    }
                 }
                 "AzureBastionSubnet" { 
                     if ($subnet.IpConfigurations.Id) { 
                         $AzBastionName = SanitizeString $subnet.IpConfigurations.Id.split("/")[8].ToLower()
                     }
-                    else { $AzBastionName = "Not Deployed" }
+                    else { $AzBastionName = "Bastion not Deployed" }
 
                     $ImagePath = Join-Path $OutputPath "icons" "bas.png"
                     
