@@ -1,0 +1,170 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+schedules:
+  - cron: '0 0 1 * *' # cron syntax defining a schedule
+        # mm HH DD MM DW
+        # \  \  \  \  \__ Days of week
+        # \  \  \  \____ Months
+        # \  \  \______ Days
+        # \  \________ Hours
+        # \__________ Minutes
+    displayName: "Scheduled Run of Workload Diagrams Page Generation"
+    branches:
+      include: 
+        - main # which branches the schedule applies to
+      #exclude: [ string ] # which branches to exclude from the schedule
+    always: true # whether to always run the pipeline or only if there have been source code changes since the last successful scheduled run. The default is false.
+    batch: false # Whether to run the pipeline if the previously scheduled run is in-progress; the default is false
+  
+trigger: none
+
+pool:
+  vmImage: ubuntu-latest
+
+resources:
+  repositories:
+  # https://learn.microsoft.com/en-us/azure/devops/pipelines/process/resources?view=azure-devops&tabs=schema#define-a-repositories-resource
+  - repository: "WikiRepo"
+    type: git
+    name: "Project Contoso/Project-Contoso.wiki"
+
+variables:
+  # Variables OK to change
+  # git username, to be used while committing and pushing changes to the ADO branch
+  gitUserName: "ISD"
+  # git user email, to be used while committing and pushing changes to the ADO branch
+  gitUserEmail: "isd@contoso.com"
+  # Destination repo pull path on the agent machine - default value is OK (relative to the agent working folder)
+  dstRepoPath: "WikiRepo"
+  wikiAutomationPath: "Wiki-Automation"
+  # Variables NOT OK to change - these are auto calculated and taken from template params to be reused by pipeline templates
+  # Destination repo reference, to be used in the commit and push operations
+  dstRepoRef: $[resources.repositories['WikiRepo'].ref]
+  wikiRepoUrl: "git://Contoso@dev.azure.com/Contoso/Project%20Contoso/_git/Project-Contoso.wiki"
+  PSDocsInputObject: ""
+
+jobs:
+- job: GenerateWikiDiagramsPage
+  displayName: "Workload Diagrams Page Generation"
+  steps:
+  - task: MicrosoftSecurityDevOps@1
+    displayName: 'Microsoft Security DevOps'
+    inputs:
+      categories: 'secrets'
+
+  - script: echo $(Build.BuildNumber) and $(Pipeline.Workspace) #display Run Number
+  - checkout: self 
+    clean: true #grant-version-control-permissions-to-the-build-service
+    persistCredentials: true
+    path: $(wikiAutomationPath)
+  - checkout: WikiRepo
+    clean: true 
+    persistCredentials: true
+    path: $(dstRepoPath)
+
+  - task: PowerShell@2
+    name: GetWikiRepo
+    displayName: Pull Wiki Repo 
+    inputs:
+      targetType: 'inline'
+      script: |
+      
+        Write-Host "Going to Pull Wiki Repo into $(Agent.BuildDirectory)/$(dstRepoPath)"
+        cd "$(Agent.BuildDirectory)/$(dstRepoPath)"
+
+        Write-Host "Setting Git config"
+        git config user.email "$(gitUserEmail)"
+        git config user.name "$(gitUserName)"
+
+        # Extracting branch name by removing "refs/Heads/" text - WARNING this might not always work 
+        # need to keep a close eye on how it performs as we go 
+
+        $dstRepoBranchName = "$(dstRepoRef)".Replace("refs/Heads/", "", "InvariantCultureIgnoreCase")
+
+        Write-Host "Syncing local destination brach state with remote to achieve attached HEAD state ..."
+        git fetch origin
+        git reset --hard origin/$dstRepoBranchName
+        git clean -f -d
+        git checkout $dstRepoBranchName
+        git pull
+
+  - task: PowerShell@2
+    name: InstalModules
+    inputs:
+      targetType: 'inline'
+      script: |
+        Install-Module -Name Az -AllowClobber -Force
+        Install-Module -Name PSDocs -Scope CurrentUser -Repository PSGallery -AllowClobber -Force
+      failOnStderr: true
+      showWarnings: true
+
+  - task: CmdLine@2
+    name: InstallGraphviz
+    displayName: Install Graphviz
+    inputs:
+      script: |
+        sudo apt update
+        echo "Downloading Graphviz 13.1.0 for Ubuntu 24.04 ..."
+        curl -O https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/13.1.0/ubuntu_24.04_graphviz-13.1.0-debs.tar.xz
+        tar -xf ubuntu_24.04_graphviz-13.1.0-debs.tar.xz
+        echo "Installing dependencies for libgraphviz4..."
+        sudo apt install libdevil1c2 libgs10 libgts-0.7-5t64 liblasi0t64 libpoppler-glib8t64 librsvg2-2
+        echo "Installing libgraphviz4..."
+        sudo dpkg -i libgraphviz4_13.1.0-1_amd64.deb
+        echo "Installing Graphviz dependencies..."
+        sudo apt install libann0 libglade2-0 libglut3.12 libgtk2.0-0t64:amd64 libgtkglext1 libqt5core5t64 libqt5gui5t64 libqt5widgets5t64
+        echo "Installing Graphviz..."
+        sudo dpkg -i graphviz_13.1.0-1_amd64.deb
+        echo "Configuring Graphviz plugins..."
+        sudo dot -c
+        dot -V
+        cd $(Agent.BuildDirectory)
+        git clone --branch jjvdmaas_visuals --single-branch https://github.com/dan-madsen/AzNetworkDiagram
+        pwd
+
+  - task: AzurePowerShell@5
+    name: GenerateDiagrams
+    displayName: Generate Diagrams 
+    inputs:
+      azureSubscription: 'scnConsumptionReporting'
+      ScriptType: 'FilePath'
+      ScriptPath: "$(Pipeline.Workspace)/$(wikiAutomationPath)/GenerateDiagramsPage.ps1"
+      ScriptArguments:
+        -DestPath "$(Pipeline.Workspace)/$(dstRepoPath)"
+        -buildDirectory $(Agent.BuildDirectory)
+      FailOnStandardError: true
+      azurePowerShellVersion: 'LatestVersion'
+      workingDirectory: "$(Pipeline.Workspace)/$(wikiAutomationPath)"
+
+  - task: PowerShell@2
+    name: GenerateWikiPage
+    displayName: Generating Wiki Page
+    inputs:
+      targetType: 'inline'
+      script: |
+        Import-Module -Name PSDocs 
+        $cwd = Get-Location
+        Write-Output "Current working directory: $cwd"
+        Write-Output "Generating Wiki Page..."
+        $PSDocsInputObject = Import-Clixml -Path "$(Agent.BuildDirectory)/PSDocsInputObject.xml"
+        Invoke-PSDocument -Path "$(Pipeline.Workspace)/$(wikiAutomationPath)/CreateDiagramsWikiPage.Doc.ps1" -Culture 'en-US' -InputObject $PSDocsInputObject -OutputPath "$(Pipeline.Workspace)/$(dstRepoPath)/Azure-Landing-Zone-Architecture-Design-and-Implementation/ALZ-Networking"
+
+        Write-Host "Output path $(Pipeline.Workspace)/$(dstRepoPath)/Azure-Landing-Zone-Architecture-Design-and-Implementation/ALZ-Networking"
+
+  - task: PowerShell@2
+    name: PushUpdateToWiki
+    displayName: Push to Wiki Repo 
+    inputs:
+      targetType: 'inline'
+      script: |
+        cd "$(Agent.BuildDirectory)/$(dstRepoPath)"
+        git status
+
+        git commit -am "Workload Diagrams page update performed at: $(Get-Date -Format "yyyyMMddTHHmmssffffZ")"
+
+        Write-Host "Performing a push ..."
+        git push origin
+# https://learn.microsoft.com/en-us/azure/devops/pipelines/scripts/git-commands?view=azure-devops&tabs=yaml#grant-version-control-permissions-to-the-build-service
