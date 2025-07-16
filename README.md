@@ -1,40 +1,5 @@
 # Introduction 
-The **Get-AzNetworkDiagram** (Powershell)Cmdlet visualizes Azure networking (and other relevant resources) utilizing Graphviz and the "DOT", diagram-as-code language to export a PDF, SVG and PNG with a network digram containing:
-  - Subscriptions
-  - VNets, including:
-    - VNet peerings
-    - Subnets
-        - Special subnet: AzureBastionSubnet and associated Azure Bastion resource
-        - Special subnet: GatewaySubnet and associated resources, incl. Network Gateways, Local Network Gateways and connections with the static defined remote subnets. But excluding Express Route Cirtcuits.
-        - Special subnet:  AzureFirewallSubnet and associated Azure Firewall Policy
-        - Associated Route Tables
-        - A * will be added to the subnet name, if a subnet is delegated. Commonly used delegations will be given a proper icon
-        - A # will be added to the subnet name, in case an NSG is associated
-  - vNets & Subnets & Delegations
-  - VPN Gateway
-  - NAT Gateway
-  - Bastion
-  - Route Tables
-  - NSG's
-  - Application Gateways
-  - Express Routes Circuits and ER Direct ports & Links
-  - vWAN's & Hubs
-  - Azure Firewall
-    - IP Groups
-  - Private Endpoints
-  - SSH Keys
-  - ACR
-  - AKS
-  - Storage Accounts
-  - VM, VMSS
-  - Keyvaults
-  - APIM
-  - MongoDB, MySQL, PostgreSQL
-  - SQL Server (logical server), Azure SQL, SQL Managed Instance
-  - EventHubs
-  - Redis Cache
-  - App Services
-  - Compute Galleries
+The **Get-AzNetworkDiagram** (Powershell)Cmdlet visualizes Azure networking (and other relevant resources) utilizing Graphviz and the "DOT", diagram-as-code language to export a PDF, SVG or PNG with a network digram containing the supported resources (see below list)
 
 The idea was _not_ to diagram everything - but enough to get an overview of routing across the entire network environment, with documentation and troubleshooting in mind. But good ideas and contributions emerged - it is now quite capable of documentating quite a bit of resourse types.
 
@@ -51,41 +16,34 @@ Version 1.0.1:
 
 
 # Requirements
-The script depends on Graphviz (the "DOT", diagram-as-code language) to genereate the diagrams in .PDF and .PNG format.
+The script depends on Graphviz (the "DOT", diagram-as-code language) to genereate the graphical output.
 
 Graphviz can be downloaded from: https://graphviz.org/. But note that the default install doesn't add the executable to $PATH, so make sure to enable that during install.
 
 It can also be installed using "Winget", but that will _NOT_ add the executable to $PATH - so you will have to do that manually.
 
 # Getting started 
+## Install using PSGallery (prefered method)
+```powershell
+Install-Module -Name AzNetworkDiagram
+```
+
 ## Install from Github repo 
 Clone repository, switch to the cloned directory, then:
 ```powershell
 Import-Module .\AzNetworkDiagram.psm1
 ```
 
-## Install using PSGallery
-```powershell
-Install-Module -Name AzNetworkDiagram
-```
-
 ## Runtime options
-**-OutputPath <path>** - set output directory. Default: "."
-
-**-Subscriptions "subid1","subid2","subname","..."** - a list of subscriptions in scope for the diagram. They can be names or Id's
-
-**-EnableRanking $bool** ($true/$false) - enable ranking (equal hight in the output) of certain resource types. For larger networks, this might be worth a shot. **Default: $true**
-
-**-Tenant "tenantId"** Specifies the tenant Id to be used in all subscription authentication. Handy when you have multiple tenants to work with. **Default: current tenant**
-
-**-Sanitize $bool** ($true/$false) - Sanitizes all names, locations, IP addresses and CIDR blocks. **Default: $false**
-
-**-Prefix "string"** - Adds a prefix to the output file name. For example is cases where you want to do multiple automated runs then the file names will have the prefix per run that you specify. **Default: No Prefix**
-
-**-OnlyCoreNetwork** ($true/$false) - if $true/enabled, only cores network resources are processed - ie. non-network resources are skipped for a cleaner diagram. Default is $false.
-
-**-KeepDotFile** ($true/$false) - if $true/enabled, the DOT file is not deleted after the diagrams have been generated. Default is $false and DOT files are deleted.
-**OutputFormat** (pdf, svg, png) - One or more output files get generated with the specified formats. Default is PDF.
+- **-OutputPath <path>** - set output directory. Default: "."
+- **-Subscriptions "subid1","subid2","subname","..."** - a list of subscriptions in scope for the diagram. They can be names or Id's
+- **-EnableRanking $bool** ($true/$false) - enable ranking (equal hight in the output) of certain resource types. For larger networks, this might be worth a shot. **Default: $true**
+- **-Tenant "tenantId"** Specifies the tenant Id to be used in all subscription authentication. Handy when you have multiple tenants to work with. **Default: current tenant**
+- **-Sanitize $bool** ($true/$false) - Sanitizes all names, locations, IP addresses and CIDR blocks. **Default: $false**
+- **-Prefix "string"** - Adds a prefix to the output file name. For example is cases where you want to do multiple automated runs then the file names will have the prefix per run that you specify. **Default: No Prefix**
+- **-OnlyCoreNetwork** ($true/$false) - if $true/enabled, only cores network resources are processed - ie. non-network resources are skipped for a cleaner diagram. Default is $false.
+- **-KeepDotFile** ($true/$false) - if $true/enabled, the DOT file is not deleted after the diagrams have been generated. Default is $false and DOT files are deleted.
+- **OutputFormat** (pdf, svg, png) - One or more output files get generated with the specified formats. Default is PDF.
 
 ## Running the Powershell module
 **Examples:**
@@ -98,7 +56,7 @@ Get-AzNetworkDiagram
 Beware, that by using "-Subscriptions" to limit the scope of data collection, you might end up with peerings being created to sparsely defined vNets (which would be out of your defined scope). These would appear as a long string, that is the id of the vNet, with special characters stripped for DOT-compatability.
 
 # Flow
-It will loop over any subscriptions available (or those defined as the parameter) and process supported resource types. After data is collected, a .PDF, .PNG and .SVG file with the diagram will be created. For very large environments the PNG format could display a scaling error. The .SVG format is editable with Microsoft Visio.
+It will loop over any subscriptions available (or those defined as the parameter) and process supported resource types. After data is collected, a .PDF, .PNG and/or .SVG file with the diagram will be created. For very large environments the PNG format could display a scaling error. The .SVG format is editable with Microsoft Visio.
 
 The .DOT settings in the .DOT file try to make the diagram as compact as possible and the ranking tries to keep similar resources ranked accordingly. Though it is inevitable that large environments make the diagram very large but zooming into the PDF or SVG works the best.
 
@@ -148,6 +106,23 @@ An example ADO pipeline YAML file has been added with support Powershell scripts
   - Pushes the generated markdown files into the Wiki
   - The cron schedule example shows how to make it run regularly on a schedule.
   - There are links in the code to show where you can get more detailed information if you want to modify your output
+
+# Changelog (since v1.0.1)
+## v1.1
+- Diagrams are now colorized
+- Linux support
+- Pipeline scripts added for Azure DevOps
+- AzNetworkDiagram info added in footer
+- Legend added to output
+- vWAN bug/scenario with first peered vNet in another sub fixed
+- New parameters
+  - KeepDotFile
+  - OutputFormat
+- New support for:
+  - Container instances
+  - Container Apps
+## v1.0.2
+- Local Gateway (Site 2 Site VPNs) - FQDN support (prevent runtime crash)
 
 # Issues, bugs, comments and ideas
 Please submit using the issues option in GitHub
