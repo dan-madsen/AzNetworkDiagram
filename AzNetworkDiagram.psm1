@@ -276,7 +276,7 @@ function Export-dotHeader {
 
     $date=Get-Date
     #$tenantDisplayName = SanitizeString (Get-AzContext).account.id.split('@')[1]
-    $tenantDisplayName = SanitizeString (Get-AzTenant).Name
+    $tenantDisplayName = SanitizeString (Get-AzTenant -TenantId (Get-AzContext).Tenant.Id).Name
     $tenantDisplayId = SanitizeString (Get-AzContext).Tenant.Id
     
     $Data = "digraph AzNetworkDiagram {
