@@ -274,14 +274,7 @@ Export-dotHeader
 function Export-dotHeader {
     [CmdletBinding()]
 
-    $date=Get-Date
-    #$tenantDisplayName = SanitizeString (Get-AzContext).account.id.split('@')[1]
-    $tenantDisplayName = SanitizeString (Get-AzTenant -TenantId (Get-AzContext).Tenant.Id).Name
-    $tenantDisplayId = SanitizeString (Get-AzContext).Tenant.Id
-    
-    $Data = "digraph AzNetworkDiagram {
-    label = `"Date: $date\nTenant: $tenantDisplayName - ${TenantDisplayId}\n\nCreated by: AzNetworkDiagram $ver`"
-    
+    $Data = "digraph AzNetworkDiagram {  
     # Colors
     colorscheme=pastel19;
     bgcolor=9;
@@ -368,13 +361,20 @@ Export-dotFooter
 function Export-dotFooter {
     $Script:Legend = $Script:Legend | Sort-Object -Unique
     $Global:MyLegend = $Script:Legend
+
+    $date = Get-Date -Format 'yyyy-MM-dd'
+    #$tenantDisplayName = SanitizeString (Get-AzContext).account.id.split('@')[1]
+    $tenantDisplayName = SanitizeString (Get-AzTenant -TenantId (Get-AzContext).Tenant.Id).Name
+    $tenantDisplayId = SanitizeString (Get-AzContext).Tenant.Id
+    
     $data = "    subgraph clusterLegend {
                     style = solid;
                     margin = 0;
                     colorscheme = rdpu7;
                     bgcolor = 1;
                     node [colorscheme = rdpu7;color = 1; margin = 0; ];
-                    label = `"`";
+                    labelloc=b;
+                    label = `"Tenant info:\n$tenantDisplayName\n${TenantDisplayId}\n\nCreated on $date by:\nAzNetworkDiagram $ver`";
 
                     l1 [color = 1; label = < <TABLE border=`"0`" style=`"rounded`">
                                 <TR><TD colspan=`"2`" border=`"0`"><FONT POINT-SIZE=`"25`"><B>Legend</B></FONT></TD></TR>
