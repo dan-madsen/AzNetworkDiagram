@@ -365,7 +365,7 @@ function Export-dotFooter {
     $date = Get-Date -Format 'yyyy-MM-dd'
     #$tenantDisplayName = SanitizeString (Get-AzContext).account.id.split('@')[1]
     $tenantDisplayName = SanitizeString (Get-AzTenant -TenantId (Get-AzContext).Tenant.Id).Name
-    $tenantDisplayId = SanitizeString (Get-AzContext).Tenant.Id
+    #$tenantDisplayId = SanitizeString (Get-AzContext).Tenant.Id
     
     $data = "    subgraph clusterLegend {
                     style = solid;
@@ -374,7 +374,7 @@ function Export-dotFooter {
                     bgcolor = 1;
                     node [colorscheme = rdpu7;color = 1; margin = 0; ];
                     labelloc=b;
-                    label = `"Tenant info:\n$tenantDisplayName\n${TenantDisplayId}\n\nCreated on $date by:\nAzNetworkDiagram $ver`";
+                    label = `"Tenant:\n$tenantDisplayName\n\nCreated on $date by:\nAzNetworkDiagram $ver`";
 
                     l1 [color = 1; label = < <TABLE border=`"0`" style=`"rounded`">
                                 <TR><TD colspan=`"2`" border=`"0`"><FONT POINT-SIZE=`"25`"><B>Legend</B></FONT></TD></TR>
@@ -3325,7 +3325,18 @@ function Get-AzNetworkDiagram {
     if ( $ver -eq "0.0.-1" ) { $ver = "(Non-PSGallery version)" } # Module loaded from file - not from PSGallery
     elseif ( $ver -eq ".." ) { $ver = "(Non-PSGallery version)" } # Module not imported - ran directly from .psm1 file ?
     else { $ver = v${$ver} }
-    Write-Output "AzNetworkDigram ${ver} - Starting ...`n"
+    #Write-Output "AzNetworkDigram ${ver} - Starting ...`n"
+
+    Write-Output "##############################################################################################"
+    Write-Output "    ___        _   __     __                      __   ____  _                                "
+    Write-output "   /   |____  / | / /__  / /__      ______  _____/ /__/ __ \(_)___ _____ __________ _____ ___ "
+    Write-Output "  / /| /_  / /  |/ / _ \/ __/ | /| / / __ \/ ___/ //_/ / / / / __ ``/ __ ``/ ___/ __ ``/ __ ``__ \"
+    Write-output " / ___ |/ /_/ /|  /  __/ /_ | |/ |/ / /_/ / /  / ,< / /_/ / / /_/ / /_/ / /  / /_/ / / / / / /" 
+    Write-Output "/_/  |_/___/_/ |_/\___/\__/ |__/|__/\____/_/  /_/|_/_____/_/\__,_/\__, /_/   \__,_/_/ /_/ /_/ "
+    write-output "                                                                 /____/                       "
+    Write-Output "$ver"
+    Write-Output "##############################################################################################`n"
+
 
     Write-Output "Checking prerequisites ..."
     Confirm-Prerequisites
