@@ -783,7 +783,7 @@ function Export-NSG {
             bgcolor = 8;
             node [colorscheme = rdylgn11; style = filled;];
 
-            $id [label = `"\n$Name\nLocation: $Location`" ; fillcolor = 8;image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];
+            $id [label = `"\n$Name\nLocation: $Location`" ; fillcolor = 8;image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $nsg)];
             label = `"$Name`";
         }
         "
@@ -2807,7 +2807,7 @@ function Export-RouteTable {
         $ImagePath = Join-Path $OutputPath "icons" "RouteTable.png"
         $footer = "
                 </TABLE>>;
-                image = `"$ImagePath`";imagepos = `"tr`"; labelloc = `"b`";height = 2.5;];
+                image = `"$ImagePath`";imagepos = `"tr`"; labelloc = `"b`";height = 2.5;$(Generate-DotURL -resource $routetable)];
         }
                 "
         $alldata = $header + $data + $footer
@@ -2856,7 +2856,7 @@ function Export-IpGroup {
     subgraph cluster_$id {
         style = invis;
         
-        $id [shape = box; label = `"\n\n\nName: $(SanitizeString $ipGroup.Name)\nLocation: $Location\n\n$IpAddresses`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];
+        $id [shape = box; label = `"\n\n\nName: $(SanitizeString $ipGroup.Name)\nLocation: $Location\n\n$IpAddresses`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $IpGroup)];
     }
     "
     Export-AddToFile -Data $alldata
