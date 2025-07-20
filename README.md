@@ -110,9 +110,9 @@ An example ADO pipeline YAML file has been added with support Powershell scripts
 
 # Changelog (since v1.0.1)
 ## v1.2
-- Resources are now links (in PDF format!), which will take you directly to the Azure portal (see below on how do disable if needed)
+- Resources can now be links, if enabled (only PDF support!), which will take you directly to the Azure portal
 - New parameters
-  - Links can be disabled using the flag -EnableLinks $false
+  - Links can be enabled using the flag -EnableLinks $true
 ## v1.1
 - Diagrams are now colorized
 - Linux support
