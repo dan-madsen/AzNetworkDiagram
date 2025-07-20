@@ -96,6 +96,7 @@ This module will include in the diagram in separate colors:
   - Compute Galleries
   - Azure Container Apps
   - Azure Container Instances
+  - Static Web Apps
 
 # Pipeline Runs
 An example ADO pipeline YAML file has been added with support Powershell scripts. This pipeline does the following:
