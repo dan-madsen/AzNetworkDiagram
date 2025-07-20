@@ -39,7 +39,10 @@
   -Prefix "string" - Adds a prefix to the output file name. For example is cases where you want to do multiple automated runs then the file names will have the prefix per run that you specify. Default: No Prefix
 
   .PARAMETER OnlyCoreNetwork
-  -OnlyCoreNetwork ($true/$false) - if $true/enabled, only cores network resources are processed - ie. non-network resources are skipped for a cleaner diagram.  
+  -OnlyCoreNetwork ($true/$false) - if $true/enabled, only cores network resources are processed - ie. non-network resources are skipped for a cleaner diagram.
+
+  .PARAMETER EnableLinks
+  -EnableLinks ($true/$false) - if $true/enabled Azure resource in the PDF output will become links, taking you to the Azure portal. **Default: $false**
 
   .INPUTS
   None. It will however require previous authentication to Azure
@@ -260,6 +263,49 @@ function SanitizeString {
     }
 }
 
+<#
+.SYNOPSIS
+Sanitizes a given string by replacing sensitive or identifiable information with randomized or predefined values.
+
+.DESCRIPTION
+The `SanitizeString` function processes an input string and replaces sensitive or identifiable information such as IP addresses, CIDR blocks, numerical strings, and alphanumeric strings with randomized or predefined values. It is designed to anonymize data for use in diagrams or reports. The function also handles specific patterns like dashes, dots, and alphanumerical strings, ensuring consistent sanitization.
+
+.PARAMETER InputString
+The string to be sanitized. This can include IP addresses, CIDR blocks, numerical strings, or alphanumeric strings.
+
+.EXAMPLE
+PS> $sanitizedString = SanitizeString -InputString "192.168.1.1"
+PS> Write-Output $sanitizedString
+10.0.0.1
+
+This example sanitizes the input IP address "192.168.1.1" and replaces it with a randomized private IP address.
+
+.EXAMPLE
+PS> $sanitizedString = SanitizeString -InputString "my-sensitive-data"
+PS> Write-Output $sanitizedString
+apple
+
+This example sanitizes the input string "my-sensitive-data" and replaces it with a random word.
+#>
+function Generate-DOTURL {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$resource
+    )
+    
+    if ( $EnableLinks -and $script:DoSanitize -eq $false ) {
+        $tenantDisplayName = SanitizeString (Get-AzTenant -TenantId (Get-AzContext).Tenant.Id).DefaultDomain
+        $linkbase = "https://portal.azure.com/#@$tenantDisplayName/resource"
+        $linkend = $resource.id
+        $doturl = "URL=`"$($linkbase + $linkend)`";"
+        return $doturl
+    }
+    else {
+        return ""
+    }
+}
+
 ##### Functions for standard definitions #####
 <#
 .SYNOPSIS
@@ -366,6 +412,10 @@ function Export-dotFooter {
     #$tenantDisplayName = SanitizeString (Get-AzContext).account.id.split('@')[1]
     $tenantDisplayName = SanitizeString (Get-AzTenant -TenantId (Get-AzContext).Tenant.Id).Name
     #$tenantDisplayId = SanitizeString (Get-AzContext).Tenant.Id
+
+    Export-AddToFile -Data "`n    ##########################################################################################################"
+    Export-AddToFile -Data "    ##### Legend"
+    Export-AddToFile -Data "    ##########################################################################################################`n"
     
     $data = "    subgraph clusterLegend {
                     style = solid;
@@ -2397,7 +2447,7 @@ function Export-vnet {
             $vnetAddressSpacesString += $(SanitizeString $_) + "\n"
         }
         $ImagePath = Join-Path $OutputPath "icons" "vnet.png"
-        $vnetdata = "    $id [fillcolor = 10; fontcolor = white; label = `"\nLocation: $Location\nAddress Space(s):\n$vnetAddressSpacesString`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];`n"
+        $vnetdata = "    $id [fillcolor = 10; fontcolor = white; label = `"\nLocation: $Location\nAddress Space(s):\n$vnetAddressSpacesString`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $vnet)];`n"
 
         # Subnets
         if ($vnet.Subnets) {
@@ -3149,7 +3199,7 @@ function Export-StaticWebApp
         $script:rankstaticwebapp += $id
         
         $header = "
-        # $staticwebappname - $id
+        # $($StaticWebApp.Name) - $id
         subgraph cluster_$id {
             style = solid;
             colorscheme = blues9 ;
@@ -3165,7 +3215,7 @@ function Export-StaticWebApp
         $swaDefaultDomain = $StaticWebApp.DefaultHostName
         #$swaProvider = $StaticWebApp.Provider
 
-        $swadata += "    $id [fillcolor = 4; label = `"\n\nLocation: $swaLocation\nSKU: $swaSKU\n\nDefault Domain:\n$swaDefaultDomain\n\nCustom Domain:\n$swaCustomDomain`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n"
+        $swadata += "    $id [fillcolor = 4; label = `"\n\nLocation: $swaLocation\nSKU: $swaSKU\n\nDefault Domain:\n$swaDefaultDomain\n\nCustom Domain:\n$swaCustomDomain`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $StaticWebApp)];`n"
         #$swadata += "    $id -> $swaId [ltail = cluster_$id; lhead = cluster_$swaId;];`n"
 
         # End subgraph
@@ -3359,6 +3409,8 @@ function Get-AzNetworkDiagram {
         [string[]]$Subscriptions,
         [Parameter(Mandatory = $false)]
         [bool]$EnableRanking = $true,
+        [Parameter(Mandatory = $false)]
+        [bool]$EnableLinks = $false,
         [Parameter(Mandatory = $false)]
         [string]$TenantId = $null,
         [Parameter(Mandatory = $false)]
