@@ -3122,6 +3122,67 @@ function Export-ContainerAppEnv
 
 <#
 .SYNOPSIS
+Exports details of an Azure Static Web App for inclusion in a network diagram.
+
+.DESCRIPTION
+The `Export-StaticWebApp` function processes a specified Azure Static Web App Environment object, retrieves its details, and formats the data for inclusion in a network diagram. It visualizes the Web App's name, location, SKU, custom domain name.
+
+.PARAMETER containerAppEnvironment
+Specifies the Azure Container App Environment object to be processed. This parameter is mandatory.
+
+.EXAMPLE
+PS> $StaticWebApp = Get-AzStaticWebApp -Name "MyStaticWebApp" -ResourceGroupName "MyResourceGroup"
+PS> Export-StaticWebApp -StaticWebApp $StaticWebApp
+
+This example retrieves an Azure Static Web App object and exports its details for inclusion in a network diagram.
+#>
+function Export-StaticWebApp
+{
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$StaticWebApp
+    )
+
+    try {
+        $id = $StaticWebApp.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankstaticwebapp += $id
+        
+        $header = "
+        # $staticwebappname - $id
+        subgraph cluster_$id {
+            style = solid;
+            colorscheme = blues9 ;
+            bgcolor = 2;
+            node [colorscheme = blues9 ; style = filled;];
+        "
+        $ImagePath = Join-Path $OutputPath "icons" "swa.png"
+        $swaName = SanitizeString $StaticWebApp.Name
+        $swaLocation = SanitizeLocation $StaticWebApp.Location
+        $swaSKU = $StaticWebApp.SkuName
+        $swaCustomDomain = $StaticWebApp.CustomDomain
+        if ( $null -eq $StaticWebApp.CustomDomain ) { $swaCustomDomain = "None" }
+        $swaDefaultDomain = $StaticWebApp.DefaultHostName
+        #$swaProvider = $StaticWebApp.Provider
+
+        $swadata += "    $id [fillcolor = 4; label = `"\n\nLocation: $swaLocation\nSKU: $swaSKU\n\nDefault Domain:\n$swaDefaultDomain\n\nCustom Domain:\n$swaCustomDomain`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n"
+        #$swadata += "    $id -> $swaId [ltail = cluster_$id; lhead = cluster_$swaId;];`n"
+
+        # End subgraph
+        $footer = "
+            label = `"$swaName`";
+        }
+        "
+        
+        Export-AddToFile -Data ($header + $swadata + $footer)
+    }
+    catch {
+        Write-Error "Can't export Static Web App: $($StaticWebApp.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+}
+
+<#
+.SYNOPSIS
 Confirms that all prerequisites are met for generating the Azure network diagram.
 
 .DESCRIPTION
@@ -3211,6 +3272,7 @@ function Confirm-Prerequisites {
         "sqlserver.png",
         "ssh-key.png",
         "storage-account.png",
+        "swa.png",
         "table.png",
         "vWAN-Hub.png",
         "vWAN.png",
@@ -3751,7 +3813,18 @@ function Get-AzNetworkDiagram {
                         Export-ContainerAppEnv $containerAppEnvironment
                     }
                 }
-
+                
+                #Static Web Apps
+                Write-Output "Collection Static Web Apps..."
+                Export-AddToFile "    ##### $subname - Static Web Apps #####"
+                $StaticWebApps = Get-AzStaticWebApp
+                if ( $null -ne $StaticWebApps ) {
+                    $Script:Legend += ,@("Static Web App","swa.png")
+                    foreach ( $swa in $StaticWebApps ) {
+                        Export-StaticWebApp -StaticWebApp $swa
+                    }
+                }
+                
             }
 
             Export-AddToFile "`n    ##########################################################################################################"
