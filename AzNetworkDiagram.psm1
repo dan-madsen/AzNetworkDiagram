@@ -3160,11 +3160,12 @@ function Export-StaticWebApp
         $swaName = SanitizeString $StaticWebApp.Name
         $swaLocation = SanitizeLocation $StaticWebApp.Location
         $swaSKU = $StaticWebApp.SkuName
-        $swaDomain = $StaticWebApp.CustomDomain
+        $swaCustomDomain = $StaticWebApp.CustomDomain
+        if ( $null -eq $StaticWebApp.CustomDomain ) { $swaCustomDomain = "None" }
         $swaDefaultDomain = $StaticWebApp.DefaultHostName
-        $swaProvider = $StaticWebApp.Provider
+        #$swaProvider = $StaticWebApp.Provider
 
-        $swadata += "    $id [fillcolor = 4; label = `"\nName: $swaName\nLocation: $swaLocation\nSKU: $swaSKU\n\nProvider: $swaProvider\nDefault Domain: $swaDefaultDomain\nCustom Domain: $swaDomain`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n"
+        $swadata += "    $id [fillcolor = 4; label = `"\n\nLocation: $swaLocation\nSKU: $swaSKU\n\nDefault Domain:\n$swaDefaultDomain\n\nCustom Domain:\n$swaCustomDomain`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n"
         #$swadata += "    $id -> $swaId [ltail = cluster_$id; lhead = cluster_$swaId;];`n"
 
         # End subgraph
@@ -3176,7 +3177,7 @@ function Export-StaticWebApp
         Export-AddToFile -Data ($header + $swadata + $footer)
     }
     catch {
-        Write-Error "Can't export Container App Environment: $($StaticWebApp.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+        Write-Error "Can't export Static Web App: $($StaticWebApp.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
     }
 }
 
