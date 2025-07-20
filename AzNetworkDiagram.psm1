@@ -3160,9 +3160,9 @@ function Export-StaticWebApp
         $swaName = SanitizeString $StaticWebApp.Name
         $swaLocation = SanitizeLocation $StaticWebApp.Location
         $swaSKU = $StaticWebApp.SkuName
-        $swaCustomDomain = $StaticWebApp.CustomDomain
+        $swaCustomDomain = SanitizeString $($StaticWebApp.CustomDomain)
         if ( $null -eq $StaticWebApp.CustomDomain ) { $swaCustomDomain = "None" }
-        $swaDefaultDomain = $StaticWebApp.DefaultHostName
+        $swaDefaultDomain = SanitizeString "$($StaticWebApp.DefaultHostName)"
         #$swaProvider = $StaticWebApp.Provider
 
         $swadata += "    $id [fillcolor = 4; label = `"\n\nLocation: $swaLocation\nSKU: $swaSKU\n\nDefault Domain:\n$swaDefaultDomain\n\nCustom Domain:\n$swaCustomDomain`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n"
