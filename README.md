@@ -122,6 +122,8 @@ An example ADO pipeline YAML file has been added with support Powershell scripts
 - New support for:
   - Container instances
   - Container Apps
+  - Static Web Apps
+  
 ## v1.0.2
 - Local Gateway (Site 2 Site VPNs) - FQDN support (prevent runtime crash)
 
