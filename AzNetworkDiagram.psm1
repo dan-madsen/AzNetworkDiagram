@@ -265,27 +265,13 @@ function SanitizeString {
 
 <#
 .SYNOPSIS
-Sanitizes a given string by replacing sensitive or identifiable information with randomized or predefined values.
+Takes an Azure PS object and returns a deeplink to the Azure portal, in DOT format.
 
 .DESCRIPTION
-The `SanitizeString` function processes an input string and replaces sensitive or identifiable information such as IP addresses, CIDR blocks, numerical strings, and alphanumeric strings with randomized or predefined values. It is designed to anonymize data for use in diagrams or reports. The function also handles specific patterns like dashes, dots, and alphanumerical strings, ensuring consistent sanitization.
+The `Generate-DOTURL` function processes an Azure resource object and returns a deeplink to the Azure portal, in DOT format.
 
-.PARAMETER InputString
-The string to be sanitized. This can include IP addresses, CIDR blocks, numerical strings, or alphanumeric strings.
-
-.EXAMPLE
-PS> $sanitizedString = SanitizeString -InputString "192.168.1.1"
-PS> Write-Output $sanitizedString
-10.0.0.1
-
-This example sanitizes the input IP address "192.168.1.1" and replaces it with a randomized private IP address.
-
-.EXAMPLE
-PS> $sanitizedString = SanitizeString -InputString "my-sensitive-data"
-PS> Write-Output $sanitizedString
-apple
-
-This example sanitizes the input string "my-sensitive-data" and replaces it with a random word.
+.PARAMETER resource
+The resource you want a link to
 #>
 function Generate-DOTURL {
     [CmdletBinding()]
@@ -425,6 +411,7 @@ function Export-dotFooter {
                     node [colorscheme = rdpu7;color = 1; margin = 0; ];
                     labelloc=b;
                     label = `"Tenant:\n$tenantDisplayName\n\nCreated on $date by:\nAzNetworkDiagram $ver`";
+                    URL = `"https://github.com/dan-madsen/AzNetworkDiagram`"
 
                     l1 [color = 1; label = < <TABLE border=`"0`" style=`"rounded`">
                                 <TR><TD colspan=`"2`" border=`"0`"><FONT POINT-SIZE=`"25`"><B>Legend</B></FONT></TD></TR>
@@ -434,6 +421,7 @@ function Export-dotFooter {
         $icon = Join-Path $OutputPath "icons" $Item[1]
         $data += "                <TR><TD align=`"left`"><IMG SCALE=`"TRUE`" SRC=`"$icon`"/></TD><TD align=`"left`">$($Item[0])</TD></TR>`n"
     }
+    #$data += "                <TR><TD colspan=`"2`" align=`"center`"><IMG SCALE=`"TRUE`" SRC=`"c:/temp/logo.png`"/></TD></TR>`n"
     $data += "                </TABLE>>]; 
             }
             { rank=max; l1; }
