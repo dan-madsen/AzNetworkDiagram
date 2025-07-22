@@ -3053,7 +3053,7 @@ function Export-ContainerGroup
             
             # DOT
             $ImagePath = Join-Path $OutputPath "icons" "containers.png"
-            $data += "    $id$contId [fillcolor = 4; label = `"\n\nName: $containerName\nImage: $containerImage\nCPU: $containerCpu Cores\nMemory: $containerMemory Gb\nGPU's: $containerGpu\nPorts: $containerPorts`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;$(Generate-DotURL -resource $container)];`n"
+            $data += "    $id$contId [fillcolor = 4; label = `"\n\nName: $containerName\nImage: $containerImage\nCPU: $containerCpu Cores\nMemory: $containerMemory Gb\nGPU's: $containerGpu\nPorts: $containerPorts`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];`n"
             $data += "    $id -> $id$contId [ltail = cluster_$id; lhead = cluster_$id$contId;];`n"
             $contId += 1;
         }
