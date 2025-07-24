@@ -114,11 +114,11 @@ An example ADO pipeline YAML file has been added with support Powershell scripts
 - New parameters
   - Links can be enabled using the flag -EnableLinks $true
 - Bug fixes
-  - Fixed crash when no custom domain is added to Static Web Apps
-  - Fixed crash when no Azure Firewall policy is attached to Azure Firewall
-  - Fixed crash when IP Groups are not used with an Azure Firewall Policy
-  - MySQL admin retrievel changed (but will give less output)
-  - Removed vWAN from output, if no hubs are present
+  - Static Web Apps: Fixed crash when no custom domain is added
+  - Azure Firewall: Fixed crash when no Azure Firewall policy is attached
+  - Azure Firewall Policy: Fixed crash when IP Groups are not in use at all
+  - MySQL: admin retrievel changed (but will give less output)
+  - vWAN: Removed from output, if no hubs are present (to avoid id with to icon or proper label)
 ## v1.1
 - Diagrams are now colorized
 - Linux support
