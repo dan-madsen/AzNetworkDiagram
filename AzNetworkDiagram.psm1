@@ -3160,8 +3160,10 @@ function Export-StaticWebApp
         $swaName = SanitizeString $StaticWebApp.Name
         $swaLocation = SanitizeLocation $StaticWebApp.Location
         $swaSKU = $StaticWebApp.SkuName
-        $swaCustomDomain = SanitizeString $($StaticWebApp.CustomDomain)
-        if ( $null -eq $StaticWebApp.CustomDomain ) { $swaCustomDomain = "None" }
+
+        $swaCustomDomainTemp  = $StaticWebApp.CustomDomain
+        if ($null -eq $swaCustomDomainTemp ){ $swaCustomDomain = SanitizeString $($StaticWebApp.CustomDomain) } else { $swaCustomDomain = "None" }
+        
         $swaDefaultDomain = SanitizeString "$($StaticWebApp.DefaultHostName)"
         #$swaProvider = $StaticWebApp.Provider
 
