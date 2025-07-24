@@ -113,6 +113,12 @@ An example ADO pipeline YAML file has been added with support Powershell scripts
 - Resources can now be links, if enabled (only PDF support!), which will take you directly to the Azure portal
 - New parameters
   - Links can be enabled using the flag -EnableLinks $true
+- Bug fixes
+  - Fixed crash when no custom domain is added to Static Web Apps
+  - Fixed crash when no Azure Firewall policy is attached to Azure Firewall
+  - Fixed crash when IP Groups are not used with an Azure Firewall Policy
+  - MySQL admin retrievel changed (but will give less output)
+  - Removed vWAN from output, if no hubs are present
 ## v1.1
 - Diagrams are now colorized
 - Linux support

@@ -284,6 +284,7 @@ function Generate-DOTURL {
         $tenantDisplayName = SanitizeString (Get-AzTenant -TenantId (Get-AzContext).Tenant.Id).DefaultDomain
         $linkbase = "https://portal.azure.com/#@$tenantDisplayName/resource"
         $linkend = $resource.id
+        if ( $null -eq $linkend ) { $linkend = $resource.ResourceID }
         $doturl = "URL=`"$($linkbase + $linkend)`";"
         return $doturl
     }
@@ -1075,6 +1076,8 @@ function Export-MySQLServer {
         # Get Entra ID Admin
         $subid = $mysql.id.split("/")[2]
         $resourceGroupName = $mysql.id.split("/")[4]
+        
+        <#
         $uri = "https://management.azure.com/subscriptions/$subid/resourceGroups/$resourceGroupName/providers/Microsoft.DBforMySQL/flexibleServers/$($mysql.Name)/administrators?api-version=2023-06-01-preview"
         $token = (ConvertFrom-SecureString (Get-AzAccessToken -ResourceUrl 'https://management.azure.com' -AsSecureString).Token -AsPlainText)
         $headers = @{
@@ -1084,6 +1087,8 @@ function Export-MySQLServer {
 
         $response = Invoke-RestMethod -ContentType "application/json" -Method Get -Uri $uri -Headers $headers -ErrorAction SilentlyContinue
         $sqladmins = $response.value.properties.login
+        #>
+        $sqladmins = $mysql.AdministratorLogin
 
         # Get other server properties
         $mysqlid = $mysql.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
@@ -1105,7 +1110,7 @@ function Export-MySQLServer {
         $ImagePath = Join-Path $OutputPath "icons" "db.png"
         foreach ($db in $dbs) {
             $dbid = $db.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-            $data += "        $($dbid) [label = `"\n\nName: $(SanitizeString $db.Name)\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $db)];`n" 
+            $data += "        $($dbid) [label = `"\n\nName: $(SanitizeString $db.Name)\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];`n" 
             $data += "        $mysqlid -> $($dbid);`n"
         }
 
@@ -1360,7 +1365,7 @@ function Export-PostgreSQLServer {
         $ImagePath = Join-Path $OutputPath "icons" "db.png"
         foreach ($db in $dbs) {
             $dbid = $db.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-            $data += "        $($dbid) [label = `"\n\nName: $(SanitizeString $db.Name)\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $db)];`n" 
+            $data += "        $($dbid) [label = `"\n\nName: $(SanitizeString $db.Name)\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];`n" 
             $data += "        $postgresqlid -> $($dbid);`n"
         }
         if ($postgresql.NetworkDelegatedSubnetResourceId) {
@@ -1904,39 +1909,47 @@ function Export-AzureFirewall {
         }
         $ImagePath = Join-Path $OutputPath "icons" "afw.png"
         $data = "`n"
-        $data += "        $azFWId [label = `"\n\n$(SanitizeString $azFWName)\nPrivate IP Address: $(SanitizeString $PrivateIPAddress)\nSKU Tier: $($azfw.Sku.Tier)\nZones: $($azfw.zones -join "," )\nPublic IP(s):\n$($PublicIPs -join "\n")`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+        $data += "          $azFWId [label = `"\n\n$(SanitizeString $azFWName)\nPrivate IP Address: $(SanitizeString $PrivateIPAddress)\nSKU Tier: $($azfw.Sku.Tier)\nZones: $($azfw.zones -join "," )\nPublic IP(s):\n$($PublicIPs -join "\n")`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $azfw)];" 
 
         # Get the Azure Firewall policy
-        $firewallPolicyName = $azfw.FirewallPolicy.id.split("/")[-1]
-        $firewallPolicy = Get-AzFirewallPolicy -ResourceGroupName $ResourceGroupName -Name $firewallPolicyName -ErrorAction Stop
-        $fwpolid = $firewallPolicy.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-        $ImagePath = Join-Path $OutputPath "icons" "firewallpolicy.png"
-        $data += "`n"
-        $data += "        $fwpolid [label = `"\n\n$(SanitizeString $firewallPolicyName)\nSKU Tier: $($firewallPolicy.sku.tier)\nThreat Intel Mode: $($firewallPolicy.ThreatIntelMode)\nDNS Servers: $(($firewallPolicy.DnsSettings.Servers|ForEach-Object {SanitizeString $_}) -join '; ')\nProxy Enabled: $($firewallPolicy.DnsSettings.EnableProxy)`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
-        $data += "`n    $azFWId -> $fwpolid;"
+        if ($null -ne $azfw.FirewallPolicy.id) {
+            $firewallPolicyName = $azfw.FirewallPolicy.id.split("/")[-1]
+            $firewallPolicy = Get-AzFirewallPolicy -ResourceGroupName $ResourceGroupName -Name $firewallPolicyName -ErrorAction Stop
+            $fwpolid = $firewallPolicy.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
 
-        for ($i = 0; $i -lt $firewallPolicy.DnsSettings.Servers.Count; $i++) {
-            $index = [array]::indexof($script:PDNSREpIp, $firewallPolicy.DnsSettings.Servers[$i])
-            if ($index -ge 0) {
-                $data += "        $fwpolid -> $($script:PDNSRId[$index]) [label = `"DNS Query`"; ];`n" 
+            $dnsservers = $firewallPolicy.DnsSettings.Servers
+            if ( $null -eq $dnsserver) { $dnsservers = "None"}
+
+            $ImagePath = Join-Path $OutputPath "icons" "firewallpolicy.png"
+            $data += "`n"
+            $data += "          $fwpolid [label = `"\n\n$(SanitizeString $firewallPolicyName)\nSKU Tier: $($firewallPolicy.sku.tier)\nThreat Intel Mode: $($firewallPolicy.ThreatIntelMode)\nDNS Servers: $(($dnsservers|ForEach-Object {SanitizeString $_}) -join '; ')\nProxy Enabled: $($firewallPolicy.DnsSettings.EnableProxy)`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $firewallPolicy)];" 
+            $data += "`n        $azFWId -> $fwpolid;"
+
+            for ($i = 0; $i -lt $firewallPolicy.DnsSettings.Servers.Count; $i++) {
+                $index = [array]::indexof($script:PDNSREpIp, $firewallPolicy.DnsSettings.Servers[$i])
+                if ($index -ge 0) {
+                    $data += "        $fwpolid -> $($script:PDNSRId[$index]) [label = `"DNS Query`"; ];`n" 
+                }
             }
-        }
-       
-        # Initialize an array to store IP Group names
-        $ipGroupIds = @()
+        
+            # Initialize an array to store IP Group names
+            $ipGroupIds = @()
 
-        foreach ($ruleCollectionGroupId in $firewallPolicy.RuleCollectionGroups.Id) {
-            $rcgName = $ruleCollectionGroupId.split("/")[-1]
-            $rcg = Get-AzFirewallPolicyRuleCollectionGroup -Name $rcgName -AzureFirewallPolicy $firewallPolicy -ErrorAction Stop
-            $ipGroupIds += $rcg.Properties.RuleCollection.rules.SourceIpGroups 
-            $ipGroupIds += $rcg.Properties.RuleCollection.rules.DestinationIpGroups
-        }
+            foreach ($ruleCollectionGroupId in $firewallPolicy.RuleCollectionGroups.Id) {
+                $rcgName = $ruleCollectionGroupId.split("/")[-1]
+                $rcg = Get-AzFirewallPolicyRuleCollectionGroup -Name $rcgName -AzureFirewallPolicy $firewallPolicy -ErrorAction Stop
+                $ipGroupIds += $rcg.Properties.RuleCollection.rules.SourceIpGroups 
+                $ipGroupIds += $rcg.Properties.RuleCollection.rules.DestinationIpGroups
+            }
 
-        # Remove duplicates and display the IP Group names
-        $ipGroupIds = $ipGroupIds | Sort-Object -Unique
-        $ipGroupIds = $ipGroupIds.replace("-", "").replace("/", "").replace(".", "").ToLower()
-        foreach ($ipGroupId in $ipGroupIds) {
-            $data += "`n    $fwpolid -> $ipGroupId;"
+            # Remove duplicates and display the IP Group names
+            $ipGroupIds = $ipGroupIds | Sort-Object -Unique
+            if ( $ipGroupIds.count -ne 0 ) {
+                $ipGroupIds = $ipGroupIds.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                foreach ($ipGroupId in $ipGroupIds) {
+                    $data += "`n    $fwpolid -> $ipGroupId;"
+                }
+            }
         }
         return $data
     }
@@ -2007,10 +2020,10 @@ function Export-Hub {
             $headid = $HubvNetID
             $script:AllInScopevNetIds += $vnet.VirtualNetworkPeerings.RemoteVirtualNetwork.id
 
-            $data += "    $HubvNetID [label = `"\n\n$Name\nLocation: $location\nSKU: $sku\nAddress Prefix: $(SanitizeString $AddressPrefix)\nHub Routing Preference: $HubRoutingPreference`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;$(Generate-DotURL -resource $hub)];"
+            $data += "    $HubvNetID [label = `"\n\n$Name\nLocation: $location\nSKU: $sku\nAddress Prefix: $(SanitizeString $AddressPrefix)\nHub Routing Preference: $HubRoutingPreference`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
         }
         else {
-            $data += "        $id [label = `"\n$Name\nLocation: $location\nSKU: $sku\nAddress Prefix: $(SanitizeString $AddressPrefix)\nHub Routing Preference: $HubRoutingPreference`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;$(Generate-DotURL -resource $hub)];"
+            $data += "        $id [label = `"\n$Name\nLocation: $location\nSKU: $sku\nAddress Prefix: $(SanitizeString $AddressPrefix)\nHub Routing Preference: $HubRoutingPreference`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
             $headid = $id
         }
         $script:rankvwanhubs += $headid
@@ -2055,10 +2068,11 @@ function Export-Hub {
             $Script:Legend += ,@("ER Gateway", "ergw.png")
             $ergwId = $hub.ExpressRouteGateway.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
             $ergwName = $hub.ExpressRouteGateway.id.split("/")[-1]
+            $ergwshortname = $ergwName.split("-")[1, 2, 3] -join ("-")
             $ergw = Get-AzExpressRouteGateway -ResourceGroupName $hub.ResourceGroupName -Name $ergwName -ErrorAction Stop
             $ImagePath = Join-Path $OutputPath "icons" "ergw.png"
             $data += "`n"
-            $data += "        $ergwId [label = `"\n\n\n$(SanitizeString $ergwName)\nAuto Scale Configuration: $($ergw.AutoScaleConfiguration.Bounds.min)-$($ergw.AutoScaleConfiguration.Bounds.max)`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+            $data += "        $ergwId [label = `"\n\n\n$(SanitizeString $ergwshortname)\nAuto Scale Configuration: $($ergw.AutoScaleConfiguration.Bounds.min)-$($ergw.AutoScaleConfiguration.Bounds.max)`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
             $data += "`n    $headid -> $ergwId;"
             $peerings = $ergw.ExpressRouteConnections.ExpressRouteCircuitPeering.id
             foreach ($peering in $peerings) {
@@ -2167,7 +2181,7 @@ function Export-VirtualGateway {
         
         }
         $ImagePath = Join-Path $OutputPath "icons" "vgw.png"
-        $data += "            $GatewayId [fillcolor = 7;label = `"\n\nName: $(SanitizeString $GatewayName)`\n\nPublic IP(s):\n$gwips`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
+        $data += "            $GatewayId [fillcolor = 7;label = `"\n\nName: $(SanitizeString $GatewayName)`\n\nPublic IP(s):\n$gwips`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $gw)];"
 
         # Get P2S conf, if configured
         $protocol = $gw.VpnClientConfiguration.VpnClientProtocols
@@ -2179,14 +2193,14 @@ function Export-VirtualGateway {
             $Script:Legend += ,@("P2S VPN Gateway", "VPN-User.png")
             #P2S config present
             $ImagePath = Join-Path $OutputPath "icons" "VPN-User.png"
-            $data += "            ${GatewayId}P2S [fillcolor = 8;label = `"\n\nProtocol: $protocol, Auth: $auth\nP2S Address Prefix: $(SanitizeString $cidr)\nCustom routes: $(($customroutes | ForEach-Object {SanitizeString $_}) -join ",")`"; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; "
+            $data += "            ${GatewayId}P2S [fillcolor = 8;label = `"\n\nProtocol: $protocol, Auth: $auth\nP2S Address Prefix: $(SanitizeString $cidr)\nCustom routes: $(($customroutes | ForEach-Object {SanitizeString $_}) -join ",")`"; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5;]; "
             $data += "            $GatewayId -> ${GatewayId}P2S"
         } 
     }
     elseif ($gwtype -eq "ExpressRoute") {
         $Script:Legend += ,@("ER Gateway", "ergw.png")
         $ImagePath = Join-Path $OutputPath "icons" "ergw.png"
-        $data += "        $GatewayId [fillcolor = 3; label = `"\nName: $(SanitizeString $GatewayName)`"; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; "
+        $data += "        $GatewayId [fillcolor = 3; label = `"\nName: $(SanitizeString $GatewayName)`"; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5;$(Generate-DotURL -resource $gw)]; "
     }
     $data += "`n"
     $data += "            $HeadId -> $GatewayId"
@@ -2266,10 +2280,11 @@ function Export-SubnetConfig {
             # DOT
             switch ($name) {
                 "AzureFirewallSubnet" {
-                    $ImagePath = Join-Path $OutputPath "icons" "afw.png" 
-                    if ($subnet.IpConfigurations.Id) {
+                    $ImagePath = Join-Path $OutputPath "icons" "afw.png"
+                    $Script:Legend += ,@("Azure Firewall", "afw.png") 
+                    if ( $null -ne $subnet.IpConfigurations.Id ) {
                         #Firewall deployed
-                        $AzFWid = $subnet.IpConfigurations.Id.ToLower().split("/azurefirewallipconfigurations/ipconfig1")[0]
+                        $AzFWid = $subnet.IpConfigurations.Id.ToLower().split("/azurefirewallipconfigurations/ipconfig")[0]
                         $AzFWrg = $subnet.IpConfigurations.id.split("/")[4]
 
                         $data += "            $id [label = `"\n\n$name\n$AddressPrefix`" ; fillcolor = 9; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; " 
@@ -2284,30 +2299,42 @@ function Export-SubnetConfig {
                     }
                 }
                 "AzureBastionSubnet" { 
-                    if ($subnet.IpConfigurations.Id) { 
+                    if ( $null -ne $subnet.IpConfigurations.Id ) { 
                         $AzBastionName = SanitizeString $subnet.IpConfigurations.Id.split("/")[8].ToLower()
+                        $AzBastionRGName = $subnet.IpConfigurations.Id.split("/")[4].ToLower()
+                        $AzBastion = Get-AzBastion -ResourceGroupName $AzBastionRGName -Name $subnet.IpConfigurations.Id.split("/")[8].ToLower()
+                        $AzBastionSKU = ($AzBastion.SkuText | ConvertFrom-JSON).Name
+                        $AzBastionLink = $(Generate-DotURL -resource $AzBastion)
                     }
-                    else { $AzBastionName = "Bastion not Deployed" }
+                    else {
+                        $AzBastionName = "Bastion not deployed" 
+                        $AzBastionSKU = "None"
+                    }
 
                     $ImagePath = Join-Path $OutputPath "icons" "bas.png"
+                    $Script:Legend += ,@("Azure Bastion", "bas.png")
                     
-                    $data += "            $id [label = `"\n\n$name\n$AddressPrefix\nName: $AzBastionName`" ; fillcolor = 6; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; " 
+                    $data += "            $id [label = `"\n\n$name\n$AddressPrefix\nName: $AzBastionName`\nSKU: $AzBastionSKU`" ; fillcolor = 6; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5;$AzBastionLink]; " 
                 }
                 "AppGatewaySubnet" { 
-                    if ($subnet.IpConfigurations.Id) { 
+                    if ( $null -ne $subnet.IpConfigurations.Id ) { 
                         $AppGatewayName = SanitizeString $subnet.IpConfigurations.Id.split("/")[8].ToLower()
+                        #$AppGatewayRGName = $subnet.IpConfigurations.Id.split("/")[4].ToLower()
+                        #$AppGateway = Get-
                         $ImagePath = Join-Path $OutputPath "icons" "agw.png"
+                        $Script:Legend += ,@("Application Gateway", "agw.png")
                     
                         $data += "            $id [label = `"\n\n$name\n$AddressPrefix\nName: $AppGatewayName`" ; fillcolor = 5; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; " 
                     }
                 }
                 "GatewaySubnet" { 
                     $ImagePath = Join-Path $OutputPath "icons" "vgw.png"
+                    $Script:Legend += ,@("Virtual Network Gateway", "vgw.png")
                     $data += "            $id [label = `"\n\n$name\n$AddressPrefix`"; fillcolor = 4; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; " 
                     $data += "`n"
                     
                     #GW DOT
-                    if ($subnet.IpConfigurations.Id) {
+                    if ( $nulll -ne $subnet.IpConfigurations.Id ) {
                         foreach ($subnet in $subnet.IpConfigurations.Id) {
                             $gwid = $subnet.split("/ipConfigurations/")[0].replace("-", "").replace("/", "").replace(".", "").ToLower()
                             $gwname = $subnet.split("/")[8].ToLower()
@@ -2537,9 +2564,9 @@ function Export-vWAN {
 
     try {
         Write-Host "Collecting vWAN info: $vwanname"
-        $script:rankvwans += $id
         $hubs = Get-AzVirtualHub -ResourceGroupName $ResourceGroupName -ErrorAction Stop | Where-Object { $($_.VirtualWAN.id) -eq $($vwan.id) }
         if ($null -ne $hubs) {
+            $script:rankvwans += $id
             $header = "
             # $Name - $id
             subgraph cluster_$id {
@@ -3198,8 +3225,10 @@ function Export-StaticWebApp
         $swaName = SanitizeString $StaticWebApp.Name
         $swaLocation = SanitizeLocation $StaticWebApp.Location
         $swaSKU = $StaticWebApp.SkuName
-        $swaCustomDomain = SanitizeString $($StaticWebApp.CustomDomain)
-        if ( $null -eq $StaticWebApp.CustomDomain ) { $swaCustomDomain = "None" }
+
+        $swaCustomDomainTemp  = $StaticWebApp.CustomDomain
+        if ($null -eq $swaCustomDomainTemp ){ $swaCustomDomain = SanitizeString $($StaticWebApp.CustomDomain) } else { $swaCustomDomain = "None" }
+
         $swaDefaultDomain = SanitizeString "$($StaticWebApp.DefaultHostName)"
         #$swaProvider = $StaticWebApp.Provider
 
