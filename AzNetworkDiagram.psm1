@@ -3332,7 +3332,7 @@ function Export-MgmtGroupEntityObject
             $name = SanitizeString $MgmtGroup.DisplayName
             $descendants = $MgmtGroupEntityObject.NumberOfDescendants
             
-            $data += "      $id [fillcolor = 4; label = `"Name: $name\nDescendants: $descendants`";image = `"$ImagePath`";imagepos = `"tc`";height = 2.0;];`n"
+            $data += "      $id [fillcolor = 4; label = `"\nName: $name\nDescendants: $descendants`";image = `"$ImagePath`";imagepos = `"tc`";height = 2.0;];`n"
             
         } 
         elseif ( $MgmtGroupEntityObject.Type -eq "/subscriptions" ) {
@@ -3344,7 +3344,7 @@ function Export-MgmtGroupEntityObject
 
             $Script:Legend += ,@("Subscription","sub.png")
             
-            $data += "      $id [fillcolor = 4; label = `"Name: $name`";image = `"$ImagePath`";imagepos = `"tc`";height = 2.0;$(Generate-DotURL -resource $sub)];`n"
+            $data += "      $id [fillcolor = 4; label = `"\nName: $name`";image = `"$ImagePath`";imagepos = `"tc`";height = 2.0;$(Generate-DotURL -resource $sub)];`n"
             
         }    
         $parent = $MgmtGroupEntityObject.parent
