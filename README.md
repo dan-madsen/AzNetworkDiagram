@@ -111,6 +111,7 @@ An example ADO pipeline YAML file has been added with support Powershell scripts
 # Changelog (since v1.0.1)
 ## v1.2
 - Resources can now be links, if enabled (only PDF support!), which will take you directly to the Azure portal
+- Optionally, add Management Group and Subscription overview to the diagram
 - New parameters
   - -EnableLinks $true
     - Links can be enabled using the flag 
@@ -121,9 +122,8 @@ An example ADO pipeline YAML file has been added with support Powershell scripts
 - Bug fixes
   - Azure Firewall: Fixed crash when no Azure Firewall policy is attached
   - Azure Firewall Policy: Fixed crash when IP Groups are not in use at all
-  - MySQL: admin retrievel changed (but will give less output)
+  - MySQL: admin retrievel changed (but will potentially give less output)
   - vWAN: Removed from output, if no hubs are present (to avoid id with to icon or proper label)
-  - Optionally, add Management Groupp and Subscription overview to the diagram
 ## v1.1
 - Diagrams are now colorized
 - Linux support
