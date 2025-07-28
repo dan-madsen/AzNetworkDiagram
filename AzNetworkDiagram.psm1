@@ -527,7 +527,7 @@ function Export-AKSCluster {
         $ImagePath = Join-Path $OutputPath "icons" "aks-node-pool.png"
         foreach ($agentpool in $Aks.AgentPoolProfiles) {
             $agentpoolid = $aksid + $agentpool.Name.replace("-", "").replace("/", "").replace(".", "").ToLower()
-            $data += "        $($agentpoolid) [label = `"\nName: $($agentpool.Name ? (SanitizeString $agentpool.Name) : '')\nMode: $($agentpool.Mode)\nZones: $($agentpool.AvailabilityZones)\nVM Size: $($agentpool.VmSize)\nMax Pods: $($agentpool.MaxPods)\nOS SKU: $($agentpool.OsSKU)\nAgent Pools: $($agentpool.MinCount) >= Pod Count <=  $($agentpool.MaxCount)\nEnable AutoScaling: $($agentpool.EnableAutoScaling)\nPublic IP: $($agentpool.EnableNodePublicIP ? (SanitizeString $agentpool.EnableNodePublicIP) : '')\n`" ; color = 7;image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $agentpool)];`n" 
+            $data += "        $($agentpoolid) [label = `"\nName: $($agentpool.Name ? (SanitizeString $agentpool.Name) : '')\nMode: $($agentpool.Mode)\nZones: $($agentpool.AvailabilityZones)\nVM Size: $($agentpool.VmSize)\nMax Pods: $($agentpool.MaxPods)\nOS SKU: $($agentpool.OsSKU)\nAgent Pools: $($agentpool.MinCount) >= Pod Count <=  $($agentpool.MaxCount)\nEnable AutoScaling: $($agentpool.EnableAutoScaling)\nPublic IP: $($agentpool.EnableNodePublicIP ? (SanitizeString $agentpool.EnableNodePublicIP) : '')\n`" ; color = 7;image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n" 
             $data += "        $aksid -> $agentpoolid [label = `"Node Pool`"];`n"
             if ($agentpool.VnetSubnetId) {
                 $agentpoolsubnetid = $agentpool.VnetSubnetId.replace("-", "").replace("/", "").replace(".", "").ToLower()
