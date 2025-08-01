@@ -1044,7 +1044,7 @@ function Export-VM {
         "
         $extensions = $vm.Extensions | ForEach-Object { $_.Id.split("/")[-1] } | Join-String -Separator ", "
 
-        # NIC loop for private + publc IPs
+        # NIC loop for private + public IPs
         $NICs = $vm.NetworkProfile.NetworkInterfaces.id
         $PublicIPAddresses = @()
         $PrivateIPAddresses = @()
@@ -1065,8 +1065,12 @@ function Export-VM {
             
             $PrivateIpAddresses += $nic.IpConfigurations[0].PrivateIpAddress ? $(SanitizeString $nic.IpConfigurations[0].PrivateIpAddress) : ""
         }
+        $PrivateIpAddresses = $PrivateIpAddresses | Sort-Object -Unique
+        $PublicIPAddresses = $PublicIPAddresses | Sort-Object -Unique
+        if ( $null -eq $PublicIPAddresses ) { $PublicIPAddresses = "None" }
+
         $ImagePath = Join-Path $OutputPath "icons" "vm.png"
-        $data += "        $vmid [label = `"\nLocation: $Location\nSKU: $($vm.HardwareProfile.VmSize)\nZones: $($vm.Zones)\nOS Type: $($vm.StorageProfile.OsDisk.OsType)\nPublic IP: $($PublicIpAddresses -Join ", ")\nPrivate IP Address: $($PrivateIpAddresses -Join ", ")\nExtensions: $extensions`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $vm)];"
+        $data += "        $vmid [label = `"\nLocation: $Location\nSKU: $($vm.HardwareProfile.VmSize)\nZones: $($vm.Zones)\nOS Type: $($vm.StorageProfile.OsDisk.OsType)\nPublic IP(s): $($PublicIpAddresses -Join ", ")\nPrivate IP(s): $($PrivateIpAddresses -Join ", ")\nExtensions: $extensions`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $vm)];"
         $data += "`n"
         $subnetid = $nic.IpConfigurations[0].Subnet.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
         $data += "        $vmid -> $subnetid;`n"
