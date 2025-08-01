@@ -2384,7 +2384,7 @@ function Export-SubnetConfig {
                     $data += "`n"
                     
                     #GW DOT
-                    if ( $nulll -ne $subnet.IpConfigurations.Id ) {
+                    if ( $null -ne $subnet.IpConfigurations.Id ) {
                         foreach ($subnet in $subnet.IpConfigurations.Id) {
                             $gwid = $subnet.split("/ipConfigurations/")[0].replace("-", "").replace("/", "").replace(".", "").ToLower()
                             $gwname = $subnet.split("/")[8].ToLower()
