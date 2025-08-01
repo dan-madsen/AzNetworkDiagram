@@ -44,6 +44,18 @@
   .PARAMETER EnableLinks
   -EnableLinks ($true/$false) - if $true/enabled Azure resource in the PDF output will become links, taking you to the Azure portal. **Default: $false**
 
+  .PARAMETER -KeepDotFile
+  -KeepDotFile ($true/$false) - if $true/enabled the DOT file will be preserved
+
+  .PARAMETER -OutputFormat
+  -OutputFormat (pdf, svg, png) - One or more output files get generated with the specified formats. Default is PDF.
+
+  .PARAMETER -EnableMgmtGroups
+  -EnableMgmtGroups ($true/$false) - Add Management Group and Subscription overview to the diagram. Default is $false.
+
+  .PARAMETER OnlyMgmtGroups
+  -OnlyMgmtGroups ($true/$false) - Creates a Management Group and Subscription overview diagram - everything else is skipped. Default is $false.
+
   .INPUTS
   None. It will however require previous authentication to Azure
 
