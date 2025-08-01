@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.1
 #Requires -Modules Az.Accounts, Az.Network, Az.Compute, Az.KeyVault, Az.Storage, Az.MySql, Az.PostgreSql, Az.CosmosDB, Az.RedisCache, Az.Sql, Az.EventHub, Az.Websites, Az.ApiManagement, Az.ContainerRegistry, Az.ManagedServiceIdentity, Az.Resources
 
 <#
@@ -1031,11 +1031,30 @@ function Export-VM {
             node [colorscheme = blues9; ];
         "
         $extensions = $vm.Extensions | ForEach-Object { $_.Id.split("/")[-1] } | Join-String -Separator ", "
-        $nic = Get-AzNetworkInterface -ResourceId $vm.NetworkProfile.NetworkInterfaces[0].Id -ErrorAction Stop
-        $PublicIpAddress = $nic.IpConfigurations[0].PublicIpAddress ? $(SanitizeString $nic.IpConfigurations[0].PublicIpAddress) : ""
-        $PrivateIpAddress = $nic.IpConfigurations[0].PrivateIpAddress ? $(SanitizeString $nic.IpConfigurations[0].PrivateIpAddress) : ""
+
+        # NIC loop for private + publc IPs
+        $NICs = $vm.NetworkProfile.NetworkInterfaces.id
+        $PublicIPAddresses = @()
+        $PrivateIPAddresses = @()
+        $NICs | Foreach-Object {
+            #NIC
+            #$nic = Get-AzNetworkInterface -ResourceId $vm.NetworkProfile.NetworkInterfaces[0].Id -ErrorAction Stop
+            $nicref = $_
+            $nic = Get-AzNetworkInterface -ResourceId $nicref -ErrorAction Stop
+
+            # Public IP
+            if ( $null -ne $nic.IpConfigurations[0].PublicIpAddress ) {
+                #$PublicIpAddress = $nic.IpConfigurations[0].PublicIpAddress ? $(SanitizeString $nic.IpConfigurations[0].PublicIpAddress) : ""
+                $PublicIPID = $nic.IpConfigurations[0].PublicIpAddress.Id
+                $PublicIPRG = $PublicIPID.Split("/")[4]
+                $PublicIPName = $PublicIPID.Split("/")[8]
+                $PublicIpAddresses += SanitizeString (Get-AzPublicIpAddress -name $PublicIPName -ResourceGroupName $PublicIPRG).Ipaddress
+            }
+            
+            $PrivateIpAddresses += $nic.IpConfigurations[0].PrivateIpAddress ? $(SanitizeString $nic.IpConfigurations[0].PrivateIpAddress) : ""
+        }
         $ImagePath = Join-Path $OutputPath "icons" "vm.png"
-        $data += "        $vmid [label = `"\nLocation: $Location\nSKU: $($vm.HardwareProfile.VmSize)\nZones: $($vm.Zones)\nOS Type: $($vm.StorageProfile.OsDisk.OsType)\nPublic IP: $PublicIpAddress\nPrivate IP Address: $PrivateIpAddress\nExtensions: $extensions`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $vm)];"
+        $data += "        $vmid [label = `"\nLocation: $Location\nSKU: $($vm.HardwareProfile.VmSize)\nZones: $($vm.Zones)\nOS Type: $($vm.StorageProfile.OsDisk.OsType)\nPublic IP: $($PublicIpAddresses -Join ", ")\nPrivate IP Address: $($PrivateIpAddresses -Join ", ")\nExtensions: $extensions`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $vm)];"
         $data += "`n"
         $subnetid = $nic.IpConfigurations[0].Subnet.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
         $data += "        $vmid -> $subnetid;`n"
@@ -1049,13 +1068,15 @@ function Export-VM {
         # VM (NIC) -> NSG
         $NetworkProfiles = $vm.NetworkProfile.networkinterfaces
         $NetworkProfiles | Foreach-Object {
-            $NICId = $NetworkProfiles.id
+            $NetworkProfile = $_
+            $NICId = $NetworkProfile.id
             $NICrg = $NICId.split("/")[4]
             $NICname = $NICId.split("/")[8]
             $NIC = Get-AzNetworkInterface -ResourceGroupName $NICrg -name $NICname
             if ( $null -ne $nic.NetworkSecurityGroup.id ) {
                 $NSGid = ($nic.NetworkSecurityGroup.id).replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $data += "        $vmid -> $NSGid;`n"
+                #$data += "        $vmid -> $NSGid [label = `"NIC: $NICName`"];`n"
+                $data += "        $vmid -> $NSGid`n"
             }
         }
         $data += "   label = `"$Name`";
@@ -3711,7 +3732,7 @@ function Get-AzNetworkDiagram {
                 }
 
                 ### vNets (incl. subnets)
-                Write-Output "Collecting vNets, and associated informations..."
+                Write-Output "Collecting vNets, and associated information..."
                 Export-AddToFile "    ##### $subname - Virtual Networks #####"
                 $vnets = Get-AzVirtualNetwork -ErrorAction Stop
                 if ($null -ne $vnets.id) {
@@ -3982,7 +4003,7 @@ function Get-AzNetworkDiagram {
 
                     #Managed Identities
                     Write-Output "Collecting Managed Identities..."
-                    Export-AddToFile "    ##### $subname - Managed Identities #####"
+                    Export-AddToFile "    ##### $subname - User Assigned Managed Identities #####"
                     $managedIdentities = Get-AzUserAssignedIdentity -ErrorAction Stop
                     if ($null -ne $managedIdentities) {
                         $Script:Legend += ,@("Managed Identity","managed-identity.png")
