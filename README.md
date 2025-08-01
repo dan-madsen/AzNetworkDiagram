@@ -124,6 +124,7 @@ An example ADO pipeline YAML file has been added with support Powershell scripts
   - Azure Firewall Policy: Fixed crash when IP Groups are not in use at all
   - MySQL: admin retrievel changed (but will potentially give less output)
   - vWAN: Removed from output, if no hubs are present (to avoid id with to icon or proper label)
+  - Container Instances - crash when instance is in stopped state
 ## v1.1
 - Diagrams are now colorized
 - Linux support

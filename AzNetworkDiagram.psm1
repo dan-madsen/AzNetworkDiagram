@@ -3061,7 +3061,9 @@ function Export-ContainerGroup
             node [colorscheme = bupu9; style = filled;];
         "
         
-        $instanceIP = (SanitizeString $containerGroup.IPAddress.IP) + " ($($containerGroup.IPAddressType.ToString()))"
+        if ( $null -ne $containerGroup.IPAddress.IP ) { $instanceIP = (SanitizeString $containerGroup.IPAddress.IP) + " ($($containerGroup.IPAddressType.ToString()))"
+        } else { $instanceIP = "Instance stopped, unavailable" }
+        
         $instanceOS = $containerGroup.OSType.ToString()
         $instanceZone = $null -eq $containerGroup.Zone ? "None" : $containerGroup.Zone
         $instanceSku = $containerGroup.sku.ToString()
