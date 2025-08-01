@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.1
 #Requires -Modules Az.Accounts, Az.Network, Az.Compute, Az.KeyVault, Az.Storage, Az.MySql, Az.PostgreSql, Az.CosmosDB, Az.RedisCache, Az.Sql, Az.EventHub, Az.Websites, Az.ApiManagement, Az.ContainerRegistry, Az.ManagedServiceIdentity, Az.Resources
 
 <#
@@ -39,7 +39,22 @@
   -Prefix "string" - Adds a prefix to the output file name. For example is cases where you want to do multiple automated runs then the file names will have the prefix per run that you specify. Default: No Prefix
 
   .PARAMETER OnlyCoreNetwork
-  -OnlyCoreNetwork ($true/$false) - if $true/enabled, only cores network resources are processed - ie. non-network resources are skipped for a cleaner diagram.  
+  -OnlyCoreNetwork ($true/$false) - if $true/enabled, only cores network resources are processed - ie. non-network resources are skipped for a cleaner diagram.
+
+  .PARAMETER EnableLinks
+  -EnableLinks ($true/$false) - if $true/enabled Azure resource in the PDF output will become links, taking you to the Azure portal. **Default: $false**
+
+  .PARAMETER -KeepDotFile
+  -KeepDotFile ($true/$false) - if $true/enabled the DOT file will be preserved
+
+  .PARAMETER -OutputFormat
+  -OutputFormat (pdf, svg, png) - One or more output files get generated with the specified formats. Default is PDF.
+
+  .PARAMETER -EnableMgmtGroups
+  -EnableMgmtGroups ($true/$false) - Add Management Group and Subscription overview to the diagram. Default is $false.
+
+  .PARAMETER OnlyMgmtGroups
+  -OnlyMgmtGroups ($true/$false) - Creates a Management Group and Subscription overview diagram - everything else is skipped. Default is $false.
 
   .INPUTS
   None. It will however require previous authentication to Azure
@@ -260,6 +275,36 @@ function SanitizeString {
     }
 }
 
+<#
+.SYNOPSIS
+Takes an Azure PS object and returns a deeplink to the Azure portal, in DOT format.
+
+.DESCRIPTION
+The `Generate-DOTURL` function processes an Azure resource object and returns a deeplink to the Azure portal, in DOT format.
+
+.PARAMETER resource
+The resource you want a link to
+#>
+function Generate-DOTURL {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$resource
+    )
+    
+    if ( $EnableLinks -and $script:DoSanitize -eq $false ) {
+        $tenantDisplayName = SanitizeString (Get-AzTenant -TenantId (Get-AzContext).Tenant.Id).DefaultDomain
+        $linkbase = "https://portal.azure.com/#@$tenantDisplayName/resource"
+        $linkend = $resource.id
+        if ( $null -eq $linkend ) { $linkend = $resource.ResourceID }
+        $doturl = "URL=`"$($linkbase + $linkend)`";"
+        return $doturl
+    }
+    else {
+        return ""
+    }
+}
+
 ##### Functions for standard definitions #####
 <#
 .SYNOPSIS
@@ -366,6 +411,10 @@ function Export-dotFooter {
     #$tenantDisplayName = SanitizeString (Get-AzContext).account.id.split('@')[1]
     $tenantDisplayName = SanitizeString (Get-AzTenant -TenantId (Get-AzContext).Tenant.Id).Name
     #$tenantDisplayId = SanitizeString (Get-AzContext).Tenant.Id
+
+    Export-AddToFile -Data "`n    ##########################################################################################################"
+    Export-AddToFile -Data "    ##### Legend"
+    Export-AddToFile -Data "    ##########################################################################################################`n"
     
     $data = "    subgraph clusterLegend {
                     style = solid;
@@ -375,6 +424,7 @@ function Export-dotFooter {
                     node [colorscheme = rdpu7;color = 1; margin = 0; ];
                     labelloc=b;
                     label = `"Tenant:\n$tenantDisplayName\n\nCreated on $date by:\nAzNetworkDiagram $ver`";
+                    URL = `"https://github.com/dan-madsen/AzNetworkDiagram`"
 
                     l1 [color = 1; label = < <TABLE border=`"0`" style=`"rounded`">
                                 <TR><TD colspan=`"2`" border=`"0`"><FONT POINT-SIZE=`"25`"><B>Legend</B></FONT></TD></TR>
@@ -384,6 +434,7 @@ function Export-dotFooter {
         $icon = Join-Path $OutputPath "icons" $Item[1]
         $data += "                <TR><TD align=`"left`"><IMG SCALE=`"TRUE`" SRC=`"$icon`"/></TD><TD align=`"left`">$($Item[0])</TD></TR>`n"
     }
+    #$data += "                <TR><TD colspan=`"2`" align=`"center`"><IMG SCALE=`"TRUE`" SRC=`"c:/temp/logo.png`"/></TD></TR>`n"
     $data += "                </TABLE>>]; 
             }
             { rank=max; l1; }
@@ -482,7 +533,7 @@ function Export-AKSCluster {
         $PodCidr = $Aks.NetworkProfile.PodCidr ? $(SanitizeString $Aks.NetworkProfile.PodCidr) : "None"
         $Location = SanitizeLocation $Aks.Location
         $ImagePath = Join-Path $OutputPath "icons" "aks-service.png"
-        $data += "        $aksid [label = `"\nLocation: $Location\nVersion: $($Aks.KubernetesVersion)\nSKU Tier: $($Aks.Sku.Tier)\nPrivate Cluster: $($Aks.ApiServerAccessProfile.EnablePrivateCluster)\nDNS Service IP: $($Aks.DnsServiceIP)\nMax Agent Pools: $($Aks.MaxAgentPools)\nContainer Registry: $aksacr\nPod CIDR: $PodCidr\nService CIDR: $ServiceCidr\n`" ; color = 8;image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];"
+        $data += "        $aksid [label = `"\nLocation: $Location\nVersion: $($Aks.KubernetesVersion)\nSKU Tier: $($Aks.Sku.Tier)\nPrivate Cluster: $($Aks.ApiServerAccessProfile.EnablePrivateCluster)\nDNS Service IP: $($Aks.DnsServiceIP)\nMax Agent Pools: $($Aks.MaxAgentPools)\nContainer Registry: $aksacr\nPod CIDR: $PodCidr\nService CIDR: $ServiceCidr\n`" ; color = 8;image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $Aks)];"
         
         #$Aks.PrivateLinkResources.PrivateLinkServiceId
         $ImagePath = Join-Path $OutputPath "icons" "aks-node-pool.png"
@@ -641,7 +692,7 @@ function Export-ApplicationGateway {
             $feports = "None"
         }
         $ImagePath = Join-Path $OutputPath "icons" "agw.png"
-        $data += "        $agwid [label = `"\nLocation: $Location\nPolicy name: $polname\nIPs: $pvtips\nSKU: $skuname\nZones: $zones\nSSL Certificates: $sslcerts\nFrontend ports: $feports\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];"
+        $data += "        $agwid [label = `"\nLocation: $Location\nPolicy name: $polname\nIPs: $pvtips\nSKU: $skuname\nZones: $zones\nSSL Certificates: $sslcerts\nFrontend ports: $feports\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $agw)];"
         $data += "`n"
         $data += "        $agwid -> $agwSubnetId;`n"
 
@@ -693,7 +744,7 @@ function Export-ManagedIdentity {
             margin = 0;
             node [colorscheme = blues9; color = 3; margin = 0;];
 
-            $id [label = `"\n$Name\nLocation: $Location`"; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];
+            $id [label = `"\n$Name\nLocation: $Location`"; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $managedIdentity)];
             label = `"$Name`";
         }
         "
@@ -733,7 +784,7 @@ function Export-NSG {
             bgcolor = 8;
             node [colorscheme = rdylgn11; style = filled;];
 
-            $id [label = `"\n$Name\nLocation: $Location`" ; fillcolor = 8;image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];
+            $id [label = `"\n$Name\nLocation: $Location`" ; fillcolor = 8;image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $nsg)];
             label = `"$Name`";
         }
         "
@@ -775,7 +826,7 @@ function Export-SSHKey {
             bgcolor = 4;
             node [colorscheme = blues9; color = 4; margin = 0;];
 
-            $id [label = `"\n$Name\nLocation: $Location`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];
+            $id [label = `"\n$Name\nLocation: $Location`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $sshkey)];
             label = `"$Name`";
         }
         "
@@ -809,7 +860,7 @@ function Export-ComputeGallery {
             color = black;
             node [colorscheme = purd9; fillcolor = 4; margin = 0; style = `"filled`";];
 
-            $id [fillcolor = 5; label = `"\nName: $Name\nLocation: $Location\nSharing Profile: $sharing`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n"
+            $id [fillcolor = 5; label = `"\nName: $Name\nLocation: $Location\nSharing Profile: $sharing`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $computeGallery)];`n"
         
         # Get all image definitions in the gallery
         $imageDefinitions = Get-AzGalleryImageDefinition -ResourceGroupName $computeGallery.ResourceGroupName -GalleryName $computeGallery.Name -ErrorAction Stop
@@ -881,7 +932,7 @@ function Export-Keyvault {
             margin = 0;
             node [colorscheme = brbg11; color = 8; margin = 0;];
 
-            $id [label = `"\nLocation: $Location\nSKU: $($properties.Properties.Sku.Name)\nSoft Delete Enabled: $($properties.Properties.enableSoftDelete)\nRBAC Authorization Enabled: $($properties.Properties.enableRbacAuthorization)\nPublic Network Access: $($properties.Properties.publicNetworkAccess)\nPurge Protection Enabled: $($properties.Properties.enablePurgeProtection)`"; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];
+            $id [label = `"\nLocation: $Location\nSKU: $($properties.Properties.Sku.Name)\nSoft Delete Enabled: $($properties.Properties.enableSoftDelete)\nRBAC Authorization Enabled: $($properties.Properties.enableRbacAuthorization)\nPublic Network Access: $($properties.Properties.publicNetworkAccess)\nPurge Protection Enabled: $($properties.Properties.enablePurgeProtection)`"; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;$(Generate-DotURL -resource $keyvault)];
         "
         if ($properties.Properties.privateEndpointConnections.properties.PrivateEndpoint.Id) {
             $peid = $properties.Properties.privateEndpointConnections.properties.PrivateEndpoint.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
@@ -929,7 +980,7 @@ function Export-VMSS {
         "
         $extensions = $vmss.VirtualMachineProfile.ExtensionProfile.Extensions | ForEach-Object { $_.Name } | Join-String -Separator ", "
         $ImagePath = Join-Path $OutputPath "icons" "vmss.png"
-        $data += "        $vmssid [label = `"\nLocation: $Location\nSKU: $($vmss.Sku.Name)\nCapacity: $($vmss.Sku.Capacity)\nZones: $($vmss.Zones)\nOS Type: $($vmss.StorageProfile.OsDisk.OsType)\nOrchestration Mode: $($vmss.OrchestrationMode)\nUpgrade Policy: $($vmss.UpgradePolicy)\nExtensions: $extensions`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];"
+        $data += "        $vmssid [label = `"\nLocation: $Location\nSKU: $($vmss.Sku.Name)\nCapacity: $($vmss.Sku.Capacity)\nZones: $($vmss.Zones)\nOS Type: $($vmss.StorageProfile.OsDisk.OsType)\nOrchestration Mode: $($vmss.OrchestrationMode)\nUpgrade Policy: $($vmss.UpgradePolicy)\nExtensions: $extensions`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $vmss)];"
         $data += "`n"
 
         $sshid = (Get-AzSshKey | Where-Object { $_.publickey -eq $vmss.VirtualMachineProfile.OsProfile.LinuxConfiguration.Ssh.PublicKeys.KeyData }).Id
@@ -992,11 +1043,34 @@ function Export-VM {
             node [colorscheme = blues9; ];
         "
         $extensions = $vm.Extensions | ForEach-Object { $_.Id.split("/")[-1] } | Join-String -Separator ", "
-        $nic = Get-AzNetworkInterface -ResourceId $vm.NetworkProfile.NetworkInterfaces[0].Id -ErrorAction Stop
-        $PublicIpAddress = $nic.IpConfigurations[0].PublicIpAddress ? $(SanitizeString $nic.IpConfigurations[0].PublicIpAddress) : ""
-        $PrivateIpAddress = $nic.IpConfigurations[0].PrivateIpAddress ? $(SanitizeString $nic.IpConfigurations[0].PrivateIpAddress) : ""
+
+        # NIC loop for private + public IPs
+        $NICs = $vm.NetworkProfile.NetworkInterfaces.id
+        $PublicIPAddresses = @()
+        $PrivateIPAddresses = @()
+        $NICs | Foreach-Object {
+            #NIC
+            #$nic = Get-AzNetworkInterface -ResourceId $vm.NetworkProfile.NetworkInterfaces[0].Id -ErrorAction Stop
+            $nicref = $_
+            $nic = Get-AzNetworkInterface -ResourceId $nicref -ErrorAction Stop
+
+            # Public IP
+            if ( $null -ne $nic.IpConfigurations[0].PublicIpAddress ) {
+                #$PublicIpAddress = $nic.IpConfigurations[0].PublicIpAddress ? $(SanitizeString $nic.IpConfigurations[0].PublicIpAddress) : ""
+                $PublicIPID = $nic.IpConfigurations[0].PublicIpAddress.Id
+                $PublicIPRG = $PublicIPID.Split("/")[4]
+                $PublicIPName = $PublicIPID.Split("/")[8]
+                $PublicIpAddresses += SanitizeString (Get-AzPublicIpAddress -name $PublicIPName -ResourceGroupName $PublicIPRG).Ipaddress
+            }
+            
+            $PrivateIpAddresses += $nic.IpConfigurations[0].PrivateIpAddress ? $(SanitizeString $nic.IpConfigurations[0].PrivateIpAddress) : ""
+        }
+        $PrivateIpAddresses = $PrivateIpAddresses | Sort-Object -Unique
+        $PublicIPAddresses = $PublicIPAddresses | Sort-Object -Unique
+        if ( $null -eq $PublicIPAddresses ) { $PublicIPAddresses = "None" }
+
         $ImagePath = Join-Path $OutputPath "icons" "vm.png"
-        $data += "        $vmid [label = `"\nLocation: $Location\nSKU: $($vm.HardwareProfile.VmSize)\nZones: $($vm.Zones)\nOS Type: $($vm.StorageProfile.OsDisk.OsType)\nPublic IP: $PublicIpAddress\nPrivate IP Address: $PrivateIpAddress\nExtensions: $extensions`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];"
+        $data += "        $vmid [label = `"\nLocation: $Location\nSKU: $($vm.HardwareProfile.VmSize)\nZones: $($vm.Zones)\nOS Type: $($vm.StorageProfile.OsDisk.OsType)\nPublic IP(s): $($PublicIpAddresses -Join ", ")\nPrivate IP(s): $($PrivateIpAddresses -Join ", ")\nExtensions: $extensions`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $vm)];"
         $data += "`n"
         $subnetid = $nic.IpConfigurations[0].Subnet.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
         $data += "        $vmid -> $subnetid;`n"
@@ -1004,6 +1078,21 @@ function Export-VM {
             foreach ($identity in $vm.Identity.UserAssignedIdentities.Keys) { 
                 $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower()
                 $data += "        $vmid -> $managedIdentityId;`n"
+            }
+        }
+
+        # VM (NIC) -> NSG
+        $NetworkProfiles = $vm.NetworkProfile.networkinterfaces
+        $NetworkProfiles | Foreach-Object {
+            $NetworkProfile = $_
+            $NICId = $NetworkProfile.id
+            $NICrg = $NICId.split("/")[4]
+            $NICname = $NICId.split("/")[8]
+            $NIC = Get-AzNetworkInterface -ResourceGroupName $NICrg -name $NICname
+            if ( $null -ne $nic.NetworkSecurityGroup.id ) {
+                $NSGid = ($nic.NetworkSecurityGroup.id).replace("-", "").replace("/", "").replace(".", "").ToLower()
+                #$data += "        $vmid -> $NSGid [label = `"NIC: $NICName`"];`n"
+                $data += "        $vmid -> $NSGid`n"
             }
         }
         $data += "   label = `"$Name`";
@@ -1037,6 +1126,8 @@ function Export-MySQLServer {
         # Get Entra ID Admin
         $subid = $mysql.id.split("/")[2]
         $resourceGroupName = $mysql.id.split("/")[4]
+        
+        <#
         $uri = "https://management.azure.com/subscriptions/$subid/resourceGroups/$resourceGroupName/providers/Microsoft.DBforMySQL/flexibleServers/$($mysql.Name)/administrators?api-version=2023-06-01-preview"
         $token = (ConvertFrom-SecureString (Get-AzAccessToken -ResourceUrl 'https://management.azure.com' -AsSecureString).Token -AsPlainText)
         $headers = @{
@@ -1046,6 +1137,8 @@ function Export-MySQLServer {
 
         $response = Invoke-RestMethod -ContentType "application/json" -Method Get -Uri $uri -Headers $headers -ErrorAction SilentlyContinue
         $sqladmins = $response.value.properties.login
+        #>
+        $sqladmins = $mysql.AdministratorLogin
 
         # Get other server properties
         $mysqlid = $mysql.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
@@ -1060,7 +1153,7 @@ function Export-MySQLServer {
             bgcolor = 4;
         "
         $ImagePath = Join-Path $OutputPath "icons" "mysql.png"
-        $data += "        $mysqlid [label = `"\n\n\nLocation: $Location\nSKU: $($mysql.SkuName)\nTier: $($mysql.SkuTier.ToString())\nVersion: $($mysql.Version)\nLogin Admins:$(SanitizeString $sqladmins)\nVM Size: $($properties.Sku.Name)\nAvailability Zone: $($mysql.AvailabilityZone)\nStandby Zone: $($mysql.HighAvailabilityStandbyAvailabilityZone)\nPublic Network Access: $($mysql.NetworkPublicNetworkAccess)`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.5;];"
+        $data += "        $mysqlid [label = `"\n\n\nLocation: $Location\nSKU: $($mysql.SkuName)\nTier: $($mysql.SkuTier.ToString())\nVersion: $($mysql.Version)\nLogin Admins:$(SanitizeString $sqladmins)\nVM Size: $($properties.Sku.Name)\nAvailability Zone: $($mysql.AvailabilityZone)\nStandby Zone: $($mysql.HighAvailabilityStandbyAvailabilityZone)\nPublic Network Access: $($mysql.NetworkPublicNetworkAccess)`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.5;$(Generate-DotURL -resource $mysql)];"
         $data += "`n"
         
         $dbs = Get-AzMySqlFlexibleServerDatabase -ResourceGroupName $mysql.id.split("/")[4] -ServerName $mysql.Name -ErrorAction Stop
@@ -1180,7 +1273,7 @@ function Export-CosmosDBAccount {
             node [color = black;];
         "
         $ImagePath = Join-Path $OutputPath "icons" "cosmosdb.png"
-        $data += "        $cosmosdbactid [label = `"Version: $($cosmosdbact.ApiProperties.ServerVersion)\nLocations: $Locations\nDefault Consistency Level: $($cosmosdbact.ConsistencyPolicy.DefaultConsistencyLevel)\nKind: $($cosmosdbact.Kind)\nDatabase Account Offer Type: $($cosmosdbact.DatabaseAccountOfferType)\nEnable Analytical Storage: $($cosmosdbact.EnableAnalyticalStorage)\nVirtual Network Filter Enabled: $($cosmosdbact.IsVirtualNetworkFilterEnabled)`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];"
+        $data += "        $cosmosdbactid [label = `"Version: $($cosmosdbact.ApiProperties.ServerVersion)\nLocations: $Locations\nDefault Consistency Level: $($cosmosdbact.ConsistencyPolicy.DefaultConsistencyLevel)\nKind: $($cosmosdbact.Kind)\nDatabase Account Offer Type: $($cosmosdbact.DatabaseAccountOfferType)\nEnable Analytical Storage: $($cosmosdbact.EnableAnalyticalStorage)\nVirtual Network Filter Enabled: $($cosmosdbact.IsVirtualNetworkFilterEnabled)`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $cosmosdbact)];"
         $data += "`n"
         $resourceGroupName = $cosmosdbact.Id.split("/")[4]
         switch ($cosmosdbact.Kind) {
@@ -1315,7 +1408,7 @@ function Export-PostgreSQLServer {
         $MemoryGB = ($SkuCaps.Capabilities | Where-Object Name -eq "MemoryGB").Value
         $config = $postgresql.SkuTier.ToString() + ", " + $postgresql.SkuName + ", " + $vCPUs + " vCores, " + $MemoryGB + " GiB RAM, " + $postgresql.StorageSizeGb + " GiB storage"
         $ImagePath = Join-Path $OutputPath "icons" "postgresql.png"
-        $data += "        $postgresqlid [label = `"\nLocation: $Location\nVersion: $($postgresql.Version.ToString()).$($postgresql.MinorVersion)\nAvailability Zone: $($postgresql.AvailabilityZone)\nConfiguration: $config\nMax IOPS: $iops\nPublic Network Access: $($postgresql.NetworkPublicNetworkAccess.ToString())`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
+        $data += "        $postgresqlid [label = `"\nLocation: $Location\nVersion: $($postgresql.Version.ToString()).$($postgresql.MinorVersion)\nAvailability Zone: $($postgresql.AvailabilityZone)\nConfiguration: $config\nMax IOPS: $iops\nPublic Network Access: $($postgresql.NetworkPublicNetworkAccess.ToString())`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;$(Generate-DotURL -resource $postgresql)];"
         $data += "`n"
 
         $dbs = Get-AzPostgreSqlFlexibleServerDatabase -ResourceGroupName $postgresqlserver.id.split("/")[4] -ServerName $postgresqlserver.Name -ErrorAction Stop
@@ -1376,7 +1469,7 @@ function Export-RedisServer {
             node [colorscheme = puor9; color = 2; margin = 0;]
         "
         $ImagePath = Join-Path $OutputPath "icons" "redis.png"
-        $data += "        $redisid [label = `"\nLocation: $Location\nSKU: $($redis.Sku)\nRedis Version: $($redis.RedisVersion)\nZones: $($redis.Zone -join ", ")\nShard Count: $($redis.ShardCount)\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
+        $data += "        $redisid [label = `"\nLocation: $Location\nSKU: $($redis.Sku)\nRedis Version: $($redis.RedisVersion)\nZones: $($redis.Zone -join ", ")\nShard Count: $($redis.ShardCount)\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;$(Generate-DotURL -resource $redis)];"
         $data += "`n"
         if ($redis.PrivateEndpointConnection.PrivateEndpoint.Id) {
             $peid = $redis.PrivateEndpointConnection.PrivateEndpoint.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
@@ -1426,7 +1519,7 @@ function Export-SQLManagedInstance {
            
         "
         $ImagePath = Join-Path $OutputPath "icons" "sqlmi.png"
-        $data += "        $sqlmiid [label = `"\n\nLocation: $Location\nSKU: $($sqlmi.Sku.Tier) $($sqlmi.Sku.Family)\nVersion: $($sqlmi.DatabaseFormat)\nEntra Id Admin: $(SanitizeString $sqlmi.Administrators.Login)\nvCores: $($sqlmi.VCores)\nStorage Size: $($sqlmi.StorageSizeInGB) GB\nZone Redundant: $($sqlmi.ZoneRedundant)\nPublic endpoint (data): $($sqlmi.PublicDataEndpointEnabled)`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.5;];"
+        $data += "        $sqlmiid [label = `"\n\nLocation: $Location\nSKU: $($sqlmi.Sku.Tier) $($sqlmi.Sku.Family)\nVersion: $($sqlmi.DatabaseFormat)\nEntra Id Admin: $(SanitizeString $sqlmi.Administrators.Login)\nvCores: $($sqlmi.VCores)\nStorage Size: $($sqlmi.StorageSizeInGB) GB\nZone Redundant: $($sqlmi.ZoneRedundant)\nPublic endpoint (data): $($sqlmi.PublicDataEndpointEnabled)`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.5;$(Generate-DotURL -resource $sqlmi)];"
         $data += "`n"
         $ImagePath = Join-Path $OutputPath "icons" "sqlmidb.png"
         Get-AzSqlInstanceDatabase -InstanceResourceId $sqlmi.Id -ErrorAction SilentlyContinue |
@@ -1435,7 +1528,7 @@ function Export-SQLManagedInstance {
             $dbid = $_.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
             $Location = SanitizeLocation $db.Location
             $retention = Get-AzSqlInstanceDatabaseBackupShortTermRetentionPolicy -ResourceGroupName $db.ResourceGroupName -InstanceName $db.ManagedInstanceName -DatabaseName $db.Name -ErrorAction SilentlyContinue
-            $data += "        $($dbid) [label = `"\n\nLocation: $Location\nName: $($db.DatabaseName)\nBackup retention: $($retention.RetentionDays) Days`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n" 
+            $data += "        $($dbid) [label = `"\n\nLocation: $Location\nName: $($db.DatabaseName)\nBackup retention: $($retention.RetentionDays) Days`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $_)];`n" 
             $data += "        $sqlmiid -> $($dbid);`n"
         }
 
@@ -1481,7 +1574,7 @@ function Export-SQLServer {
             
         "
         $ImagePath = Join-Path $OutputPath "icons" "sqlserver.png"
-        $data += "        $sqlserverid [label = `"\nLocation: $Location\nVersion: $($sqlserver.ServerVersion)\nEntra ID Admin: $(SanitizeString $sqlserver.Administrators.Login)`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];"
+        $data += "        $sqlserverid [label = `"\nLocation: $Location\nVersion: $($sqlserver.ServerVersion)\nEntra ID Admin: $(SanitizeString $sqlserver.Administrators.Login)`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $sqlserver)];"
         $data += "`n"
 
         # Iterate through all SQL databases hosted on that server
@@ -1504,7 +1597,7 @@ function Export-SQLServer {
                 $gb = [math]::Round($db.MaxSizeBytes / 1GB, 2)   # 1 GB = 1 073 741 824 bytes
                 $Location = SanitizeLocation $db.Location
                 $ImagePath = Join-Path $OutputPath "icons" "sqldb.png"
-                $data += "        $($dbid) [label = `"\n\nLocation: $Location\nName: $(SanitizeString $db.DatabaseName)\nPricing Tier: $pricingTier\nMax Size: $gb GB\nZone Redundant: $($db.ZoneRedundant)\nElastic Pool Name: $($db.ElasticPoolName ? (SanitizeString $db.ElasticPoolName) : '')`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n" 
+                $data += "        $($dbid) [label = `"\n\nLocation: $Location\nName: $(SanitizeString $db.DatabaseName)\nPricing Tier: $pricingTier\nMax Size: $gb GB\nZone Redundant: $($db.ZoneRedundant)\nElastic Pool Name: $($db.ElasticPoolName ? (SanitizeString $db.ElasticPoolName) : '')`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $_)];`n" 
                 $data += "        $sqlserverid -> $($dbid);`n"
             }
         }
@@ -1546,7 +1639,7 @@ function Export-EventHub {
             bgcolor = 5;
         "
         $ImagePath = Join-Path $OutputPath "icons" "eventhub.png"
-        $data += "        $namespaceid [label = `"\nLocation: $Location\nSKU: $($namespace.SkuName)\nTier: $($namespace.SkuTier)\nCapacity: $($namespace.SkuCapacity)\nZone Redundant: $($namespace.ZoneRedundant)`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
+        $data += "        $namespaceid [label = `"\nLocation: $Location\nSKU: $($namespace.SkuName)\nTier: $($namespace.SkuTier)\nCapacity: $($namespace.SkuCapacity)\nZone Redundant: $($namespace.ZoneRedundant)`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;$(Generate-DotURL -resource $namespace)];"
         $data += "`n"
         
         # iterate through all event hubs hosted on that namespace
@@ -1555,7 +1648,7 @@ function Export-EventHub {
             $eventhub = $_
             $eventhubid = $_.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
             $Location = SanitizeLocation $eventhub.Location
-            $data += "        $($eventhubid) [label = `"\n\nLocation: $Location\nName: $(SanitizeString $eventhub.Name)\nMessage Retention: $($eventhub.MessageRetentionInDays)\nPartition Count: $($eventhub.PartitionCount)\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n" 
+            $data += "        $($eventhubid) [label = `"\n\nLocation: $Location\nName: $(SanitizeString $eventhub.Name)\nMessage Retention: $($eventhub.MessageRetentionInDays)\nPartition Count: $($eventhub.PartitionCount)\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $_)];`n" 
             $data += "        $namespaceid -> $eventhubid;`n"
         }
         if ($namespace.PrivateEndpointConnection.PrivateEndpointId) {
@@ -1602,7 +1695,7 @@ function Export-AppServicePlan {
             node [color = black;];
         "
         $ImagePath = Join-Path $OutputPath "icons" "appplan.png"
-        $data += "        $planid [label = `"\nLocation: $Location\nSKU: $($plan.Sku.Name)\nTier: $($plan.Sku.Tier)\nKind: $($plan.Kind)\nCapacity: $($plan.Sku.Capacity)\nNumber of Apps: $($plan.NumberOfSites)\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
+        $data += "        $planid [label = `"\nLocation: $Location\nSKU: $($plan.Sku.Name)\nTier: $($plan.Sku.Tier)\nKind: $($plan.Kind)\nCapacity: $($plan.Sku.Capacity)\nNumber of Apps: $($plan.NumberOfSites)\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;$(Generate-DotURL -resource $plan)];"
         $data += "`n"
 
         $ImagePath = Join-Path $OutputPath "icons" "appservices.png"
@@ -1614,7 +1707,7 @@ function Export-AppServicePlan {
             $appid = $_.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
             $Location = SanitizeLocation $app.Location
 
-            $data += "        $($appid) [label = `"\n\nLocation: $Location\nName: $(SanitizeString $app.Name)\nKind: $($app.Kind)\nHost Name: $(SanitizeString $app.DefaultHostName)\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n" 
+            $data += "        $($appid) [label = `"\n\nLocation: $Location\nName: $(SanitizeString $app.Name)\nKind: $($app.Kind)\nHost Name: $(SanitizeString $app.DefaultHostName)\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $_)];`n" 
             $data += "        $planid -> $appid;`n"
 
             # Add links to Private Endpoints and Managed Identities
@@ -1679,7 +1772,7 @@ function Export-APIM {
             $PrivateIPAddresses = $apim.PrivateIPAddresses
         }
         $ImagePath = Join-Path $OutputPath "icons" "apim.png"
-        $data += "        $apimid [label = `"\nLocation: $Location\nSKU: $($apim.Sku)\nPlatform Version: $($apim.PlatformVersion)\nPublic IP Addresses: $PublicIPAddresses\nPrivate IP Addresses: $PrivateIPAddresses\nCapacity: $($apim.Capacity)\nZone: $($apim.Zone)\nPublic Network Access: $($apim.PublicNetworkAccess)\nProducts: $prodCount\nAPI's: $apiCount\nVirtual Network: $($apim.VpnType)`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
+        $data += "        $apimid [label = `"\nLocation: $Location\nSKU: $($apim.Sku)\nPlatform Version: $($apim.PlatformVersion)\nPublic IP Addresses: $PublicIPAddresses\nPrivate IP Addresses: $PrivateIPAddresses\nCapacity: $($apim.Capacity)\nZone: $($apim.Zone)\nPublic Network Access: $($apim.PublicNetworkAccess)\nProducts: $prodCount\nAPI's: $apiCount\nVirtual Network: $($apim.VpnType)`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;$(Generate-DotURL -resource $apim)];"
         $data += "`n"
         if ($apim.VirtualNetwork.SubnetResourceId) {
             $subnetid = $apim.VirtualNetwork.SubnetResourceId.replace("-", "").replace("/", "").replace(".", "").ToLower()
@@ -1730,7 +1823,7 @@ function Export-ACR {
             node [colorscheme = orrd9; color = 2; margin = 0;];
         "
         $ImagePath = Join-Path $OutputPath "icons" "acr.png"
-        $data += "        $acrid [label = `"\nACR Name: $Name\nLocation: $Location\nSKU: $($acr.SkuName.ToString())\nZone Redundancy: $($acr.ZoneRedundancy.ToString())\nPublic Network Access: $($acr.PublicNetworkAccess.ToString())\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];"
+        $data += "        $acrid [label = `"\nACR Name: $Name\nLocation: $Location\nSKU: $($acr.SkuName.ToString())\nZone Redundancy: $($acr.ZoneRedundancy.ToString())\nPublic Network Access: $($acr.PublicNetworkAccess.ToString())\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;$(Generate-DotURL -resource $acr)];"
         $data += "`n"
         if ($acr.PrivateEndpointConnection.PrivateEndpointId) {
             $acrpeid = $acr.PrivateEndpointConnection.PrivateEndpointId.ToString().replace("-", "").replace("/", "").replace(".", "").ToLower()
@@ -1789,7 +1882,7 @@ function Export-StorageAccount {
         }
         $HierarchicalNamespace = $storageaccount.EnableHierarchicalNamespace ? "Enabled" : "Disabled"
         $ImagePath = Join-Path $OutputPath "icons" "storage-account.png"
-        $data += "        $staid [label = `"\n\nLocation: $Location\nSKU: $($storageaccount.Sku.Name)\nKind: $($storageaccount.Kind)\nPublic Network Access: $PublicNetworkAccess\nAccess Tier: $($storageaccount.AccessTier)\nHierarchical Namespace: $HierarchicalNamespace\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];"
+        $data += "        $staid [label = `"\n\nLocation: $Location\nSKU: $($storageaccount.Sku.Name)\nKind: $($storageaccount.Kind)\nPublic Network Access: $PublicNetworkAccess\nAccess Tier: $($storageaccount.AccessTier)\nHierarchical Namespace: $HierarchicalNamespace\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $storageaccount)];"
         $data += "`n"
         $peids = Get-AzPrivateEndpointConnection -PrivateLinkResourceId $storageaccount.Id -ErrorAction Stop
         
@@ -1866,39 +1959,47 @@ function Export-AzureFirewall {
         }
         $ImagePath = Join-Path $OutputPath "icons" "afw.png"
         $data = "`n"
-        $data += "        $azFWId [label = `"\n\n$(SanitizeString $azFWName)\nPrivate IP Address: $(SanitizeString $PrivateIPAddress)\nSKU Tier: $($azfw.Sku.Tier)\nZones: $($azfw.zones -join "," )\nPublic IP(s):\n$($PublicIPs -join "\n")`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+        $data += "          $azFWId [label = `"\n\n$(SanitizeString $azFWName)\nPrivate IP Address: $(SanitizeString $PrivateIPAddress)\nSKU Tier: $($azfw.Sku.Tier)\nZones: $($azfw.zones -join "," )\nPublic IP(s):\n$($PublicIPs -join "\n")`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $azfw)];" 
 
         # Get the Azure Firewall policy
-        $firewallPolicyName = $azfw.FirewallPolicy.id.split("/")[-1]
-        $firewallPolicy = Get-AzFirewallPolicy -ResourceGroupName $ResourceGroupName -Name $firewallPolicyName -ErrorAction Stop
-        $fwpolid = $firewallPolicy.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-        $ImagePath = Join-Path $OutputPath "icons" "firewallpolicy.png"
-        $data += "`n"
-        $data += "        $fwpolid [label = `"\n\n$(SanitizeString $firewallPolicyName)\nSKU Tier: $($firewallPolicy.sku.tier)\nThreat Intel Mode: $($firewallPolicy.ThreatIntelMode)\nDNS Servers: $(($firewallPolicy.DnsSettings.Servers|ForEach-Object {SanitizeString $_}) -join '; ')\nProxy Enabled: $($firewallPolicy.DnsSettings.EnableProxy)`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
-        $data += "`n    $azFWId -> $fwpolid;"
+        if ($null -ne $azfw.FirewallPolicy.id) {
+            $firewallPolicyName = $azfw.FirewallPolicy.id.split("/")[-1]
+            $firewallPolicy = Get-AzFirewallPolicy -ResourceGroupName $ResourceGroupName -Name $firewallPolicyName -ErrorAction Stop
+            $fwpolid = $firewallPolicy.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
 
-        for ($i = 0; $i -lt $firewallPolicy.DnsSettings.Servers.Count; $i++) {
-            $index = [array]::indexof($script:PDNSREpIp, $firewallPolicy.DnsSettings.Servers[$i])
-            if ($index -ge 0) {
-                $data += "        $fwpolid -> $($script:PDNSRId[$index]) [label = `"DNS Query`"; ];`n" 
+            $dnsservers = $firewallPolicy.DnsSettings.Servers
+            if ( $null -eq $dnsserver) { $dnsservers = "None"}
+
+            $ImagePath = Join-Path $OutputPath "icons" "firewallpolicy.png"
+            $data += "`n"
+            $data += "          $fwpolid [label = `"\n\n$(SanitizeString $firewallPolicyName)\nSKU Tier: $($firewallPolicy.sku.tier)\nThreat Intel Mode: $($firewallPolicy.ThreatIntelMode)\nDNS Servers: $(($dnsservers|ForEach-Object {SanitizeString $_}) -join '; ')\nProxy Enabled: $($firewallPolicy.DnsSettings.EnableProxy)`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $firewallPolicy)];" 
+            $data += "`n        $azFWId -> $fwpolid;"
+
+            for ($i = 0; $i -lt $firewallPolicy.DnsSettings.Servers.Count; $i++) {
+                $index = [array]::indexof($script:PDNSREpIp, $firewallPolicy.DnsSettings.Servers[$i])
+                if ($index -ge 0) {
+                    $data += "        $fwpolid -> $($script:PDNSRId[$index]) [label = `"DNS Query`"; ];`n" 
+                }
             }
-        }
-       
-        # Initialize an array to store IP Group names
-        $ipGroupIds = @()
+        
+            # Initialize an array to store IP Group names
+            $ipGroupIds = @()
 
-        foreach ($ruleCollectionGroupId in $firewallPolicy.RuleCollectionGroups.Id) {
-            $rcgName = $ruleCollectionGroupId.split("/")[-1]
-            $rcg = Get-AzFirewallPolicyRuleCollectionGroup -Name $rcgName -AzureFirewallPolicy $firewallPolicy -ErrorAction Stop
-            $ipGroupIds += $rcg.Properties.RuleCollection.rules.SourceIpGroups 
-            $ipGroupIds += $rcg.Properties.RuleCollection.rules.DestinationIpGroups
-        }
+            foreach ($ruleCollectionGroupId in $firewallPolicy.RuleCollectionGroups.Id) {
+                $rcgName = $ruleCollectionGroupId.split("/")[-1]
+                $rcg = Get-AzFirewallPolicyRuleCollectionGroup -Name $rcgName -AzureFirewallPolicy $firewallPolicy -ErrorAction Stop
+                $ipGroupIds += $rcg.Properties.RuleCollection.rules.SourceIpGroups 
+                $ipGroupIds += $rcg.Properties.RuleCollection.rules.DestinationIpGroups
+            }
 
-        # Remove duplicates and display the IP Group names
-        $ipGroupIds = $ipGroupIds | Sort-Object -Unique
-        $ipGroupIds = $ipGroupIds.replace("-", "").replace("/", "").replace(".", "").ToLower()
-        foreach ($ipGroupId in $ipGroupIds) {
-            $data += "`n    $fwpolid -> $ipGroupId;"
+            # Remove duplicates and display the IP Group names
+            $ipGroupIds = $ipGroupIds | Sort-Object -Unique
+            if ( $ipGroupIds.count -ne 0 ) {
+                $ipGroupIds = $ipGroupIds.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                foreach ($ipGroupId in $ipGroupIds) {
+                    $data += "`n    $fwpolid -> $ipGroupId;"
+                }
+            }
         }
         return $data
     }
@@ -2017,10 +2118,11 @@ function Export-Hub {
             $Script:Legend += ,@("ER Gateway", "ergw.png")
             $ergwId = $hub.ExpressRouteGateway.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
             $ergwName = $hub.ExpressRouteGateway.id.split("/")[-1]
+            $ergwshortname = $ergwName.split("-")[1, 2, 3] -join ("-")
             $ergw = Get-AzExpressRouteGateway -ResourceGroupName $hub.ResourceGroupName -Name $ergwName -ErrorAction Stop
             $ImagePath = Join-Path $OutputPath "icons" "ergw.png"
             $data += "`n"
-            $data += "        $ergwId [label = `"\n\n\n$(SanitizeString $ergwName)\nAuto Scale Configuration: $($ergw.AutoScaleConfiguration.Bounds.min)-$($ergw.AutoScaleConfiguration.Bounds.max)`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+            $data += "        $ergwId [label = `"\n\n\n$(SanitizeString $ergwshortname)\nAuto Scale Configuration: $($ergw.AutoScaleConfiguration.Bounds.min)-$($ergw.AutoScaleConfiguration.Bounds.max)`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
             $data += "`n    $headid -> $ergwId;"
             $peerings = $ergw.ExpressRouteConnections.ExpressRouteCircuitPeering.id
             foreach ($peering in $peerings) {
@@ -2129,7 +2231,7 @@ function Export-VirtualGateway {
         
         }
         $ImagePath = Join-Path $OutputPath "icons" "vgw.png"
-        $data += "            $GatewayId [fillcolor = 7;label = `"\n\nName: $(SanitizeString $GatewayName)`\n\nPublic IP(s):\n$gwips`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
+        $data += "            $GatewayId [fillcolor = 7;label = `"\n\nName: $(SanitizeString $GatewayName)`\n\nPublic IP(s):\n$gwips`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $gw)];"
 
         # Get P2S conf, if configured
         $protocol = $gw.VpnClientConfiguration.VpnClientProtocols
@@ -2141,14 +2243,14 @@ function Export-VirtualGateway {
             $Script:Legend += ,@("P2S VPN Gateway", "VPN-User.png")
             #P2S config present
             $ImagePath = Join-Path $OutputPath "icons" "VPN-User.png"
-            $data += "            ${GatewayId}P2S [fillcolor = 8;label = `"\n\nProtocol: $protocol, Auth: $auth\nP2S Address Prefix: $(SanitizeString $cidr)\nCustom routes: $(($customroutes | ForEach-Object {SanitizeString $_}) -join ",")`"; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; "
+            $data += "            ${GatewayId}P2S [fillcolor = 8;label = `"\n\nProtocol: $protocol, Auth: $auth\nP2S Address Prefix: $(SanitizeString $cidr)\nCustom routes: $(($customroutes | ForEach-Object {SanitizeString $_}) -join ",")`"; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5;]; "
             $data += "            $GatewayId -> ${GatewayId}P2S"
         } 
     }
     elseif ($gwtype -eq "ExpressRoute") {
         $Script:Legend += ,@("ER Gateway", "ergw.png")
         $ImagePath = Join-Path $OutputPath "icons" "ergw.png"
-        $data += "        $GatewayId [fillcolor = 3; label = `"\nName: $(SanitizeString $GatewayName)`"; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; "
+        $data += "        $GatewayId [fillcolor = 3; label = `"\nName: $(SanitizeString $GatewayName)`"; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5;$(Generate-DotURL -resource $gw)]; "
     }
     $data += "`n"
     $data += "            $HeadId -> $GatewayId"
@@ -2228,10 +2330,11 @@ function Export-SubnetConfig {
             # DOT
             switch ($name) {
                 "AzureFirewallSubnet" {
-                    $ImagePath = Join-Path $OutputPath "icons" "afw.png" 
-                    if ($subnet.IpConfigurations.Id) {
+                    $ImagePath = Join-Path $OutputPath "icons" "afw.png"
+                    $Script:Legend += ,@("Azure Firewall", "afw.png") 
+                    if ( $null -ne $subnet.IpConfigurations.Id ) {
                         #Firewall deployed
-                        $AzFWid = $subnet.IpConfigurations.Id.ToLower().split("/azurefirewallipconfigurations/ipconfig1")[0]
+                        $AzFWid = $subnet.IpConfigurations.Id.ToLower().split("/azurefirewallipconfigurations/ipconfig")[0]
                         $AzFWrg = $subnet.IpConfigurations.id.split("/")[4]
 
                         $data += "            $id [label = `"\n\n$name\n$AddressPrefix`" ; fillcolor = 9; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; " 
@@ -2246,30 +2349,42 @@ function Export-SubnetConfig {
                     }
                 }
                 "AzureBastionSubnet" { 
-                    if ($subnet.IpConfigurations.Id) { 
+                    if ( $null -ne $subnet.IpConfigurations.Id ) { 
                         $AzBastionName = SanitizeString $subnet.IpConfigurations.Id.split("/")[8].ToLower()
+                        $AzBastionRGName = $subnet.IpConfigurations.Id.split("/")[4].ToLower()
+                        $AzBastion = Get-AzBastion -ResourceGroupName $AzBastionRGName -Name $subnet.IpConfigurations.Id.split("/")[8].ToLower()
+                        $AzBastionSKU = ($AzBastion.SkuText | ConvertFrom-JSON).Name
+                        $AzBastionLink = $(Generate-DotURL -resource $AzBastion)
                     }
-                    else { $AzBastionName = "Bastion not Deployed" }
+                    else {
+                        $AzBastionName = "Bastion not deployed" 
+                        $AzBastionSKU = "None"
+                    }
 
                     $ImagePath = Join-Path $OutputPath "icons" "bas.png"
+                    $Script:Legend += ,@("Azure Bastion", "bas.png")
                     
-                    $data += "            $id [label = `"\n\n$name\n$AddressPrefix\nName: $AzBastionName`" ; fillcolor = 6; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; " 
+                    $data += "            $id [label = `"\n\n$name\n$AddressPrefix\nName: $AzBastionName`\nSKU: $AzBastionSKU`" ; fillcolor = 6; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5;$AzBastionLink]; " 
                 }
                 "AppGatewaySubnet" { 
-                    if ($subnet.IpConfigurations.Id) { 
+                    if ( $null -ne $subnet.IpConfigurations.Id ) { 
                         $AppGatewayName = SanitizeString $subnet.IpConfigurations.Id.split("/")[8].ToLower()
+                        #$AppGatewayRGName = $subnet.IpConfigurations.Id.split("/")[4].ToLower()
+                        #$AppGateway = Get-
                         $ImagePath = Join-Path $OutputPath "icons" "agw.png"
+                        $Script:Legend += ,@("Application Gateway", "agw.png")
                     
                         $data += "            $id [label = `"\n\n$name\n$AddressPrefix\nName: $AppGatewayName`" ; fillcolor = 5; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; " 
                     }
                 }
                 "GatewaySubnet" { 
                     $ImagePath = Join-Path $OutputPath "icons" "vgw.png"
+                    $Script:Legend += ,@("Virtual Network Gateway", "vgw.png")
                     $data += "            $id [label = `"\n\n$name\n$AddressPrefix`"; fillcolor = 4; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; " 
                     $data += "`n"
                     
                     #GW DOT
-                    if ($subnet.IpConfigurations.Id) {
+                    if ( $null -ne $subnet.IpConfigurations.Id ) {
                         foreach ($subnet in $subnet.IpConfigurations.Id) {
                             $gwid = $subnet.split("/ipConfigurations/")[0].replace("-", "").replace("/", "").replace(".", "").ToLower()
                             $gwname = $subnet.split("/")[8].ToLower()
@@ -2397,7 +2512,7 @@ function Export-vnet {
             $vnetAddressSpacesString += $(SanitizeString $_) + "\n"
         }
         $ImagePath = Join-Path $OutputPath "icons" "vnet.png"
-        $vnetdata = "    $id [fillcolor = 10; fontcolor = white; label = `"\nLocation: $Location\nAddress Space(s):\n$vnetAddressSpacesString`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];`n"
+        $vnetdata = "    $id [fillcolor = 10; fontcolor = white; label = `"\nLocation: $Location\nAddress Space(s):\n$vnetAddressSpacesString`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $vnet)];`n"
 
         # Subnets
         if ($vnet.Subnets) {
@@ -2499,9 +2614,9 @@ function Export-vWAN {
 
     try {
         Write-Host "Collecting vWAN info: $vwanname"
-        $script:rankvwans += $id
         $hubs = Get-AzVirtualHub -ResourceGroupName $ResourceGroupName -ErrorAction Stop | Where-Object { $($_.VirtualWAN.id) -eq $($vwan.id) }
         if ($null -ne $hubs) {
+            $script:rankvwans += $id
             $header = "
             # $Name - $id
             subgraph cluster_$id {
@@ -2513,7 +2628,7 @@ function Export-vWAN {
             # Convert addressSpace prefixes from array to string
             $vWANDetails = "Virtual WAN Type: $VirtualWANType\nLocation: $Location\nAllow Vnet to Vnet Traffic: $AllowVnetToVnetTraffic\nAllow Branch to Branch Traffic: $AllowBranchToBranchTraffic"
             $ImagePath = Join-Path $OutputPath "icons" "vWAN.png"
-            $vwandata = "    $id [label = `"\n$vWANDetails`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n"
+            $vwandata = "    $id [label = `"\n$vWANDetails`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $vwan)];`n"
             $footer = "
                 label = `"$Name`";
             }
@@ -2584,7 +2699,7 @@ function Export-ExpressRouteCircuit {
             bgcolor = 3;
             node [colorscheme = rdpu9 ; color = 3; ];
     
-            $erportid [label = `"\nName: $erportname\nLocation: $Location\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];
+            $erportid [label = `"\nName: $erportname\nLocation: $Location\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $erport)];
         "
         foreach ($link in $erport.Links) { 
             $linkid = $link.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
@@ -2632,7 +2747,7 @@ function Export-ExpressRouteCircuit {
         bgcolor = 2;
         node [colorscheme = rdpu9 ; color = 2; ];
 
-        $id [label = `"\nName: $ername\nLocation: $Location`" ; image = `"$ImagePath`";imagepos = `"tc`"; labelloc = `"b`";height = 3.5;];
+        $id [label = `"\nName: $ername\nLocation: $Location`" ; image = `"$ImagePath`";imagepos = `"tc`"; labelloc = `"b`";height = 3.5;$(Generate-DotURL -resource $er)];
         $id [shape = none;label = <
             <TABLE cellborder=`"0`" color=`"black`" border=`"1`"  style=`"rounded`">
             <TR><TD>SKU Tier</TD><VR/><TD>$skuTier</TD></TR><HR/>
@@ -2757,7 +2872,7 @@ function Export-RouteTable {
         $ImagePath = Join-Path $OutputPath "icons" "RouteTable.png"
         $footer = "
                 </TABLE>>;
-                image = `"$ImagePath`";imagepos = `"tr`"; labelloc = `"b`";height = 2.5;];
+                image = `"$ImagePath`";imagepos = `"tr`"; labelloc = `"b`";height = 2.5;$(Generate-DotURL -resource $routetable)];
         }
                 "
         $alldata = $header + $data + $footer
@@ -2806,7 +2921,7 @@ function Export-IpGroup {
     subgraph cluster_$id {
         style = invis;
         
-        $id [shape = box; label = `"\n\n\nName: $(SanitizeString $ipGroup.Name)\nLocation: $Location\n\n$IpAddresses`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];
+        $id [shape = box; label = `"\n\n\nName: $(SanitizeString $ipGroup.Name)\nLocation: $Location\n\n$IpAddresses`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $IpGroup)];
     }
     "
     Export-AddToFile -Data $alldata
@@ -2880,7 +2995,7 @@ function Export-Connection {
 
         $data += "Peer : $(SanitizeString $lgwPeerInfo)\n\nStatic remote subnet(s):\n$lgwsubnets"
         $ImagePath = Join-Path $OutputPath "icons" "VPN-Site.png"
-        $data += "`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];"
+        $data += "`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $connection)];"
     } 
     elseif ($VNET2VNET) {
         $lgwid = $connection.VirtualNetworkGateway2.id.replace("-", "").replace("/", "").replace("`"", "").replace(".", "").ToLower()
@@ -2949,7 +3064,7 @@ function Export-PrivateEndpoint {
             }
         }
         $ImagePath = Join-Path $OutputPath "icons" "private-endpoint.png"
-        $data = "`n                     $peid [colorscheme = rdylgn11; color = 1; fontcolor = white; label = `"\n$pedetails`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+        $data = "`n                     $peid [colorscheme = rdylgn11; color = 1; fontcolor = white; label = `"\n$pedetails`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $pe)];" 
         Export-AddToFile -Data $data
     }
     catch {
@@ -2996,13 +3111,15 @@ function Export-ContainerGroup
             node [colorscheme = bupu9; style = filled;];
         "
         
-        $instanceIP = (SanitizeString $containerGroup.IPAddress.IP) + " ($($containerGroup.IPAddressType.ToString()))"
+        if ( $null -ne $containerGroup.IPAddress.IP ) { $instanceIP = (SanitizeString $containerGroup.IPAddress.IP) + " ($($containerGroup.IPAddressType.ToString()))"
+        } else { $instanceIP = "Instance stopped, unavailable" }
+        
         $instanceOS = $containerGroup.OSType.ToString()
         $instanceZone = $null -eq $containerGroup.Zone ? "None" : $containerGroup.Zone
         $instanceSku = $containerGroup.sku.ToString()
         $ImagePath = Join-Path $OutputPath "icons" "containerinstance.png"
 
-        $data = "    $id [fillcolor = 3; fontcolor = black; label = `"\nName: $name\nLocation: $location\nOS Type: $instanceOS\nIP Address: $instanceIP\nZone: $instanceZone\nSKU: $instanceSku`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];`n"
+        $data = "    $id [fillcolor = 3; fontcolor = black; label = `"\nName: $name\nLocation: $location\nOS Type: $instanceOS\nIP Address: $instanceIP\nZone: $instanceZone\nSKU: $instanceSku`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;$(Generate-DotURL -resource $containerGroup)];`n"
         
         $contId = 0;
         foreach($container in $containerGroup.Container) {
@@ -3073,7 +3190,7 @@ function Export-ContainerAppEnv
             node [colorscheme = blues9 ; style = filled;];
         "
         $ImagePath = Join-Path $OutputPath "icons" "containerappenv.png"
-        $envdata = "    $id [fillcolor = 3; fontcolor = black; label = `"\nName: $envname\nLocation: $location\nZone Redundant: $($containerAppEnvironment.ZoneRedundant)\nEnvironment Type: $EnvironmentType\nStatic IP: $staticIP`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;];`n"
+        $envdata = "    $id [fillcolor = 3; fontcolor = black; label = `"\nName: $envname\nLocation: $location\nZone Redundant: $($containerAppEnvironment.ZoneRedundant)\nEnvironment Type: $EnvironmentType\nStatic IP: $staticIP`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;$(Generate-DotURL -resource $containerAppEnvironment)];`n"
         $acas =  Get-AzContainerApp | where-object { $_.EnvironmentId -eq $containerAppEnvironment.id }
         if ($acas) {
             $script:rankcontainerapps += $id
@@ -3102,7 +3219,7 @@ function Export-ContainerAppEnv
                 
                 # DOT
                 $ImagePath = Join-Path $OutputPath "icons" "containerapp.png"
-                $envdata += "    $acaId [fillcolor = 4; label = `"\n$acaDetails`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n"
+                $envdata += "    $acaId [fillcolor = 4; label = `"\n$acaDetails`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $aca)];`n"
                 $envdata += "    $id -> $acaId [ltail = cluster_$id; lhead = cluster_$acaId;];`n"
             }
         }
@@ -3149,7 +3266,7 @@ function Export-StaticWebApp
         $script:rankstaticwebapp += $id
         
         $header = "
-        # $staticwebappname - $id
+        # $($StaticWebApp.Name) - $id
         subgraph cluster_$id {
             style = solid;
             colorscheme = blues9 ;
@@ -3163,11 +3280,11 @@ function Export-StaticWebApp
 
         $swaCustomDomainTemp  = $StaticWebApp.CustomDomain
         if ($null -eq $swaCustomDomainTemp ){ $swaCustomDomain = SanitizeString $($StaticWebApp.CustomDomain) } else { $swaCustomDomain = "None" }
-        
+
         $swaDefaultDomain = SanitizeString "$($StaticWebApp.DefaultHostName)"
         #$swaProvider = $StaticWebApp.Provider
 
-        $swadata += "    $id [fillcolor = 4; label = `"\n\nLocation: $swaLocation\nSKU: $swaSKU\n\nDefault Domain:\n$swaDefaultDomain\n\nCustom Domain:\n$swaCustomDomain`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n"
+        $swadata += "    $id [fillcolor = 4; label = `"\n\nLocation: $swaLocation\nSKU: $swaSKU\n\nDefault Domain:\n$swaDefaultDomain\n\nCustom Domain:\n$swaCustomDomain`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $StaticWebApp)];`n"
         #$swadata += "    $id -> $swaId [ltail = cluster_$id; lhead = cluster_$swaId;];`n"
 
         # End subgraph
@@ -3181,6 +3298,121 @@ function Export-StaticWebApp
     catch {
         Write-Error "Can't export Static Web App: $($StaticWebApp.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
     }
+}
+
+<#
+.SYNOPSIS
+Exports details of a Mangement Group for inclusion in a network diagram.
+
+.DESCRIPTION
+The `Export-MgmtGroups function processes a specified Azure Management Groups, retrieves its details, and formats the data for inclusion in a network diagram.
+#>
+function Export-MgmtGroups
+{
+    [CmdletBinding()]
+    param(
+    )
+
+    try {
+        Export-AddToFile "`n    ##########################################################################################################"
+        Export-AddToFile "    ##### Management Group overview "
+        Export-AddToFile "    ##########################################################################################################`n"
+
+        $header = "
+    # Management Group overview
+    subgraph cluster_mgmtgroups {
+        style = solid;
+        colorscheme = blues9 ;
+        bgcolor = 2;
+        node [colorscheme = blues9 ; style = filled;];
+    "
+
+        $MgmtGroupsEntityObjects = Get-AzManagementGroupEntity -ErrorAction Stop 
+        $mgmtgroupdata = ""
+        if ($null -ne $MgmtGroupsEntityObjects) {
+            $Script:Legend += ,@("Management Group","mgmtgroup.png")
+            $MgmtGroupsEntityObjects | ForEach-Object {
+                $MgmtGroupEntityObject = $_
+                $mgmtgroupdata += Export-MgmtGroupEntityObject -MgmtGroupEntityObject $MgmtGroupEntityObject
+            }
+        }
+
+        # End subgraph
+        $footer = "
+            label = `"Mangement Groups`";
+        }
+        "
+        
+        Export-AddToFile -Data ($header + $mgmtgroupdata + $footer)
+    }
+    catch {
+        Write-Error "Can't export Management Groups at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+}
+
+<#
+.SYNOPSIS
+Exports details of a Mangement Group for inclusion in a network diagram.
+
+.DESCRIPTION
+The `Export-MgmtGroupEntityObject` function processes a specified Azure Management Group object, retrieves its details, and formats the data for inclusion in a network diagram.
+
+.PARAMETER mgmtGroup
+Specifies the Azure Management Group object to be processed. This parameter is mandatory.
+
+.EXAMPLE
+PS> $MgmtGroupEntityObject = Get-AzManagementGroupEntity
+PS> $MgmtGroupEntityObject | Foreach-Object { Export-MgmtGroupEntityObject -MgmtGroupEntityObject $MgmtGroupEntityObject }
+
+This example retrieves specified Azure Management Group object, retrieves its details, and formats the data for inclusion in a network diagram.
+#>
+function Export-MgmtGroupEntityObject
+{
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$MgmtGroupEntityObject
+    )
+
+    try {
+        $data = ""
+        $id = $MgmtGroupEntityObject.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        if ( $MgmtGroupEntityObject.Type -eq "Microsoft.Management/managementGroups" ) {
+            $MgmtGroup = $_
+            $script:rankmgmtgroup += $id
+            $ImagePath = Join-Path $OutputPath "icons" "mgmtgroup.png"
+            $name = SanitizeString $MgmtGroup.DisplayName
+            $descendants = $MgmtGroupEntityObject.NumberOfDescendants
+            
+            $data += "      $id [fillcolor = 4; label = `"\nName: $name\nDescendants: $descendants`";image = `"$ImagePath`";imagepos = `"tc`";height = 2.0;];`n"
+            
+        } 
+        elseif ( $MgmtGroupEntityObject.Type -eq "/subscriptions" ) {
+        
+            $sub = $_
+            $script:ranksubs += $id
+            $ImagePath = Join-Path $OutputPath "icons" "sub.png"
+            $name = SanitizeString $sub.DisplayName
+
+            $Script:Legend += ,@("Subscription","sub.png")
+            
+            $data += "      $id [fillcolor = 4; label = `"\nName: $name`";image = `"$ImagePath`";imagepos = `"tc`";height = 2.0;$(Generate-DotURL -resource $sub)];`n"
+            
+        }    
+        $parent = $MgmtGroupEntityObject.parent
+        if ( $null -ne $parent) { 
+            # Tenant Root Group has no parent
+            $parent = $parent.replace("-", "").replace("/", "").replace(".", "").ToLower() 
+            $data += "      $parent -> $id ;`n"
+        }
+
+        return $data
+
+    }
+    catch {
+        Write-Error "Can't export Management Groups Entity Object at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+  
 }
 
 <#
@@ -3256,6 +3488,7 @@ function Confirm-Prerequisites {
         #"lgw.png",
         "managed-identity.png",
         #"mariadb.png",
+        "mgmtgroup.png"
         "mongodb.png",
         "mysql.png",
         "ng.png",
@@ -3274,6 +3507,7 @@ function Confirm-Prerequisites {
         "sqlserver.png",
         "ssh-key.png",
         "storage-account.png",
+        "sub.png"
         "swa.png",
         "table.png",
         "vWAN-Hub.png",
@@ -3362,6 +3596,10 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)]
         [bool]$EnableRanking = $true,
         [Parameter(Mandatory = $false)]
+        [bool]$EnableLinks = $false,
+        [Parameter(Mandatory = $false)]
+        [bool]$EnableMgmtGroups = $false,
+        [Parameter(Mandatory = $false)]
         [string]$TenantId = $null,
         [Parameter(Mandatory = $false)]
         [string]$Prefix = $null,
@@ -3369,6 +3607,8 @@ function Get-AzNetworkDiagram {
         [bool]$Sanitize = $false,
         [Parameter(Mandatory = $false)] 
         [bool]$OnlyCoreNetwork = $false,
+        [Parameter(Mandatory = $false)] 
+        [bool]$OnlyMgmtGroups = $false,
         [Parameter(Mandatory = $false)] 
         [bool]$KeepDotFile = $false,
         [Parameter(Mandatory = $false)] 
@@ -3448,420 +3688,426 @@ function Get-AzNetworkDiagram {
     }
 
     try {
-        # Collect all vNet ID's in scope otherwise we can end up with 1 vNet peered to 1000 other vNets which are not in scope
-        # Errors will appear like: dot: graph is too large for cairo-renderer bitmaps. Scaling by 0.324583 to fit
-        
-        #$AzureRegions = Get-AzLocation | Select-Object DisplayName, Location | Sort-Object DisplayName
-        $Subscriptions | ForEach-Object {
-            # Set Context
-            if ($TenantId) {
-                # If TenantId is specified, use it to set the context               
-                $context = Set-AzContext -Subscription $_ -Tenant $TenantId -Force -ErrorAction Stop
-            }
-            else {
-                $context = Set-AzContext -Subscription $_ -Force -ErrorAction Stop
-            }
-            $subid = $context.Subscription.Id
-            $subname = $context.Subscription.Name
-            
-            Write-Output "`nCollecting data from subscription: $subname ($subid)"
-            Export-AddToFile "`n    ##########################################################################################################"
-            Export-AddToFile "    ##### $subname "
-            Export-AddToFile "    ##########################################################################################################`n"
-
-            ### RTs
-            Write-Output "Collecting Route Tables..."
-            Export-AddToFile "    ##### $subname - Route Tables #####"
-            $routetables = Get-AzRouteTable -ErrorAction Stop 
-            if ($null -ne $routetables) {
-                $Script:Legend += ,@("Route Table","RouteTable.png")
-                $routetables | ForEach-Object {
-                    $routetable = $_
-                    Export-RouteTable $routetable
-                }
-            }
-
-            ### Ip Groups
-            Write-Output "Collecting IP Groups..."
-            Export-AddToFile "    ##### $subname - IP Groups #####"
-            $ipGroups = Get-AzIpGroup -ErrorAction Stop
-            if ($null -ne $ipGroups) {
-                $Script:Legend += ,@("IP Group","ipgroup.png")
-                $cluster = "subgraph cluster_ipgroups {
-                    style = solid;
-                    bgcolor = 5;
-                "
-                Export-AddToFile -Data $cluster
-                $ipGroups | ForEach-Object {
-                    $ipGroup = $_
-                    Export-IpGroup -IpGroup $ipGroup
-                }
-                $footer = "
-                    label = `"IP Groups`";
-                }"
-                Export-AddToFile -Data $footer
-            }
-
-            ### vNets (incl. subnets)
-            Write-Output "Collecting vNets, and associated informations..."
-            Export-AddToFile "    ##### $subname - Virtual Networks #####"
-            $vnets = Get-AzVirtualNetwork -ErrorAction Stop
-            if ($null -ne $vnets.id) {
-                $Script:Legend += ,@("Virtual Network","vnet.png")
-                $script:AllInScopevNetIds += $vnets.id
-
-                $vnets | ForEach-Object {
-                    $vnet = $_
-                    Export-vnet $vnet
-                }
-            }
-
-            #NSGs
-            Write-Output "Collecting NSG's..."
-            Export-AddToFile "    ##### $subname - NSG's #####"
-            $nsgs = Get-AzNetworkSecurityGroup -ErrorAction Stop
-            if ($null -ne $nsgs) {
-                $Script:Legend += ,@("Network Security Group","nsg.png")
-                foreach ($nsg in $nsgs) {
-                    Export-NSG $nsg
-                }
-            }
-
-            #VPN Connections
-            Write-Output "Collecting VPN/ER Connections..."
-            Export-AddToFile "    ##### $subname - VPN/ER Connections #####"
-            $VPNConnections = Get-AzResource | Where-Object { $_.ResourceType -eq "Microsoft.Network/connections" }
-            if ($null -ne $VPNConnections) {
-                $Script:Legend += ,@("VPN Connection","VPN-Site.png")
-                $VPNConnections | ForEach-Object {
-                    $connection = $_
-                    $resname = $connection.Name
-                    $rgname = $connection.ResourceGroupName
-                    $connection = Get-AzVirtualNetworkGatewayConnection -name $resname -ResourceGroupName $rgname -ErrorAction Stop
-                    Export-Connection $connection
-                }
-            }
-
-            #Express Route Circuits
-            Write-Output "Collecting Express Route Circuits..."
-            Export-AddToFile "    ##### $subname - Express Route Circuits #####"
-            $er = Get-AzExpressRouteCircuit -ErrorAction Stop
-            if ($null -ne $er) {
-                $Script:Legend += ,@("Express Route Circuit","ercircuit.png")
-                $er | ForEach-Object {
-                    $er = $_
-                    Export-ExpressRouteCircuit $er
-                }
-            }
-
-            #Virtual WANs
-            Write-Output "Collecting vWANs..."
-            Export-AddToFile "    ##### $subname - Virtual WANs #####"
-            $vWANs = Get-AzVirtualWan -ErrorAction Stop
-            if ($null -ne $vWANs) {
-                $Script:Legend += ,@("Virtual WAN","vWAN.png")
-                $vWANs | ForEach-Object {
-                    $vWAN = $_
-                    Export-vWAN $vWAN
-                }
-            }
-
-            ### Private Endpoints
-            Write-Output "Collecting Private Endpoints..."
-            Export-AddToFile "    ##### $subname - Private Endpoints #####"
-            $privateEndpoints = Get-AzPrivateEndpoint -ErrorAction Stop
-            if ($null -ne $privateEndpoints) {
-                $Script:Legend += ,@("Private Endpoint","private-endpoint.png")
-                foreach ($pe in $privateEndpoints) {
-                    Export-PrivateEndpoint $pe
-                }
-            }
-
-            # Skip the rest of the resource types, if -OnlyCoreNetwork was set to true, at runtime
-            if ( -not $OnlyCoreNetwork ) {
-
-                #Container Instances
-                Write-Output "Collecting Container Instances..."
-                Export-AddToFile "    ##### $subname - Container Instances #####"
-                $containerGroups = Get-AzContainerGroup -ErrorAction Stop
-                if ($null -ne $containerGroups) {   
-                    $Script:Legend += ,@("Containers","containers.png")
-                    $Script:Legend += ,@("Container Instance","containerinstance.png")
-                    foreach ($containerGroup in $containerGroups) {
-                        Export-ContainerGroup $containerGroup
-                    }
-                }
-                ### VMs
-                Write-Output "Collecting VMs..."
-                Export-AddToFile "    ##### $subname - VMs #####"
-                $VMs = Get-AzVM -ErrorAction Stop
-                if ($null -ne $VMs) {
-                    $Script:Legend += ,@("Virtual Machine","vm.png")
-                    foreach ($vm in $VMs) {
-                        Export-VM $VM
-                    }
-                }
-
-                ### Keyvaults
-                Write-Output "Collecting Keyvaults..."
-                Export-AddToFile "    ##### $subname - Keyvaults #####"
-                $Keyvaults = Get-AzKeyVault -ErrorAction Stop
-                if ($null -ne $Keyvaults) {
-                    $Script:Legend += ,@("Key Vault","keyvault.png")
-                    foreach ($keyvault in $Keyvaults) {
-                        Export-Keyvault $Keyvault
-                    }
-                }
-
-                ### Storage Accounts
-                Write-Output "Collecting Storage Accounts..."
-                Export-AddToFile "    ##### $subname - Storage Accounts #####"
-                $storageaccounts = Get-AzStorageAccount -ErrorAction Stop
-                if ($null -ne $storageaccounts) {
-                    $Script:Legend += ,@("Storage Account","storage-account.png")
-                    foreach ($storageaccount in $storageaccounts) {
-                        Export-StorageAccount $storageaccount
-                    }
-                }
-
-                # Application Gateways
-                Write-Output "Collecting Application Gateways..."
-                Export-AddToFile "    ##### $subname - Application Gateways #####"
-                $agws = Get-AzApplicationGateway -ErrorAction Stop
-                if ($null -ne $agws) {
-                    $Script:Legend += ,@("Application Gateway","agw.png")
-                    foreach ($agw in $agws) {
-                        Export-ApplicationGateway $agw
-                    }
-                }
-
-                #MySQL Servers
-                Write-Output "Collecting MySQL Flexible Servers..."
-                Export-AddToFile "    ##### $subname - MySQL Flexible Servers #####"
-                $mysqlservers = Get-AzMySqlFlexibleServer -ErrorAction Stop
-                if ($null -ne $mysqlservers) {
-                    $Script:Legend += ,@("MySQL Server","mysql.png")
-                    foreach ($mysqlserver in $mysqlservers) {
-                        Export-MySQLServer $mysqlserver 
-                    }
-                }
-
-                #PostgreSQL Servers
-                Write-Output "Collecting PostgreSQL Servers..."
-                Export-AddToFile "    ##### $subname - PostgreSQL Servers #####"
-                $postgresqlservers = Get-AzPostgreSqlFlexibleServer -ErrorAction Stop
-                if ($null -ne $postgresqlservers) {
-                    $Script:Legend += ,@("PostgreSQL Server","postgresql.png")
-                    foreach ($postgresqlserver in $postgresqlservers) {
-                        Export-PostgreSQLServer $postgresqlserver 
-                    }
-                }
-
-                #CosmosDB Servers
-                Write-Output "Collecting CosmosDB Servers..."
-                Export-AddToFile "    ##### $subname - CosmosDB Servers #####"
-                $resourceGroups = Get-AzResourceGroup -ErrorAction Stop
-                $GotAzCosmosDBAccounts = $false
-                foreach ($rg in $resourceGroups) {
-                    $dbaccts = Get-AzCosmosDBAccount -ResourceGroupName $rg.ResourceGroupName -ErrorAction Stop
-                    foreach ($dbaact in $dbaccts) {
-                        $GotAzCosmosDBAccounts = $true
-                        Export-CosmosDBAccount $dbaact
-                    }
-                }
-                if ($GotAzCosmosDBAccounts) {
-                    $Script:Legend += ,@("CosmosDB Account","cosmosdb.png")
-                }
-
-                #Redis Servers
-                Write-Output "Collecting Redis Servers..."
-                Export-AddToFile "    ##### $subname - Redis Servers #####"
-                $redisservers = Get-AzRedisCache -ErrorAction Stop
-                if ($null -ne $redisservers) {
-                    $Script:Legend += ,@("Redis Cache","redis.png")
-                    foreach ($redisserver in $redisservers) {
-                        Export-RedisServer $redisserver 
-                    }
-                }
-
-                #SQL Managed Instances
-                Write-Output "Collecting SQL Managed Instances..."
-                Export-AddToFile "    ##### $subname - SQL Managed Instances #####"
-                $sqlmanagedinstances = Get-AzSqlInstance -ErrorAction Stop
-                if ($null -ne $sqlmanagedinstances) {
-                    $Script:Legend += ,@("SQL Managed Instance","sqlmi.png")
-                    foreach ($sqlmanagedinstance in $sqlmanagedinstances) {
-                        Export-SQLManagedInstance $sqlmanagedinstance 
-                    }
-                }
-
-                #Azure SQL logical servers
-                Write-Output "Collecting SQL Servers..."
-                Export-AddToFile "    ##### $subname - SQL Servers #####"
-                $sqlservers = Get-AzSqlServer -ErrorAction Stop
-                if ($null -ne $sqlservers) {
-                    $Script:Legend += ,@("SQL Server","sqlserver.png")
-                    foreach ($sqlserver in $sqlservers) {
-                        Export-SQLServer $sqlserver 
-                    }
-                }
-
-                #EventHubs
-                Write-Output "Collecting Event Hubs..."
-                Export-AddToFile "    ##### $subname - Event Hubs #####"
-                $namespaces = Get-AzEventHubNamespace -ErrorAction Stop
-                if ($null -ne $namespaces) {
-                    $Script:Legend += ,@("Event Hub","eventhub.png")
-                    foreach ($namespace in $namespaces) {
-                        Export-EventHub $namespace 
-                    }
-                }
-
-                #App Service Plans
-                Write-Output "Collecting App Service Plans..."
-                Export-AddToFile "    ##### $subname - App Service Plans #####"
-                $appserviceplans = Get-AzAppServicePlan -ErrorAction Stop   
-                if ($null -ne $appserviceplans) {
-                    $Script:Legend += ,@("App Service Plan","appplan.png")
-                    foreach ($appserviceplan in $appserviceplans) {
-                        Export-AppServicePlan $appserviceplan 
-                    }
-                }
-
-                #APIMs
-                Write-Output "Collecting API Management Services..."
-                Export-AddToFile "    ##### $subname - API Management Services #####"
-                $apims = Get-AzApiManagement -ErrorAction Stop
-                if ($null -ne $apims) {
-                    $Script:Legend += ,@("API Management","apim.png")
-                    foreach ($apim in $apims) {
-                        Export-APIM $apim 
-                    }
-                }
-
-                #AKS
-                Write-Output "Collecting AKS Clusters..."
-                Export-AddToFile "    ##### $subname - AKS Clusters #####"
-                $aksclusters = Get-AzAksCluster -ErrorAction Stop
-                if ($null -ne $aksclusters) {
-                    $Script:Legend += ,@("AKS Cluster","aks-service.png")
-                    foreach ($akscluster in $aksclusters) {
-                        Export-AKSCluster $akscluster
-                    }   
-                }
-
-                #Compute Galleries
-                Write-Output "Collecting Compute Galleries..."
-                Export-AddToFile "    ##### $subname - Compute Galleries #####"
-                $computeGalleries = Get-AzGallery -ErrorAction Stop
-                if ($null -ne $computeGalleries) {
-                    $Script:Legend += ,@("Compute Gallery","computegalleries.png")
-                    foreach ($computeGallery in $computeGalleries) {
-                        Export-ComputeGallery $computeGallery
-                    }
-                }
-
-                #VMSSs
-                Write-Output "Collecting VMSS..."
-                Export-AddToFile "    ##### $subname - VMSS #####"
-                $VMSSs = Get-AzVMSS -ErrorAction Stop
-                if ($null -ne $VMSSs) {
-                    $Script:Legend += ,@("Virtual Machine Scale Set","vmss.png")
-                    foreach ($vmss in $VMSSs) {
-                        Export-VMSS $vmss
-                    }
-                }
-
-                #Managed Identities
-                Write-Output "Collecting Managed Identities..."
-                Export-AddToFile "    ##### $subname - Managed Identities #####"
-                $managedIdentities = Get-AzUserAssignedIdentity -ErrorAction Stop
-                if ($null -ne $managedIdentities) {
-                    $Script:Legend += ,@("Managed Identity","managed-identity.png")
-                    foreach ($managedIdentity in $managedIdentities) {
-                        Export-ManagedIdentity $managedIdentity
-                    }
-                }
-
-                #ACRs
-                Write-Output "Collecting Azure Container Registries..."
-                Export-AddToFile "    ##### $subname - Azure Container Registries #####"
-                $acrs = Get-AzContainerRegistry -ErrorAction Stop
-                if ($null -ne $acrs) {
-                    $Script:Legend += ,@("Azure Container Registry","acr.png")
-                    foreach ($acr in $acrs) {
-                        Export-ACR $acr
-                    }   
-                }
-
-                #SSH Keys
-                Write-Output "Collecting SSH Keys..."
-                Export-AddToFile "    ##### $subname - SSH Keys #####"
-                $sshkeys = Get-AzSshKey -ErrorAction Stop
-                if ($null -ne $sshkeys) {
-                    $Script:Legend += ,@("SSH Key","ssh-key.png")
-                    foreach ($sshkey in $sshkeys) {
-                        Export-SSHKey $sshkey
-                    }
-                }
-
-                #Container App Environments
-                Write-Output "Collecting Container App Environments..."
-                Export-AddToFile "    ##### $subname - Container App Environments #####"
-                $containerAppEnvironments = Get-AzContainerAppManagedEnv -ErrorAction Stop
-                if ($null -ne $containerAppEnvironments) {
-                    $Script:Legend += ,@("Container App Environment","containerappenv.png")
-                    foreach ($containerAppEnvironment in $containerAppEnvironments) {
-                        Export-ContainerAppEnv $containerAppEnvironment
-                    }
-                }
-                
-                #Static Web Apps
-                Write-Output "Collection Static Web Apps..."
-                Export-AddToFile "    ##### $subname - Static Web Apps #####"
-                $StaticWebApps = Get-AzStaticWebApp
-                if ( $null -ne $StaticWebApps ) {
-                    $Script:Legend += ,@("Static Web App","swa.png")
-                    foreach ( $swa in $StaticWebApps ) {
-                        Export-StaticWebApp -StaticWebApp $swa
-                    }
-                }
-                
-            }
-
-            Export-AddToFile "`n    ##########################################################################################################"
-            Export-AddToFile "    ##### $subname "
-            Export-AddToFile "    ##### END"
-            Export-AddToFile "    ##########################################################################################################`n"
+        if ( $EnableMgmtGroups -or $OnlyMgmtGroups ) {
+            Write-Output "`nCollecting management groups..."
+            Export-MgmtGroups
         }
-        
-        # vNet Peerings
-        Write-Output "`nConnecting in-scope peered vNets..."
-        foreach ($InScopevNetId in $script:AllInScopevNetIds) {
-            $vnetname = $InScopevNetId.split("/")[-1]
-            $vnetsub = $InScopevNetId.split("/")[2]
-            $vnetrg = $InScopevNetId.split("/")[4]
-            #
-            # The Hub is in another "managed" subscription, so we cannot use the context of that subscription
-            # So we're filtering it out here. We do't have access to it.
-            #
-            if ($Subscriptions.IndexOf($vnetsub) -ge 0) {
+        if ( $false -eq $OnlyMgmtGroups ) {
+            # Collect all vNet ID's in scope otherwise we can end up with 1 vNet peered to 1000 other vNets which are not in scope
+            # Errors will appear like: dot: graph is too large for cairo-renderer bitmaps. Scaling by 0.324583 to fit
+            
+            #$AzureRegions = Get-AzLocation | Select-Object DisplayName, Location | Sort-Object DisplayName
+            $Subscriptions | ForEach-Object {
+                # Set Context
                 if ($TenantId) {
-                    $context = Set-AzContext -Subscription $vnetsub -Tenant $TenantId -ErrorAction Stop
+                    # If TenantId is specified, use it to set the context               
+                    $context = Set-AzContext -Subscription $_ -Tenant $TenantId -Force -ErrorAction Stop
                 }
                 else {
-                    $context = Set-AzContext -Subscription $vnetsub -ErrorAction Stop
+                    $context = Set-AzContext -Subscription $_ -Force -ErrorAction Stop
                 }
-                $vnet = Get-AzVirtualNetwork -name $vnetname -ResourceGroupName $vnetrg -ErrorAction Stop
-                $vnetId = $vnet.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $vnetPeerings = $vnet.VirtualNetworkPeerings.RemoteVirtualNetwork.id
-                foreach ($peering in $vnetPeerings) {
-                    if ($script:AllInScopevNetIds.IndexOf($peering) -ge 0) {
-                        $peeringId = $peering.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                        # DOT
-                        $data = "    $vnetId -> $peeringId [label = `"Peered to`"; ltail = cluster_$vnetId; lhead = cluster_$peeringId; weight = 10;];"
+                $subid = $context.Subscription.Id
+                $subname = $context.Subscription.Name
+                
+                Write-Output "`nCollecting data from subscription: $subname ($subid)"
+                Export-AddToFile "`n    ##########################################################################################################"
+                Export-AddToFile "    ##### $subname "
+                Export-AddToFile "    ##########################################################################################################`n"
 
-                        Export-AddToFile -Data $data
+                ### RTs
+                Write-Output "Collecting Route Tables..."
+                Export-AddToFile "    ##### $subname - Route Tables #####"
+                $routetables = Get-AzRouteTable -ErrorAction Stop 
+                if ($null -ne $routetables) {
+                    $Script:Legend += ,@("Route Table","RouteTable.png")
+                    $routetables | ForEach-Object {
+                        $routetable = $_
+                        Export-RouteTable $routetable
+                    }
+                }
+
+                ### Ip Groups
+                Write-Output "Collecting IP Groups..."
+                Export-AddToFile "    ##### $subname - IP Groups #####"
+                $ipGroups = Get-AzIpGroup -ErrorAction Stop
+                if ($null -ne $ipGroups) {
+                    $Script:Legend += ,@("IP Group","ipgroup.png")
+                    $cluster = "subgraph cluster_ipgroups {
+                        style = solid;
+                        bgcolor = 5;
+                    "
+                    Export-AddToFile -Data $cluster
+                    $ipGroups | ForEach-Object {
+                        $ipGroup = $_
+                        Export-IpGroup -IpGroup $ipGroup
+                    }
+                    $footer = "
+                        label = `"IP Groups`";
+                    }"
+                    Export-AddToFile -Data $footer
+                }
+
+                ### vNets (incl. subnets)
+                Write-Output "Collecting vNets, and associated information..."
+                Export-AddToFile "    ##### $subname - Virtual Networks #####"
+                $vnets = Get-AzVirtualNetwork -ErrorAction Stop
+                if ($null -ne $vnets.id) {
+                    $Script:Legend += ,@("Virtual Network","vnet.png")
+                    $script:AllInScopevNetIds += $vnets.id
+
+                    $vnets | ForEach-Object {
+                        $vnet = $_
+                        Export-vnet $vnet
+                    }
+                }
+
+                #NSGs
+                Write-Output "Collecting NSG's..."
+                Export-AddToFile "    ##### $subname - NSG's #####"
+                $nsgs = Get-AzNetworkSecurityGroup -ErrorAction Stop
+                if ($null -ne $nsgs) {
+                    $Script:Legend += ,@("Network Security Group","nsg.png")
+                    foreach ($nsg in $nsgs) {
+                        Export-NSG $nsg
+                    }
+                }
+
+                #VPN Connections
+                Write-Output "Collecting VPN/ER Connections..."
+                Export-AddToFile "    ##### $subname - VPN/ER Connections #####"
+                $VPNConnections = Get-AzResource | Where-Object { $_.ResourceType -eq "Microsoft.Network/connections" }
+                if ($null -ne $VPNConnections) {
+                    $Script:Legend += ,@("VPN Connection","VPN-Site.png")
+                    $VPNConnections | ForEach-Object {
+                        $connection = $_
+                        $resname = $connection.Name
+                        $rgname = $connection.ResourceGroupName
+                        $connection = Get-AzVirtualNetworkGatewayConnection -name $resname -ResourceGroupName $rgname -ErrorAction Stop
+                        Export-Connection $connection
+                    }
+                }
+
+                #Express Route Circuits
+                Write-Output "Collecting Express Route Circuits..."
+                Export-AddToFile "    ##### $subname - Express Route Circuits #####"
+                $er = Get-AzExpressRouteCircuit -ErrorAction Stop
+                if ($null -ne $er) {
+                    $Script:Legend += ,@("Express Route Circuit","ercircuit.png")
+                    $er | ForEach-Object {
+                        $er = $_
+                        Export-ExpressRouteCircuit $er
+                    }
+                }
+
+                #Virtual WANs
+                Write-Output "Collecting vWANs..."
+                Export-AddToFile "    ##### $subname - Virtual WANs #####"
+                $vWANs = Get-AzVirtualWan -ErrorAction Stop
+                if ($null -ne $vWANs) {
+                    $Script:Legend += ,@("Virtual WAN","vWAN.png")
+                    $vWANs | ForEach-Object {
+                        $vWAN = $_
+                        Export-vWAN $vWAN
+                    }
+                }
+
+                ### Private Endpoints
+                Write-Output "Collecting Private Endpoints..."
+                Export-AddToFile "    ##### $subname - Private Endpoints #####"
+                $privateEndpoints = Get-AzPrivateEndpoint -ErrorAction Stop
+                if ($null -ne $privateEndpoints) {
+                    $Script:Legend += ,@("Private Endpoint","private-endpoint.png")
+                    foreach ($pe in $privateEndpoints) {
+                        Export-PrivateEndpoint $pe
+                    }
+                }
+
+                # Skip the rest of the resource types, if -OnlyCoreNetwork was set to true, at runtime
+                if ( -not $OnlyCoreNetwork ) {
+
+                    #Container Instances
+                    Write-Output "Collecting Container Instances..."
+                    Export-AddToFile "    ##### $subname - Container Instances #####"
+                    $containerGroups = Get-AzContainerGroup -ErrorAction Stop
+                    if ($null -ne $containerGroups) {   
+                        $Script:Legend += ,@("Containers","containers.png")
+                        $Script:Legend += ,@("Container Instance","containerinstance.png")
+                        foreach ($containerGroup in $containerGroups) {
+                            Export-ContainerGroup $containerGroup
+                        }
+                    }
+                    ### VMs
+                    Write-Output "Collecting VMs..."
+                    Export-AddToFile "    ##### $subname - VMs #####"
+                    $VMs = Get-AzVM -ErrorAction Stop
+                    if ($null -ne $VMs) {
+                        $Script:Legend += ,@("Virtual Machine","vm.png")
+                        foreach ($vm in $VMs) {
+                            Export-VM $VM
+                        }
+                    }
+
+                    ### Keyvaults
+                    Write-Output "Collecting Keyvaults..."
+                    Export-AddToFile "    ##### $subname - Keyvaults #####"
+                    $Keyvaults = Get-AzKeyVault -ErrorAction Stop
+                    if ($null -ne $Keyvaults) {
+                        $Script:Legend += ,@("Key Vault","keyvault.png")
+                        foreach ($keyvault in $Keyvaults) {
+                            Export-Keyvault $Keyvault
+                        }
+                    }
+
+                    ### Storage Accounts
+                    Write-Output "Collecting Storage Accounts..."
+                    Export-AddToFile "    ##### $subname - Storage Accounts #####"
+                    $storageaccounts = Get-AzStorageAccount -ErrorAction Stop
+                    if ($null -ne $storageaccounts) {
+                        $Script:Legend += ,@("Storage Account","storage-account.png")
+                        foreach ($storageaccount in $storageaccounts) {
+                            Export-StorageAccount $storageaccount
+                        }
+                    }
+
+                    # Application Gateways
+                    Write-Output "Collecting Application Gateways..."
+                    Export-AddToFile "    ##### $subname - Application Gateways #####"
+                    $agws = Get-AzApplicationGateway -ErrorAction Stop
+                    if ($null -ne $agws) {
+                        $Script:Legend += ,@("Application Gateway","agw.png")
+                        foreach ($agw in $agws) {
+                            Export-ApplicationGateway $agw
+                        }
+                    }
+
+                    #MySQL Servers
+                    Write-Output "Collecting MySQL Flexible Servers..."
+                    Export-AddToFile "    ##### $subname - MySQL Flexible Servers #####"
+                    $mysqlservers = Get-AzMySqlFlexibleServer -ErrorAction Stop
+                    if ($null -ne $mysqlservers) {
+                        $Script:Legend += ,@("MySQL Server","mysql.png")
+                        foreach ($mysqlserver in $mysqlservers) {
+                            Export-MySQLServer $mysqlserver 
+                        }
+                    }
+
+                    #PostgreSQL Servers
+                    Write-Output "Collecting PostgreSQL Servers..."
+                    Export-AddToFile "    ##### $subname - PostgreSQL Servers #####"
+                    $postgresqlservers = Get-AzPostgreSqlFlexibleServer -ErrorAction Stop
+                    if ($null -ne $postgresqlservers) {
+                        $Script:Legend += ,@("PostgreSQL Server","postgresql.png")
+                        foreach ($postgresqlserver in $postgresqlservers) {
+                            Export-PostgreSQLServer $postgresqlserver 
+                        }
+                    }
+
+                    #CosmosDB Servers
+                    Write-Output "Collecting CosmosDB Servers..."
+                    Export-AddToFile "    ##### $subname - CosmosDB Servers #####"
+                    $resourceGroups = Get-AzResourceGroup -ErrorAction Stop
+                    $GotAzCosmosDBAccounts = $false
+                    foreach ($rg in $resourceGroups) {
+                        $dbaccts = Get-AzCosmosDBAccount -ResourceGroupName $rg.ResourceGroupName -ErrorAction Stop
+                        foreach ($dbaact in $dbaccts) {
+                            $GotAzCosmosDBAccounts = $true
+                            Export-CosmosDBAccount $dbaact
+                        }
+                    }
+                    if ($GotAzCosmosDBAccounts) {
+                        $Script:Legend += ,@("CosmosDB Account","cosmosdb.png")
+                    }
+
+                    #Redis Servers
+                    Write-Output "Collecting Redis Servers..."
+                    Export-AddToFile "    ##### $subname - Redis Servers #####"
+                    $redisservers = Get-AzRedisCache -ErrorAction Stop
+                    if ($null -ne $redisservers) {
+                        $Script:Legend += ,@("Redis Cache","redis.png")
+                        foreach ($redisserver in $redisservers) {
+                            Export-RedisServer $redisserver 
+                        }
+                    }
+
+                    #SQL Managed Instances
+                    Write-Output "Collecting SQL Managed Instances..."
+                    Export-AddToFile "    ##### $subname - SQL Managed Instances #####"
+                    $sqlmanagedinstances = Get-AzSqlInstance -ErrorAction Stop
+                    if ($null -ne $sqlmanagedinstances) {
+                        $Script:Legend += ,@("SQL Managed Instance","sqlmi.png")
+                        foreach ($sqlmanagedinstance in $sqlmanagedinstances) {
+                            Export-SQLManagedInstance $sqlmanagedinstance 
+                        }
+                    }
+
+                    #Azure SQL logical servers
+                    Write-Output "Collecting SQL Servers..."
+                    Export-AddToFile "    ##### $subname - SQL Servers #####"
+                    $sqlservers = Get-AzSqlServer -ErrorAction Stop
+                    if ($null -ne $sqlservers) {
+                        $Script:Legend += ,@("SQL Server","sqlserver.png")
+                        foreach ($sqlserver in $sqlservers) {
+                            Export-SQLServer $sqlserver 
+                        }
+                    }
+
+                    #EventHubs
+                    Write-Output "Collecting Event Hubs..."
+                    Export-AddToFile "    ##### $subname - Event Hubs #####"
+                    $namespaces = Get-AzEventHubNamespace -ErrorAction Stop
+                    if ($null -ne $namespaces) {
+                        $Script:Legend += ,@("Event Hub","eventhub.png")
+                        foreach ($namespace in $namespaces) {
+                            Export-EventHub $namespace 
+                        }
+                    }
+
+                    #App Service Plans
+                    Write-Output "Collecting App Service Plans..."
+                    Export-AddToFile "    ##### $subname - App Service Plans #####"
+                    $appserviceplans = Get-AzAppServicePlan -ErrorAction Stop   
+                    if ($null -ne $appserviceplans) {
+                        $Script:Legend += ,@("App Service Plan","appplan.png")
+                        foreach ($appserviceplan in $appserviceplans) {
+                            Export-AppServicePlan $appserviceplan 
+                        }
+                    }
+
+                    #APIMs
+                    Write-Output "Collecting API Management Services..."
+                    Export-AddToFile "    ##### $subname - API Management Services #####"
+                    $apims = Get-AzApiManagement -ErrorAction Stop
+                    if ($null -ne $apims) {
+                        $Script:Legend += ,@("API Management","apim.png")
+                        foreach ($apim in $apims) {
+                            Export-APIM $apim 
+                        }
+                    }
+
+                    #AKS
+                    Write-Output "Collecting AKS Clusters..."
+                    Export-AddToFile "    ##### $subname - AKS Clusters #####"
+                    $aksclusters = Get-AzAksCluster -ErrorAction Stop
+                    if ($null -ne $aksclusters) {
+                        $Script:Legend += ,@("AKS Cluster","aks-service.png")
+                        foreach ($akscluster in $aksclusters) {
+                            Export-AKSCluster $akscluster
+                        }   
+                    }
+
+                    #Compute Galleries
+                    Write-Output "Collecting Compute Galleries..."
+                    Export-AddToFile "    ##### $subname - Compute Galleries #####"
+                    $computeGalleries = Get-AzGallery -ErrorAction Stop
+                    if ($null -ne $computeGalleries) {
+                        $Script:Legend += ,@("Compute Gallery","computegalleries.png")
+                        foreach ($computeGallery in $computeGalleries) {
+                            Export-ComputeGallery $computeGallery
+                        }
+                    }
+
+                    #VMSSs
+                    Write-Output "Collecting VMSS..."
+                    Export-AddToFile "    ##### $subname - VMSS #####"
+                    $VMSSs = Get-AzVMSS -ErrorAction Stop
+                    if ($null -ne $VMSSs) {
+                        $Script:Legend += ,@("Virtual Machine Scale Set","vmss.png")
+                        foreach ($vmss in $VMSSs) {
+                            Export-VMSS $vmss
+                        }
+                    }
+
+                    #Managed Identities
+                    Write-Output "Collecting Managed Identities..."
+                    Export-AddToFile "    ##### $subname - User Assigned Managed Identities #####"
+                    $managedIdentities = Get-AzUserAssignedIdentity -ErrorAction Stop
+                    if ($null -ne $managedIdentities) {
+                        $Script:Legend += ,@("Managed Identity","managed-identity.png")
+                        foreach ($managedIdentity in $managedIdentities) {
+                            Export-ManagedIdentity $managedIdentity
+                        }
+                    }
+
+                    #ACRs
+                    Write-Output "Collecting Azure Container Registries..."
+                    Export-AddToFile "    ##### $subname - Azure Container Registries #####"
+                    $acrs = Get-AzContainerRegistry -ErrorAction Stop
+                    if ($null -ne $acrs) {
+                        $Script:Legend += ,@("Azure Container Registry","acr.png")
+                        foreach ($acr in $acrs) {
+                            Export-ACR $acr
+                        }   
+                    }
+
+                    #SSH Keys
+                    Write-Output "Collecting SSH Keys..."
+                    Export-AddToFile "    ##### $subname - SSH Keys #####"
+                    $sshkeys = Get-AzSshKey -ErrorAction Stop
+                    if ($null -ne $sshkeys) {
+                        $Script:Legend += ,@("SSH Key","ssh-key.png")
+                        foreach ($sshkey in $sshkeys) {
+                            Export-SSHKey $sshkey
+                        }
+                    }
+
+                    #Container App Environments
+                    Write-Output "Collecting Container App Environments..."
+                    Export-AddToFile "    ##### $subname - Container App Environments #####"
+                    $containerAppEnvironments = Get-AzContainerAppManagedEnv -ErrorAction Stop
+                    if ($null -ne $containerAppEnvironments) {
+                        $Script:Legend += ,@("Container App Environment","containerappenv.png")
+                        foreach ($containerAppEnvironment in $containerAppEnvironments) {
+                            Export-ContainerAppEnv $containerAppEnvironment
+                        }
+                    }
+                    
+                    #Static Web Apps
+                    Write-Output "Collection Static Web Apps..."
+                    Export-AddToFile "    ##### $subname - Static Web Apps #####"
+                    $StaticWebApps = Get-AzStaticWebApp
+                    if ( $null -ne $StaticWebApps ) {
+                        $Script:Legend += ,@("Static Web App","swa.png")
+                        foreach ( $swa in $StaticWebApps ) {
+                            Export-StaticWebApp -StaticWebApp $swa
+                        }
+                    }
+                    
+                }
+
+                Export-AddToFile "`n    ##########################################################################################################"
+                Export-AddToFile "    ##### $subname "
+                Export-AddToFile "    ##### END"
+                Export-AddToFile "    ##########################################################################################################`n"
+            }
+            
+            # vNet Peerings
+            Write-Output "`nConnecting in-scope peered vNets..."
+            foreach ($InScopevNetId in $script:AllInScopevNetIds) {
+                $vnetname = $InScopevNetId.split("/")[-1]
+                $vnetsub = $InScopevNetId.split("/")[2]
+                $vnetrg = $InScopevNetId.split("/")[4]
+                #
+                # The Hub is in another "managed" subscription, so we cannot use the context of that subscription
+                # So we're filtering it out here. We do't have access to it.
+                #
+                if ($Subscriptions.IndexOf($vnetsub) -ge 0) {
+                    if ($TenantId) {
+                        $context = Set-AzContext -Subscription $vnetsub -Tenant $TenantId -ErrorAction Stop
+                    }
+                    else {
+                        $context = Set-AzContext -Subscription $vnetsub -ErrorAction Stop
+                    }
+                    $vnet = Get-AzVirtualNetwork -name $vnetname -ResourceGroupName $vnetrg -ErrorAction Stop
+                    $vnetId = $vnet.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $vnetPeerings = $vnet.VirtualNetworkPeerings.RemoteVirtualNetwork.id
+                    foreach ($peering in $vnetPeerings) {
+                        if ($script:AllInScopevNetIds.IndexOf($peering) -ge 0) {
+                            $peeringId = $peering.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                            # DOT
+                            $data = "    $vnetId -> $peeringId [label = `"Peered to`"; ltail = cluster_$vnetId; lhead = cluster_$peeringId; weight = 10;];"
+
+                            Export-AddToFile -Data $data
+                        }
                     }
                 }
             }
