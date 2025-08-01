@@ -129,14 +129,14 @@ An example ADO pipeline YAML file has been added with support Powershell scripts
 - New parameters
   - KeepDotFile $true
     - Keeps the DOT file, instead of deleting it
-  - OutputFormat pdf','svg','png'
+  - OutputFormat 'pdf','svg','png'
     - Set one of more output formats - defaults to PDF
   - EnableLinks $true
-    - Many resources become links to the Azure portal can be enabled using this flag 
+    - Many resources become links to the Azure portal (only supported in PDF format)
   - EnableMgmtGroups $true
     - Add Management Group and Subscription overview to the diagram
   - OnlyMgmtGroups $true
-    - Creates a Management Group and Subscription overview diagram - everything else is skipped
+    - Only the Management Group and Subscription overview are exported - everything else is skipped
 - Bugs fixed
   - vWAN: Crashed when first peered vNet was in another sub fixed
   - Azure Firewall: Crashed when no Azure Firewall policy is attached
