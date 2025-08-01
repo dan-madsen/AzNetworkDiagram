@@ -44,6 +44,9 @@ Import-Module .\AzNetworkDiagram.psm1
 - **-OnlyCoreNetwork** ($true/$false) - if $true/enabled, only cores network resources are processed - ie. non-network resources are skipped for a cleaner diagram. Default is $false.
 - **-KeepDotFile** ($true/$false) - if $true/enabled, the DOT file is not deleted after the diagrams have been generated. Default is $false and DOT files are deleted.
 - **OutputFormat** (pdf, svg, png) - One or more output files get generated with the specified formats. Default is PDF.
+- **EnableLinks** ($true/$false) - Many resources become links to the Azure portal can be enabled using this flag. Default is $false.
+- **EnableMgmtGroups** ($true/$false) - Add Management Group and Subscription overview to the diagram. Default is $false.
+- **OnlyMgmtGroups** ($true/$false) - Creates a Management Group and Subscription overview diagram - everything else is skipped. Default is $false.
 
 ## Running the Powershell module
 **Examples:**
@@ -129,18 +132,18 @@ An example ADO pipeline YAML file has been added with support Powershell scripts
   - OutputFormat pdf','svg','png'
     - Set one of more output formats - defaults to PDF
   - EnableLinks $true
-    - Deeplinks to the Azure portal can be enabled using this flag 
+    - Many resources become links to the Azure portal can be enabled using this flag 
   - EnableMgmtGroups $true
     - Add Management Group and Subscription overview to the diagram
   - OnlyMgmtGroups $true
     - Creates a Management Group and Subscription overview diagram - everything else is skipped
 - Bugs fixed
-  - vWAN bug/scenario with first peered vNet in another sub fixed
-  - Azure Firewall: Fixed crash when no Azure Firewall policy is attached
+  - vWAN: Crashed when first peered vNet was in another sub fixed
+  - Azure Firewall: Crashed when no Azure Firewall policy is attached
   - Azure Firewall Policy: Fixed crash when IP Groups are not in use at all
   - MySQL: admin retrievel changed (but will potentially give less output)
   - vWAN: Removed from output, if no hubs are present (to avoid id with to icon or proper label)
-  - Container Instances - crash when instance is in stopped state
+  - Container Instances: Crashed when instance is in stopped state
 
 ## v1.0.2
 - Local Gateway (Site 2 Site VPNs) - FQDN support (prevent runtime crash)
