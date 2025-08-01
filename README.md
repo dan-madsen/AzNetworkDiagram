@@ -44,6 +44,9 @@ Import-Module .\AzNetworkDiagram.psm1
 - **-OnlyCoreNetwork** ($true/$false) - if $true/enabled, only cores network resources are processed - ie. non-network resources are skipped for a cleaner diagram. Default is $false.
 - **-KeepDotFile** ($true/$false) - if $true/enabled, the DOT file is not deleted after the diagrams have been generated. Default is $false and DOT files are deleted.
 - **OutputFormat** (pdf, svg, png) - One or more output files get generated with the specified formats. Default is PDF.
+- **EnableLinks** ($true/$false) - Many resources become links to the Azure portal can be enabled using this flag. Default is $false.
+- **EnableMgmtGroups** ($true/$false) - Add Management Group and Subscription overview to the diagram. Default is $false.
+- **OnlyMgmtGroups** ($true/$false) - Creates a Management Group and Subscription overview diagram - everything else is skipped. Default is $false.
 
 ## Running the Powershell module
 **Examples:**
@@ -109,29 +112,39 @@ An example ADO pipeline YAML file has been added with support Powershell scripts
   - There are links in the code to show where you can get more detailed information if you want to modify your output
 
 # Changelog (since v1.0.1)
-## v1.2
-- Resources can now be links, if enabled (only PDF support!), which will take you directly to the Azure portal
-- New parameters
-  - Links can be enabled using the flag -EnableLinks $true
-- Bug fixes
-  - Azure Firewall: Fixed crash when no Azure Firewall policy is attached
-  - Azure Firewall Policy: Fixed crash when IP Groups are not in use at all
-  - MySQL: admin retrievel changed (but will give less output)
-  - vWAN: Removed from output, if no hubs are present (to avoid id with to icon or proper label)
 ## v1.1
-- Diagrams are now colorized
-- Linux support
-- Pipeline scripts added for Azure DevOps
-- AzNetworkDiagram info added in footer
-- Legend added to output
-- vWAN bug/scenario with first peered vNet in another sub fixed
-- New parameters
-  - KeepDotFile
-  - OutputFormat
-- New support for:
+- New support for
   - Container instances
   - Container Apps
   - Static Web Apps
+  - Multiple NICs pr. VM
+  - VMs (or rather the NICs associated with the VM) now references associated NSG(s)
+- New features
+  - Diagrams are now colorized
+  - Linux support
+  - Pipeline (template) scripts added for Azure DevOps
+  - Legend added to output, incl. AzNetworkDiagram info (and link)
+  - Resources can now be links, if enabled (only PDF support!), which will take you directly to the Azure portal
+  - Optionally, add Management Group and Subscription overview to the diagram
+- New parameters
+  - KeepDotFile $true
+    - Keeps the DOT file, instead of deleting it
+  - OutputFormat pdf','svg','png'
+    - Set one of more output formats - defaults to PDF
+  - EnableLinks $true
+    - Many resources become links to the Azure portal can be enabled using this flag 
+  - EnableMgmtGroups $true
+    - Add Management Group and Subscription overview to the diagram
+  - OnlyMgmtGroups $true
+    - Creates a Management Group and Subscription overview diagram - everything else is skipped
+- Bugs fixed
+  - vWAN: Crashed when first peered vNet was in another sub fixed
+  - Azure Firewall: Crashed when no Azure Firewall policy is attached
+  - Azure Firewall Policy: Fixed crash when IP Groups are not in use at all
+  - MySQL: admin retrievel changed (but will potentially give less output)
+  - vWAN: Removed from output, if no hubs are present (to avoid id with to icon or proper label)
+  - Container Instances: Crashed when instance is in stopped state
+
 ## v1.0.2
 - Local Gateway (Site 2 Site VPNs) - FQDN support (prevent runtime crash)
 

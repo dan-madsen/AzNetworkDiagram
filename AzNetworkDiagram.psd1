@@ -12,7 +12,7 @@
     RootModule = 'AzNetworkDiagram.psm1'
     
     # Version number of this module.
-    ModuleVersion = '1.2'
+    ModuleVersion = '1.1'
     
     # Supported PSEditions
     # CompatiblePSEditions = @()
@@ -33,7 +33,7 @@
     Description = 'Creates a network diagram of your Azure network infrastructure.'
     
     # Minimum version of the PowerShell engine required by this module
-    # PowerShellVersion = ''
+    PowerShellVersion = '7.1'
     
     # Name of the PowerShell host required by this module
     # PowerShellHostName = ''
@@ -107,7 +107,7 @@
             # IconUri = ''
     
     # ReleaseNotes of this module
-             ReleaseNotes = 'v1.2 release'
+             ReleaseNotes = 'v1.1 release'
     
     # Prerelease string of this module
             # Prerelease = ''
