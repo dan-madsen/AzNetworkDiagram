@@ -1045,6 +1045,19 @@ function Export-VM {
                 $data += "        $vmid -> $managedIdentityId;`n"
             }
         }
+
+        # VM (NIC) -> NSG
+        $NetworkProfiles = $vm.NetworkProfile.networkinterfaces
+        $NetworkProfiles | Foreach-Object {
+            $NICId = $NetworkProfiles.id
+            $NICrg = $NICId.split("/")[4]
+            $NICname = $NICId.split("/")[8]
+            $NIC = Get-AzNetworkInterface -ResourceGroupName $NICrg -name $NICname
+            if ( $null -ne $nic.NetworkSecurityGroup.id ) {
+                $NSGid = ($nic.NetworkSecurityGroup.id).replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $data += "        $vmid -> $NSGid;`n"
+            }
+        }
         $data += "   label = `"$Name`";
                 }`n"
 

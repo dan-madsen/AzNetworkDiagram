@@ -112,6 +112,7 @@ An example ADO pipeline YAML file has been added with support Powershell scripts
 ## v1.2
 - Resources can now be links, if enabled (only PDF support!), which will take you directly to the Azure portal
 - Optionally, add Management Group and Subscription overview to the diagram
+- VMs (or rather the NICs associated with the VM) now references associated NSG(s) 
 - New parameters
   - -EnableLinks $true
     - Links can be enabled using the flag 
