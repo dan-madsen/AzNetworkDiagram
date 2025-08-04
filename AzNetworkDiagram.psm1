@@ -3624,11 +3624,11 @@ function Get-AzNetworkDiagram {
     $vermajor = $module.Version.Major
     $verminor = $module.Version.Minor
     $verbuild = $module.Version.Build
-    $version = "${vermajor}.${verminor}.${verbuild}"
+    $ver = "${vermajor}.${verminor}.${verbuild}"
 
     if ( $ver -eq "0.0.-1" ) { $ver = "(Non-PSGallery version)" } # Module loaded from file - not from PSGallery
     elseif ( $ver -eq ".." ) { $ver = "(Non-PSGallery version)" } # Module not imported - ran directly from .psm1 file ?
-    else { $ver = "v$($version)" }
+    else { $ver = "v$($ver)" }
     #Write-Output "AzNetworkDigram ${ver} - Starting ...`n"
 
     Write-Output "##############################################################################################"
