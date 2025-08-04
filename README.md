@@ -84,7 +84,7 @@ It is inevitable that large environments make the diagram **very large** (in thi
 ---
 
 # Flow
-It will loop over any subscriptions available (or those defined as the parameter) and process supported resource types. After data is collected, a .PDF, .PNG and/or .SVG file with the diagram will be created. For very large environments the PNG format could display a scaling error. The .SVG format is editable with Microsoft Visio.
+It will loop over any subscriptions available (or those defined as the parameter) and process supported resource types. After data is collected, a .PDF, .PNG and/or .SVG file with the diagram will be created. For very large environments the PNG format could display a scaling error. The .SVG format is editable with Microsoft Visio. **Consult above recommendation.**
 
 The .DOT settings in the .DOT file try to make the diagram as compact as possible and the ranking tries to keep similar resources ranked accordingly. 
 
@@ -98,7 +98,7 @@ If links to other resources exist then these links are drawn too. For example, i
 The module is now compatible with both Ubuntu and Windows so you can run it successfully on either system. The requirement of having Graphviz installed exists on both platforms. You can look into the YAML file in the pipeline example on how to install Graphviz on Ubuntu unattended.
 
 This module will include in the diagram in separate colors:
-  - Subscriptions
+  - Mangement Groups and Subscriptions
   - vNets & Subnets & Delegations
   - Route Tables
   - NSG's
@@ -131,7 +131,7 @@ This module will include in the diagram in separate colors:
 ---
 
 # Pipeline Runs
-An example ADO pipeline YAML file has been added with support Powershell scripts. This pipeline does the following:
+An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagram/tree/main/pipeline) has been added with support Powershell scripts. This pipeline does the following:
   - It assumes you have a Wiki in use for your project
   - It pulls this Wiki and the azNetworkDiagram repo on the standard runner
   - Installs GraphViz and Powershell modules
