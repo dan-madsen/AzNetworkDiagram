@@ -71,14 +71,14 @@ Beware, that by using "-Subscriptions" to limit the scope of data collection, yo
 It is inevitable that large environments make the diagram **very large** (in this case "wide"), but zooming into the PDF or SVG works the best. In cases where diagrams gets too bug/wide, you should consider scoping the digram (ie. utilize **-Subscriptions "subid","subid2"....**) to create smaller diagrams with a scope that matches your deployment(s), instead of your entire infrastructure. For many environments, you could probably go with something like this:
 - A management group diagram (-OnlyMgmtGroups $true)
 - A core network diagram (-OnlyCoreNetwork $true) that spans part of your infrastructure (or maybe everything), which will include
- - Route tables
- - IP Groups
- - vNets (incl. subnets, peerings, Azure Bastion, Azure Firewall)
- - NSGs
- - VPN Connections
- - Express Route Circuits
- - vWAN / Virtual WAN
- - Private Endpoints
+  - Route tables
+  - IP Groups
+  - vNets (incl. subnets, peerings, Azure Bastion, Azure Firewall)
+  - NSGs
+  - VPN Connections
+  - Express Route Circuits
+  - vWAN / Virtual WAN
+  - Private Endpoints
 - Multiple minor diagrams for individual workloads
 
 ---
