@@ -41,8 +41,6 @@ Clone repository (or download the file referenced), switch to the cloned directo
 Import-Module .\AzNetworkDiagram.psm1
 ```
 
----
-
 ## Runtime options
 - **-OutputPath <path>** - set output directory. Default: "."
 - **-Subscriptions "subid1","subid2","subname","..."** - a list of subscriptions in scope for the diagram. They can be names or Id's
@@ -69,10 +67,26 @@ Beware, that by using "-Subscriptions" to limit the scope of data collection, yo
 
 ---
 
+# Recommendation
+It is inevitable that large environments make the diagram **very large** (in this case "wide"), but zooming into the PDF or SVG works the best. In cases where diagrams gets too bug/wide, you should consider scoping the digram (ie. utilize **-Subscriptions "subid","subid2"....**) to create smaller diagrams with a scope that matches your deployment(s), instead of your entire infrastructure. For many environments, you could probably go with something like this:
+- A management group diagram (-OnlyMgmtGroups $true)
+- A core network diagram (-OnlyCoreNetwork $true) that spans part of your infrastructure (or maybe everything), which will include
+ - Route tables
+ - IP Groups
+ - vNets (incl. subnets, peerings, Azure Bastion, Azure Firewall)
+ - NSGs
+ - VPN Connections
+ - Express Route Circuits
+ - vWAN / Virtual WAN
+ - Private Endpoints
+- Multiple minor diagrams for individual workloads
+
+---
+
 # Flow
 It will loop over any subscriptions available (or those defined as the parameter) and process supported resource types. After data is collected, a .PDF, .PNG and/or .SVG file with the diagram will be created. For very large environments the PNG format could display a scaling error. The .SVG format is editable with Microsoft Visio.
 
-The .DOT settings in the .DOT file try to make the diagram as compact as possible and the ranking tries to keep similar resources ranked accordingly. Though it is inevitable that large environments make the diagram very large (in this case "wide"), but zooming into the PDF or SVG works the best. In these cases, you should consider scoping the process (ie. utilize **-Subscriptions "subid","subid2"....**) to create smaller diagrams with a scope that matches your deployment(s).
+The .DOT settings in the .DOT file try to make the diagram as compact as possible and the ranking tries to keep similar resources ranked accordingly. 
 
 In Hub-Spoke and vWAN environments only resources in scope are depicted to avoid a very large number of links to orphan vNets from a scope point of view. Both vWAN resources and standalone versions of them are handled accordingly with similar data drawn.
 
