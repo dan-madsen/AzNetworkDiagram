@@ -4086,11 +4086,18 @@ function Get-AzNetworkDiagram {
                 $vnetname = $InScopevNetId.split("/")[-1]
                 $vnetsub = $InScopevNetId.split("/")[2]
                 $vnetrg = $InScopevNetId.split("/")[4]
+
+                try {
+                    $vnetsubName = (Get-AzSubscription -SubscriptionId $vnetsub -Tenant $TenantId -ErrorAction Stop).Name
+                } catch {
+                    $vnetsubName = ""
+                }
+
                 #
                 # The Hub is in another "managed" subscription, so we cannot use the context of that subscription
                 # So we're filtering it out here. We do't have access to it.
                 #
-                if ($Subscriptions.IndexOf($vnetsub) -ge 0) {
+                if (($Subscriptions.IndexOf($vnetsub) -ge 0) -or ($Subscriptions.IndexOf($vnetsubName) -ge 0)) {
                     if ($TenantId) {
                         $context = Set-AzContext -Subscription $vnetsub -Tenant $TenantId -ErrorAction Stop
                     }
