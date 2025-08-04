@@ -21,7 +21,7 @@ Some examples of the diagrams. **Additional demo outputs are available in the "D
 ---
 
 # Requirements
-The script depends on Graphviz (the "DOT", diagram-as-code language) to genereate the graphical output.
+**The script depends on Graphviz** (the "DOT", diagram-as-code language) to genereate the graphical output.
 
 Graphviz can be downloaded from: https://graphviz.org/. But note that the default install doesn't add the executable to $PATH, so make sure to enable that during install.
 
@@ -36,7 +36,7 @@ Install-Module -Name AzNetworkDiagram
 ```
 
 ## Install from Github repo 
-Clone repository (or download to file referenced), switch to the cloned directory, then:
+Clone repository (or download the file referenced), switch to the cloned directory, then:
 ```powershell
 Import-Module .\AzNetworkDiagram.psm1
 ```
@@ -72,7 +72,7 @@ Beware, that by using "-Subscriptions" to limit the scope of data collection, yo
 # Flow
 It will loop over any subscriptions available (or those defined as the parameter) and process supported resource types. After data is collected, a .PDF, .PNG and/or .SVG file with the diagram will be created. For very large environments the PNG format could display a scaling error. The .SVG format is editable with Microsoft Visio.
 
-The .DOT settings in the .DOT file try to make the diagram as compact as possible and the ranking tries to keep similar resources ranked accordingly. Though it is inevitable that large environments make the diagram very large (in essence "wide"), but zooming into the PDF or SVG works the best.
+The .DOT settings in the .DOT file try to make the diagram as compact as possible and the ranking tries to keep similar resources ranked accordingly. Though it is inevitable that large environments make the diagram very large (in this case "wide"), but zooming into the PDF or SVG works the best. In these cases, you should consider scoping the process (ie. utilize **-Subscriptions "subid","subid2"....**) to create smaller diagrams with a scope that matches your deployment(s).
 
 In Hub-Spoke and vWAN environments only resources in scope are depicted to avoid a very large number of links to orphan vNets from a scope point of view. Both vWAN resources and standalone versions of them are handled accordingly with similar data drawn.
 
