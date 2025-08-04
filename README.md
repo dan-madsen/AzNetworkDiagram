@@ -1,19 +1,24 @@
 # Introduction 
-The **Get-AzNetworkDiagram** (Powershell)Cmdlet visualizes Azure networking (and other relevant resources) utilizing Graphviz and the "DOT", diagram-as-code language to export a PDF, SVG or PNG with a network digram containing the supported resources (see below list)
+The **Get-AzNetworkDiagram** (Powershell)Cmdlet visualizes Azure infrastructure utilizing Graphviz and the "DOT" (diagram-as-code) language to export a PDF, SVG or PNG with a digram containing the supported resources (see below list)
 
-The idea was _not_ to diagram everything - but enough to get an overview of routing across the entire network environment, with documentation and troubleshooting in mind. But good ideas and contributions emerged - it is now quite capable of documentating quite a bit of resourse types.
+At this point it is now quite capable of documentating quite a bit of resourse types. Initially it was with network as a focus - but it has emerged into some more. It will document network and infrastructure in a diagram, useful for documentation and/or troubleshooting.
 
 ```diff
 - Disclaimer: We take no resposibility for any actions caused by this script!
 ```
 
-# Demo output
-**Additional demo outputs are available in the "DemoOutput" folder.**
+---
 
-Version 1.0.1:
+# Demo output v1.1
+Some examples of the diagrams. **Additional demo outputs are available in the "DemoOutput" folder.**
 
-![Demo output](https://github.com/dan-madsen/AzNetworkDiagram/blob/main/DemoOutput/Demo.png)  
+## Demo output (partial):
+![Demo output (partial)](https://github.com/dan-madsen/AzNetworkDiagram/blob/main/DemoOutput/Demo-Workload-AzNetworkDiagram-Partial.png) 
 
+## Management group overview:
+![Management Group overview](https://github.com/dan-madsen/AzNetworkDiagram/blob/main/DemoOutput/Management-Groups-AzNetworkDiagram.png) 
+
+---
 
 # Requirements
 The script depends on Graphviz (the "DOT", diagram-as-code language) to genereate the graphical output.
@@ -22,6 +27,8 @@ Graphviz can be downloaded from: https://graphviz.org/. But note that the defaul
 
 It can also be installed using "Winget", but that will _NOT_ add the executable to $PATH - so you will have to do that manually.
 
+---
+
 # Getting started 
 ## Install using PSGallery (prefered method)
 ```powershell
@@ -29,10 +36,12 @@ Install-Module -Name AzNetworkDiagram
 ```
 
 ## Install from Github repo 
-Clone repository, switch to the cloned directory, then:
+Clone repository (or download to file referenced), switch to the cloned directory, then:
 ```powershell
 Import-Module .\AzNetworkDiagram.psm1
 ```
+
+---
 
 ## Runtime options
 - **-OutputPath <path>** - set output directory. Default: "."
@@ -51,21 +60,25 @@ Import-Module .\AzNetworkDiagram.psm1
 ## Running the Powershell module
 **Examples:**
 ```powershell
-Get-AzNetworkDiagram [-Tenant tenantId] [-Subscriptions "subid1","subid2","..."] [-OutputPath C:\temp\] [-EnableRanking $true] [-OnlyCoreNetwork $true] [-Sanitize $true] [-Prefix prefixstring] [-KeepDotFile $true] [-OutputFormat [pdf,svg,png]]
+Get-AzNetworkDiagram [-Tenant tenantId] [-Subscriptions "subid1","subid2","..."] [-OutputPath C:\temp\] [-EnableRanking $true] [-OnlyCoreNetwork $true] [-Sanitize $true] [-Prefix prefixstring] [-KeepDotFile $true] [-OutputFormat [pdf,svg,png]] [-EnableMgmtGroups $true] [-EnableLinks $true]
 
 Get-AzNetworkDiagram 
 ```
 
 Beware, that by using "-Subscriptions" to limit the scope of data collection, you might end up with peerings being created to sparsely defined vNets (which would be out of your defined scope). These would appear as a long string, that is the id of the vNet, with special characters stripped for DOT-compatability.
 
+---
+
 # Flow
 It will loop over any subscriptions available (or those defined as the parameter) and process supported resource types. After data is collected, a .PDF, .PNG and/or .SVG file with the diagram will be created. For very large environments the PNG format could display a scaling error. The .SVG format is editable with Microsoft Visio.
 
-The .DOT settings in the .DOT file try to make the diagram as compact as possible and the ranking tries to keep similar resources ranked accordingly. Though it is inevitable that large environments make the diagram very large but zooming into the PDF or SVG works the best.
+The .DOT settings in the .DOT file try to make the diagram as compact as possible and the ranking tries to keep similar resources ranked accordingly. Though it is inevitable that large environments make the diagram very large (in essence "wide"), but zooming into the PDF or SVG works the best.
 
 In Hub-Spoke and vWAN environments only resources in scope are depicted to avoid a very large number of links to orphan vNets from a scope point of view. Both vWAN resources and standalone versions of them are handled accordingly with similar data drawn.
 
 If links to other resources exist then these links are drawn too. For example, if the vWAN Firewall has a DNS proxy enabled which points to a Private DNS Resolver then that link will be displayed too. If an IP Group is used in a Firewall Policy then that link is also displayed.
+
+---
 
 # Currently Supported Resources
 The module is now compatible with both Ubuntu and Windows so you can run it successfully on either system. The requirement of having Graphviz installed exists on both platforms. You can look into the YAML file in the pipeline example on how to install Graphviz on Ubuntu unattended.
@@ -101,6 +114,8 @@ This module will include in the diagram in separate colors:
   - Azure Container Instances
   - Static Web Apps
 
+---
+
 # Pipeline Runs
 An example ADO pipeline YAML file has been added with support Powershell scripts. This pipeline does the following:
   - It assumes you have a Wiki in use for your project
@@ -110,6 +125,8 @@ An example ADO pipeline YAML file has been added with support Powershell scripts
   - Pushes the generated markdown files into the Wiki
   - The cron schedule example shows how to make it run regularly on a schedule.
   - There are links in the code to show where you can get more detailed information if you want to modify your output
+
+---
 
 # Changelog (since v1.0.1)
 ## v1.1
@@ -147,6 +164,8 @@ An example ADO pipeline YAML file has been added with support Powershell scripts
 
 ## v1.0.2
 - Local Gateway (Site 2 Site VPNs) - FQDN support (prevent runtime crash)
+
+---
 
 # Issues, bugs, comments and ideas
 Please submit using the issues option in GitHub
