@@ -30,7 +30,7 @@
     #Copyright = '(c) User01. All rights reserved.'
     
     # Description of the functionality provided by this module
-    Description = 'Creates a network diagram of your Azure network infrastructure.'
+    Description = 'Creates a diagram of your Azure infrastructure.'
     
     # Minimum version of the PowerShell engine required by this module
     PowerShellVersion = '7.1'
@@ -95,7 +95,7 @@
     PSData = @{
     
     # Tags applied to this module. These help with module discovery in online galleries.
-            Tags = @("Azure", "Network", "Documentation", "Diagram")
+            Tags = @("Azure", "Infrastructure", "Network", "Documentation", "Diagram", "Automation")
     
     # A URL to the license for this module.
              LicenseUri = 'https://github.com/dan-madsen/AzNetworkDiagram/blob/main/LICENSE'
