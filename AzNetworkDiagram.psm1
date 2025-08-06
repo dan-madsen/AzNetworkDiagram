@@ -1597,7 +1597,7 @@ function Export-SQLServer {
                 $gb = [math]::Round($db.MaxSizeBytes / 1GB, 2)   # 1 GB = 1 073 741 824 bytes
                 $Location = SanitizeLocation $db.Location
                 $ImagePath = Join-Path $OutputPath "icons" "sqldb.png"
-                $data += "        $($dbid) [label = `"\n\nLocation: $Location\nName: $(SanitizeString $db.DatabaseName)\nPricing Tier: $pricingTier\nMax Size: $gb GB\nZone Redundant: $($db.ZoneRedundant)\nElastic Pool Name: $($db.ElasticPoolName ? (SanitizeString $db.ElasticPoolName) : '')`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $_)];`n" 
+                $data += "        $($dbid) [label = `"\n\nLocation: $Location\nName: $(SanitizeString $db.DatabaseName)\nPricing Tier: $pricingTier\nMax Size: $gb GB\nZone Redundant: $($db.ZoneRedundant)\nElastic Pool Name: $($db.ElasticPoolName ? (SanitizeString $db.ElasticPoolName) : 'N/A')`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $_)];`n" 
                 $data += "        $sqlserverid -> $($dbid);`n"
             }
         }
@@ -3705,6 +3705,7 @@ function Get-AzNetworkDiagram {
                 }
                 else {
                     $context = Set-AzContext -Subscription $_ -Force -ErrorAction Stop
+                    $TenantId = $context.Tenant.Id
                 }
                 $subid = $context.Subscription.Id
                 $subname = $context.Subscription.Name
@@ -4098,12 +4099,7 @@ function Get-AzNetworkDiagram {
                 # So we're filtering it out here. We do't have access to it.
                 #
                 if (($Subscriptions.IndexOf($vnetsub) -ge 0) -or ($Subscriptions.IndexOf($vnetsubName) -ge 0)) {
-                    if ($TenantId) {
-                        $context = Set-AzContext -Subscription $vnetsub -Tenant $TenantId -ErrorAction Stop
-                    }
-                    else {
-                        $context = Set-AzContext -Subscription $vnetsub -ErrorAction Stop
-                    }
+                    $context = Set-AzContext -Subscription $vnetsub -Tenant $TenantId -ErrorAction Stop
                     $vnet = Get-AzVirtualNetwork -name $vnetname -ResourceGroupName $vnetrg -ErrorAction Stop
                     $vnetId = $vnet.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
                     $vnetPeerings = $vnet.VirtualNetworkPeerings.RemoteVirtualNetwork.id
