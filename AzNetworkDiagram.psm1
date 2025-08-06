@@ -4099,6 +4099,7 @@ function Get-AzNetworkDiagram {
                 # So we're filtering it out here. We do't have access to it.
                 #
                 if (($Subscriptions.IndexOf($vnetsub) -ge 0) -or ($Subscriptions.IndexOf($vnetsubName) -ge 0)) {
+                    $context = Set-AzContext -Subscription $vnetsub -Tenant $TenantId -ErrorAction Stop
                     $vnet = Get-AzVirtualNetwork -name $vnetname -ResourceGroupName $vnetrg -ErrorAction Stop
                     $vnetId = $vnet.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
                     $vnetPeerings = $vnet.VirtualNetworkPeerings.RemoteVirtualNetwork.id
