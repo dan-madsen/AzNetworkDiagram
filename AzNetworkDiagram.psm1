@@ -3703,7 +3703,7 @@ function Get-AzNetworkDiagram {
                     # If TenantId is specified, use it to set the context               
                     $context = Set-AzContext -Subscription $_ -Tenant $TenantId -Force -ErrorAction Stop
                 }
-               else {
+                else {
                     $context = Set-AzContext -Subscription $_ -Force -ErrorAction Stop
                     $TenantId = $context.Tenant.Id
                 }
