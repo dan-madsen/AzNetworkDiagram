@@ -469,7 +469,7 @@ function Export-AddToFile {
 
 <#
 .SYNOPSIS
-Exports details of an AKS Cluster for inclusion in a infrastructure diagram.
+Exports details of an AKS Cluster for inclusion in an infrastructure diagram.
 .DESCRIPTION
 This function processes an AKS Cluster object and formats its details for the Azure infrastructure diagram.
 .PARAMETER Aks
@@ -612,7 +612,7 @@ Specifies the Azure Application Gateway object to be processed.
 .EXAMPLE
 PS> Export-ApplicationGateway -agw $applicationGateway
 
-This example processes the specified Azure Application Gateway and exports its details for inclusion in a infrastructure diagram.
+This example processes the specified Azure Application Gateway and exports its details for inclusion in an infrastructure diagram.
 
 #>
 function Export-ApplicationGateway {
