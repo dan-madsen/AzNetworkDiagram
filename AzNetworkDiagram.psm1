@@ -3337,7 +3337,7 @@ function Export-StaticWebApp
 
 <#
 .SYNOPSIS
-Exports details of an Azure Static Web App for inclusion in an infrastructure diagram.
+Exports details of a Recovery Service Vault for inclusion in an infrastructure diagram.
 
 .DESCRIPTION
 The `Export-RecoveryServiceVault` function processes a specified Recovery Service Vault object, retrieves its details, and formats the data for inclusion in the diagram. It visualizes the Vault's name, location, policies, storage redundancy and softdelete state.
@@ -3462,6 +3462,56 @@ function Export-RecoveryServiceVault
     }
     catch {
         Write-Error "Can't export Recovery Service Vault: $($RecoveryServiceVault.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+}
+
+<#
+.SYNOPSIS
+Exports details of a Backup Vault for inclusion in an infrastructure diagram.
+
+.DESCRIPTION
+The `Export-BackupVault` function processes a specified Backup Vault object, retrieves its details, and formats the data for inclusion in the diagram. It visualizes the Vault's name, location, policies, storage redundancy and softdelete state.
+
+.PARAMETER BackupVault
+Specifies the Backup Vaultobject to be processed. This parameter is mandatory.
+
+.EXAMPLE
+PS> $BackupVault = Get-AzDataProtectionBackupVault -Name "RSV" -ResourceGroupName "MyResourceGroup"
+PS> Export-BackupVault $BackupVault 
+
+This example retrieves a Backup Vault object and exports its details for inclusion in the diagram.
+#>
+function Export-BackupVault
+{
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$BackupVault
+    )
+
+    try {
+        $id = $BackupVault.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankbackupvault += $id
+        
+        $header = "
+        # $($BackupVault.Name) - $id
+        subgraph cluster_$id {
+            style = solid;
+            colorscheme = blues9 ;
+            bgcolor = 2;
+            node [colorscheme = blues9 ; style = filled;];
+        "
+
+        # End subgraph
+        $footer = "
+            label = `"$vaultName`";
+        }
+        "
+        
+        Export-AddToFile -Data ($header + $rsvdata + $footer)
+    }
+    catch {
+        Write-Error "Can't export Backup Vault: $($BackupVault.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
     }
 }
 
@@ -4246,6 +4296,17 @@ function Get-AzNetworkDiagram {
                         $Script:Legend += ,@("Recovery Service Vault","rsv.png")
                         foreach ( $rsv in $RecoveryServiceVaults ) {
                             Export-RecoveryServiceVault -RecoveryServiceVault $rsv
+                        }
+                    }
+
+                    #Backup Vaults (BV)
+                    Write-Output "Collecting Backup Vaults..."
+                    Export-AddToFile "    ##### $subname - Backup Vaults #####"
+                    $BackupVaults = Get-AzDataProtectionBackupVault
+                    if ( $null -ne $BackupVaults ) {
+                        $Script:Legend += ,@("Backup Vault","backupvault.png")
+                        foreach ( $bv in $BackupVaults ) {
+                            Export-BackupVault -BackupVault $bv
                         }
                     }
                     
