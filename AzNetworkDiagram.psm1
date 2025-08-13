@@ -6,16 +6,7 @@
   Creates a Network Diagram of your Azure networking infrastructure.
 
   .DESCRIPTION
-  The Get-AzNetworkDiagram (Powershell)Cmdlet visualizes Azure networking utilizing Graphviz and the "DOT", diagram-as-code language to export a PDF and PNG with a network digram containing:
-  - VNets, including:
-    - VNet peerings
-    - Subnets
-        - Special subnet: AzureBastionSubnet and associated Azure Bastion resource
-        - Special subnet: GatewaySubnet and associated resources, incl. Network Gateways, Local Network Gateways and connections with the static defined remote subnets. But excluding Express Route Cirtcuits.
-        - Special subnet:  AzureFirewallSubnet and associated Azure Firewall Policy
-        - Associated Route Tables
-        - A * will be added to the subnet name, if a subnet is delegated. Commonly used delegations will be given a proper icon
-        - A # will be added to the subnet name, in case an NSG is associated
+  The Get-AzNetworkDiagram (Powershell)Cmdlet visualizes Azure resources utilizing Graphviz and the "DOT", diagram-as-code language to export a PDF and PNG with an infrastructure digram containing the supported resource and relevant information.
 
   IMPORTANT:
   Icons in the .\icons\ folder is necessary in order to generate the diagram. If not present, they will be downloaded to the output directory during runtime.
@@ -30,7 +21,7 @@
   -Subscriptions "subid1","subid2","..."** - a list of subscriptions in scope for the digram. Default is all available subscriptions.
 
   .PARAMETER EnableRanking
-  -EnableRanking $true ($true/$false) - enable ranking (equal hight in the output) of certain resource types. For larger networks, this might be worth a shot. **Default: $true**
+  -EnableRanking $true ($true/$false) - enable ranking (equal hight in the output) of certain resource types. For larger environments, this might be worth a shot. **Default: $true**
 
   .PARAMETER Sanitize
   -Sanitize $bool ($true/$false) - Sanitizes all names, locations, IP addresses and CIDR blocks. Default: $false
@@ -308,9 +299,9 @@ function Generate-DOTURL {
 ##### Functions for standard definitions #####
 <#
 .SYNOPSIS
-Exports the DOT file header for the network diagram.
+Exports the DOT file header for the infrastructure diagram.
 .DESCRIPTION
-This function writes the initial DOT syntax and global graph settings for the Azure network diagram.
+This function writes the initial DOT syntax and global graph settings for the Azure infrastructure diagram.
 .PARAMETER None
 This function does not take any parameters.
 .EXAMPLE
@@ -343,9 +334,9 @@ function Export-dotHeader {
 
 <#
 .SYNOPSIS
-Exports the DOT file footer with resource ranking for the network diagram.
+Exports the DOT file footer with resource ranking for the infrastructure diagram.
 .DESCRIPTION
-This function writes the closing DOT syntax and resource ranking information for the Azure network diagram.
+This function writes the closing DOT syntax and resource ranking information for the Azure infrastructure diagram.
 .PARAMETER None
 This function does not take any parameters.
 .EXAMPLE
@@ -395,9 +386,9 @@ function Export-dotFooterRanking {
 
 <#
 .SYNOPSIS
-Exports the DOT file footer for the network diagram.
+Exports the DOT file footer for the infrastructure diagram.
 .DESCRIPTION
-This function writes the closing DOT syntax for the Azure network diagram.
+This function writes the closing DOT syntax for the Azure infrastructure diagram.
 .PARAMETER None
 This function does not take any parameters.
 .EXAMPLE
@@ -444,9 +435,9 @@ function Export-dotFooter {
 
 <#
 .SYNOPSIS
-Creates a new file for outputting the network diagram data.
+Creates a new file for outputting the infrastructure diagram data.
 .DESCRIPTION
-This function creates a new output file for the Azure network diagram, overwriting any existing file with the same name.
+This function creates a new output file for the Azure infrastructure diagram, overwriting any existing file with the same name.
 .PARAMETER None
 This function does not take any parameters.
 .EXAMPLE
@@ -461,9 +452,9 @@ function Export-CreateFile {
 
 <#
 .SYNOPSIS
-Appends data to the output file for the network diagram.
+Appends data to the output file for the infrastructure diagram.
 .DESCRIPTION
-This function appends a string of data to the output file for the Azure network diagram.
+This function appends a string of data to the output file for the Azure infrastructure diagram.
 .PARAMETER Data
 The string data to append to the output file.
 .EXAMPLE
@@ -478,9 +469,9 @@ function Export-AddToFile {
 
 <#
 .SYNOPSIS
-Exports details of an AKS Cluster for inclusion in a network diagram.
+Exports details of an AKS Cluster for inclusion in an infrastructure diagram.
 .DESCRIPTION
-This function processes an AKS Cluster object and formats its details for the Azure network diagram.
+This function processes an AKS Cluster object and formats its details for the Azure infrastructure diagram.
 .PARAMETER Aks
 The AKS Cluster object to process.
 .EXAMPLE
@@ -610,10 +601,10 @@ function Export-AKSCluster {
 
 <#
 .SYNOPSIS
-Exports details of an Azure Application Gateway for inclusion in a network diagram.
+Exports details of an Azure Application Gateway for inclusion in an infrastructure diagram.
 
 .DESCRIPTION
-The `Export-ApplicationGateway` function processes a specified Azure Application Gateway object, retrieves its details, and formats the data for inclusion in a network diagram. It visualizes the gateway's name, SKU, zones, SSL certificates, frontend IP configurations, and associated firewall policies.
+The `Export-ApplicationGateway` function processes a specified Azure Application Gateway object, retrieves its details, and formats the data for inclusion in an infrastructure diagram. It visualizes the gateway's name, SKU, zones, SSL certificates, frontend IP configurations, and associated firewall policies.
 
 .PARAMETER agw
 Specifies the Azure Application Gateway object to be processed.
@@ -621,7 +612,7 @@ Specifies the Azure Application Gateway object to be processed.
 .EXAMPLE
 PS> Export-ApplicationGateway -agw $applicationGateway
 
-This example processes the specified Azure Application Gateway and exports its details for inclusion in a network diagram.
+This example processes the specified Azure Application Gateway and exports its details for inclusion in an infrastructure diagram.
 
 #>
 function Export-ApplicationGateway {
@@ -715,9 +706,9 @@ function Export-ApplicationGateway {
 
 <#
 .SYNOPSIS
-Exports details of a managed identity for inclusion in a network diagram.
+Exports details of a managed identity for inclusion in an infrastructure diagram.
 .DESCRIPTION
-This function processes a managed identity object and formats its details for the Azure network diagram.
+This function processes a managed identity object and formats its details for the Azure infrastructure diagram.
 .PARAMETER managedIdentity
 The managed identity object to process.
 .EXAMPLE
@@ -797,9 +788,9 @@ function Export-NSG {
 
 <#
 .SYNOPSIS
-Exports details of an SSH key for inclusion in a network diagram.
+Exports details of an SSH key for inclusion in an infrastructure diagram.
 .DESCRIPTION
-This function processes an SSH key object and formats its details for the Azure network diagram.
+This function processes an SSH key object and formats its details for the Azure infrastructure diagram.
 .PARAMETER sshKey
 The SSH key object to process.
 .EXAMPLE
@@ -902,9 +893,9 @@ function Export-ComputeGallery {
 }
 <#
 .SYNOPSIS
-Exports details of an Azure Key Vault for inclusion in a network diagram.
+Exports details of an Azure Key Vault for inclusion in an infrastructure diagram.
 .DESCRIPTION
-This function processes a Key Vault object and formats its details for the Azure network diagram.
+This function processes a Key Vault object and formats its details for the Azure infrastructure diagram.
 .PARAMETER keyvault
 The Key Vault object to process.
 .EXAMPLE
@@ -951,9 +942,9 @@ function Export-Keyvault {
 
 <#
 .SYNOPSIS
-Exports details of a Virtual Machine Scale Set (VMSS) for inclusion in a network diagram.
+Exports details of a Virtual Machine Scale Set (VMSS) for inclusion in an infrastructure diagram.
 .DESCRIPTION
-This function processes a VMSS object and formats its details for the Azure network diagram.
+This function processes a VMSS object and formats its details for the Azure infrastructure diagram.
 .PARAMETER vmss
 The Virtual Machine Scale Set object to process.
 .EXAMPLE
@@ -1015,9 +1006,9 @@ function Export-VMSS {
 
 <#
 .SYNOPSIS
-Exports details of a Virtual Machine (VM) for inclusion in a network diagram.
+Exports details of a Virtual Machine (VM) for inclusion in an infrastructure diagram.
 .DESCRIPTION
-This function processes a VM object and formats its details for the Azure network diagram.
+This function processes a VM object and formats its details for the Azure infrastructure diagram.
 .PARAMETER vm
 The Virtual Machine object to process.
 .EXAMPLE
@@ -1107,9 +1098,9 @@ function Export-VM {
 
 <#
 .SYNOPSIS
-Exports details of a MySQL Flexible Server for inclusion in a network diagram.
+Exports details of a MySQL Flexible Server for inclusion in an infrastructure diagram.
 .DESCRIPTION
-This function processes a MySQL Flexible Server object and formats its details for the Azure network diagram.
+This function processes a MySQL Flexible Server object and formats its details for the Azure infrastructure diagram.
 .PARAMETER mysql
 The MySQL Flexible Server object to process.
 .EXAMPLE
@@ -1246,9 +1237,9 @@ function Invoke-TableWriter {
 
 <#
 .SYNOPSIS
-Exports details of a Cosmos DB account for inclusion in a network diagram.
+Exports details of a Cosmos DB account for inclusion in an infrastructure diagram.
 .DESCRIPTION
-This function processes a Cosmos DB account object and formats its details for the Azure network diagram.
+This function processes a Cosmos DB account object and formats its details for the Azure infrastructure diagram.
 .PARAMETER cosmosdbact
 The Cosmos DB account object to process.
 .EXAMPLE
@@ -1373,9 +1364,9 @@ function Export-CosmosDBAccount {
 
 <#
 .SYNOPSIS
-Exports details of a PostgreSQL Flexible Server for inclusion in a network diagram.
+Exports details of a PostgreSQL Flexible Server for inclusion in an infrastructure diagram.
 .DESCRIPTION
-This function processes a PostgreSQL Flexible Server object and formats its details for the Azure network diagram.
+This function processes a PostgreSQL Flexible Server object and formats its details for the Azure infrastructure diagram.
 .PARAMETER postgresql
 The PostgreSQL Flexible Server object to process.
 .EXAMPLE
@@ -1441,9 +1432,9 @@ function Export-PostgreSQLServer {
 
 <#
 .SYNOPSIS
-Exports details of a Redis server for inclusion in a network diagram.
+Exports details of a Redis server for inclusion in an infrastructure diagram.
 .DESCRIPTION
-This function processes a Redis server object and formats its details for the Azure network diagram.
+This function processes a Redis server object and formats its details for the Azure infrastructure diagram.
 .PARAMETER redis
 The Redis server object to process.
 .EXAMPLE
@@ -1493,9 +1484,9 @@ function Export-RedisServer {
 
 <#
 .SYNOPSIS
-Exports details of a SQL Managed Instance for inclusion in a network diagram.
+Exports details of a SQL Managed Instance for inclusion in an infrastructure diagram.
 .DESCRIPTION
-This function processes a SQL Managed Instance object and formats its details for the Azure network diagram.
+This function processes a SQL Managed Instance object and formats its details for the Azure infrastructure diagram.
 .PARAMETER sqlmi
 The SQL Managed Instance object to process.
 .EXAMPLE
@@ -1548,9 +1539,9 @@ function Export-SQLManagedInstance {
 
 <#
 .SYNOPSIS
-Exports details of a SQL Server for inclusion in a network diagram.
+Exports details of a SQL Server for inclusion in an infrastructure diagram.
 .DESCRIPTION
-This function processes a SQL Server object and formats its details for the Azure network diagram.
+This function processes a SQL Server object and formats its details for the Azure infrastructure diagram.
 .PARAMETER sqlserver
 The SQL Server object to process.
 .EXAMPLE
@@ -1614,9 +1605,9 @@ function Export-SQLServer {
 
 <#
 .SYNOPSIS
-Exports details of an Event Hub namespace for inclusion in a network diagram.
+Exports details of an Event Hub namespace for inclusion in an infrastructure diagram.
 .DESCRIPTION
-This function processes an Event Hub namespace object and formats its details for the Azure network diagram.
+This function processes an Event Hub namespace object and formats its details for the Azure infrastructure diagram.
 .PARAMETER namespace
 The Event Hub namespace object to process.
 .EXAMPLE
@@ -1666,9 +1657,9 @@ function Export-EventHub {
 
 <#
 .SYNOPSIS
-Exports details of an App Service Plan for inclusion in a network diagram.
+Exports details of an App Service Plan for inclusion in an infrastructure diagram.
 .DESCRIPTION
-This function processes an App Service Plan object and formats its details for the Azure network diagram.
+This function processes an App Service Plan object and formats its details for the Azure infrastructure diagram.
 .PARAMETER plan
 The App Service Plan object to process.
 .EXAMPLE
@@ -1730,9 +1721,9 @@ function Export-AppServicePlan {
 
 <#
 .SYNOPSIS
-Exports details of an API Management (APIM) instance for inclusion in a network diagram.
+Exports details of an API Management (APIM) instance for inclusion in an infrastructure diagram.
 .DESCRIPTION
-This function processes an APIM object and formats its details for the Azure network diagram.
+This function processes an APIM object and formats its details for the Azure infrastructure diagram.
 .PARAMETER apim
 The API Management object to process.
 .EXAMPLE
@@ -1794,9 +1785,9 @@ function Export-APIM {
 
 <#
 .SYNOPSIS
-Exports details of an Azure Container Registry (ACR) for inclusion in a network diagram.
+Exports details of an Azure Container Registry (ACR) for inclusion in an infrastructure diagram.
 .DESCRIPTION
-This function processes an Azure Container Registry object and formats its details for the Azure network diagram.
+This function processes an Azure Container Registry object and formats its details for the Azure infrastructure diagram.
 .PARAMETER acr
 The Azure Container Registry object to process.
 .EXAMPLE
@@ -1842,9 +1833,9 @@ function Export-ACR {
 
 <#
 .SYNOPSIS
-Exports details of a Storage Account for inclusion in a network diagram.
+Exports details of a Storage Account for inclusion in an infrastructure diagram.
 .DESCRIPTION
-This function processes a Storage Account object and formats its details for the Azure network diagram.
+This function processes a Storage Account object and formats its details for the Azure infrastructure diagram.
 .PARAMETER storageaccount
 The Storage Account object to process.
 .EXAMPLE
@@ -1884,6 +1875,35 @@ function Export-StorageAccount {
         $ImagePath = Join-Path $OutputPath "icons" "storage-account.png"
         $data += "        $staid [label = `"\n\nLocation: $Location\nSKU: $($storageaccount.Sku.Name)\nKind: $($storageaccount.Kind)\nPublic Network Access: $PublicNetworkAccess\nAccess Tier: $($storageaccount.AccessTier)\nHierarchical Namespace: $HierarchicalNamespace\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $storageaccount)];"
         $data += "`n"
+        
+        #File Shares
+        try {
+            #Shares that are not snapshots
+            $shares = $storageaccount | Get-AzStorageShare | Where-Object {$_.IsSnapshot -eq $false}
+
+            if ( $null -ne $shares ) {
+                $shares | ForEach-Object {
+                    $share = $_
+                    $sharename = SanitizeString $share.Name
+                    $shareid = ("$staid$sharename").replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $sharequota = $share.Quota
+                    $shareaccesstier = $share.ListShareProperties.Properties.AccessTier
+
+                    $Script:Legend += ,@("Azure File Share", "azurefileshare.png")
+                    $ImagePath = Join-Path $OutputPath "icons" "azurefileshare.png"
+
+                    $data += "        $shareid [label = `"Name: $sharename\nQuota in GiB: $sharequota\nAccess tier: $shareaccesstier`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n"
+                    $data += "      $staid -> $shareid`n"
+                }
+            }
+        } catch {
+            # No access to shares
+            $Script:Legend += ,@("Azure File Share", "azurefileshare.png")
+            $ImagePath = Join-Path $OutputPath "icons" "azurefileshare.png"
+            $data += "        $($staid)noaccess [label = `"Unknown\nPermission denied when looking look up File Shares`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n"
+            $data += "      $staid -> $($staid)noaccess`n"
+        }
+        
         $peids = Get-AzPrivateEndpointConnection -PrivateLinkResourceId $storageaccount.Id -ErrorAction Stop
         
         if ($peids) {
@@ -1905,10 +1925,10 @@ function Export-StorageAccount {
 
 <#
 .SYNOPSIS
-Exports details of an Azure Firewall and its associated policies for inclusion in a network diagram.
+Exports details of an Azure Firewall and its associated policies for inclusion in an infrastructure diagram.
 
 .DESCRIPTION
-The `Export-AzureFirewall` function processes a specified Azure Firewall object, retrieves its details, and formats the data for inclusion in a network diagram. It visualizes the firewall's name, private and public IP addresses, SKU tier, zones, and associated firewall policies, including DNS settings and IP groups.
+The `Export-AzureFirewall` function processes a specified Azure Firewall object, retrieves its details, and formats the data for inclusion in an infrastructure diagram. It visualizes the firewall's name, private and public IP addresses, SKU tier, zones, and associated firewall policies, including DNS settings and IP groups.
 
 .PARAMETER FirewallId
 Specifies the unique identifier of the Azure Firewall to be processed.
@@ -1919,7 +1939,7 @@ Specifies the resource group of the Azure Firewall.
 .EXAMPLE
 PS> Export-AzureFirewall -FirewallId "/subscriptions/xxxx/resourceGroups/rg1/providers/Microsoft.Network/azureFirewalls/fw1" -ResourceGroupName "rg1"
 
-This example processes the specified Azure Firewall and exports its details for inclusion in a network diagram.
+This example processes the specified Azure Firewall and exports its details for inclusion in an infrastructure diagram.
 
 #>
 function Export-AzureFirewall {
@@ -2010,10 +2030,10 @@ function Export-AzureFirewall {
 
 <#
 .SYNOPSIS
-Exports details of a Virtual WAN Hub for inclusion in a network diagram.
+Exports details of a Virtual WAN Hub for inclusion in an infrastructure diagram.
 
 .DESCRIPTION
-The `Export-Hub` function processes a specified Virtual WAN Hub object, retrieves its details, and formats the data for inclusion in a network diagram. It visualizes the hub's name, location, SKU, address prefix, routing preference, and associated resources such as VPN gateways, ExpressRoute gateways, and Azure Firewalls.
+The `Export-Hub` function processes a specified Virtual WAN Hub object, retrieves its details, and formats the data for inclusion in an infrastructure diagram. It visualizes the hub's name, location, SKU, address prefix, routing preference, and associated resources such as VPN gateways, ExpressRoute gateways, and Azure Firewalls.
 
 .PARAMETER hub
 Specifies the Virtual WAN Hub object to be processed.
@@ -2021,7 +2041,7 @@ Specifies the Virtual WAN Hub object to be processed.
 .EXAMPLE
 PS> Export-Hub -hub $vwanHub
 
-This example processes the specified Virtual WAN Hub and exports its details for inclusion in a network diagram.
+This example processes the specified Virtual WAN Hub and exports its details for inclusion in an infrastructure diagram.
 
 #>
 function Export-Hub {
@@ -2178,10 +2198,10 @@ function Export-Hub {
 
 <#
 .SYNOPSIS
-Exports details of a Virtual Network Gateway for inclusion in a network diagram.
+Exports details of a Virtual Network Gateway for inclusion in an infrastructure diagram.
 
 .DESCRIPTION
-The `Export-VirtualGateway` function processes a specified Virtual Network Gateway object, retrieves its details, and formats the data for inclusion in a network diagram. It visualizes the gateway's name, type (VPN or ExpressRoute), and associated public IP addresses.
+The `Export-VirtualGateway` function processes a specified Virtual Network Gateway object, retrieves its details, and formats the data for inclusion in an infrastructure diagram. It visualizes the gateway's name, type (VPN or ExpressRoute), and associated public IP addresses.
 
 .PARAMETER GatewayName
 Specifies the name of the Virtual Network Gateway to be processed.
@@ -2198,7 +2218,7 @@ Specifies the identifier of the parent resource to which the gateway is connecte
 .EXAMPLE
 PS> Export-VirtualGateway -GatewayName "MyGateway" -ResourceGroupName "MyResourceGroup" -GatewayId "gateway123" -HeadId "vnet123"
 
-This example processes the specified Virtual Network Gateway and exports its details for inclusion in a network diagram.
+This example processes the specified Virtual Network Gateway and exports its details for inclusion in an infrastructure diagram.
 
 #>
 function Export-VirtualGateway {
@@ -2262,10 +2282,10 @@ function Export-VirtualGateway {
 
 <#
 .SYNOPSIS
-Exports details of a subnet configuration for inclusion in a network diagram.
+Exports details of a subnet configuration for inclusion in an infrastructure diagram.
 
 .DESCRIPTION
-The `Export-SubnetConfig` function processes a list of subnet objects, retrieves their details, and formats the data for inclusion in a network diagram. It visualizes subnet properties such as name, address prefix, associated NSGs, route tables, NAT gateways, and special configurations like Azure Firewall, Bastion, and Gateway subnets.
+The `Export-SubnetConfig` function processes a list of subnet objects, retrieves their details, and formats the data for inclusion in an infrastructure diagram. It visualizes subnet properties such as name, address prefix, associated NSGs, route tables, NAT gateways, and special configurations like Azure Firewall, Bastion, and Gateway subnets.
 
 .PARAMETER subnets
 Specifies the list of subnet objects to be processed.
@@ -2273,7 +2293,7 @@ Specifies the list of subnet objects to be processed.
 .EXAMPLE
 PS> Export-SubnetConfig -subnets $subnetList
 
-This example processes the specified list of subnets and exports their details for inclusion in a network diagram.
+This example processes the specified list of subnets and exports their details for inclusion in an infrastructure diagram.
 
 #>
 function Export-SubnetConfig {
@@ -2472,10 +2492,10 @@ function Export-SubnetConfig {
 
 <#
 .SYNOPSIS
-Exports details of a virtual network (VNet) for inclusion in a network diagram.
+Exports details of a virtual network (VNet) for inclusion in an infrastructure diagram.
 
 .DESCRIPTION
-The `Export-vnet` function processes a specified virtual network object, retrieves its details, and formats the data for inclusion in a network diagram. It visualizes the VNet's name, address spaces, subnets, associated private DNS resolvers, and other configurations.
+The `Export-vnet` function processes a specified virtual network object, retrieves its details, and formats the data for inclusion in an infrastructure diagram. It visualizes the VNet's name, address spaces, subnets, associated private DNS resolvers, and other configurations.
 
 .PARAMETER vnet
 Specifies the virtual network object to be processed.
@@ -2483,7 +2503,7 @@ Specifies the virtual network object to be processed.
 .EXAMPLE
 PS> Export-vnet -vnet $vnet
 
-This example processes the specified virtual network and exports its details for inclusion in a network diagram.
+This example processes the specified virtual network and exports its details for inclusion in an infrastructure diagram.
 
 #>
 function Export-vnet {
@@ -2585,10 +2605,10 @@ function Export-vnet {
 
 <#
 .SYNOPSIS
-Exports details of a Virtual WAN (vWAN) for inclusion in a network diagram.
+Exports details of a Virtual WAN (vWAN) for inclusion in an infrastructure diagram.
 
 .DESCRIPTION
-The `Export-vWAN` function processes a specified Virtual WAN object, retrieves its details, and formats the data for inclusion in a network diagram. It visualizes the vWAN's name, type, location, and associated hubs, along with their configurations.
+The `Export-vWAN` function processes a specified Virtual WAN object, retrieves its details, and formats the data for inclusion in an infrastructure diagram. It visualizes the vWAN's name, type, location, and associated hubs, along with their configurations.
 
 .PARAMETER vwan
 Specifies the Virtual WAN object to be processed.
@@ -2596,7 +2616,7 @@ Specifies the Virtual WAN object to be processed.
 .EXAMPLE
 PS> Export-vWAN -vwan $vWAN
 
-This example processes the specified Virtual WAN and exports its details for inclusion in a network diagram.
+This example processes the specified Virtual WAN and exports its details for inclusion in an infrastructure diagram.
 
 #>
 function Export-vWAN {
@@ -2651,10 +2671,10 @@ function Export-vWAN {
 
 <#
 .SYNOPSIS
-Exports details of an ExpressRoute Circuit for inclusion in a network diagram.
+Exports details of an ExpressRoute Circuit for inclusion in an infrastructure diagram.
 
 .DESCRIPTION
-The `Export-ExpressRouteCircuit` function processes a specified ExpressRoute Circuit object, retrieves its details, and formats the data for inclusion in a network diagram. It visualizes the circuit's name, SKU, bandwidth, provider, peering details, and associated ExpressRoute Direct ports if applicable.
+The `Export-ExpressRouteCircuit` function processes a specified ExpressRoute Circuit object, retrieves its details, and formats the data for inclusion in an infrastructure diagram. It visualizes the circuit's name, SKU, bandwidth, provider, peering details, and associated ExpressRoute Direct ports if applicable.
 
 .PARAMETER er
 Specifies the ExpressRoute Circuit object to be processed.
@@ -2662,7 +2682,7 @@ Specifies the ExpressRoute Circuit object to be processed.
 .EXAMPLE
 PS> Export-ExpressRouteCircuit -er $expressRouteCircuit
 
-This example processes the specified ExpressRoute Circuit and exports its details for inclusion in a network diagram.
+This example processes the specified ExpressRoute Circuit and exports its details for inclusion in an infrastructure diagram.
 
 #>
 function Export-ExpressRouteCircuit {
@@ -2811,10 +2831,10 @@ function Export-ExpressRouteCircuit {
 
 <#
 .SYNOPSIS
-Exports details of a route table for inclusion in a network diagram.
+Exports details of a route table for inclusion in an infrastructure diagram.
 
 .DESCRIPTION
-The `Export-RouteTable` function processes a specified route table object, retrieves its routes, and formats the data for inclusion in a network diagram. It visualizes the route table name, address prefixes, next hop types, and next hop IP addresses.
+The `Export-RouteTable` function processes a specified route table object, retrieves its routes, and formats the data for inclusion in an infrastructure diagram. It visualizes the route table name, address prefixes, next hop types, and next hop IP addresses.
 
 .PARAMETER routetable
 Specifies the route table object to be processed.
@@ -2822,7 +2842,7 @@ Specifies the route table object to be processed.
 .EXAMPLE
 PS> Export-RouteTable -routetable $routeTable
 
-This example processes the specified route table and exports its details for inclusion in a network diagram.
+This example processes the specified route table and exports its details for inclusion in an infrastructure diagram.
 
 #>
 function Export-RouteTable {
@@ -2885,10 +2905,10 @@ function Export-RouteTable {
 
 <#
 .SYNOPSIS
-Exports details of an IP Group for inclusion in a network diagram.
+Exports details of an IP Group for inclusion in an infrastructure diagram.
 
 .DESCRIPTION
-The `Export-IpGroup` function processes a specified IP Group object, retrieves its details, and formats the data for inclusion in a network diagram. It visualizes the IP Group name and associated IP addresses.
+The `Export-IpGroup` function processes a specified IP Group object, retrieves its details, and formats the data for inclusion in an infrastructure diagram. It visualizes the IP Group name and associated IP addresses.
 
 .PARAMETER IpGroup
 Specifies the IP Group object to be processed.
@@ -2896,7 +2916,7 @@ Specifies the IP Group object to be processed.
 .EXAMPLE
 PS> Export-IpGroup -IpGroup $ipGroup
 
-This example processes the specified IP Group and exports its details for inclusion in a network diagram.
+This example processes the specified IP Group and exports its details for inclusion in an infrastructure diagram.
 
 #>
 function Export-IpGroup {
@@ -2932,7 +2952,7 @@ function Export-IpGroup {
 Exports details of a VPN connection and its associated gateways.
 
 .DESCRIPTION
-The `Export-Connection` function processes a specified VPN/ER connection object, retrieves details about the associated virtual network gateway or local network gateway, and formats the data for inclusion in a network diagram. It visualizes the connection type, peer information, and static remote subnets if applicable.
+The `Export-Connection` function processes a specified VPN/ER connection object, retrieves details about the associated virtual network gateway or local network gateway, and formats the data for inclusion in an infrastructure diagram. It visualizes the connection type, peer information, and static remote subnets if applicable.
 
 .PARAMETER connection
 Specifies the VPN/ER connection object to be processed.
@@ -2940,7 +2960,7 @@ Specifies the VPN/ER connection object to be processed.
 .EXAMPLE
 PS> Export-Connection -connection $vpnConnection
 
-This example processes the specified VPN connection and exports its details for inclusion in a network diagram.
+This example processes the specified VPN connection and exports its details for inclusion in an infrastructure diagram.
 
 #>
 function Export-Connection {
@@ -3026,7 +3046,7 @@ function Export-Connection {
 Exports details of a Private Endpoint and its associated Private Link Service connections.
 
 .DESCRIPTION
-The `Export-PrivateEndpoint` function retrieves information about a specified Private Endpoint, including its name and associated Private Link Service connections. It formats the data for inclusion in a network diagram, displaying the Private Endpoint's details and connections visually.
+The `Export-PrivateEndpoint` function retrieves information about a specified Private Endpoint, including its name and associated Private Link Service connections. It formats the data for inclusion in an infrastructure diagram, displaying the Private Endpoint's details and connections visually.
 
 .PARAMETER pe
 Specifies the Private Endpoint object to be processed.
@@ -3034,7 +3054,7 @@ Specifies the Private Endpoint object to be processed.
 .EXAMPLE
 PS> Export-PrivateEndpoint -pe $privateEndpoint
 
-This example processes the specified Private Endpoint and exports its details for inclusion in a network diagram.
+This example processes the specified Private Endpoint and exports its details for inclusion in an infrastructure diagram.
 
 #>
 function Export-PrivateEndpoint {
@@ -3074,10 +3094,10 @@ function Export-PrivateEndpoint {
 
 <#
 .SYNOPSIS
-Exports details of an Azure Container Group for inclusion in a network diagram.
+Exports details of an Azure Container Group for inclusion in an infrastructure diagram.
 
 .DESCRIPTION
-The `Export-ContainerGroup` function processes a specified Azure Container Group object, retrieves its details, and formats the data for inclusion in a network diagram. It visualizes the container group's name, location, OS type, IP address, zone, SKU, and associated containers with their configurations.
+The `Export-ContainerGroup` function processes a specified Azure Container Group object, retrieves its details, and formats the data for inclusion in an infrastructure diagram. It visualizes the container group's name, location, OS type, IP address, zone, SKU, and associated containers with their configurations.
 
 .PARAMETER containerGroup
 Specifies the Azure Container Group object to be processed. This parameter is mandatory.
@@ -3086,7 +3106,7 @@ Specifies the Azure Container Group object to be processed. This parameter is ma
 PS> $containerGroup = Get-AzContainerGroup -Name "MyContainerGroup" -ResourceGroupName "MyResourceGroup"
 PS> Export-ContainerGroup -containerGroup $containerGroup
 
-This example retrieves an Azure Container Group object and exports its details for inclusion in a network diagram.
+This example retrieves an Azure Container Group object and exports its details for inclusion in an infrastructure diagram.
 #>
 function Export-ContainerGroup
 {
@@ -3150,10 +3170,10 @@ function Export-ContainerGroup
 
 <#
 .SYNOPSIS
-Exports details of an Azure Container App Environment for inclusion in a network diagram.
+Exports details of an Azure Container App Environment for inclusion in an infrastructure diagram.
 
 .DESCRIPTION
-The `Export-ContainerAppEnv` function processes a specified Azure Container App Environment object, retrieves its details, and formats the data for inclusion in a network diagram. It visualizes the environment's name, location, static IP, zone redundancy, environment type, and associated container apps.
+The `Export-ContainerAppEnv` function processes a specified Azure Container App Environment object, retrieves its details, and formats the data for inclusion in an infrastructure diagram. It visualizes the environment's name, location, static IP, zone redundancy, environment type, and associated container apps.
 
 .PARAMETER containerAppEnvironment
 Specifies the Azure Container App Environment object to be processed. This parameter is mandatory.
@@ -3162,7 +3182,7 @@ Specifies the Azure Container App Environment object to be processed. This param
 PS> $containerAppEnv = Get-AzContainerAppEnvironment -Name "MyEnvironment" -ResourceGroupName "MyResourceGroup"
 PS> Export-ContainerAppEnv -containerAppEnvironment $containerAppEnv
 
-This example retrieves an Azure Container App Environment object and exports its details for inclusion in a network diagram.
+This example retrieves an Azure Container App Environment object and exports its details for inclusion in an infrastructure diagram.
 #>
 function Export-ContainerAppEnv
 {
@@ -3239,19 +3259,19 @@ function Export-ContainerAppEnv
 
 <#
 .SYNOPSIS
-Exports details of an Azure Static Web App for inclusion in a network diagram.
+Exports details of an Azure Static Web App for inclusion in an infrastructure diagram.
 
 .DESCRIPTION
-The `Export-StaticWebApp` function processes a specified Azure Static Web App Environment object, retrieves its details, and formats the data for inclusion in a network diagram. It visualizes the Web App's name, location, SKU, custom domain name.
+The `Export-StaticWebApp` function processes a specified Azure Static Web App Environment object, retrieves its details, and formats the data for inclusion in an infrastructure diagram. It visualizes the Web App's name, location, SKU, custom domain name.
 
 .PARAMETER containerAppEnvironment
-Specifies the Azure Container App Environment object to be processed. This parameter is mandatory.
+Specifies the Azure Static Web App object to be processed. This parameter is mandatory.
 
 .EXAMPLE
 PS> $StaticWebApp = Get-AzStaticWebApp -Name "MyStaticWebApp" -ResourceGroupName "MyResourceGroup"
 PS> Export-StaticWebApp -StaticWebApp $StaticWebApp
 
-This example retrieves an Azure Static Web App object and exports its details for inclusion in a network diagram.
+This example retrieves an Azure Static Web App object and exports its details for inclusion in an infrastructure diagram.
 #>
 function Export-StaticWebApp
 {
@@ -3302,10 +3322,140 @@ function Export-StaticWebApp
 
 <#
 .SYNOPSIS
-Exports details of a Mangement Group for inclusion in a network diagram.
+Exports details of an Azure Static Web App for inclusion in an infrastructure diagram.
 
 .DESCRIPTION
-The `Export-MgmtGroups function processes a specified Azure Management Groups, retrieves its details, and formats the data for inclusion in a network diagram.
+The `Export-RecoveryServiceVault` function processes a specified Recovery Service Vault object, retrieves its details, and formats the data for inclusion in the diagram. It visualizes the Vault's name, location, policies, storage redundancy and softdelete state.
+
+.PARAMETER RecoveryServiceVault
+Specifies the Recovery Service Vault object to be processed. This parameter is mandatory.
+
+.EXAMPLE
+PS> $RecoveryServiceVault = Get-AzRecoveryServicesVault -Name "RSV" -ResourceGroupName "MyResourceGroup"
+PS> Export-RecoveryServiceVault $RecoveryServiceVault 
+
+This example retrieves a Recovery Service Vault object and exports its details for inclusion in the diagram.
+#>
+function Export-RecoveryServiceVault
+{
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$RecoveryServiceVault
+    )
+
+    try {
+        $id = $RecoveryServiceVault.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankrecoveryservicevault += $id
+        
+        $header = "
+        # $($RecoveryServiceVault.Name) - $id
+        subgraph cluster_$id {
+            style = solid;
+            colorscheme = blues9 ;
+            bgcolor = 2;
+            node [colorscheme = blues9 ; style = filled;];
+        "
+        
+        $rsvdata = ""
+        
+        $vaultname = SanitizeString $RecoveryServiceVault.Name
+        $vaultid = $RecoveryServiceVault.ID.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $softdeletestate = (Get-AzRecoveryServicesVaultProperty -VaultId $RecoveryServiceVault.id -WarningAction SilentlyContinue).SoftDeleteFeatureState
+        $softdeletedays = (Get-AzRecoveryServicesVaultProperty -VaultId $RecoveryServiceVault.id -WarningAction SilentlyContinue).SoftDeleteRetentionPeriodInDays
+        $redundancy = (Get-AzRecoveryServicesBackupProperties -Vault $RecoveryServiceVault).BackupStorageRedundancy
+        
+        $ImagePath = Join-Path $OutputPath "icons" "rsv.png"
+
+        #DOT - add image and other metadata
+        $rsvdata += "    $vaultid [fillcolor = 3; label=`"$vaultname\nRedundancy: $redundancy\nSoft delete: $softdeletestate\nSoft delete day(s): $softdeletedays`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $RecoveryServiceVault)]`n"
+                
+        $policies = Get-AzRecoveryServicesBackupProtectionPolicy -VaultId $RecoveryServiceVault.id
+        $policies | ForEach-Object {
+            $policy = $_
+            $policyname = SanitizeString $policy.Name
+            $policyid = $policy.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            
+            #$containertype = $item.containertype
+            $workloadtype = $policy.WorkloadType
+            $policysubtype = $policy.PolicySubType ? $policy.PolicySubType : "N/A"
+            
+            $items = Get-AzRecoveryServicesBackupItem -Policy $policy -VaultId $RecoveryServiceVault.id
+            $policyProtectedItemsCount = $items.count
+            
+            #DOT
+            $rsvdata += "$vaultid -> $policyid`n"
+            $rsvdata += "$policyid [fillcolor = 4; label=`"$policyname\nWorkload type: $workloadtype\nPolicy subtype: $policysubtype\nProtected Items: $policyProtectedItemsCount`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;]`n"
+
+            $items | ForEach-Object {
+                $item = $_
+                $resid = $item.SourceResourceId.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                
+                $resobject = $null
+                $rgname = $item.SourceResourceId.split("/")[4]
+                $resname = $item.SourceResourceId.split("/")[8]
+
+                #Validate existance prior to creating reference in DOT
+                switch ($workloadtype) {
+                    "AzureVM" {
+                        $vm = Get-AzVM -ResourceGroupName $rgname -Name $resname -ErrorAction SilentlyContinue
+                        if ( $null -ne $vm ) { $resobject = $vm } #else {
+                            #$VMImagePath = Join-Path $OutputPath "icons" "vm.png"
+                            #$rsvdata += "$resid [label = `"\nNon-existent VM: $(SanitizeString $resname)`" ; image = `"$VMImagePath`";fillcolor = 7;imagepos = `"tc`";labelloc = `"b`";height = 1.0;];"
+                        #}
+                    }
+                    "AzureFiles" {
+                        $sa = Get-AzStorageAccount -ResourceGroupName $rgname -Name $resname -ErrorAction SilentlyContinue
+                        $filesharename = $item.FriendlyName
+                        if ( $null -ne $sa ) { 
+                            $resobject = $sa 
+                            $resid = "$($resid)$filesharename" #move pointer to fileshare instead of SA
+                        } #else {
+                            #$SAImagePath = Join-Path $OutputPath "icons" "sa.png"
+                            #$rsvdata += "$resid [label = `"\nNon-existent storage account: $(SanitizeString $resname)`" ; image = `"$SAImagePath`";fillcolor = 7;imagepos = `"tc`";labelloc = `"b`";height = 1.0;];"
+                        #}
+                    }
+                    "AzureSQL" { #Not implemented 
+                    }
+                    "AzureVMAppContainer"  { #Not implemented
+                    }
+                    #SQL DB in VM
+                    "MSSQL" {
+                        $sqlvm = Get-AzSQLVM -ResourceGroupName $rgname -Name $resname -ErrorAction SilentlyContinue
+                        if ( $null -ne $sqlvm ) { $resobject = $sqlvm } # else {
+                        #    $SQLVMImagePath = Join-Path $OutputPath "icons" "vm.png"
+                        #    $rsvdata += "$resid [label = `"\nNon-existent SQLVM: $(SanitizeString $resname)`" ; image = `"$SQLVMImagePath`";fillcolor = 7;imagepos = `"tc`";labelloc = `"b`";height = 1.0;];"
+                        #}
+                    }
+                    #"Windows" # Requires "-BackupManagementType MAB" in the next sted. But MARS agents/backups are out of scope
+                }
+            
+                #DOT
+                if ( $null -ne $resobject ) {
+                    $rsvdata += "$resid -> $policyid`n"
+                }
+            }
+        }
+
+        # End subgraph
+        $footer = "
+            label = `"$vaultName`";
+        }
+        "
+        
+        Export-AddToFile -Data ($header + $rsvdata + $footer)
+    }
+    catch {
+        Write-Error "Can't export Recovery Service Vault: $($RecoveryServiceVault.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+}
+
+<#
+.SYNOPSIS
+Exports details of a Mangement Group for inclusion in an infrastructure diagram.
+
+.DESCRIPTION
+The `Export-MgmtGroups function processes a specified Azure Management Groups, retrieves its details, and formats the data for inclusion in an infrastructure diagram.
 #>
 function Export-MgmtGroups
 {
@@ -3352,10 +3502,10 @@ function Export-MgmtGroups
 
 <#
 .SYNOPSIS
-Exports details of a Mangement Group for inclusion in a network diagram.
+Exports details of a Mangement Group for inclusion in an infrastructure diagram.
 
 .DESCRIPTION
-The `Export-MgmtGroupEntityObject` function processes a specified Azure Management Group object, retrieves its details, and formats the data for inclusion in a network diagram.
+The `Export-MgmtGroupEntityObject` function processes a specified Azure Management Group object, retrieves its details, and formats the data for inclusion in an infrastructure diagram.
 
 .PARAMETER mgmtGroup
 Specifies the Azure Management Group object to be processed. This parameter is mandatory.
@@ -3364,7 +3514,7 @@ Specifies the Azure Management Group object to be processed. This parameter is m
 PS> $MgmtGroupEntityObject = Get-AzManagementGroupEntity
 PS> $MgmtGroupEntityObject | Foreach-Object { Export-MgmtGroupEntityObject -MgmtGroupEntityObject $MgmtGroupEntityObject }
 
-This example retrieves specified Azure Management Group object, retrieves its details, and formats the data for inclusion in a network diagram.
+This example retrieves specified Azure Management Group object, retrieves its details, and formats the data for inclusion in an infrastructure diagram.
 #>
 function Export-MgmtGroupEntityObject
 {
@@ -3417,10 +3567,10 @@ function Export-MgmtGroupEntityObject
 
 <#
 .SYNOPSIS
-Confirms that all prerequisites are met for generating the Azure network diagram.
+Confirms that all prerequisites are met for generating the Azure infrastructure diagram.
 
 .DESCRIPTION
-The `Confirm-Prerequisites` function ensures that all required tools, modules, and configurations are in place before generating the Azure network diagram. It verifies the presence of Graphviz (`dot.exe`), required PowerShell modules (`Az.Network` and `Az.Accounts`), Azure authentication, and necessary icons for the diagram. If any prerequisites are missing, it provides guidance for resolving the issues.
+The `Confirm-Prerequisites` function ensures that all required tools, modules, and configurations are in place before generating the Azure infrastructure diagram. It verifies the presence of Graphviz (`dot.exe`), required PowerShell modules (`Az.Network` and `Az.Accounts`), Azure authentication, and necessary icons for the diagram. If any prerequisites are missing, it provides guidance for resolving the issues.
 
 #>
 function Confirm-Prerequisites {
@@ -3460,6 +3610,7 @@ function Confirm-Prerequisites {
         "appplan.png",
         #"appserviceplan.png",
         "appservices.png",
+        "azurefileshare.png",
         #"azuresql.png",
         "bas.png",
         "cassandra.png",
@@ -3499,7 +3650,7 @@ function Confirm-Prerequisites {
         #"privatednszone.png",
         "redis.png",
         "RouteTable.png",
-        #"rsv.png",
+        "rsv.png",
         "snet.png",
         "sqldb.png",
         "sqlmi.png",
@@ -3564,10 +3715,10 @@ function Get-DOTExecutable {
 
 <#
 .SYNOPSIS
-Generates a detailed network diagram of Azure resources for specified subscriptions.
+Generates a detailed infrastructure diagram of Azure resources for specified subscriptions.
 
 .DESCRIPTION
-The `Get-AzNetworkDiagram` function collects and visualizes Azure networking resources, including VNets, subnets, firewalls, gateways, Virtual WANs, ExpressRoute circuits, private endpoints, and more. It uses Graphviz to create a DOT-based diagram and outputs it in PDF, PNG, and SVG formats. The diagram includes relationships and dependencies between resources, providing a comprehensive view of the Azure network infrastructure.
+The `Get-AzNetworkDiagram` function collects and visualizes Azure resources, including networking, infrastructure and more. It uses Graphviz to create a DOT-based diagram and outputs it in PDF, PNG, and SVG formats. The diagram includes relationships and dependencies between resources, providing a comprehensive view of the Azure network infrastructure.
 
 .PARAMETER OutputPath
 Specifies the directory where the output files (DOT, PDF, PNG, SVG) will be saved. Defaults to the current working directory.
@@ -3629,8 +3780,7 @@ function Get-AzNetworkDiagram {
     if ( $ver -eq "0.0.-1" ) { $ver = "(Non-PSGallery version)" } # Module loaded from file - not from PSGallery
     elseif ( $ver -eq ".." ) { $ver = "(Non-PSGallery version)" } # Module not imported - ran directly from .psm1 file ?
     else { $ver = "v$($ver)" }
-    #Write-Output "AzNetworkDigram ${ver} - Starting ...`n"
-
+    
     Write-Output "##############################################################################################"
     Write-Output "    ___        _   __     __                      __   ____  _                                "
     Write-output "   /   |____  / | / /__  / /__      ______  _____/ /__/ __ \(_)___ _____ __________ _____ ___ "
@@ -3689,7 +3839,7 @@ function Get-AzNetworkDiagram {
 
     try {
         if ( $EnableMgmtGroups -or $OnlyMgmtGroups ) {
-            Write-Output "`nCollecting management groups..."
+            Write-Output "`nCollecting management groups and subscriptions..."
             Export-MgmtGroups
         }
         if ( $false -eq $OnlyMgmtGroups ) {
@@ -4063,13 +4213,24 @@ function Get-AzNetworkDiagram {
                     }
                     
                     #Static Web Apps
-                    Write-Output "Collection Static Web Apps..."
+                    Write-Output "Collecting Static Web Apps..."
                     Export-AddToFile "    ##### $subname - Static Web Apps #####"
                     $StaticWebApps = Get-AzStaticWebApp
                     if ( $null -ne $StaticWebApps ) {
                         $Script:Legend += ,@("Static Web App","swa.png")
                         foreach ( $swa in $StaticWebApps ) {
                             Export-StaticWebApp -StaticWebApp $swa
+                        }
+                    }
+
+                    #Recovery Service Vaults (RSV)
+                    Write-Output "Collecting Recovery Service Vaults..."
+                    Export-AddToFile "    ##### $subname - Recovery Service Vaults #####"
+                    $RecoveryServiceVaults = Get-AzRecoveryServicesVault
+                    if ( $null -ne $RecoveryServiceVaults ) {
+                        $Script:Legend += ,@("Recovery Service Vault","rsv.png")
+                        foreach ( $rsv in $RecoveryServiceVaults ) {
+                            Export-RecoveryServiceVault -RecoveryServiceVault $rsv
                         }
                     }
                     
