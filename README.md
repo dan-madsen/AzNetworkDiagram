@@ -143,6 +143,11 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 ---
 
 # Changelog (since v1.0.1)
+## v1.2 (not released to PSGallery yet)
+- New support for
+  - Recovery Service Vaults
+    - References to VMs, MSSQL in VMs and Azure File Shares
+  - Azure File Share (storage account sub resource)
 ## v1.1
 - New support for
   - Container instances

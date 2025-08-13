@@ -1875,6 +1875,35 @@ function Export-StorageAccount {
         $ImagePath = Join-Path $OutputPath "icons" "storage-account.png"
         $data += "        $staid [label = `"\n\nLocation: $Location\nSKU: $($storageaccount.Sku.Name)\nKind: $($storageaccount.Kind)\nPublic Network Access: $PublicNetworkAccess\nAccess Tier: $($storageaccount.AccessTier)\nHierarchical Namespace: $HierarchicalNamespace\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $storageaccount)];"
         $data += "`n"
+        
+        #File Shares
+        try {
+            #Shares that are not snapshots
+            $shares = $storageaccount | Get-AzStorageShare | Where-Object {$_.IsSnapshot -eq $false}
+
+            if ( $null -ne $shares ) {
+                $shares | ForEach-Object {
+                    $share = $_
+                    $sharename = SanitizeString $share.Name
+                    $shareid = ("$staid$sharename").replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $sharequota = $share.Quota
+                    $shareaccesstier = $share.ListShareProperties.Properties.AccessTier
+
+                    $Script:Legend += ,@("Azure File Share", "azurefileshare.png")
+                    $ImagePath = Join-Path $OutputPath "icons" "azurefileshare.png"
+
+                    $data += "        $shareid [label = `"Name: $sharename\nQuota in GiB: $sharequota\nAccess tier: $shareaccesstier`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n"
+                    $data += "      $staid -> $shareid`n"
+                }
+            }
+        } catch {
+            # No access to shares
+            $Script:Legend += ,@("Azure File Share", "azurefileshare.png")
+            $ImagePath = Join-Path $OutputPath "icons" "azurefileshare.png"
+            $data += "        $($staid)noaccess [label = `"Unknown\nPermission denied when looking look up File Shares`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n"
+            $data += "      $staid -> $($staid)noaccess`n"
+        }
+        
         $peids = Get-AzPrivateEndpointConnection -PrivateLinkResourceId $storageaccount.Id -ErrorAction Stop
         
         if ($peids) {
@@ -3375,9 +3404,13 @@ function Export-RecoveryServiceVault
                             #$rsvdata += "$resid [label = `"\nNon-existent VM: $(SanitizeString $resname)`" ; image = `"$VMImagePath`";fillcolor = 7;imagepos = `"tc`";labelloc = `"b`";height = 1.0;];"
                         #}
                     }
-                    "AzureStorage" {
+                    "AzureFiles" {
                         $sa = Get-AzStorageAccount -ResourceGroupName $rgname -Name $resname -ErrorAction SilentlyContinue
-                        if ( $null -ne $sa ) { $resobject = $sa } #else {
+                        $filesharename = $item.FriendlyName
+                        if ( $null -ne $sa ) { 
+                            $resobject = $sa 
+                            $resid = "$($resid)$filesharename" #move pointer to fileshare instead of SA
+                        } #else {
                             #$SAImagePath = Join-Path $OutputPath "icons" "sa.png"
                             #$rsvdata += "$resid [label = `"\nNon-existent storage account: $(SanitizeString $resname)`" ; image = `"$SAImagePath`";fillcolor = 7;imagepos = `"tc`";labelloc = `"b`";height = 1.0;];"
                         #}
@@ -3577,6 +3610,7 @@ function Confirm-Prerequisites {
         "appplan.png",
         #"appserviceplan.png",
         "appservices.png",
+        "azurefileshare.png",
         #"azuresql.png",
         "bas.png",
         "cassandra.png",
