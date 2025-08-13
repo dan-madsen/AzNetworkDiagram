@@ -1816,6 +1816,21 @@ function Export-ACR {
         $ImagePath = Join-Path $OutputPath "icons" "acr.png"
         $data += "        $acrid [label = `"\nACR Name: $Name\nLocation: $Location\nSKU: $($acr.SkuName.ToString())\nZone Redundancy: $($acr.ZoneRedundancy.ToString())\nPublic Network Access: $($acr.PublicNetworkAccess.ToString())\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;$(Generate-DotURL -resource $acr)];"
         $data += "`n"
+
+        #Repositories
+        $acrid = $acr.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $repos = Get-AzContainerRegistryRepository -RegistryName $acr.name
+        $repos | ForEach-Object {
+            $reponame = SanitizeString $_
+            $repo = $_.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $ImagePath = Join-Path $OutputPath "icons" "acr.png"
+            $data += "$acrid$repo [label = `"Repository: $reponame`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
+            $data += "$acrid -> $acrid$repo`n" #Repos do not have IDs
+
+            #$tags = Get-AzContainerRegistryTag -RepositoryName $repo -RegistryName $acr.name
+        }
+
+
         if ($acr.PrivateEndpointConnection.PrivateEndpointId) {
             $acrpeid = $acr.PrivateEndpointConnection.PrivateEndpointId.ToString().replace("-", "").replace("/", "").replace(".", "").ToLower()
             $data += "        $acrid -> $($acrpeid) [label = `"Private Endpoint`"; ];`n"

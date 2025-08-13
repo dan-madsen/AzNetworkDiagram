@@ -148,6 +148,7 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
   - Recovery Service Vaults
     - References to VMs, MSSQL in VMs and Azure File Shares
   - Azure File Share (storage account sub resource)
+  - Azure Container Registry - added repositories to diagram
 ## v1.1
 - New support for
   - Container instances
