@@ -1915,9 +1915,37 @@ function Export-StorageAccount {
             # No access to shares
             $Script:Legend += ,@("Azure File Share", "azurefileshare.png")
             $ImagePath = Join-Path $OutputPath "icons" "azurefileshare.png"
-            $data += "        $($staid)noaccess [label = `"Unknown\nPermission denied when looking look up File Shares`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n"
-            $data += "      $staid -> $($staid)noaccess`n"
+            $data += "        $($staid)sharenoaccess [label = `"Unknown\nPermission denied when looking look up File Shares`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n"
+            $data += "      $staid -> $($staid)sharenoaccess`n"
         }
+
+        #Containers
+        try {    
+            $containers =  $storageaccount | Get-AzStorageContainer
+
+            if ( $null -ne $containers ) {
+                $containers | ForEach-Object {
+                    $container = $_
+                    $containername = SanitizeString $container.Name
+                    $containerid = ("$staid$containername").replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    #$sharequota = $share.Quota
+                    #$shareaccesstier = $share.ListShareProperties.Properties.AccessTier
+
+                    $Script:Legend += ,@("Azure Storage Account Container", "storage-account-container.png")
+                    $ImagePath = Join-Path $OutputPath "icons" "storage-account-container.png"
+
+                    $data += "        $containerid [label = `"Name: $containername`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n"
+                    $data += "      $staid -> $containerid`n"
+                }
+            }
+        } catch {
+            # No access to Containers
+            $Script:Legend += ,@("Azure Storage Account Container", "storage-account-container.png")
+            $ImagePath = Join-Path $OutputPath "icons" "storage-account-container.png"
+            $data += "        $($staid)containernoaccess [label = `"Unknown\nPermission denied when looking look up containers`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n"
+            $data += "      $staid -> $($staid)containernoaccess`n"
+        }
+        
         
         $peids = Get-AzPrivateEndpointConnection -PrivateLinkResourceId $storageaccount.Id -ErrorAction Stop
         
@@ -3502,13 +3530,57 @@ function Export-BackupVault
             node [colorscheme = blues9 ; style = filled;];
         "
 
+        $bvdata = ""
+        
+        $vaultname = SanitizeString $BackupVault.Name
+        $vaultrgname = $BackupVault.id.split("/")[4]
+        $vaultid = $BackupVault.ID.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $softdeletestate = $backupvault.SoftDeleteState
+        $softdeletedays = $backupvault.SoftDeleteRetentionDurationInDay
+        $redundancy = $backupvault.StorageSetting.type
+        
+        $ImagePath = Join-Path $OutputPath "icons" "backupvault.png"
+
+        #DOT - add image and other metadata
+        $bvdata += "    $vaultid [fillcolor = 3; label=`"$vaultname\nRedundancy: $redundancy\nSoft delete: $softdeletestate\nSoft delete day(s): $softdeletedays`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $BackupVault)]`n"
+        
+        $policies = Get-AzDataProtectionBackupPolicy -VaultName $vaultname -ResourceGroupName $vaultrgname
+        $policies | ForEach-Object {
+            $policy = $_
+            $policyname = SanitizeString $policy.Name
+            $policyid = $policy.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $policydatasource = $policy.Property.DatasourceType
+            
+            $intances = Get-AzDataProtectionBackupInstance -VaultName $vaultname -ResourceGroupName $vaultrgname
+            $policyProtectedItemsCount = $intances.count
+            
+            #DOT
+            $bvdata += "$policyid [fillcolor = 4; label=`"Policy Name: $policyname\nProtected Items: $policyProtectedItemsCount\nData source type=$policydatasource`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;]`n"
+            $bvdata += "$vaultid -> $policyid`n"
+            
+            ########################################################## INSTANCES SHOULD BE PASSED UPON POLICY - WHICH IS IT NOT AT THIS POINT !!!!! ##########################################################
+            $intances | ForEach-Object {
+                $instance = $_
+                $resid = ($instance.Property.DataSourceInfo.ResourceId).replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $containers = $instance.Property.PolicyInfo.PolicyParameter.BackupDatasourceParametersList.ContainersList
+                #$resid = $item.SourceResourceId.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $containers | ForEach-Object {
+                    $container = $_
+                    #$resobject = $null
+                    #$rgname = $item.SourceResourceId.split("/")[4]
+                    #$resname = $item.SourceResourceId.split("/")[8]
+
+                    $bvdata += "$resid$container -> $policyid`n"
+                }
+            }
+        }
         # End subgraph
         $footer = "
             label = `"$vaultName`";
         }
         "
         
-        Export-AddToFile -Data ($header + $rsvdata + $footer)
+        Export-AddToFile -Data ($header + $bvdata + $footer)
     }
     catch {
         Write-Error "Can't export Backup Vault: $($BackupVault.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
