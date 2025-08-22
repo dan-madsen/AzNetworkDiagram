@@ -145,9 +145,12 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 # Changelog (since v1.0.1)
 ## v1.2 (not released to PSGallery yet)
 - New support for
+  - Backup Vaults (not to be confused with Recovery Service Vaults below!)
+    - References to Storage Accounts blobs, PostgreSQL, etc...
   - Recovery Service Vaults
     - References to VMs, MSSQL in VMs and Azure File Shares
-  - Azure File Share (storage account sub resource)
+  - Storage account/Azure File Share
+  - Storage account/Container
   - Azure Container Registry - added repositories to diagram
 ## v1.1
 - New support for

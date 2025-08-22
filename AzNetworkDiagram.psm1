@@ -1393,6 +1393,7 @@ function Export-PostgreSQLServer {
         $resource = Get-AzResource -ResourceId $postgresql.Id -ErrorAction Stop
         # General Purpose, D4ds_v5 (SkuName), 4 vCores, 16 GiB RAM, 128 GiB storage $postgresql.StorageSizeGb
         $Location = SanitizeLocation (Get-AzLocation | Where-Object DisplayName -eq $postgresql.Location).Location 
+        $SkuName = $postgresql.SkuName
         $SkuCaps = Get-AzComputeResourceSku -Location $postgresql.Location | Where-Object { $_.Name -eq $skuName }
         $iops = ($SkuCaps.Capabilities | Where-Object Name -eq "UncachedDiskIOPS").Value
         $vCPUs = ($SkuCaps.Capabilities | Where-Object Name -eq "vCPUs").Value
@@ -1915,9 +1916,37 @@ function Export-StorageAccount {
             # No access to shares
             $Script:Legend += ,@("Azure File Share", "azurefileshare.png")
             $ImagePath = Join-Path $OutputPath "icons" "azurefileshare.png"
-            $data += "        $($staid)noaccess [label = `"Unknown\nPermission denied when looking look up File Shares`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n"
-            $data += "      $staid -> $($staid)noaccess`n"
+            $data += "        $($staid)sharenoaccess [label = `"Unknown\nPermission denied when looking look up File Shares`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n"
+            $data += "      $staid -> $($staid)sharenoaccess`n"
         }
+
+        #Containers
+        try {    
+            $containers =  $storageaccount | Get-AzStorageContainer
+
+            if ( $null -ne $containers ) {
+                $containers | ForEach-Object {
+                    $container = $_
+                    $containername = SanitizeString $container.Name
+                    $containerid = ("$staid$containername").replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    #$sharequota = $share.Quota
+                    #$shareaccesstier = $share.ListShareProperties.Properties.AccessTier
+
+                    $Script:Legend += ,@("Azure Storage Account Container", "storage-account-container.png")
+                    $ImagePath = Join-Path $OutputPath "icons" "storage-account-container.png"
+
+                    $data += "        $containerid [label = `"Name: $containername`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n"
+                    $data += "      $staid -> $containerid`n"
+                }
+            }
+        } catch {
+            # No access to Containers
+            $Script:Legend += ,@("Azure Storage Account Container", "storage-account-container.png")
+            $ImagePath = Join-Path $OutputPath "icons" "storage-account-container.png"
+            $data += "        $($staid)containernoaccess [label = `"Unknown\nPermission denied when looking look up containers`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n"
+            $data += "      $staid -> $($staid)containernoaccess`n"
+        }
+        
         
         $peids = Get-AzPrivateEndpointConnection -PrivateLinkResourceId $storageaccount.Id -ErrorAction Stop
         
@@ -3337,7 +3366,7 @@ function Export-StaticWebApp
 
 <#
 .SYNOPSIS
-Exports details of an Azure Static Web App for inclusion in an infrastructure diagram.
+Exports details of a Recovery Service Vault for inclusion in an infrastructure diagram.
 
 .DESCRIPTION
 The `Export-RecoveryServiceVault` function processes a specified Recovery Service Vault object, retrieves its details, and formats the data for inclusion in the diagram. It visualizes the Vault's name, location, policies, storage redundancy and softdelete state.
@@ -3462,6 +3491,99 @@ function Export-RecoveryServiceVault
     }
     catch {
         Write-Error "Can't export Recovery Service Vault: $($RecoveryServiceVault.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+}
+
+<#
+.SYNOPSIS
+Exports details of a Backup Vault for inclusion in an infrastructure diagram.
+
+.DESCRIPTION
+The `Export-BackupVault` function processes a specified Backup Vault object, retrieves its details, and formats the data for inclusion in the diagram. It visualizes the Vault's name, location, policies, storage redundancy and softdelete state.
+
+.PARAMETER BackupVault
+Specifies the Backup Vaultobject to be processed. This parameter is mandatory.
+
+.EXAMPLE
+PS> $BackupVault = Get-AzDataProtectionBackupVault -Name "RSV" -ResourceGroupName "MyResourceGroup"
+PS> Export-BackupVault $BackupVault 
+
+This example retrieves a Backup Vault object and exports its details for inclusion in the diagram.
+#>
+function Export-BackupVault
+{
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$BackupVault
+    )
+
+    try {
+        $id = $BackupVault.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankbackupvault += $id
+        
+        $header = "
+        # $($BackupVault.Name) - $id
+        subgraph cluster_$id {
+            style = solid;
+            colorscheme = blues9 ;
+            bgcolor = 2;
+            node [colorscheme = blues9 ; style = filled;];
+        "
+
+        $bvdata = ""
+        
+        $vaultname = SanitizeString $BackupVault.Name
+        $vaultrgname = $BackupVault.id.split("/")[4]
+        $vaultid = $BackupVault.ID.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $softdeletestate = $backupvault.SoftDeleteState
+        $softdeletedays = $backupvault.SoftDeleteRetentionDurationInDay
+        $redundancy = $backupvault.StorageSetting.type
+        
+        $ImagePath = Join-Path $OutputPath "icons" "backupvault.png"
+
+        #DOT - add image and other metadata
+        $bvdata += "    $vaultid [fillcolor = 3; label=`"$vaultname\nRedundancy: $redundancy\nSoft delete: $softdeletestate\nSoft delete day(s): $softdeletedays`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $BackupVault)]`n"
+        
+        #All policies
+        $policies = Get-AzDataProtectionBackupPolicy -VaultName $vaultname -ResourceGroupName $vaultrgname
+        $policies | ForEach-Object {
+            $policy = $_
+            $policyname = SanitizeString $policy.Name
+            $policyid = $policy.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $policydatasource = $policy.Property.DatasourceType
+            
+            #DOT
+            $bvdata += "$policyid [fillcolor = 4; label=`"Policy Name: $policyname\nData source type=$policydatasource`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;]`n"
+            $bvdata += "$vaultid -> $policyid`n"
+        }
+
+        #Instances/items
+        $instances = Get-AzDataProtectionBackupInstance -VaultName $vaultname -ResourceGroupName $vaultrgname
+        $instances | ForEach-Object {
+            $instance = $_
+            #$policyname = $instance.Property.PolicyInfo.policyid.Split("/")[10]
+            $policyid = $instance.Property.POlicyInfo.policyid.replace("-", "").replace("/", "").replace(".", "").ToLower()
+
+            $resid = ($instance.Property.DataSourceInfo.ResourceId).replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $containers = $instance.Property.PolicyInfo.PolicyParameter.BackupDatasourceParametersList.ContainersList
+            
+            $containers | ForEach-Object {
+                $container = $_
+                $bvdata += "$resid$container -> $policyid`n"
+            }
+        }
+
+        # End subgraph
+        $footer = "
+            label = `"$vaultName`";
+        }
+        "
+        
+        Export-AddToFile -Data ($header + $bvdata + $footer)
+    }
+    catch {
+        Write-Error "Can't export Backup Vault: $($BackupVault.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
     }
 }
 
@@ -3990,7 +4112,6 @@ function Get-AzNetworkDiagram {
 
                 # Skip the rest of the resource types, if -OnlyCoreNetwork was set to true, at runtime
                 if ( -not $OnlyCoreNetwork ) {
-
                     #Container Instances
                     Write-Output "Collecting Container Instances..."
                     Export-AddToFile "    ##### $subname - Container Instances #####"
@@ -4246,6 +4367,17 @@ function Get-AzNetworkDiagram {
                         $Script:Legend += ,@("Recovery Service Vault","rsv.png")
                         foreach ( $rsv in $RecoveryServiceVaults ) {
                             Export-RecoveryServiceVault -RecoveryServiceVault $rsv
+                        }
+                    }
+
+                    #Backup Vaults (BV)
+                    Write-Output "Collecting Backup Vaults..."
+                    Export-AddToFile "    ##### $subname - Backup Vaults #####"
+                    $BackupVaults = Get-AzDataProtectionBackupVault
+                    if ( $null -ne $BackupVaults ) {
+                        $Script:Legend += ,@("Backup Vault","backupvault.png")
+                        foreach ( $bv in $BackupVaults ) {
+                            Export-BackupVault -BackupVault $bv
                         }
                     }
                     
