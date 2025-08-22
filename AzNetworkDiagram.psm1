@@ -1393,6 +1393,7 @@ function Export-PostgreSQLServer {
         $resource = Get-AzResource -ResourceId $postgresql.Id -ErrorAction Stop
         # General Purpose, D4ds_v5 (SkuName), 4 vCores, 16 GiB RAM, 128 GiB storage $postgresql.StorageSizeGb
         $Location = SanitizeLocation (Get-AzLocation | Where-Object DisplayName -eq $postgresql.Location).Location 
+        $SkuName = $postgresql.SkuName
         $SkuCaps = Get-AzComputeResourceSku -Location $postgresql.Location | Where-Object { $_.Name -eq $skuName }
         $iops = ($SkuCaps.Capabilities | Where-Object Name -eq "UncachedDiskIOPS").Value
         $vCPUs = ($SkuCaps.Capabilities | Where-Object Name -eq "vCPUs").Value
@@ -3544,6 +3545,7 @@ function Export-BackupVault
         #DOT - add image and other metadata
         $bvdata += "    $vaultid [fillcolor = 3; label=`"$vaultname\nRedundancy: $redundancy\nSoft delete: $softdeletestate\nSoft delete day(s): $softdeletedays`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $BackupVault)]`n"
         
+        #All policies
         $policies = Get-AzDataProtectionBackupPolicy -VaultName $vaultname -ResourceGroupName $vaultrgname
         $policies | ForEach-Object {
             $policy = $_
@@ -3551,29 +3553,27 @@ function Export-BackupVault
             $policyid = $policy.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
             $policydatasource = $policy.Property.DatasourceType
             
-            $intances = Get-AzDataProtectionBackupInstance -VaultName $vaultname -ResourceGroupName $vaultrgname
-            $policyProtectedItemsCount = $intances.count
-            
             #DOT
-            $bvdata += "$policyid [fillcolor = 4; label=`"Policy Name: $policyname\nProtected Items: $policyProtectedItemsCount\nData source type=$policydatasource`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;]`n"
+            $bvdata += "$policyid [fillcolor = 4; label=`"Policy Name: $policyname\nData source type=$policydatasource`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;]`n"
             $bvdata += "$vaultid -> $policyid`n"
-            
-            ########################################################## INSTANCES SHOULD BE PASSED UPON POLICY - WHICH IS IT NOT AT THIS POINT !!!!! ##########################################################
-            $intances | ForEach-Object {
-                $instance = $_
-                $resid = ($instance.Property.DataSourceInfo.ResourceId).replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $containers = $instance.Property.PolicyInfo.PolicyParameter.BackupDatasourceParametersList.ContainersList
-                #$resid = $item.SourceResourceId.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $containers | ForEach-Object {
-                    $container = $_
-                    #$resobject = $null
-                    #$rgname = $item.SourceResourceId.split("/")[4]
-                    #$resname = $item.SourceResourceId.split("/")[8]
+        }
 
-                    $bvdata += "$resid$container -> $policyid`n"
-                }
+        #Instances/items
+        $instances = Get-AzDataProtectionBackupInstance -VaultName $vaultname -ResourceGroupName $vaultrgname
+        $instances | ForEach-Object {
+            $instance = $_
+            #$policyname = $instance.Property.PolicyInfo.policyid.Split("/")[10]
+            $policyid = $instance.Property.POlicyInfo.policyid.replace("-", "").replace("/", "").replace(".", "").ToLower()
+
+            $resid = ($instance.Property.DataSourceInfo.ResourceId).replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $containers = $instance.Property.PolicyInfo.PolicyParameter.BackupDatasourceParametersList.ContainersList
+            
+            $containers | ForEach-Object {
+                $container = $_
+                $bvdata += "$resid$container -> $policyid`n"
             }
         }
+
         # End subgraph
         $footer = "
             label = `"$vaultName`";
@@ -4112,7 +4112,6 @@ function Get-AzNetworkDiagram {
 
                 # Skip the rest of the resource types, if -OnlyCoreNetwork was set to true, at runtime
                 if ( -not $OnlyCoreNetwork ) {
-
                     #Container Instances
                     Write-Output "Collecting Container Instances..."
                     Export-AddToFile "    ##### $subname - Container Instances #####"
