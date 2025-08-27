@@ -41,9 +41,6 @@
   .PARAMETER -OutputFormat
   -OutputFormat (pdf, svg, png) - One or more output files get generated with the specified formats. Default is PDF.
 
-  .PARAMETER -EnableMgmtGroups
-  -EnableMgmtGroups ($true/$false) - Add Management Group and Subscription overview to the diagram. Default is $false.
-
   .PARAMETER OnlyMgmtGroups
   -OnlyMgmtGroups ($true/$false) - Creates a Management Group and Subscription overview diagram - everything else is skipped. Default is $false.
 
@@ -3887,8 +3884,6 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)]
         [bool]$EnableLinks = $false,
         [Parameter(Mandatory = $false)]
-        [bool]$EnableMgmtGroups = $false,
-        [Parameter(Mandatory = $false)]
         [string]$TenantId = $null,
         [Parameter(Mandatory = $false)]
         [string]$Prefix = $null,
@@ -3976,7 +3971,7 @@ function Get-AzNetworkDiagram {
     }
 
     try {
-        if ( $EnableMgmtGroups -or $OnlyMgmtGroups ) {
+        if ( $OnlyMgmtGroups ) {
             Write-Output "`nCollecting management groups and subscriptions..."
             Export-MgmtGroups
         }
