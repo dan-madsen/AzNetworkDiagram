@@ -152,6 +152,8 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
   - Storage account/Azure File Share
   - Storage account/Container
   - Azure Container Registry - added repositories to diagram
+- Changed parameters for Mmangement Groups
+  - EnableMgmtGroups removed, rarely a case where it would make sense to have in a diagram with everything else.
 ## v1.1
 - New support for
   - Container instances
