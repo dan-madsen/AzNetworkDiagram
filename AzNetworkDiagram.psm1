@@ -32,6 +32,12 @@
   .PARAMETER OnlyCoreNetwork
   -OnlyCoreNetwork ($true/$false) - if $true/enabled, only cores network resources are processed - ie. non-network resources are skipped for a cleaner diagram.
 
+  .PARAMETER OnlyMgmtGroups
+  -OnlyMgmtGroups ($true/$false) - Creates a Management Group and Subscription overview diagram - everything else is skipped. Default is $false.
+
+  .PARAMETER OnlyServiceGroups
+  -OnlyServiceGroups ($true/$false) - Creates an Azure Service Group overview diagram - everything else is skipped. Default is $false.
+
   .PARAMETER EnableLinks
   -EnableLinks ($true/$false) - if $true/enabled Azure resource in the PDF output will become links, taking you to the Azure portal. **Default: $false**
 
@@ -40,9 +46,6 @@
 
   .PARAMETER -OutputFormat
   -OutputFormat (pdf, svg, png) - One or more output files get generated with the specified formats. Default is PDF.
-
-  .PARAMETER OnlyMgmtGroups
-  -OnlyMgmtGroups ($true/$false) - Creates a Management Group and Subscription overview diagram - everything else is skipped. Default is $false.
 
   .INPUTS
   None. It will however require previous authentication to Azure
@@ -3894,6 +3897,8 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)] 
         [bool]$OnlyMgmtGroups = $false,
         [Parameter(Mandatory = $false)] 
+        [bool]$OnlyServiceGroups = $false,
+        [Parameter(Mandatory = $false)] 
         [bool]$KeepDotFile = $false,
         [Parameter(Mandatory = $false)] 
         [ValidateSet('pdf','svg','png')]
@@ -3972,10 +3977,14 @@ function Get-AzNetworkDiagram {
 
     try {
         if ( $OnlyMgmtGroups ) {
-            Write-Output "`nCollecting management groups and subscriptions..."
+            Write-Output "`nCollecting Management Groups and Subscriptions..."
             Export-MgmtGroups
         }
-        if ( $false -eq $OnlyMgmtGroups ) {
+        if ( $OnlyServiceGroups -and $false -eq $OnlyMgmtGroups) {
+            Write-Output "`nCollecting Azure Service Groups and Subscriptions..."
+            Export-MgmtGroups
+        }
+        if ( $false -eq $OnlyMgmtGroups -and $false -eq $OnlyServiceGroups) {
             # Collect all vNet ID's in scope otherwise we can end up with 1 vNet peered to 1000 other vNets which are not in scope
             # Errors will appear like: dot: graph is too large for cairo-renderer bitmaps. Scaling by 0.324583 to fit
             
