@@ -398,7 +398,11 @@ write-Host("Step A ")
 
     $date = Get-Date -Format 'yyyy-MM-dd'
     #$tenantDisplayName = SanitizeString (Get-AzContext).account.id.split('@')[1]
-    $tenantDisplayName = SanitizeString (Get-AzTenant -TenantId (Get-AzContext).Tenant.Id).Name
+    $TenantId = (Get-AzContext).Tenant.Id
+write-host("TenantId = $TenantId")
+    $TenantName = (Get-AzTenant -TenantId $TenantId).Name
+write-host("TenantName = $TenantName")
+    $tenantDisplayName = SanitizeString $TenantName
     #$tenantDisplayId = SanitizeString (Get-AzContext).Tenant.Id
 write-Host("Step B ")
 
