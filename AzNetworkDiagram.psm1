@@ -400,9 +400,9 @@ write-Host("Step A ")
     #$tenantDisplayName = SanitizeString (Get-AzContext).account.id.split('@')[1]
     $TenantId = (Get-AzContext).Tenant.Id
 write-host("TenantId = $TenantId")
-    $TenantName = (Get-AzTenant -TenantId $TenantId).Name
+    $TenantName = (Get-AzTenant -TenantId $TenantId | Select-Object Name)
 write-host("TenantName = $TenantName")
-    $TenantDisplayName = (Get-AzTenant -TenantId $TenantId).DisplayName
+    $TenantDisplayName = (Get-AzTenant -TenantId $TenantId | Select-Object DisplayName)
 write-host("TenantDisplayName = $TenantDisplayName")
     $MyTenant = (Get-AzTenant -TenantId $TenantId)
     $MyTenantJson = $MyTenant | ConvertTo-Json -Depth 10
