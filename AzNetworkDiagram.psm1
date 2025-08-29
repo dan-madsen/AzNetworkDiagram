@@ -402,7 +402,9 @@ write-Host("Step A ")
 write-host("TenantId = $TenantId")
     $TenantName = (Get-AzTenant -TenantId $TenantId).Name
 write-host("TenantName = $TenantName")
-    $tenantDisplayName = SanitizeString $TenantName
+    $TenantDisplayName = (Get-AzTenant -TenantId $TenantId).DisplayName
+write-host("TenantDisplayName = $TenantDisplayName")
+    $tenantDisplayName = SanitizeString $TenantDisplayName
     #$tenantDisplayId = SanitizeString (Get-AzContext).Tenant.Id
 write-Host("Step B ")
 
