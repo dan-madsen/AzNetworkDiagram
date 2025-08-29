@@ -3979,6 +3979,17 @@ function Get-AzNetworkDiagram {
     Update-AzConfig -DisplaySecretsWarning $false -Scope process | Out-Null
     Update-AzConfig -DisplayBreakingChangeWarning $false -Scope process | Out-Null
 
+        $TenantId = (Get-AzContext).Tenant.Id
+write-host("TenantId = $TenantId")
+    $TenantName = (Get-AzTenant -TenantId $TenantId | Select-Object Name)
+write-host("TenantName = $TenantName")
+    $TenantDisplayName = (Get-AzTenant -TenantId $TenantId | Select-Object DisplayName)
+write-host("TenantDisplayName = $TenantDisplayName")
+    $MyTenant = (Get-AzTenant -TenantId $TenantId)
+    $MyTenantJson = $MyTenant | ConvertTo-Json -Depth 10
+Write-host("tenant info: $MyTenantJson")
+    $tenantDisplayName = SanitizeString $TenantDisplayName
+
     # No subscriptions available?
     if ( $null -eq $Subscriptions ) {
         throw  "No available subscriptions within active AzContext - missing permissions?"
