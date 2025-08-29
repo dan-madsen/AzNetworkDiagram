@@ -404,6 +404,9 @@ write-host("TenantId = $TenantId")
 write-host("TenantName = $TenantName")
     $TenantDisplayName = (Get-AzTenant -TenantId $TenantId).DisplayName
 write-host("TenantDisplayName = $TenantDisplayName")
+    $MyTenant = (Get-AzTenant -TenantId $TenantId)
+    $MyTenantJson = $MyTenant | ConvertTo-Json -Depth 10
+Write-host("tenant info: $MyTenantJson")
     $tenantDisplayName = SanitizeString $TenantDisplayName
     #$tenantDisplayId = SanitizeString (Get-AzContext).Tenant.Id
 write-Host("Step B ")
