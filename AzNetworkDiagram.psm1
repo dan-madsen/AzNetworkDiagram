@@ -394,11 +394,13 @@ Export-dotFooter
 function Export-dotFooter {
     $Script:Legend = $Script:Legend | Sort-Object -Unique
     $Global:MyLegend = $Script:Legend
+write-Host("Step A ")
 
     $date = Get-Date -Format 'yyyy-MM-dd'
     #$tenantDisplayName = SanitizeString (Get-AzContext).account.id.split('@')[1]
     $tenantDisplayName = SanitizeString (Get-AzTenant -TenantId (Get-AzContext).Tenant.Id).Name
     #$tenantDisplayId = SanitizeString (Get-AzContext).Tenant.Id
+write-Host("Step B ")
 
     Export-AddToFile -Data "`n    ##########################################################################################################"
     Export-AddToFile -Data "    ##### Legend"
@@ -417,6 +419,7 @@ function Export-dotFooter {
                     l1 [color = 1; label = < <TABLE border=`"0`" style=`"rounded`">
                                 <TR><TD colspan=`"2`" border=`"0`"><FONT POINT-SIZE=`"25`"><B>Legend</B></FONT></TD></TR>
             "
+write-Host("Step C ")
 
     foreach ($Item in $Script:Legend) {
         $icon = Join-Path $OutputPath "icons" $Item[1]
@@ -427,6 +430,8 @@ function Export-dotFooter {
             }
             { rank=max; l1; }
     }"
+write-Host("Step D ")
+
     Export-AddToFile -Data $data #EOF
 }
 
