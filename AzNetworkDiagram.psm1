@@ -281,7 +281,15 @@ function Generate-DOTURL {
     )
     
     if ( $EnableLinks -and $script:DoSanitize -eq $false ) {
-        $tenantDisplayName = SanitizeString (Get-AzTenant -TenantId (Get-AzContext).Tenant.Id).DefaultDomain
+        #$tenantDisplayName = SanitizeString (Get-AzTenant -TenantId (Get-AzContext).Tenant.Id).DefaultDomain
+        $TenantId = (Get-AzContext).Tenant.Id
+        if ( $null -ne $TenantId -or "" -ne $TenantId ) {
+            $TenantContext = Get-AzTenant -TenantId $TenantId 
+            if ( $null -ne $TenantContext -or "" -ne $TenantContext ) {
+                $tenantDisplayName = SanitizeString $TenantContext.DefaultDomain
+            } else { return "" }
+        } else { return "" }
+
         $linkbase = "https://portal.azure.com/#@$tenantDisplayName/resource"
         $linkend = $resource.id
         if ( $null -eq $linkend ) { $linkend = $resource.ResourceID }
@@ -396,8 +404,16 @@ function Export-dotFooter {
     $Global:MyLegend = $Script:Legend
 
     $date = Get-Date -Format 'yyyy-MM-dd'
-    #$tenantDisplayName = SanitizeString (Get-AzContext).account.id.split('@')[1]
-    $tenantDisplayName = SanitizeString (Get-AzTenant -TenantId (Get-AzContext).Tenant.Id).Name
+
+    #$tenantDisplayName = SanitizeString (Get-AzTenant -TenantId (Get-AzContext).Tenant.Id).Name
+    $TenantId = (Get-AzContext).Tenant.Id
+    if ( $null -ne $TenantId -or "" -ne $TenantId ) {
+        $TenantContext = Get-AzTenant -TenantId $TenantId
+        if ( $null -ne $TenantContext -or "" -ne $TenantContext ) {
+            $tenantDisplayName = SanitizeString $TenantContext.Name
+        } else { return "Not available" }
+    } else { return "Not available" }
+
     #$tenantDisplayId = SanitizeString (Get-AzContext).Tenant.Id
 
     Export-AddToFile -Data "`n    ##########################################################################################################"
