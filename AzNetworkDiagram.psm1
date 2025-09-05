@@ -2411,7 +2411,7 @@ function Export-SubnetConfig {
                     $Script:Legend += ,@("Azure Firewall", "afw.png") 
                     if ( $null -ne $subnet.IpConfigurations.Id ) {
                         #Firewall deployed
-                        $AzFWid = $subnet.IpConfigurations.Id.ToLower().split("/azurefirewallipconfigurations/ipconfig")[0]
+                        $AzFWid = $subnet.IpConfigurations.Id.ToLower().split("/azurefirewallipconfigurations/")[0]
                         $AzFWrg = $subnet.IpConfigurations.id.split("/")[4]
 
                         $data += "            $id [label = `"\n\n$name\n$AddressPrefix`" ; fillcolor = 9; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; " 
@@ -2525,18 +2525,22 @@ function Export-SubnetConfig {
                     }
                 }
                 #Public IP prefixes associated
-                $ipprefixes = $NATGWobject.PublicIpPrefixes | ForEach-Object { SanitizeString $_ }
+                $ipprefixes = $NATGWobject.PublicIpPrefixes
                 $ipprefixesstring = ""
-                if ($ipprefixes.id) {
+                if ( $ipprefixes.id -ne "" -and $null -ne $ipprefixes.id ) {
                     $ipprefixes.id | ForEach-Object {
                         $rgname = $_.split("/")[4]
                         $ipname = $_.split("/")[8]
-                        $ipprefixesstring += "$ipname : $ipprefixes \n"
+                        $ipprefix = SanitizeString (Get-AzPublicIpPrefix -Name $ipname -ResourceGroupName $rgname -ErrorAction Stop).IpPrefix
+                        $ipprefixesstring += "$ipname : $ipprefix \n"
                     }
-                }  
+                }
+                if ( $ipsstring -eq "" ) { $ipsstring = "None" }
+                if ( $ipprefixesstring -eq "" ) { $ipprefixesstring = "None" }
+                
                 $ImagePath = Join-Path $OutputPath "icons" "ng.png" 
-                $data += "        $NATGWID [fillcolor = 9; label = `"\n\nName: $(SanitizeString $name)\n\nPublic IP(s):\n$ipsstring\nPublic IP Prefix(es):\n$ipprefixesstring`"; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; "
-                $data += "        $id -> $NATGWID" + "`n"
+                $data += "            $NATGWID [fillcolor = 9; label = `"\n\nName: $(SanitizeString $name)\n\nPublic IP(s):\n$ipsstring\nPublic IP Prefix(es):\n$ipprefixesstring`"; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5;$(Generate-DotURL -resource $NATGWobject)]; `n"
+                $data += "            $id -> $NATGWID" + "`n"
 
             }
         }
@@ -2925,12 +2929,15 @@ function Export-RouteTable {
                 <TABLE border=`"0`" style=`"rounded`">
                 <TR><TD border=`"0`" align=`"left`"><BR/><BR/><B>$routetableName</B></TD></TR>
                 <TR><TD border=`"0`" align=`"left`">Location: $Location<BR/><BR/></TD></TR>
-                <TR><TD><B>Route</B></TD><TD><B>NextHopType</B></TD><TD><B>NextHopIpAddress</B></TD></TR>
+                <TR><TD><B>Route</B></TD><TD><B>Name</B></TD><TD><B>NextHopType</B></TD><TD><B>NextHopIpAddress</B></TD></TR>
                 <HR/>"
         
         # Individual Routes        
         $data = ""
-        ForEach ($route in $routetable.Routes ) {
+
+        #Sort routes for easier reading
+        $routesSorted = $routetable.Routes | Sort-Object -Property AddressPrefix
+        ForEach ($route in $routesSorted ) {
             if ($route.AddressPrefix -match '^[a-zA-Z]+$') {
                 # Only letters, not IP address or CIDR
                 $addressprefix = $route.AddressPrefix
@@ -2938,12 +2945,13 @@ function Export-RouteTable {
             else {
                 $addressprefix = $route.AddressPrefix ? $(SanitizeString $route.AddressPrefix) : ""
             }
+            $name = $route.Name
             $nexthoptype = $route.NextHopType
             $nexthopip = $route.NextHopIpAddress ? $(SanitizeString $route.NextHopIpAddress) : ""
-            $data = $data + "<TR><TD align=`"left`">$addressprefix</TD><TD align=`"left`">$nexthoptype</TD><TD align=`"left`">$nexthopip</TD></TR>"
+            $data = $data + "<TR><TD align=`"left`">$addressprefix</TD><TD align=`"left`">$name</TD><TD align=`"left`">$nexthoptype</TD><TD align=`"left`">$nexthopip</TD></TR>"
         }
         if ($data -eq "") {
-            $data = "<TR><TD align=`"left`">No routes found</TD><TD align=`"left`">N/A</TD><TD align=`"left`">N/A</TD></TR>"
+            $data = "<TR><TD align=`"left`">No routes found</TD><TD align=`"left`">N/A</TD><TD align=`"left`">N/A</TD><TD align=`"left`">N/A</TD></TR>"
         }
         # End table
         $ImagePath = Join-Path $OutputPath "icons" "RouteTable.png"
