@@ -180,7 +180,7 @@ function SanitizeString {
     }
 
     if ($null -eq $InputString) {
-        return $null
+        return ""
     }
     elseif ($InputString -eq "") {
         return $InputString
