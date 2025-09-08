@@ -408,6 +408,9 @@ if ($null -eq $TenantName -or $TenantName -eq "") {
     Write-Host "Using DefaultDomain as TenantName"
     $TenantName = $Tenant.DefaultDomain
 }
+if ($null -eq $TenantName) {
+    $TenantName = "Unknown Tenant"
+}   
 Write-Host "GetType() = " $TenantName.GetType()
 Write-Host "TenantName: $TenantName"
     $tenantDisplayName = SanitizeString $TenantName
