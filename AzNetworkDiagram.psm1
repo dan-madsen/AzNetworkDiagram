@@ -152,6 +152,8 @@ function SanitizeString {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
+        [AllowNull()]
+        [AllowEmptyString()]
         [string]$InputString
     )
     $Ignore = @("true", "false", "enabled", "disabled", "yes", "no", "on", "off")
