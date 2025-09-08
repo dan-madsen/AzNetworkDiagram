@@ -152,6 +152,8 @@ function SanitizeString {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
+        [AllowNull()]
+        [AllowEmptyString()]
         [string]$InputString
     )
     $Ignore = @("true", "false", "enabled", "disabled", "yes", "no", "on", "off")
@@ -397,7 +399,13 @@ function Export-dotFooter {
 
     $date = Get-Date -Format 'yyyy-MM-dd'
 
-    $tenantDisplayName = SanitizeString (Get-AzTenant -TenantId (Get-AzContext).Tenant.Id).Name
+    $context = Get-AzContext -ErrorAction SilentlyContinue
+    $TenantId = $context.Tenant.Id
+    $Tenant = Get-AzTenant -TenantId $TenantId -ErrorAction SilentlyContinue
+    $TenantName = $Tenant.Name
+
+    $tenantDisplayName = SanitizeString $TenantName
+
     #$tenantDisplayId = SanitizeString (Get-AzContext).Tenant.Id
 
     Export-AddToFile -Data "`n    ##########################################################################################################"
