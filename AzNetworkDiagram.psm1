@@ -401,12 +401,9 @@ function Export-dotFooter {
 
     $context = Get-AzContext -ErrorAction SilentlyContinue
     $TenantId = $context.Tenant.Id
-    $Tenant = Get-AzTenant -TenantId $TenantId
+    $Tenant = Get-AzTenant -TenantId $TenantId -ErrorAction SilentlyContinue
     $TenantName = $Tenant.Name
 
-    #if ($null -eq $TenantName) {
-    #    $TenantName = "Unknown Tenant"
-    #}   
     $tenantDisplayName = SanitizeString $TenantName
 
     #$tenantDisplayId = SanitizeString (Get-AzContext).Tenant.Id
