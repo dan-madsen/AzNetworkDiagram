@@ -400,21 +400,13 @@ function Export-dotFooter {
     $date = Get-Date -Format 'yyyy-MM-dd'
 
     $context = Get-AzContext -ErrorAction SilentlyContinue
-Write-Host "Context: $context"    
     $TenantId = $context.Tenant.Id
-Write-Host "TenantId: $TenantId"
     $Tenant = Get-AzTenant -TenantId $TenantId
-Write-Host "Tenant: $Tenant"
     $TenantName = $Tenant.Name
-if ($null -eq $TenantName -or $TenantName -eq "") {
-    Write-Host "Using DefaultDomain as TenantName"
-    $TenantName = $Tenant.DefaultDomain
-}
-if ($null -eq $TenantName) {
-    $TenantName = "Unknown Tenant"
-}   
-Write-Host "GetType() = " $TenantName.GetType()
-Write-Host "TenantName: $TenantName"
+
+    #if ($null -eq $TenantName) {
+    #    $TenantName = "Unknown Tenant"
+    #}   
     $tenantDisplayName = SanitizeString $TenantName
 
     #$tenantDisplayId = SanitizeString (Get-AzContext).Tenant.Id
