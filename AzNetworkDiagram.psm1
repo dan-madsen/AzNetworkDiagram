@@ -397,7 +397,16 @@ function Export-dotFooter {
 
     $date = Get-Date -Format 'yyyy-MM-dd'
 
-    $tenantDisplayName = SanitizeString (Get-AzTenant -TenantId (Get-AzContext).Tenant.Id).Name
+    $context = Get-AzContext -ErrorAction SilentlyContinue
+Write-Host "Context: $context"    
+    $TenantId = $context.Tenant.Id
+Write-Host "TenantId: $TenantId"
+    $Tenant = Get-AzTenant -TenantId $TenantId
+Write-Host "Tenant: $Tenant"
+    $TenantName = $Tenant.Name
+Write-Host "TenantName: $TenantName"
+    $tenantDisplayName = SanitizeString $TenantName
+Write-Host "tenantDisplayName: $tenantDisplayName"
     #$tenantDisplayId = SanitizeString (Get-AzContext).Tenant.Id
 
     Export-AddToFile -Data "`n    ##########################################################################################################"
