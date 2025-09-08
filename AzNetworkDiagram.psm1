@@ -404,9 +404,14 @@ Write-Host "TenantId: $TenantId"
     $Tenant = Get-AzTenant -TenantId $TenantId
 Write-Host "Tenant: $Tenant"
     $TenantName = $Tenant.Name
+if ($null -eq $TenantName -or $TenantName -eq "") {
+    Write-Host "Using DefaultDomain as TenantName"
+    $TenantName = $Tenant.DefaultDomain
+}
+Write-Host "GetType() = " $TenantName.GetType()
 Write-Host "TenantName: $TenantName"
     $tenantDisplayName = SanitizeString $TenantName
-Write-Host "tenantDisplayName: $tenantDisplayName"
+
     #$tenantDisplayId = SanitizeString (Get-AzContext).Tenant.Id
 
     Export-AddToFile -Data "`n    ##########################################################################################################"
