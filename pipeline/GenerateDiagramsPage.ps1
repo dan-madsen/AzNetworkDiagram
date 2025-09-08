@@ -42,9 +42,13 @@ $PSDocsInputObject = New-Object PSObject -property @{
 }
 
 $PSDocsInputObject.Environments | ForEach-Object { 
-                                        Get-AzNetworkDiagram -Subscriptions $_.Subscriptions -Prefix $_.Prefix -OutputPath $OutputPath -OutputFormat pdf,svg,png
+                                        $prefix = $_.Prefix
+                                        Write-Host "Using PS version $($PSVersionTable.PSVersion) - Edition: $($PSVersionTable.PSEdition)"
+                                        Get-AzNetworkDiagram -Subscriptions $_.Subscriptions -Prefix $prefix -OutputPath $OutputPath -OutputFormat pdf,svg,png
                                         cd "$destPath"
-                                        git add "$OutputPath/$_Prefix*"
+                                        git add "$OutputPath/$prefix*.png"
+                                        git add "$OutputPath/$prefix*.svg"
+                                        git add "$OutputPath/$prefix*.pdf"
                                     }
 
 $PSDocsInputObject | Export-Clixml -Path "$buildDirectory/PSDocsInputObject.xml"
