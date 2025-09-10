@@ -3669,7 +3669,7 @@ function Export-AVS
         $AVSHXCManager = $AVS.EndpointHcxCloudManager
         $AVSNSXManager = $AVS.EndpointNsxtManager
         $AVSExpressRouteCircuit = $AVS.CircuitExpressRouteId
-        $AVSExpressRouteCircuitId = $AVSExpressRouteCircuit.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $AVSExpressRouteCircuitId = $AVSExpressRouteCircuit.replace("-", "").replace("/", "").replace(".", "").ToLower()
 
         #DOT - add image and other metadata
         $ImagePath = Join-Path $OutputPath "icons" "avs.png"
@@ -3687,7 +3687,7 @@ function Export-AVS
         }
         "
         
-        Export-AddToFile -Data ($header + $bvdata + $footer)
+        Export-AddToFile -Data ($header + $AVSdata + $footer)
     }
     catch {
         Write-Error "Can't export AVS: $($AVS.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
