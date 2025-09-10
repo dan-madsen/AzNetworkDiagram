@@ -44,6 +44,9 @@
   .PARAMETER OnlyMgmtGroups
   -OnlyMgmtGroups ($true/$false) - Creates a Management Group and Subscription overview diagram - everything else is skipped. Default is $false.
 
+  .PARAMETER SkipXXX
+  -SkipXXX ($true/$false) - Skips a chosen non-core network resource type - use tab completion to see current list.
+
   .INPUTS
   None. It will however require previous authentication to Azure
 
