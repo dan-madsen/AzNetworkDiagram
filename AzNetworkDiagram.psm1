@@ -3086,6 +3086,25 @@ function Export-Connection {
     # ER (Peer set = ER Circuit - circuit defined seperately)
     if ($ER -and $vpngwid -ne 0) {
         $peerid = $connection.Peer.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        
+        # Validate ER Circuit access
+        $peerSub = $connection.Peer.id.Split("/")[2]
+        $peerRG = $connection.Peer.id.Split("/")[4]
+        $peerName = $connection.Peer.id.Split("/")[8]
+        
+        $currentcontext = (Get-AzContext).Subscription.Id
+        $tempcontext = $peerSub
+        $null = Set-AzContext $tempcontext -ErrorAction SilentlyContinue
+        $circiut = Get-azexpressRouteCircuit -ResourceName $peerName -ResourceGroupName $peerRG -ErrorAction SilentlyContinue
+        $null = Set-AzContext $currentcontext
+        
+        if ( $null -eq $circiut ) {
+            #Define unknown ER Cicuit here as unknown, if not found.
+            $Script:Legend += ,@("Express Route Circuit","ercircuit.png")
+            $ImagePath = Join-Path $OutputPath "icons" "ercircuit.png"
+            $data += "$peerid [label = `"\nName:$peerName\n(Unknown Express route circuit)`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
+        }
+
         $data += "`n    $vpngwid -> $peerid`n"
     }
     # VPN or VNet2VNet
