@@ -1,5 +1,5 @@
 #Requires -Version 7.1
-#Requires -Modules Az.Accounts, Az.Network, Az.Compute, Az.KeyVault, Az.Storage, Az.MySql, Az.PostgreSql, Az.CosmosDB, Az.RedisCache, Az.Sql, Az.EventHub, Az.Websites, Az.ApiManagement, Az.ContainerRegistry, Az.ManagedServiceIdentity, Az.Resources
+#Requires -Modules Az.Accounts, Az.Network, Az.Compute, Az.KeyVault, Az.Storage, Az.MySql, Az.PostgreSql, Az.CosmosDB, Az.RedisCache, Az.Sql, Az.EventHub, Az.Websites, Az.ApiManagement, Az.ContainerRegistry, Az.ManagedServiceIdentity, Az.Resources, Az.vmware
 
 <#
   .SYNOPSIS
@@ -3537,7 +3537,7 @@ Exports details of a Backup Vault for inclusion in an infrastructure diagram.
 The `Export-BackupVault` function processes a specified Backup Vault object, retrieves its details, and formats the data for inclusion in the diagram. It visualizes the Vault's name, location, policies, storage redundancy and softdelete state.
 
 .PARAMETER BackupVault
-Specifies the Backup Vaultobject to be processed. This parameter is mandatory.
+Specifies the Backup Vault object to be processed. This parameter is mandatory.
 
 .EXAMPLE
 PS> $BackupVault = Get-AzDataProtectionBackupVault -Name "RSV" -ResourceGroupName "MyResourceGroup"
@@ -3619,6 +3619,78 @@ function Export-BackupVault
     }
     catch {
         Write-Error "Can't export Backup Vault: $($BackupVault.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+}
+
+<#
+.SYNOPSIS
+Exports details of a AVS instance for inclusion in an infrastructure diagram.
+
+.DESCRIPTION
+The `Export-AVS` function processes a specified AVS object, retrieves its details, and formats the data for inclusion in the diagram.
+
+.PARAMETER BackupVault
+Specifies the AVS bject to be processed. This parameter is mandatory.
+
+.EXAMPLE
+PS> $AVS = Get-AzVMwarePrivateCloud
+PS> Export-AVS $AVS
+
+This example retrieves a Backup Vault object and exports its details for inclusion in the diagram.
+#>
+function Export-AVS
+{
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$AVS
+    )
+
+    try {
+        $id = $AVS.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankavs += $id
+        
+        $header = "
+        # $($AVS.Name) - $id
+        subgraph cluster_$id {
+            style = solid;
+            colorscheme = blues9 ;
+            bgcolor = 2;
+            node [colorscheme = blues9 ; style = filled;];
+        "
+               
+
+        $AVSname = $AVS.Name
+        $AVSnetwork = $AVS.NetworkBlock
+        $AVSHosts = $AVS.ManagementClusterSize
+        $AVSSKUName = $AVS.SkuName
+        $AVSvCenter = $AVS.EndpointVcsa
+        $AVSLocation = $AVS.Location
+        $AVSHXCManager = $AVS.EndpointHcxCloudManager
+        $AVSNSXManager = $AVS.EndpointNsxtManager
+        $AVSExpressRouteCircuit = $AVS.CircuitExpressRouteId
+        $AVSExpressRouteCircuitId = $AVSExpressRouteCircuit.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+
+        #DOT - add image and other metadata
+        $ImagePath = Join-Path $OutputPath "icons" "avs.png"
+        $AVSdata += "    $id [fillcolor = 3; label=`"Name: $AVSName\nLocation\ $AVSLocation\nNetwork block: $AVSnetwork\nSKU: $AVSSKUName\nHosts: $AVSHosts\n\nEndpoints:\nvCenter: $AVSvCenter\nHXC Manager: $AVSHXCManager\nNSX Manager: $AVSNSXManager`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $AVS)]`n"
+        
+        #ER Circuit
+        $ImagePath = Join-Path $OutputPath "icons" "erport.png" 
+        $erportname = $AVSExpressRouteCircuit.Split("/")[8]
+        $AVSdata += "     $AVSExpressRouteCircuitId [label = `"\nName: $erportname`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
+        $AVSdata += "     $AVSExpressRouteCircuitId -> $id"
+
+        # End subgraph
+        $footer = "
+            label = `"$AVSName`";
+        }
+        "
+        
+        Export-AddToFile -Data ($header + $bvdata + $footer)
+    }
+    catch {
+        Write-Error "Can't export AVS: $($AVS.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
     }
 }
 
@@ -3782,6 +3854,7 @@ function Confirm-Prerequisites {
         "appplan.png",
         #"appserviceplan.png",
         "appservices.png",
+        "avs.png",
         "azurefileshare.png",
         #"azuresql.png",
         "bas.png",
@@ -3983,7 +4056,9 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)]
         [bool]$SkipRSV = $false,
         [Parameter(Mandatory = $false)]
-        [bool]$SkipBV = $false
+        [bool]$SkipBV = $false,
+        [Parameter(Mandatory = $false)]
+        [bool]$SkipAVS = $false
     )
 
     # Remove trailing "\" from path
@@ -4509,6 +4584,20 @@ function Get-AzNetworkDiagram {
                             $Script:Legend += ,@("Backup Vault","backupvault.png")
                             foreach ( $bv in $BackupVaults ) {
                                 Export-BackupVault -BackupVault $bv
+                            }
+                        }
+                    }
+
+                    #AVS
+                    if ( $false -eq $SkipAVS ) {
+                        Write-Output "Collecting AVS instances..."
+                        Export-AddToFile "    ##### $subname - Azure VMware Solution (AVS) #####"
+                        $AVSs = Get-AzVMwarePrivateCloud
+                        if ( $null -ne $AVSs ) {
+                            $Script:Legend += ,@("Azure VMware Solution","avs.png")
+                            $Script:Legend += ,@("Express Route Circuit","ercircuit.png")
+                            foreach ( $AVS in $AVSs ) {
+                                Export-AVS -AVS $AVS
                             }
                         }
                     }
