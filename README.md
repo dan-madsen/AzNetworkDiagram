@@ -53,6 +53,7 @@ Import-Module .\AzNetworkDiagram.psm1
 - **-KeepDotFile** ($true/$false) - if $true/enabled, the DOT file is not deleted after the diagrams have been generated. Default is $false and DOT files are deleted.
 - **-OutputFormat** (pdf, svg, png) - One or more output files get generated with the specified formats. Default is PDF.
 - **-EnableLinks** ($true/$false) - Many resources become links to the Azure portal can be enabled using this flag. Default is $false.
+- **-SkipXXX** ($true/$false) - Skips a chosen non-core network resource type - use tab completion to see current list.
 
 
 ## Running the Powershell module
@@ -127,6 +128,8 @@ This module will include in the diagram in separate colors:
   - Azure Container Apps
   - Azure Container Instances
   - Static Web Apps
+  - Recovery Service Vaults
+  - Backup Vaults
 
 ---
 
@@ -152,8 +155,13 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
   - Storage account/Azure File Share
   - Storage account/Container
   - Azure Container Registry - added repositories to diagram
-- Changed parameters for Mmangement Groups
+- Changed parameters for Mangement Groups
   - EnableMgmtGroups removed, rarely a case where it would make sense to have mangement groups in a diagram with everything else. Utilize [-OnlyMgmtGroups $true] for management groups overview moving forward.
+- New parameters
+  - All non-core network resource, now have a corrosponding -Skip option. A few examples:
+    - -SkipSA $true
+    - -SkipVM $true
+    - Use tab completion for a full list
 - New features
   - NAT GW
     - Link addedd
@@ -163,6 +171,7 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 - Bugs fixed
   - Azure Firewall parsing when in VNet (ie. not vWAN configurations)
   - NAT Gateway: Public IP Prefixes are now showing correctly
+  - Express Routes circuits are now validated prior to making links, to avoid non-sense in the output
 ## v1.1
 - New support for
   - Container instances
