@@ -130,6 +130,7 @@ This module will include in the diagram in separate colors:
   - Static Web Apps
   - Recovery Service Vaults
   - Backup Vaults
+  - Azure VMware Solution
 
 ---
 
@@ -155,6 +156,7 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
   - Storage account/Azure File Share
   - Storage account/Container
   - Azure Container Registry - added repositories to diagram
+  - Azure VMware Solution
 - Changed parameters for Mangement Groups
   - EnableMgmtGroups removed, rarely a case where it would make sense to have mangement groups in a diagram with everything else. Utilize [-OnlyMgmtGroups $true] for management groups overview moving forward.
 - New parameters
