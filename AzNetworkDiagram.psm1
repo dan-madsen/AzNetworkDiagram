@@ -3676,7 +3676,7 @@ function Export-AVS
         $AVSdata += "    $id [fillcolor = 3; label=`"Name: $AVSName\nLocation\ $AVSLocation\nNetwork block: $AVSnetwork\nSKU: $AVSSKUName\nHosts: $AVSHosts\n\nEndpoints:\nvCenter: $AVSvCenter\nHXC Manager: $AVSHXCManager\nNSX Manager: $AVSNSXManager`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $AVS)]`n"
         
         #ER Circuit
-        $ImagePath = Join-Path $OutputPath "icons" "erport.png" 
+        $ImagePath = Join-Path $OutputPath "icons" "ercircuit.png" 
         $erportname = $AVSExpressRouteCircuit.Split("/")[8]
         $AVSdata += "     $AVSExpressRouteCircuitId [label = `"\nName: $erportname`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
         $AVSdata += "     $AVSExpressRouteCircuitId -> $id"
