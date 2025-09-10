@@ -4073,7 +4073,10 @@ function Get-AzNetworkDiagram {
 
     if ( $ver -eq "0.0.-1" ) { $ver = "(Non-PSGallery version)" } # Module loaded from file - not from PSGallery
     elseif ( $ver -eq ".." ) { $ver = "(Non-PSGallery version)" } # Module not imported - ran directly from .psm1 file ?
-    else { $ver = "v$($ver)" }
+    else { 
+        if ( $verbuild -eq "-1" ) { $verbuild = "0" }
+        $ver = "v$($ver)"
+    }
     
     Write-Output "##############################################################################################"
     Write-Output "    ___        _   __     __                      __   ____  _                                "
