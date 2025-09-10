@@ -3673,7 +3673,7 @@ function Export-AVS
 
         #DOT - add image and other metadata
         $ImagePath = Join-Path $OutputPath "icons" "avs.png"
-        $AVSdata += "    $id [fillcolor = 3; label=`"Name: $AVSName\nLocation\ $AVSLocation\nNetwork block: $AVSnetwork\nSKU: $AVSSKUName\nHosts: $AVSHosts\n\nEndpoints:\nvCenter: $AVSvCenter\nHXC Manager: $AVSHXCManager\nNSX Manager: $AVSNSXManager`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $AVS)]`n"
+        $AVSdata += "    $id [fillcolor = 3; label=`"\n\nName: $AVSName\nLocation\ $AVSLocation\nNetwork block: $AVSnetwork\nSKU: $AVSSKUName\nHosts: $AVSHosts\n\nEndpoints:\nvCenter: $AVSvCenter\nHXC Manager: $AVSHXCManager\nNSX Manager: $AVSNSXManager`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $AVS)]`n"
         
         #ER Circuit
         $ImagePath = Join-Path $OutputPath "icons" "ercircuit.png" 
