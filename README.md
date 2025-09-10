@@ -147,7 +147,7 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 ---
 
 # Changelog (since v1.0.1)
-## v1.2 (not released to PSGallery yet)
+## v1.2
 - New support for
   - Backup Vaults (not to be confused with Recovery Service Vaults below!)
     - References to Storage Accounts blobs/containers, PostgreSQL, etc...
