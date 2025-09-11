@@ -147,6 +147,11 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 ---
 
 # Changelog (since v1.0.1)
+## Upcoming releas (not released to Powershell Gallary yet)
+- New support for
+  - NICs connected to VMs now appear as seperate resources, with its own link to subnets and NSGs. That is handy when utilizing NVAs (Network Virtual Appliances) for example.
+## v1.2.1
+- Bug fix - versions with a minor of "0", now shows correctly (showed "-1")
 ## v1.2
 - New support for
   - Backup Vaults (not to be confused with Recovery Service Vaults below!)
