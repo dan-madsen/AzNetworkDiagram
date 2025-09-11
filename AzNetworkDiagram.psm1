@@ -1043,15 +1043,21 @@ function Export-VM {
         "
         $extensions = $vm.Extensions | ForEach-Object { $_.Id.split("/")[-1] } | Join-String -Separator ", "
 
+        #VM DOT
+        $ImagePath = Join-Path $OutputPath "icons" "vm.png"
+        $data += "    $vmid [label = `"\nLocation: $Location\nSKU: $($vm.HardwareProfile.VmSize)\nZones: $($vm.Zones)\nOS Type: $($vm.StorageProfile.OsDisk.OsType)\nExtensions: $extensions`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $vm)];"
+        $data += "`n"
+
         # NIC loop for private + public IPs
         $NICs = $vm.NetworkProfile.NetworkInterfaces.id
-        $PublicIPAddresses = @()
-        $PrivateIPAddresses = @()
         $NICs | Foreach-Object {
+            $PublicIPAddresses = @()
+            $PrivateIPAddresses = @()
             #NIC
             #$nic = Get-AzNetworkInterface -ResourceId $vm.NetworkProfile.NetworkInterfaces[0].Id -ErrorAction Stop
             $nicref = $_
             $nic = Get-AzNetworkInterface -ResourceId $nicref -ErrorAction Stop
+            $NICid = $nic.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
 
             # Public IP
             if ( $null -ne $nic.IpConfigurations[0].PublicIpAddress ) {
@@ -1063,20 +1069,22 @@ function Export-VM {
             }
             
             $PrivateIpAddresses += $nic.IpConfigurations[0].PrivateIpAddress ? $(SanitizeString $nic.IpConfigurations[0].PrivateIpAddress) : ""
+            $PrivateIpAddresses = $PrivateIpAddresses | Sort-Object -Unique
+            $PublicIPAddresses = $PublicIPAddresses | Sort-Object -Unique
+            if ( $null -eq $PublicIPAddresses ) { $PublicIPAddresses = "None" }
+            $subnetid = $nic.IpConfigurations[0].Subnet.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            
+            #NIC DOT
+            $ImagePath = Join-Path $OutputPath "icons" "nic.png"
+            $data += "            $NICid [label = `"Name: $NICname\nPrivate IP(s): $($PrivateIpAddresses -Join ", ")\nPublic IP(s): $($PublicIpAddresses -Join ", ")\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $NIC)];"
+            $data += "            $VMid -> $NICid;`n"
+            $data += "            $NICid -> $subnetid;`n"
         }
-        $PrivateIpAddresses = $PrivateIpAddresses | Sort-Object -Unique
-        $PublicIPAddresses = $PublicIPAddresses | Sort-Object -Unique
-        if ( $null -eq $PublicIPAddresses ) { $PublicIPAddresses = "None" }
 
-        $ImagePath = Join-Path $OutputPath "icons" "vm.png"
-        $data += "        $vmid [label = `"\nLocation: $Location\nSKU: $($vm.HardwareProfile.VmSize)\nZones: $($vm.Zones)\nOS Type: $($vm.StorageProfile.OsDisk.OsType)\nPublic IP(s): $($PublicIpAddresses -Join ", ")\nPrivate IP(s): $($PrivateIpAddresses -Join ", ")\nExtensions: $extensions`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $vm)];"
-        $data += "`n"
-        $subnetid = $nic.IpConfigurations[0].Subnet.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-        $data += "        $vmid -> $subnetid;`n"
         if ($vm.Identity.UserAssignedIdentities.Keys) {
             foreach ($identity in $vm.Identity.UserAssignedIdentities.Keys) { 
                 $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $data += "        $vmid -> $managedIdentityId;`n"
+                $data += "            $vmid -> $managedIdentityId;`n"
             }
         }
 
@@ -1088,14 +1096,15 @@ function Export-VM {
             $NICrg = $NICId.split("/")[4]
             $NICname = $NICId.split("/")[8]
             $NIC = Get-AzNetworkInterface -ResourceGroupName $NICrg -name $NICname
+            $NICid = $NIC.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
             if ( $null -ne $nic.NetworkSecurityGroup.id ) {
                 $NSGid = ($nic.NetworkSecurityGroup.id).replace("-", "").replace("/", "").replace(".", "").ToLower()
-                #$data += "        $vmid -> $NSGid [label = `"NIC: $NICName`"];`n"
-                $data += "        $vmid -> $NSGid`n"
+                #$data += "                $vmid -> $NSGid [label = `"NIC: $NICName`"];`n"
+                $data += "            $NICid -> $NSGid`n"
             }
         }
-        $data += "   label = `"$Name`";
-                }`n"
+        $data += "            label = `"$Name`";
+        }`n"
 
         Export-AddToFile -Data $data
     }
@@ -3660,14 +3669,14 @@ function Export-AVS
         "
                
 
-        $AVSname = $AVS.Name
+        $AVSname = SanitizeString $AVS.Name
         $AVSnetwork = $AVS.NetworkBlock
         $AVSHosts = $AVS.ManagementClusterSize
         $AVSSKUName = $AVS.SkuName
-        $AVSvCenter = $AVS.EndpointVcsa
+        $AVSvCenter = SanitizeString $AVS.EndpointVcsa
         $AVSLocation = $AVS.Location
-        $AVSHXCManager = $AVS.EndpointHcxCloudManager
-        $AVSNSXManager = $AVS.EndpointNsxtManager
+        $AVSHXCManager = SanitizeString $AVS.EndpointHcxCloudManager
+        $AVSNSXManager = SanitizeString$AVS.EndpointNsxtManager
         $AVSExpressRouteCircuit = $AVS.CircuitExpressRouteId
         $AVSExpressRouteCircuitId = $AVSExpressRouteCircuit.replace("-", "").replace("/", "").replace(".", "").ToLower()
 
@@ -3888,6 +3897,7 @@ function Confirm-Prerequisites {
         "mongodb.png",
         "mysql.png",
         "ng.png",
+        "nic.png",
         "nsg.png",
         "peerings.png",
         "postgresql.png",
@@ -4294,6 +4304,7 @@ function Get-AzNetworkDiagram {
                         $VMs = Get-AzVM -ErrorAction Stop
                         if ($null -ne $VMs) {
                             $Script:Legend += ,@("Virtual Machine","vm.png")
+                            $Script:Legend += ,@("Network Interface Card","nic.png")
                             foreach ($vm in $VMs) {
                                 Export-VM $VM
                             }
