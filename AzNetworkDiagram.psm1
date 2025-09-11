@@ -3674,9 +3674,9 @@ function Export-AVS
         $AVSHosts = $AVS.ManagementClusterSize
         $AVSSKUName = $AVS.SkuName
         $AVSvCenter = SanitizeString $AVS.EndpointVcsa
-        $AVSLocation = $AVS.Location
+        $AVSLocation = SanitizeLocation $AVS.Location
         $AVSHXCManager = SanitizeString $AVS.EndpointHcxCloudManager
-        $AVSNSXManager = SanitizeString$AVS.EndpointNsxtManager
+        $AVSNSXManager = SanitizeString $AVS.EndpointNsxtManager
         $AVSExpressRouteCircuit = $AVS.CircuitExpressRouteId
         $AVSExpressRouteCircuitId = $AVSExpressRouteCircuit.replace("-", "").replace("/", "").replace(".", "").ToLower()
 
