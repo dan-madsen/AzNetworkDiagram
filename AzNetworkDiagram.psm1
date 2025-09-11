@@ -2474,6 +2474,52 @@ function Export-SubnetConfig {
                         }
                     }
                 }
+                "RouteServerSubnet" { 
+                    $ImagePath = Join-Path $OutputPath "icons" "rtserv.png"
+                    $Script:Legend += ,@("Route Server", "rtserv.png")
+                    $data += "            $id [label = `"\n\n$name\n$AddressPrefix`"; fillcolor = 4; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ];" 
+                    $data += "`n"
+                    
+                    #Route server DOT
+                    if ( $null -ne $subnet.IpConfigurations.Id ) {
+                        $objects = $subnet.IpConfigurations.Id
+                        $subid = (Get-AzContext).Subscription.Id
+                        $rtservid = $objects | Where-Object {$_ -like "*$($subid)*"}
+                    
+                        if ( $null -ne $rtservid ) {
+                            $rtservname = SanitizeString $rtservid.split("/")[8].ToLower()
+                            $rtservrg = $rtservid.split("/")[4].ToLower()
+                            $rtserv = Get-AzRouteServer -ResourceGroupName $rtservrg -RouteServerName $rtservname -ErrorAction SilentlyContinue
+                            $rtservid = $rtservid.replace("-", "").replace("/", "").replace(".", "").ToLower()
+
+                            if ( $null -ne $rtserv ) {
+                                $ASN = SanitizeString $rtserv.RouteServerAsn
+                                $BranchToBranch = $rtserv.AllowBranchToBranchTraffic
+                                $rtservips = ($rtserv.RouteServerIps | Sort-Object | ForEach-Object {SanitizeString $_}) -join ', '
+                                $rtservpeers = $rtserv.Peerings | Sort-Object -Property PeerIp
+                                $rtservpeersstring = ""
+                                $rtservpeers | foreach-object {
+                                    $peer = $_
+                                    $peerASN = SanitizeString $peer.PeerASN
+                                    $peerName = SanitizeString $peer.Name
+                                    $peerIp = SanitizeString $peer.PeerIp
+                                    $rtservpeersstring += "$peerIp | $peerASN | $peerName\n"
+                                }
+
+                                if ( "" -eq $rtservpeersstring ) { $rtservpeersstring = "No peers configured" }
+                                
+                                #RTSERV DOT
+                                $data += "            $rtservid [label = `"\n\nName: $rtservname\nASN: $ASN\nIPs: $rtservips\nBranchToBranch: $BranchToBranch\n\nPeers:\n$rtservpeersstring`"; fillcolor = 4; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5;$(Generate-DotURL -resource $rtserv)];`n" 
+                                $data += "            $id -> $rtservid"
+                                
+                            } else {
+                                #Not deployed
+                            }
+                        }
+                        #$data += Export-VirtualGateway -GatewayName $gwname -ResourceGroupName $gwrg -GatewayId $gwid -HeadId $id
+                        
+                    }
+                }
                 default { 
                     ##### Subnet delegations #####
                     $subnetDelegationName = $subnet.Delegations.Name
