@@ -426,15 +426,14 @@ function Export-dotFooter {
                     URL = `"https://github.com/dan-madsen/AzNetworkDiagram`"
 
                     l1 [color = 1; label = < <TABLE border=`"0`" style=`"rounded`">
-                                <TR><TD colspan=`"2`" border=`"0`"><FONT POINT-SIZE=`"25`"><B>Legend</B></FONT></TD></TR>
-            "
+                                             <TR><TD colspan=`"2`" border=`"0`"><FONT POINT-SIZE=`"25`"><B>Legend</B></FONT></TD></TR>
+"
 
     foreach ($Item in $Script:Legend) {
         $icon = Join-Path $OutputPath "icons" $Item[1]
-        $data += "                <TR><TD align=`"left`"><IMG SCALE=`"TRUE`" SRC=`"$icon`"/></TD><TD align=`"left`">$($Item[0])</TD></TR>`n"
+        $data += "                                             <TR><TD align=`"left`"><IMG SCALE=`"TRUE`" SRC=`"$icon`"/></TD><TD align=`"left`">$($Item[0])</TD></TR>`n"
     }
-    #$data += "                <TR><TD colspan=`"2`" align=`"center`"><IMG SCALE=`"TRUE`" SRC=`"c:/temp/logo.png`"/></TD></TR>`n"
-    $data += "                </TABLE>>]; 
+    $data += "                                             </TABLE>>]; 
             }
             { rank=max; l1; }
     }"
@@ -1058,6 +1057,7 @@ function Export-VM {
             $nicref = $_
             $nic = Get-AzNetworkInterface -ResourceId $nicref -ErrorAction Stop
             $NICid = $nic.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $NICname = $nic.Name
 
             # Public IP
             if ( $null -ne $nic.IpConfigurations[0].PublicIpAddress ) {
@@ -3684,14 +3684,14 @@ Exports details of a AVS instance for inclusion in an infrastructure diagram.
 .DESCRIPTION
 The `Export-AVS` function processes a specified AVS object, retrieves its details, and formats the data for inclusion in the diagram.
 
-.PARAMETER BackupVault
+.PARAMETER AVS
 Specifies the AVS bject to be processed. This parameter is mandatory.
 
 .EXAMPLE
 PS> $AVS = Get-AzVMwarePrivateCloud
 PS> Export-AVS $AVS
 
-This example retrieves a Backup Vault object and exports its details for inclusion in the diagram.
+This example retrieves a AVS object and exports its details for inclusion in the diagram.
 #>
 function Export-AVS
 {
@@ -3746,6 +3746,136 @@ function Export-AVS
     }
     catch {
         Write-Error "Can't export AVS: $($AVS.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+}
+
+<#
+.SYNOPSIS
+Exports details of a AVD instance for inclusion in an infrastructure diagram.
+
+.DESCRIPTION
+The `Export-AVD` function processes a specified AVS object, retrieves its details, and formats the data for inclusion in the diagram.
+
+.PARAMETER AVD
+Specifies the AVD bject to be processed. This parameter is mandatory.
+
+.EXAMPLE
+PS> $AVD = Get-AzWvdHostPool
+PS> Export-AVD $AVD
+
+This example retrieves an AVD hostpool and exports its details for inclusion in the diagram.
+#>
+function Export-AVD
+{
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$AVD
+    )
+
+    try {
+        $hostpoolid = $AVD.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankavd += $hostpoolid
+        
+        $header = "
+        # $($AVD.Name) - $hostpoolid
+        subgraph cluster_$hostpoolid {
+            style = solid;
+            colorscheme = blues9 ;
+            bgcolor = 2;
+            node [colorscheme = blues9 ; style = filled;];
+        "
+        
+        $hostpool = $AVD
+        $name = $hostpool.Name
+        $rgname = $hostpool.ResourceGroupName
+        $friendlyName = $hostpool.FriendlyName ? (SanitizeString $hostpool.FriendlyName) : "None"
+        $location = SanitizeLocation $hostpool.location
+        $lb = $hostpool.LoadBalancerType
+        $hostpooltype = $hostpool.HostPoolType
+        $sessionLimit = $hostpool.MaxSessionLimit
+        $appGroups = $hostpool.ApplicationGroupReference #ids
+        $ValidationEnvironment = $hostpool.ValidationEnvironment
+        
+        #DOT - add image and other metadata
+        $ImagePath = Join-Path $OutputPath "icons" "avd-hostpool.png"
+        $AVDdata += "    $hostpoolid [fillcolor = 3; label=`"\n\nHost pool: $(SanitizeString $name)\nFriendly name: $friendlyName\nLocation: $location\n\nHost pool type: $hostpooltype\nLoad balancing algoritm: $lb\nSession limit: $sessionLimit\nValidation Environment: $ValidationEnvironment`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $AVD)]`n"
+        
+        #Session Hosts
+        $sessionHosts = Get-AzWvdSessionHost -HostPoolName $name -ResourceGroupName $rgname -ErrorAction SilentlyContinue
+        if ( $null -ne $sessionHosts ) {
+            $sessionHosts | foreach-object {
+                $sessionhost = $_
+                $sessionhostid = $sessionhost.ResourceId.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                #$drainmode = ! $sessionhost.AllowNewSession
+                $AVDdata += "            $hostpoolid -> $sessionhostid `n" #[label=`"Drain mode: $drainmode`"]
+            }
+        }
+        
+        #Application Groups | Desktops and (Remote)apps on hostpool
+        $appGroups | Foreach-object {
+            $id = $_
+            $rgname = $id.split("/")[4]
+            $resname =  $id.split("/")[8]
+            $appGroup = Get-AzWvdApplicationGroup -ResourceGroupName $rgname -name $resname
+            $appGroupId = $appGroup.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $type = $appGroup.ApplicationGroupType
+            
+            #Workspace | Grouping of ApplicationGroups mapped to users
+            if ( $null -ne $appGroup ) {
+                $workspaceARMID = $appGroup.WorkspaceArmPath
+
+                if ( $null -ne $workspaceARMID ) {
+                    $workspaceDOTID = $workspaceARMID.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $workspaceRG = $workspaceARMID.split("/")[4]
+                    $workspaceName = $workspaceARMID.split("/")[8]
+                    $workspace = Get-AzWvdWorkspace -Name $workspaceName -ResourceGroupName $workspaceRG -ErrorAction SilentlyContinue
+                    
+                    if ( $null -ne $workspace -and "" -ne $workspace) {
+                        $workspaceFriendlyName = $workspace.FriendlyName ? (SanitizeString $workspace.FriendlyName) : "None"
+
+                        #DOT
+                        $ImagePath = Join-Path $OutputPath "icons" "avd-workspace.png"
+                        $AVDdata += "            $workspaceDOTID [fillcolor = 3; label=`"Name: $(SanitizeString $workspaceName)\nFriendly name: $workspaceFriendlyName`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $workspace)]`n"
+                        $AVDdata += "            $appGroupId -> $workspaceDOTID`n"
+                    }                    
+                } 
+            }
+            
+            #Applications
+            $ImagePath = Join-Path $OutputPath "icons" "avd-appgroup.png"
+            if ( $type -eq "RemoteApp" ) {
+                $apps = Get-AzWvdApplication -ResourceGroupName $rgname -GroupName $resname
+                $appsFriendlyString = ""
+
+                if ( $null -ne $apps ) {
+                    $apps | foreach-object {
+                        $app = $_
+                        $appsFriendlyString += (Sanitizestring $app.FriendlyName) + "\n"
+                    }
+                }
+                
+                #DOT
+                $AVDdata += "            $appGroupId [fillcolor = 3; label=`"\nName: $(SanitizeString $resname)\nType: $type\n\nApplication(s):\n$appsFriendlyString`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $appGroup)]`n"
+                $AVDdata += "            $hostpoolid -> $appGroupId`n"
+            } elseif ( $type -eq "Desktop" ) { #type == Desktop
+                $appGroupFriendlyName = SanitizeString $appGroup.FriendlyName
+                #DOT
+                $AVDdata += "            $appGroupId [fillcolor = 3; label=`"\nName: $(SanitizeString $resname)\nFriendly name: $appGroupFriendlyName\nType: $type`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $appGroup)]`n"
+                $AVDdata += "            $hostpoolid -> $appGroupId`n"
+            }
+        }
+
+        # End subgraph
+        $footer = "
+            label = `"$(SanitizeString $name)`";
+        }
+        "
+
+        Export-AddToFile -Data ($header + $AVDdata + $footer)
+    }
+    catch {
+        Write-Error "Can't export AVD: $($AVD.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
     }
 }
 
@@ -3905,6 +4035,9 @@ function Confirm-Prerequisites {
         "agw.png",
         "aks-node-pool.png",
         "aks-service.png",
+        "avd-hostpool.png",
+        "avd-workspace.png",
+        "avd-appgroup.png",
         "apim.png",
         "appplan.png",
         #"appserviceplan.png",
@@ -3952,6 +4085,7 @@ function Confirm-Prerequisites {
         "redis.png",
         "RouteTable.png",
         "rsv.png",
+        "rtserv.png".
         "snet.png",
         "sqldb.png",
         "sqlmi.png",
@@ -4114,7 +4248,9 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)]
         [bool]$SkipBV = $false,
         [Parameter(Mandatory = $false)]
-        [bool]$SkipAVS = $false
+        [bool]$SkipAVS = $false,
+        [Parameter(Mandatory = $false)]
+        [bool]$SkipAVD = $false
     )
 
     # Remove trailing "\" from path
@@ -4661,6 +4797,21 @@ function Get-AzNetworkDiagram {
                             }
                         }
                     }
+
+                    #AVD
+                    if ( $false -eq $SkipAVD ) {
+                        Write-Output "Collecting AVD pools..."
+                        Export-AddToFile "    ##### $subname - Azure Virtual Desktop (AVD) #####"
+                        $AVDs = Get-AzWvdHostPool
+                        if ( $null -ne $AVDs ) {
+                            $Script:Legend += ,@("AVD Hostpool","avd-hostpool.png")
+                            $Script:Legend += ,@("AVD Workspace","avd-workspace.png")
+                            $Script:Legend += ,@("AVD App Group","avd-appgroup.png")
+                            foreach ( $AVD in $AVDs ) {
+                                Export-AVD -AVD $AVD
+                            }
+                        }
+                    }                    
                     
                 }
 
