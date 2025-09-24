@@ -3828,7 +3828,7 @@ function Export-AVD
                 if ( $null -ne $workspaceARMID ) {
                     $workspaceDOTID = $workspaceARMID.replace("-", "").replace("/", "").replace(".", "").ToLower()
                     $workspaceRG = $workspaceARMID.split("/")[4]
-                    $workspaceName = SanitizeString $workspaceARMID.split("/")[8]
+                    $workspaceName = $workspaceARMID.split("/")[8]
                     $workspace = Get-AzWvdWorkspace -Name $workspaceName -ResourceGroupName $workspaceRG -ErrorAction SilentlyContinue
                     
                     if ( $null -ne $workspace -and "" -ne $workspace) {
@@ -3836,7 +3836,7 @@ function Export-AVD
 
                         #DOT
                         $ImagePath = Join-Path $OutputPath "icons" "avd-workspace.png"
-                        $AVDdata += "            $workspaceDOTID [fillcolor = 3; label=`"Name: $workspaceName\nFriendly name: $workspaceFriendlyName`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $workspace)]`n"
+                        $AVDdata += "            $workspaceDOTID [fillcolor = 3; label=`"Name: $(SanitizeString $workspaceName)\nFriendly name: $workspaceFriendlyName`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $workspace)]`n"
                         $AVDdata += "            $appGroupId -> $workspaceDOTID`n"
                     }                    
                 } 
