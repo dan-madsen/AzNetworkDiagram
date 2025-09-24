@@ -426,15 +426,14 @@ function Export-dotFooter {
                     URL = `"https://github.com/dan-madsen/AzNetworkDiagram`"
 
                     l1 [color = 1; label = < <TABLE border=`"0`" style=`"rounded`">
-                                <TR><TD colspan=`"2`" border=`"0`"><FONT POINT-SIZE=`"25`"><B>Legend</B></FONT></TD></TR>
-            "
+                                             <TR><TD colspan=`"2`" border=`"0`"><FONT POINT-SIZE=`"25`"><B>Legend</B></FONT></TD></TR>
+"
 
     foreach ($Item in $Script:Legend) {
         $icon = Join-Path $OutputPath "icons" $Item[1]
-        $data += "                <TR><TD align=`"left`"><IMG SCALE=`"TRUE`" SRC=`"$icon`"/></TD><TD align=`"left`">$($Item[0])</TD></TR>`n"
+        $data += "                                             <TR><TD align=`"left`"><IMG SCALE=`"TRUE`" SRC=`"$icon`"/></TD><TD align=`"left`">$($Item[0])</TD></TR>`n"
     }
-    #$data += "                <TR><TD colspan=`"2`" align=`"center`"><IMG SCALE=`"TRUE`" SRC=`"c:/temp/logo.png`"/></TD></TR>`n"
-    $data += "                </TABLE>>]; 
+    $data += "                                             </TABLE>>]; 
             }
             { rank=max; l1; }
     }"
@@ -1058,6 +1057,7 @@ function Export-VM {
             $nicref = $_
             $nic = Get-AzNetworkInterface -ResourceId $nicref -ErrorAction Stop
             $NICid = $nic.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $NICname = $nic.Name
 
             # Public IP
             if ( $null -ne $nic.IpConfigurations[0].PublicIpAddress ) {
@@ -3790,15 +3790,16 @@ function Export-AVD
         $name = $hostpool.Name
         $rgname = $hostpool.ResourceGroupName
         $friendlyName = $hostpool.FriendlyName ? (SanitizeString $hostpool.FriendlyName) : "None"
-        $location = $hostpool.location
+        $location = SanitizeLocation $hostpool.location
         $lb = $hostpool.LoadBalancerType
         $hostpooltype = $hostpool.HostPoolType
         $sessionLimit = $hostpool.MaxSessionLimit
         $appGroups = $hostpool.ApplicationGroupReference #ids
+        $ValidationEnvironment = $hostpool.ValidationEnvironment
         
         #DOT - add image and other metadata
         $ImagePath = Join-Path $OutputPath "icons" "avd-hostpool.png"
-        $AVDdata += "    $hostpoolid [fillcolor = 3; label=`"\n\nHost pool: $name\nFriendly name: $friendlyName\nLocation: $location\n\nHost pool type: $hostpooltype\nLoad balancing algoritm: $lb\nSession limit: $sessionLimit`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $AVD)]`n"
+        $AVDdata += "    $hostpoolid [fillcolor = 3; label=`"\n\nHost pool: $(SanitizeString $name)\nFriendly name: $friendlyName\nLocation: $location\n\nHost pool type: $hostpooltype\nLoad balancing algoritm: $lb\nSession limit: $sessionLimit\nValidation Environment: $ValidationEnvironment`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $AVD)]`n"
         
         #Session Hosts
         $sessionHosts = Get-AzWvdSessionHost -HostPoolName $name -ResourceGroupName $rgname -ErrorAction SilentlyContinue
@@ -3806,7 +3807,8 @@ function Export-AVD
             $sessionHosts | foreach-object {
                 $sessionhost = $_
                 $sessionhostid = $sessionhost.ResourceId.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $AVDdata += "$hostpoolid -> $sessionhostid"
+                #$drainmode = ! $sessionhost.AllowNewSession
+                $AVDdata += "            $hostpoolid -> $sessionhostid `n" #[label=`"Drain mode: $drainmode`"]
             }
         }
         
@@ -3820,14 +3822,13 @@ function Export-AVD
             $type = $appGroup.ApplicationGroupType
             
             #Workspace | Grouping of ApplicationGroups mapped to users
-            # Workspaces should be defined only once (out of this loop!), and just create the reference here?
             if ( $null -ne $appGroup ) {
                 $workspaceARMID = $appGroup.WorkspaceArmPath
 
                 if ( $null -ne $workspaceARMID ) {
                     $workspaceDOTID = $workspaceARMID.replace("-", "").replace("/", "").replace(".", "").ToLower()
                     $workspaceRG = $workspaceARMID.split("/")[4]
-                    $workspaceName = $workspaceARMID.split("/")[8]
+                    $workspaceName = SanitizeString $workspaceARMID.split("/")[8]
                     $workspace = Get-AzWvdWorkspace -Name $workspaceName -ResourceGroupName $workspaceRG -ErrorAction SilentlyContinue
                     
                     if ( $null -ne $workspace -and "" -ne $workspace) {
@@ -3835,40 +3836,42 @@ function Export-AVD
 
                         #DOT
                         $ImagePath = Join-Path $OutputPath "icons" "avd-workspace.png"
-                        $AVDdata += "    $workspaceDOTID [fillcolor = 3; label=`"\n\nName: $workspaceName\nFriendly name: $workspaceFriendlyName`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $workspace)]`n"
-                        $AVDdata += "    $appGroupId -> $workspaceDOTID"
-                    }
-                }
+                        $AVDdata += "            $workspaceDOTID [fillcolor = 3; label=`"Name: $workspaceName\nFriendly name: $workspaceFriendlyName`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $workspace)]`n"
+                        $AVDdata += "            $appGroupId -> $workspaceDOTID`n"
+                    }                    
+                } 
             }
-
+            
             #Applications
             $ImagePath = Join-Path $OutputPath "icons" "avd-appgroup.png"
             if ( $type -eq "RemoteApp" ) {
                 $apps = Get-AzWvdApplication -ResourceGroupName $rgname -GroupName $resname
-                $appsString = ""
+                $appsFriendlyString = ""
+
                 if ( $null -ne $apps ) {
                     $apps | foreach-object {
                         $app = $_
-                        $appsString += $app.FriendlyName #SEPARATION, COMMA/LINE ######################### TODO
-                        $appsString | ForEach-Object {
-                            #DOT - application
-                            $AVDdata += "    $appGroupId [fillcolor = 3; label=`"\n\nName: $resname\nType: $type`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $appGroup)]`n"
-                            $AVDdata += "    $hostpoolid -> $appGroupId"
-                        }
+                        $appsFriendlyString += (Sanitizestring $app.FriendlyName) + "\n"
                     }
                 }
+                
+                #DOT
+                $AVDdata += "            $appGroupId [fillcolor = 3; label=`"\nName: $(SanitizeString $resname)\nType: $type\n\nApplication(s):\n$appsFriendlyString`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $appGroup)]`n"
+                $AVDdata += "            $hostpoolid -> $appGroupId`n"
             } elseif ( $type -eq "Desktop" ) { #type == Desktop
-                $AVDdata += "    $appGroupId [fillcolor = 3; label=`"\n\nName: $resname\nType: $type`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $appGroup)]`n"
-                $AVDdata += "    $hostpoolid -> $appGroupId"
+                $appGroupFriendlyName = SanitizeString $appGroup.FriendlyName
+                #DOT
+                $AVDdata += "            $appGroupId [fillcolor = 3; label=`"\nName: $(SanitizeString $resname)\nFriendly name: $appGroupFriendlyName\nType: $type`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $appGroup)]`n"
+                $AVDdata += "            $hostpoolid -> $appGroupId`n"
             }
         }
 
         # End subgraph
         $footer = "
-            label = `"$name`";
+            label = `"$(SanitizeString $name)`";
         }
         "
-        
+
         Export-AddToFile -Data ($header + $AVDdata + $footer)
     }
     catch {
