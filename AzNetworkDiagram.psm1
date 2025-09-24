@@ -4085,6 +4085,7 @@ function Confirm-Prerequisites {
         "redis.png",
         "RouteTable.png",
         "rsv.png",
+        "rtserv.png".
         "snet.png",
         "sqldb.png",
         "sqlmi.png",
