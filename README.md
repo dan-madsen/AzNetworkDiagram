@@ -71,17 +71,9 @@ Beware, that by using "-Subscriptions" to limit the scope of data collection, yo
 ---
 
 # Recommendation
-It is inevitable that large environments make the diagram **very large** (in this case "wide"), but zooming into the PDF or SVG works the best. In cases where diagrams gets too bug/wide, you should consider scoping the digram (ie. utilize **-Subscriptions "subid","subid2"....**) to create smaller diagrams with a scope that matches your deployment(s), instead of your entire infrastructure. For many environments, you could probably go with something like this:
+It is inevitable that large environments make the diagram **very large** (in this case "wide"), but zooming into the PDF or SVG works the best. In cases where diagrams gets too big/wide, you should consider scoping the digram (ie. utilize **-Subscriptions "subid","subid2"....**) to create smaller diagrams with a scope that matches your deployment(s), instead of your entire infrastructure. For many environments, you could probably go with something like this:
 - A management group diagram (-OnlyMgmtGroups $true)
-- A core network diagram (-OnlyCoreNetwork $true) that spans part of your infrastructure (or maybe everything), which will include
-  - Route tables
-  - IP Groups
-  - vNets (incl. subnets, peerings, Azure Bastion, Azure Firewall)
-  - NSGs
-  - VPN Connections
-  - Express Route Circuits
-  - vWAN / Virtual WAN
-  - Private Endpoints
+- A core network diagram (-OnlyCoreNetwork $true) that spans part of your infrastructure (or maybe everything), which will include the core network resources listed under "Currently supported resources"
 - Multiple minor diagrams for individual workloads
 
 ---
@@ -102,39 +94,44 @@ The module is now compatible with both Ubuntu and Windows so you can run it succ
 
 This module will include in the diagram in separate colors:
   - Mangement Groups and Subscriptions
-  - vNets & Subnets & Delegations
-  - Route Tables
-  - NSG's
-  - IP Groups
+  - Core network resources
+    - Azure Firewall, including IP Groups
+    - Bastion
+    - NAT Gateway
+    - NSG's
+    - Route Server
+    - Route Tables
+    - VPN/ER Gateways and connections
+      - Express Routes Circuits, ER Direct ports and Links
+    - vNets incl. delegations, peerings and subnets 
+    - vWAN's & Hubs
+  - API Management (APIM)
+  - App Service Plans and App Services
   - Application Gateways
-  - Express Routes Circuits and ER Direct ports & Links
-  - vWAN's & Hubs
-  - Azure Firewall
-  - VPN Gateway
-  - NAT Gateway
-  - Bastion
-  - Route Server
-  - Private Endpoints
-  - SSH Keys
-  - ACR
-  - AKS
-  - Storage Accounts
-  - VM, VMSS
-  - Keyvaults
-  - APIM
-  - MongoDB, MySQL, PostgreSQL
-  - SQL Server (logical server), Azure SQL, SQL Managed Instance
-  - EventHubs
-  - Redis Cache
-  - App Services
-  - Compute Galleries
   - Azure Container Apps
   - Azure Container Instances
-  - Static Web Apps
-  - Recovery Service Vaults
-  - Backup Vaults
+  - Azure Container Registry
+  - Azure Kubernetes Services
   - Azure VMware Solution
   - Azure Virtual Desktop
+  - Backup Vaults
+  - Compute Galleries
+  - EventHubs
+  - Keyvaults
+  - Open Source DBs
+    - CosmosDB
+    - MongoDB
+    - MySQL
+    - PostgreSQL
+  - Private Endpoints
+  - Recovery Service Vaults
+  - Redis Cache
+  - SQL Managed Instance
+  - SQL Server (logical server), Azure SQL
+  - SSH Keys
+  - Static Web Apps
+  - Storage Accounts
+  - Virtual Machines and Virtual Machine Scale Sets
 
 ---
 
@@ -163,7 +160,7 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
     - -EnableSA $true
     - -SkipVM $true
     - -EnableVM $true
-- Minor fixes
+- Minor changes
   - VPN Connections static remote subnets are now sorted
   - Route table propagation setting now reflected
   - Viritual Network Gateways now reflect the SKU
