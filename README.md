@@ -154,6 +154,10 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
   - Azure Route Server
   - NICs connected to VMs now appear as seperate resources, with its own link to subnets and NSGs. That is handy when utilizing NVAs (Network Virtual Appliances) for example.
   - Azure Virtual Desktop (Hostpools, Application Groups, Workspaces), incl. references to session hosts
+- Minor fixes
+  - VPN Connections static remote subnets are now sorted
+  - Route table propagation setting now reflected
+  - Viritual Network Gateways now reflect the SKU
 ## v1.2.1
 - Bug fix - versions with a minor of "0", now shows correctly (showed "-1")
 ## v1.2

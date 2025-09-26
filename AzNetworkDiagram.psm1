@@ -2297,6 +2297,7 @@ function Export-VirtualGateway {
     
     $gw = Get-AzVirtualNetworkGateway -ResourceGroupName $ResourceGroupName -ResourceName $GatewayName -ErrorAction Stop
     $gwtype = $gw.Gatewaytype
+    $gwsku = $gw.Sku
 
     $script:rankvgws += $GatewayId
 
@@ -2312,7 +2313,7 @@ function Export-VirtualGateway {
         
         }
         $ImagePath = Join-Path $OutputPath "icons" "vgw.png"
-        $data += "            $GatewayId [fillcolor = 7;label = `"\n\nName: $(SanitizeString $GatewayName)`\n\nPublic IP(s):\n$gwips`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $gw)];"
+        $data += "            $GatewayId [fillcolor = 7;label = `"\n\nName: $(SanitizeString $GatewayName)\nSKU: $gwsku\n\nPublic IP(s):\n$gwips`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $gw)];"
 
         # Get P2S conf, if configured
         $protocol = $gw.VpnClientConfiguration.VpnClientProtocols
@@ -2331,7 +2332,7 @@ function Export-VirtualGateway {
     elseif ($gwtype -eq "ExpressRoute") {
         $Script:Legend += ,@("ER Gateway", "ergw.png")
         $ImagePath = Join-Path $OutputPath "icons" "ergw.png"
-        $data += "        $GatewayId [fillcolor = 3; label = `"\nName: $(SanitizeString $GatewayName)`"; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5;$(Generate-DotURL -resource $gw)]; "
+        $data += "        $GatewayId [fillcolor = 3; label = `"\nName: $(SanitizeString $GatewayName)\nSKU: $gwsku`"; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5;$(Generate-DotURL -resource $gw)]; "
     }
     $data += "`n"
     $data += "            $HeadId -> $GatewayId"
@@ -2964,6 +2965,7 @@ function Export-RouteTable {
         $routetableName = SanitizeString $routetable.Name
         $Location = SanitizeLocation $routetable.Location
         $id = $routetable.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $RoutePropagationDisabled = $routetable.DisableBgpRoutePropagation
 
         $script:rankrts += $id
 
@@ -2979,6 +2981,7 @@ function Export-RouteTable {
                 <TABLE border=`"0`" style=`"rounded`">
                 <TR><TD border=`"0`" align=`"left`"><BR/><BR/><B>$routetableName</B></TD></TR>
                 <TR><TD border=`"0`" align=`"left`">Location: $Location<BR/><BR/></TD></TR>
+                <TR><TD border=`"0`" align=`"left`">Route Propagation disabled: $RoutePropagationDisabled<BR/><BR/></TD></TR>
                 <TR><TD><B>Route</B></TD><TD><B>Name</B></TD><TD><B>NextHopType</B></TD><TD><B>NextHopIpAddress</B></TD></TR>
                 <HR/>"
         
@@ -3122,7 +3125,7 @@ function Export-Connection {
 
         $lgwsubnetsarray = $lgwobject.addressSpaceText | ConvertFrom-Json
         $lgwsubnets = ""
-        $lgwsubnetsarray.AddressPrefixes | ForEach-Object {
+        $lgwsubnetsarray.AddressPrefixes | Sort-Object | ForEach-Object {
             $prefix = SanitizeString $_
             $lgwsubnets += "$prefix \n"
         }
