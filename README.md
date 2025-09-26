@@ -153,6 +153,7 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
   - Azure Route Server
   - NICs connected to VMs now appear as seperate resources, with its own link to subnets and NSGs. That is handy when utilizing NVAs (Network Virtual Appliances) for example.
   - Azure Virtual Desktop (Hostpools, Application Groups, Workspaces), incl. references to session hosts
+  - Multiple IPConfigurations pr. NIC - ie. multiple private and public IPs
 - Parameters changes/added/removed
   - -OnlyCoreNetwork has been replaced by -SkipNonCoreNetwork to align with new more flexible structure for Skipping/Enabling resources. See next entry
   - All non-core network resources, now have a corresponding -Skip and -Enable options. -EnableXXXX will take precedence. Use tab-completion for a full list. A few examples:
