@@ -155,7 +155,7 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
   - Azure Virtual Desktop (Hostpools, Application Groups, Workspaces), incl. references to session hosts
 - Parameters changes/added/removed
   - -OnlyCoreNetwork has been replaced by -SkipNonCoreNetwork to align with new more flexible structure for Skipping/Enabling resources. See next entry
-  - All non-core network resources, now have a corresponding -Skip and -Enable options. Use tab-completion for a full list. A few examples:
+  - All non-core network resources, now have a corresponding -Skip and -Enable options. -EnableXXXX will take precedence. Use tab-completion for a full list. A few examples:
     - -SkipSA $true
     - -EnableSA $true
     - -SkipVM $true
@@ -186,7 +186,7 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
     - Use tab completion for a full list
 - New features
   - NAT GW
-    - Link addedd
+    - Link added
   - Routes Tables
     - Routes are now sorted by Address Prefix
     - Route names are now part of the output
