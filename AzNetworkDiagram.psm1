@@ -4293,6 +4293,10 @@ function Get-AzNetworkDiagram {
     $script:DoSanitize = $Sanitize
     $script:Legend = @()
 
+    #Ensure Legend has at least 2 entries to avoid weird bug when only one resource types is added
+    $Script:Legend += ,@("Subnet", "snet.png")
+    $Script:Legend += ,@("Virtual Network","vnet.png")
+    
     ##### Data collection / Execution #####
 
     # Run program and collect data through powershell commands
