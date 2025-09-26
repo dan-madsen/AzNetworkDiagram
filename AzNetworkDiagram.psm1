@@ -1059,21 +1059,24 @@ function Export-VM {
             $NICid = $nic.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
             $NICname = $nic.Name
 
-            # Public IP
-            if ( $null -ne $nic.IpConfigurations[0].PublicIpAddress ) {
-                #$PublicIpAddress = $nic.IpConfigurations[0].PublicIpAddress ? $(SanitizeString $nic.IpConfigurations[0].PublicIpAddress) : ""
-                $PublicIPID = $nic.IpConfigurations[0].PublicIpAddress.Id
-                $PublicIPRG = $PublicIPID.Split("/")[4]
-                $PublicIPName = $PublicIPID.Split("/")[8]
-                $PublicIpAddresses += SanitizeString (Get-AzPublicIpAddress -name $PublicIPName -ResourceGroupName $PublicIPRG).Ipaddress
+            $nic.IpConfigurations | ForEach-Object {
+                $nicipconfig = $_
+                # Public IP
+                if ( $null -ne $nicipconfig.PublicIpAddress ) {
+                    #$PublicIpAddress = $nic.IpConfigurations[0].PublicIpAddress ? $(SanitizeString $nic.IpConfigurations[0].PublicIpAddress) : ""
+                    $PublicIPID = $nicipconfig.PublicIpAddress.Id
+                    $PublicIPRG = $PublicIPID.Split("/")[4]
+                    $PublicIPName = $PublicIPID.Split("/")[8]
+                    $PublicIpAddresses += SanitizeString (Get-AzPublicIpAddress -name $PublicIPName -ResourceGroupName $PublicIPRG).Ipaddress
+                }
+                
+                $PrivateIpAddresses += $nicipconfig.PrivateIpAddress ? $(SanitizeString $nicipconfig.PrivateIpAddress) : ""
             }
-            
-            $PrivateIpAddresses += $nic.IpConfigurations[0].PrivateIpAddress ? $(SanitizeString $nic.IpConfigurations[0].PrivateIpAddress) : ""
             $PrivateIpAddresses = $PrivateIpAddresses | Sort-Object -Unique
             $PublicIPAddresses = $PublicIPAddresses | Sort-Object -Unique
             if ( $null -eq $PublicIPAddresses ) { $PublicIPAddresses = "None" }
-            $subnetid = $nic.IpConfigurations[0].Subnet.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-            
+            $subnetid = $nicipconfig.Subnet.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+
             #NIC DOT
             $ImagePath = Join-Path $OutputPath "icons" "nic.png"
             $data += "            $NICid [label = `"Name: $NICname\nPrivate IP(s): $($PrivateIpAddresses -Join ", ")\nPublic IP(s): $($PublicIpAddresses -Join ", ")\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $NIC)];"
