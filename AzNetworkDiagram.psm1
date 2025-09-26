@@ -2297,7 +2297,7 @@ function Export-VirtualGateway {
     
     $gw = Get-AzVirtualNetworkGateway -ResourceGroupName $ResourceGroupName -ResourceName $GatewayName -ErrorAction Stop
     $gwtype = $gw.Gatewaytype
-    $gwsku = $gw.Sku
+    $gwsku = $gw.Sku.Name
 
     $script:rankvgws += $GatewayId
 
@@ -2965,7 +2965,7 @@ function Export-RouteTable {
         $routetableName = SanitizeString $routetable.Name
         $Location = SanitizeLocation $routetable.Location
         $id = $routetable.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-        $RoutePropagationDisabled = $routetable.DisableBgpRoutePropagation
+        $RoutePropagationEnabled = ! $routetable.DisableBgpRoutePropagation
 
         $script:rankrts += $id
 
@@ -2981,7 +2981,7 @@ function Export-RouteTable {
                 <TABLE border=`"0`" style=`"rounded`">
                 <TR><TD border=`"0`" align=`"left`"><BR/><BR/><B>$routetableName</B></TD></TR>
                 <TR><TD border=`"0`" align=`"left`">Location: $Location<BR/><BR/></TD></TR>
-                <TR><TD border=`"0`" align=`"left`">Route Propagation disabled: $RoutePropagationDisabled<BR/><BR/></TD></TR>
+                <TR><TD border=`"0`" align=`"left`">Propagate Gateway Routes: $RoutePropagationEnabled<BR/><BR/></TD></TR>
                 <TR><TD><B>Route</B></TD><TD><B>Name</B></TD><TD><B>NextHopType</B></TD><TD><B>NextHopIpAddress</B></TD></TR>
                 <HR/>"
         
@@ -4454,19 +4454,19 @@ function Get-AzNetworkDiagram {
                     }
                 }
 
-                ### Private Endpoints
-                Write-Output "Collecting Private Endpoints..."
-                Export-AddToFile "    ##### $subname - Private Endpoints #####"
-                $privateEndpoints = Get-AzPrivateEndpoint -ErrorAction Stop
-                if ($null -ne $privateEndpoints) {
-                    $Script:Legend += ,@("Private Endpoint","private-endpoint.png")
-                    foreach ($pe in $privateEndpoints) {
-                        Export-PrivateEndpoint $pe
-                    }
-                }
-
                 # Skip the rest of the resource types, if -OnlyCoreNetwork was set to true, at runtime
                 if ( -not $OnlyCoreNetwork ) {
+
+                    ### Private Endpoints
+                    Write-Output "Collecting Private Endpoints..."
+                    Export-AddToFile "    ##### $subname - Private Endpoints #####"
+                    $privateEndpoints = Get-AzPrivateEndpoint -ErrorAction Stop
+                    if ($null -ne $privateEndpoints) {
+                        $Script:Legend += ,@("Private Endpoint","private-endpoint.png")
+                        foreach ($pe in $privateEndpoints) {
+                            Export-PrivateEndpoint $pe
+                        }
+                    }
 
                     #Container Instances
                     if ( $false -eq $SkipACI ) {
