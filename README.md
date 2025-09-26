@@ -48,12 +48,14 @@ Import-Module .\AzNetworkDiagram.psm1
 - **-Tenant "tenantId"** Specifies the tenant Id to be used in all subscription authentication. Handy when you have multiple tenants to work with. **Default: current tenant**
 - **-Sanitize $bool** ($true/$false) - Sanitizes all names, locations, IP addresses and CIDR blocks. **Default: $false**
 - **-Prefix "string"** - Adds a prefix to the output file name. For example is cases where you want to do multiple automated runs then the file names will have the prefix per run that you specify. **Default: No Prefix**
-- **-OnlyCoreNetwork** ($true/$false) - if $true/enabled, only cores network resources are processed - ie. non-network resources are skipped for a cleaner diagram - but you will also lack some references from shown resources. Default is $false.
+- **-SkipNonCoreNetwork** ($true/$false) - if $true/enabled, only cores network resources are processed (unless resource types are explicitly enabled using -EnableXXXX options) - ie. non-network resources are skipped for a cleaner diagram - but you will also lack some references from shown resources. Default is $false.
+- **-SkipXXX** ($true/$false) - Skips a chosen non-core network resource type - use tab completion to see current list.
+- **-EnableXXX** ($true/$false) - Enable a chosen non-core network resource type regardless of it being skipped (-EnableXXXX will take precedence!) - use tab completion to see current list.
 - **-OnlyMgmtGroups** ($true/$false) - Creates a Management Group and Subscription overview diagram - everything else is skipped. Default is $false.
 - **-KeepDotFile** ($true/$false) - if $true/enabled, the DOT file is not deleted after the diagrams have been generated. Default is $false and DOT files are deleted.
 - **-OutputFormat** (pdf, svg, png) - One or more output files get generated with the specified formats. Default is PDF.
 - **-EnableLinks** ($true/$false) - Many resources become links to the Azure portal can be enabled using this flag. Default is $false.
-- **-SkipXXX** ($true/$false) - Skips a chosen non-core network resource type - use tab completion to see current list.
+
 
 
 ## Running the Powershell module
@@ -154,10 +156,18 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
   - Azure Route Server
   - NICs connected to VMs now appear as seperate resources, with its own link to subnets and NSGs. That is handy when utilizing NVAs (Network Virtual Appliances) for example.
   - Azure Virtual Desktop (Hostpools, Application Groups, Workspaces), incl. references to session hosts
+- Parameters changes/added/removed
+  - -OnlyCoreNetwork has been replaced by -SkipNonCoreNetwork to align with new more flexible structure for Skipping/Enabling resources. See next entry
+  - All non-core network resources, now have a corresponding -Skip and -Enable options. Use tab-completion for a full list. A few examples:
+    - -SkipSA $true
+    - -EnableSA $true
+    - -SkipVM $true
+    - -EnableVM $true
 - Minor fixes
   - VPN Connections static remote subnets are now sorted
   - Route table propagation setting now reflected
   - Viritual Network Gateways now reflect the SKU
+  - Parameters are now sorted for easier tab-completion
 ## v1.2.1
 - Bug fix - versions with a minor of "0", now shows correctly (showed "-1")
 ## v1.2
@@ -173,7 +183,7 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 - Changed parameters for Mangement Groups
   - EnableMgmtGroups removed, rarely a case where it would make sense to have mangement groups in a diagram with everything else. Utilize [-OnlyMgmtGroups $true] for management groups overview moving forward.
 - New parameters
-  - All non-core network resource, now have a corrosponding -Skip option. A few examples:
+  - All non-core network resource, now have a corresponding -Skip option. A few examples:
     - -SkipSA $true
     - -SkipVM $true
     - Use tab completion for a full list
