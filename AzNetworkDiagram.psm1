@@ -1059,21 +1059,24 @@ function Export-VM {
             $NICid = $nic.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
             $NICname = $nic.Name
 
-            # Public IP
-            if ( $null -ne $nic.IpConfigurations[0].PublicIpAddress ) {
-                #$PublicIpAddress = $nic.IpConfigurations[0].PublicIpAddress ? $(SanitizeString $nic.IpConfigurations[0].PublicIpAddress) : ""
-                $PublicIPID = $nic.IpConfigurations[0].PublicIpAddress.Id
-                $PublicIPRG = $PublicIPID.Split("/")[4]
-                $PublicIPName = $PublicIPID.Split("/")[8]
-                $PublicIpAddresses += SanitizeString (Get-AzPublicIpAddress -name $PublicIPName -ResourceGroupName $PublicIPRG).Ipaddress
+            $nic.IpConfigurations | ForEach-Object {
+                $nicipconfig = $_
+                # Public IP
+                if ( $null -ne $nicipconfig.PublicIpAddress ) {
+                    #$PublicIpAddress = $nic.IpConfigurations[0].PublicIpAddress ? $(SanitizeString $nic.IpConfigurations[0].PublicIpAddress) : ""
+                    $PublicIPID = $nicipconfig.PublicIpAddress.Id
+                    $PublicIPRG = $PublicIPID.Split("/")[4]
+                    $PublicIPName = $PublicIPID.Split("/")[8]
+                    $PublicIpAddresses += SanitizeString (Get-AzPublicIpAddress -name $PublicIPName -ResourceGroupName $PublicIPRG).Ipaddress
+                }
+                
+                $PrivateIpAddresses += $nicipconfig.PrivateIpAddress ? $(SanitizeString $nicipconfig.PrivateIpAddress) : ""
             }
-            
-            $PrivateIpAddresses += $nic.IpConfigurations[0].PrivateIpAddress ? $(SanitizeString $nic.IpConfigurations[0].PrivateIpAddress) : ""
             $PrivateIpAddresses = $PrivateIpAddresses | Sort-Object -Unique
             $PublicIPAddresses = $PublicIPAddresses | Sort-Object -Unique
             if ( $null -eq $PublicIPAddresses ) { $PublicIPAddresses = "None" }
-            $subnetid = $nic.IpConfigurations[0].Subnet.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-            
+            $subnetid = $nicipconfig.Subnet.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+
             #NIC DOT
             $ImagePath = Join-Path $OutputPath "icons" "nic.png"
             $data += "            $NICid [label = `"Name: $NICname\nPrivate IP(s): $($PrivateIpAddresses -Join ", ")\nPublic IP(s): $($PublicIpAddresses -Join ", ")\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $NIC)];"
@@ -2297,6 +2300,7 @@ function Export-VirtualGateway {
     
     $gw = Get-AzVirtualNetworkGateway -ResourceGroupName $ResourceGroupName -ResourceName $GatewayName -ErrorAction Stop
     $gwtype = $gw.Gatewaytype
+    $gwsku = $gw.Sku.Name
 
     $script:rankvgws += $GatewayId
 
@@ -2312,7 +2316,7 @@ function Export-VirtualGateway {
         
         }
         $ImagePath = Join-Path $OutputPath "icons" "vgw.png"
-        $data += "            $GatewayId [fillcolor = 7;label = `"\n\nName: $(SanitizeString $GatewayName)`\n\nPublic IP(s):\n$gwips`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $gw)];"
+        $data += "            $GatewayId [fillcolor = 7;label = `"\n\nName: $(SanitizeString $GatewayName)\nSKU: $gwsku\n\nPublic IP(s):\n$gwips`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $gw)];"
 
         # Get P2S conf, if configured
         $protocol = $gw.VpnClientConfiguration.VpnClientProtocols
@@ -2331,7 +2335,7 @@ function Export-VirtualGateway {
     elseif ($gwtype -eq "ExpressRoute") {
         $Script:Legend += ,@("ER Gateway", "ergw.png")
         $ImagePath = Join-Path $OutputPath "icons" "ergw.png"
-        $data += "        $GatewayId [fillcolor = 3; label = `"\nName: $(SanitizeString $GatewayName)`"; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5;$(Generate-DotURL -resource $gw)]; "
+        $data += "        $GatewayId [fillcolor = 3; label = `"\nName: $(SanitizeString $GatewayName)\nSKU: $gwsku`"; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5;$(Generate-DotURL -resource $gw)]; "
     }
     $data += "`n"
     $data += "            $HeadId -> $GatewayId"
@@ -2964,6 +2968,7 @@ function Export-RouteTable {
         $routetableName = SanitizeString $routetable.Name
         $Location = SanitizeLocation $routetable.Location
         $id = $routetable.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $RoutePropagationEnabled = ! $routetable.DisableBgpRoutePropagation
 
         $script:rankrts += $id
 
@@ -2979,6 +2984,7 @@ function Export-RouteTable {
                 <TABLE border=`"0`" style=`"rounded`">
                 <TR><TD border=`"0`" align=`"left`"><BR/><BR/><B>$routetableName</B></TD></TR>
                 <TR><TD border=`"0`" align=`"left`">Location: $Location<BR/><BR/></TD></TR>
+                <TR><TD border=`"0`" align=`"left`">Propagate gateway routes: $RoutePropagationEnabled<BR/><BR/></TD></TR>
                 <TR><TD><B>Route</B></TD><TD><B>Name</B></TD><TD><B>NextHopType</B></TD><TD><B>NextHopIpAddress</B></TD></TR>
                 <HR/>"
         
@@ -3122,7 +3128,7 @@ function Export-Connection {
 
         $lgwsubnetsarray = $lgwobject.addressSpaceText | ConvertFrom-Json
         $lgwsubnets = ""
-        $lgwsubnetsarray.AddressPrefixes | ForEach-Object {
+        $lgwsubnetsarray.AddressPrefixes | Sort-Object | ForEach-Object {
             $prefix = SanitizeString $_
             $lgwsubnets += "$prefix \n"
         }
@@ -4176,81 +4182,71 @@ function Get-AzNetworkDiagram {
     [CmdletBinding()]
     # Parameters
     param (
-        [Parameter(Mandatory = $false)]
-        [string]$OutputPath = $pwd,
-        [Parameter(Mandatory = $false)]
-        [string[]]$Subscriptions,
-        [Parameter(Mandatory = $false)]
-        [bool]$EnableRanking = $true,
-        [Parameter(Mandatory = $false)]
-        [bool]$EnableLinks = $false,
-        [Parameter(Mandatory = $false)]
-        [string]$TenantId = $null,
-        [Parameter(Mandatory = $false)]
-        [string]$Prefix = $null,
-        [Parameter(Mandatory = $false)]
-        [bool]$Sanitize = $false,
-        [Parameter(Mandatory = $false)] 
-        [bool]$OnlyCoreNetwork = $false,
-        [Parameter(Mandatory = $false)] 
-        [bool]$OnlyMgmtGroups = $false,
-        [Parameter(Mandatory = $false)] 
-        [bool]$KeepDotFile = $false,
-        [Parameter(Mandatory = $false)] 
-        [ValidateSet('pdf','svg','png')]
-        [string[]]$OutputFormat = "pdf",
-        [Parameter(Mandatory = $false)]
-        [bool]$SkipSA = $false,
-        [Parameter(Mandatory = $false)]
-        [bool]$SkipACI = $false,
-        [Parameter(Mandatory = $false)]
-        [bool]$SkipVM = $false,
-        [Parameter(Mandatory = $false)]
-        [bool]$SkipVMSS = $false,
-        [Parameter(Mandatory = $false)]
-        [bool]$SkipKV = $false,
-        [Parameter(Mandatory = $false)]
-        [bool]$SkipAppGW = $false,
-        [Parameter(Mandatory = $false)]
-        [bool]$SkipMySQL = $false,
-        [Parameter(Mandatory = $false)]
-        [bool]$SkipPostgreSQL = $false,
-        [Parameter(Mandatory = $false)]
-        [bool]$SkipCosmosDB = $false,
-        [Parameter(Mandatory = $false)]
-        [bool]$SkipRedis = $false,
-        [Parameter(Mandatory = $false)]
-        [bool]$SkipSQLMI = $false,
-        [Parameter(Mandatory = $false)]
-        [bool]$SkipSQLDB = $false,
-        [Parameter(Mandatory = $false)]
-        [bool]$SkipEventHub = $false,
-        [Parameter(Mandatory = $false)]
-        [bool]$SkipASP = $false,
-        [Parameter(Mandatory = $false)]
-        [bool]$SkipAPIM = $false,
-        [Parameter(Mandatory = $false)]
-        [bool]$SkipAKS = $false,
-        [Parameter(Mandatory = $false)]
-        [bool]$SkipGAL = $false,
-        [Parameter(Mandatory = $false)]
-        [bool]$SkipMI = $false,
-        [Parameter(Mandatory = $false)]
-        [bool]$SkipACR = $false,
-        [Parameter(Mandatory = $false)]
-        [bool]$SkipSSHKeys = $false,
-        [Parameter(Mandatory = $false)]
-        [bool]$SkipACA = $false,
-        [Parameter(Mandatory = $false)]
-        [bool]$SkipSWA = $false,
-        [Parameter(Mandatory = $false)]
-        [bool]$SkipRSV = $false,
-        [Parameter(Mandatory = $false)]
-        [bool]$SkipBV = $false,
-        [Parameter(Mandatory = $false)]
-        [bool]$SkipAVS = $false,
-        [Parameter(Mandatory = $false)]
-        [bool]$SkipAVD = $false
+        [Parameter(Mandatory = $false)][bool]$EnableACA = $false,
+        [Parameter(Mandatory = $false)][bool]$EnableACI = $false,
+        [Parameter(Mandatory = $false)][bool]$EnableACR = $false,
+        [Parameter(Mandatory = $false)][bool]$EnableAKS = $false,
+        [Parameter(Mandatory = $false)][bool]$EnableAPIM = $false,
+        [Parameter(Mandatory = $false)][bool]$EnableASP = $false,
+        [Parameter(Mandatory = $false)][bool]$EnableAVD = $false,
+        [Parameter(Mandatory = $false)][bool]$EnableAVS = $false,
+        [Parameter(Mandatory = $false)][bool]$EnableAppGW = $false,
+        [Parameter(Mandatory = $false)][bool]$EnableBV = $false,
+        [Parameter(Mandatory = $false)][bool]$EnableCosmosDB = $false,
+        [Parameter(Mandatory = $false)][bool]$EnableEventHub = $false,
+        [Parameter(Mandatory = $false)][bool]$EnableGAL = $false,
+        [Parameter(Mandatory = $false)][bool]$EnableKV = $false,
+        [Parameter(Mandatory = $false)][bool]$EnableLinks = $false,
+        [Parameter(Mandatory = $false)][bool]$EnableMI = $false,
+        [Parameter(Mandatory = $false)][bool]$EnableMySQL = $false,
+        [Parameter(Mandatory = $false)][bool]$EnablePE = $false,
+        [Parameter(Mandatory = $false)][bool]$EnablePostgreSQL = $false,
+        [Parameter(Mandatory = $false)][bool]$EnableRanking = $true,
+        [Parameter(Mandatory = $false)][bool]$EnableRedis = $false,
+        [Parameter(Mandatory = $false)][bool]$EnableRSV = $false,
+        [Parameter(Mandatory = $false)][bool]$EnableSA = $false,
+        [Parameter(Mandatory = $false)][bool]$EnableSQLDB = $false,
+        [Parameter(Mandatory = $false)][bool]$EnableSQLMI = $false,
+        [Parameter(Mandatory = $false)][bool]$EnableSSHKeys = $false,
+        [Parameter(Mandatory = $false)][bool]$EnableSWA = $false,
+        [Parameter(Mandatory = $false)][bool]$EnableVM = $false,
+        [Parameter(Mandatory = $false)][bool]$EnableVMSS = $false,
+        [Parameter(Mandatory = $false)][bool]$KeepDotFile = $false,
+        [Parameter(Mandatory = $false)][bool]$OnlyMgmtGroups = $false,
+        [Parameter(Mandatory = $false)][ValidateSet('pdf','svg','png')][string[]]$OutputFormat = "pdf",
+        [Parameter(Mandatory = $false)][string]$OutputPath = $pwd,
+        [Parameter(Mandatory = $false)][string]$Prefix = $null,
+        [Parameter(Mandatory = $false)][bool]$Sanitize = $false,
+        [Parameter(Mandatory = $false)][bool]$SkipACA = $false,
+        [Parameter(Mandatory = $false)][bool]$SkipACI = $false,
+        [Parameter(Mandatory = $false)][bool]$SkipACR = $false,
+        [Parameter(Mandatory = $false)][bool]$SkipAKS = $false,
+        [Parameter(Mandatory = $false)][bool]$SkipAPIM = $false,
+        [Parameter(Mandatory = $false)][bool]$SkipASP = $false,
+        [Parameter(Mandatory = $false)][bool]$SkipAVD = $false,
+        [Parameter(Mandatory = $false)][bool]$SkipAVS = $false,
+        [Parameter(Mandatory = $false)][bool]$SkipAppGW = $false,
+        [Parameter(Mandatory = $false)][bool]$SkipBV = $false,
+        [Parameter(Mandatory = $false)][bool]$SkipCosmosDB = $false,
+        [Parameter(Mandatory = $false)][bool]$SkipEventHub = $false,
+        [Parameter(Mandatory = $false)][bool]$SkipGAL = $false,
+        [Parameter(Mandatory = $false)][bool]$SkipKV = $false,
+        [Parameter(Mandatory = $false)][bool]$SkipMI = $false,
+        [Parameter(Mandatory = $false)][bool]$SkipMySQL = $false,
+        [Parameter(Mandatory = $false)][bool]$SkipNonCoreNetwork = $false,
+        [Parameter(Mandatory = $false)][bool]$SkipPE = $false,
+        [Parameter(Mandatory = $false)][bool]$SkipPostgreSQL = $false,
+        [Parameter(Mandatory = $false)][bool]$SkipRSV = $false,
+        [Parameter(Mandatory = $false)][bool]$SkipRedis = $false,
+        [Parameter(Mandatory = $false)][bool]$SkipSA = $false,
+        [Parameter(Mandatory = $false)][bool]$SkipSQLDB = $false,
+        [Parameter(Mandatory = $false)][bool]$SkipSQLMI = $false,
+        [Parameter(Mandatory = $false)][bool]$SkipSSHKeys = $false,
+        [Parameter(Mandatory = $false)][bool]$SkipSWA = $false,
+        [Parameter(Mandatory = $false)][bool]$SkipVM = $false,
+        [Parameter(Mandatory = $false)][bool]$SkipVMSS = $false,
+        [Parameter(Mandatory = $false)][string[]]$Subscriptions,
+        [Parameter(Mandatory = $false)][string]$TenantId = $null
     )
 
     # Remove trailing "\" from path
@@ -4300,6 +4296,10 @@ function Get-AzNetworkDiagram {
     $script:DoSanitize = $Sanitize
     $script:Legend = @()
 
+    #Ensure Legend has at least 2 entries to avoid weird bug when only one resource types is added
+    $Script:Legend += ,@("Subnet", "snet.png")
+    $Script:Legend += ,@("Virtual Network","vnet.png")
+    
     ##### Data collection / Execution #####
 
     # Run program and collect data through powershell commands
@@ -4451,369 +4451,367 @@ function Get-AzNetworkDiagram {
                     }
                 }
 
+                ############################################# Optional elements starts here #############################################
                 ### Private Endpoints
-                Write-Output "Collecting Private Endpoints..."
-                Export-AddToFile "    ##### $subname - Private Endpoints #####"
-                $privateEndpoints = Get-AzPrivateEndpoint -ErrorAction Stop
-                if ($null -ne $privateEndpoints) {
-                    $Script:Legend += ,@("Private Endpoint","private-endpoint.png")
-                    foreach ($pe in $privateEndpoints) {
-                        Export-PrivateEndpoint $pe
+                if ( $EnablePE -OR (-not $SkipNonCoreNetwork -AND -not $SkipPE ) ) {
+                    Write-Output "Collecting Private Endpoints..."
+                    Export-AddToFile "    ##### $subname - Private Endpoints #####"
+                    $privateEndpoints = Get-AzPrivateEndpoint -ErrorAction Stop
+                    if ($null -ne $privateEndpoints) {
+                        $Script:Legend += ,@("Private Endpoint","private-endpoint.png")
+                        foreach ($pe in $privateEndpoints) {
+                            Export-PrivateEndpoint $pe
+                        }
                     }
                 }
 
-                # Skip the rest of the resource types, if -OnlyCoreNetwork was set to true, at runtime
-                if ( -not $OnlyCoreNetwork ) {
-
-                    #Container Instances
-                    if ( $false -eq $SkipACI ) {
-                        Write-Output "Collecting Container Instances..."
-                        Export-AddToFile "    ##### $subname - Container Instances #####"
-                        $containerGroups = Get-AzContainerGroup -ErrorAction Stop
-                        if ($null -ne $containerGroups) {   
-                            $Script:Legend += ,@("Containers","containers.png")
-                            $Script:Legend += ,@("Container Instance","containerinstance.png")
-                            foreach ($containerGroup in $containerGroups) {
-                                Export-ContainerGroup $containerGroup
-                            }
+                #Container Instances
+                if ( $EnableACI -OR (-not $SkipNonCoreNetwork -AND -not $SkipACI ) ) {
+                    Write-Output "Collecting Container Instances..."
+                    Export-AddToFile "    ##### $subname - Container Instances #####"
+                    $containerGroups = Get-AzContainerGroup -ErrorAction Stop
+                    if ($null -ne $containerGroups) {   
+                        $Script:Legend += ,@("Containers","containers.png")
+                        $Script:Legend += ,@("Container Instance","containerinstance.png")
+                        foreach ($containerGroup in $containerGroups) {
+                            Export-ContainerGroup $containerGroup
                         }
                     }
-
-                    ### VMs
-                    if ( $false -eq $SkipVM ) {
-                        Write-Output "Collecting VMs..."
-                        Export-AddToFile "    ##### $subname - VMs #####"
-                        $VMs = Get-AzVM -ErrorAction Stop
-                        if ($null -ne $VMs) {
-                            $Script:Legend += ,@("Virtual Machine","vm.png")
-                            $Script:Legend += ,@("Network Interface Card","nic.png")
-                            foreach ($vm in $VMs) {
-                                Export-VM $VM
-                            }
-                        }
-                    }
-
-                    ### Keyvaults
-                    if ( $false -eq $SkipKV ) {
-                        Write-Output "Collecting Keyvaults..."
-                        Export-AddToFile "    ##### $subname - Keyvaults #####"
-                        $Keyvaults = Get-AzKeyVault -ErrorAction Stop
-                        if ($null -ne $Keyvaults) {
-                            $Script:Legend += ,@("Key Vault","keyvault.png")
-                            foreach ($keyvault in $Keyvaults) {
-                                Export-Keyvault $Keyvault
-                            }
-                        }
-                    }
-
-                    ### Storage Accounts
-                    if ( $false -eq $SkipSA ) {
-                        Write-Output "Collecting Storage Accounts..."
-                        Export-AddToFile "    ##### $subname - Storage Accounts #####"
-                        $storageaccounts = Get-AzStorageAccount -ErrorAction Stop
-                        if ($null -ne $storageaccounts) {
-                            $Script:Legend += ,@("Storage Account","storage-account.png")
-                            foreach ($storageaccount in $storageaccounts) {
-                                Export-StorageAccount $storageaccount
-                            }
-                        }
-                    }
-
-                    # Application Gateways
-                    if ( $false -eq $SkipAppGW ) {
-                        Write-Output "Collecting Application Gateways..."
-                        Export-AddToFile "    ##### $subname - Application Gateways #####"
-                        $agws = Get-AzApplicationGateway -ErrorAction Stop
-                        if ($null -ne $agws) {
-                            $Script:Legend += ,@("Application Gateway","agw.png")
-                            foreach ($agw in $agws) {
-                                Export-ApplicationGateway $agw
-                            }
-                        }
-                    }
-
-                    #MySQL Servers
-                    if ( $false -eq $SkipMySQL ) {
-                        Write-Output "Collecting MySQL Flexible Servers..."
-                        Export-AddToFile "    ##### $subname - MySQL Flexible Servers #####"
-                        $mysqlservers = Get-AzMySqlFlexibleServer -ErrorAction Stop
-                        if ($null -ne $mysqlservers) {
-                            $Script:Legend += ,@("MySQL Server","mysql.png")
-                            foreach ($mysqlserver in $mysqlservers) {
-                                Export-MySQLServer $mysqlserver 
-                            }
-                        }
-                    }
-
-                    #PostgreSQL Servers
-                    if ( $false -eq $SkipPostgreSQL ) {
-                        Write-Output "Collecting PostgreSQL Servers..."
-                        Export-AddToFile "    ##### $subname - PostgreSQL Servers #####"
-                        $postgresqlservers = Get-AzPostgreSqlFlexibleServer -ErrorAction Stop
-                        if ($null -ne $postgresqlservers) {
-                            $Script:Legend += ,@("PostgreSQL Server","postgresql.png")
-                            foreach ($postgresqlserver in $postgresqlservers) {
-                                Export-PostgreSQLServer $postgresqlserver 
-                            }
-                        }
-                    }
-
-                    #CosmosDB Servers
-                    if ( $false -eq $SkipCosmosDB ) {
-                        Write-Output "Collecting CosmosDB Servers..."
-                        Export-AddToFile "    ##### $subname - CosmosDB Servers #####"
-                        $resourceGroups = Get-AzResourceGroup -ErrorAction Stop
-                        $GotAzCosmosDBAccounts = $false
-                        foreach ($rg in $resourceGroups) {
-                            $dbaccts = Get-AzCosmosDBAccount -ResourceGroupName $rg.ResourceGroupName -ErrorAction Stop
-                            foreach ($dbaact in $dbaccts) {
-                                $GotAzCosmosDBAccounts = $true
-                                Export-CosmosDBAccount $dbaact
-                            }
-                        }
-                        if ($GotAzCosmosDBAccounts) {
-                            $Script:Legend += ,@("CosmosDB Account","cosmosdb.png")
-                        }
-                    }
-
-                    #Redis Servers
-                    if ( $false -eq $SkipRedis ) {
-                        Write-Output "Collecting Redis Servers..."
-                        Export-AddToFile "    ##### $subname - Redis Servers #####"
-                        $redisservers = Get-AzRedisCache -ErrorAction Stop
-                        if ($null -ne $redisservers) {
-                            $Script:Legend += ,@("Redis Cache","redis.png")
-                            foreach ($redisserver in $redisservers) {
-                                Export-RedisServer $redisserver 
-                            }
-                        }
-                    }
-
-                    #SQL Managed Instances
-                    if ( $false -eq $SkipSQLMI ) {
-                        Write-Output "Collecting SQL Managed Instances..."
-                        Export-AddToFile "    ##### $subname - SQL Managed Instances #####"
-                        $sqlmanagedinstances = Get-AzSqlInstance -ErrorAction Stop
-                        if ($null -ne $sqlmanagedinstances) {
-                            $Script:Legend += ,@("SQL Managed Instance","sqlmi.png")
-                            foreach ($sqlmanagedinstance in $sqlmanagedinstances) {
-                                Export-SQLManagedInstance $sqlmanagedinstance 
-                            }
-                        }
-                    }
-
-                    #Azure SQL logical servers
-                    if ( $false -eq $SkipSQLDB ) {
-                        Write-Output "Collecting SQL Servers..."
-                        Export-AddToFile "    ##### $subname - SQL Servers #####"
-                        $sqlservers = Get-AzSqlServer -ErrorAction Stop
-                        if ($null -ne $sqlservers) {
-                            $Script:Legend += ,@("SQL Server","sqlserver.png")
-                            foreach ($sqlserver in $sqlservers) {
-                                Export-SQLServer $sqlserver 
-                            }
-                        }
-                    }
-
-                    #EventHubs
-                    if ( $false -eq $SkipEventHub ) {
-                        Write-Output "Collecting Event Hubs..."
-                        Export-AddToFile "    ##### $subname - Event Hubs #####"
-                        $namespaces = Get-AzEventHubNamespace -ErrorAction Stop
-                        if ($null -ne $namespaces) {
-                            $Script:Legend += ,@("Event Hub","eventhub.png")
-                            foreach ($namespace in $namespaces) {
-                                Export-EventHub $namespace 
-                            }
-                        }
-                    }
-
-                    #App Service Plans
-                    if ( $false -eq $SkipASP ) {
-                        Write-Output "Collecting App Service Plans..."
-                        Export-AddToFile "    ##### $subname - App Service Plans #####"
-                        $appserviceplans = Get-AzAppServicePlan -ErrorAction Stop   
-                        if ($null -ne $appserviceplans) {
-                            $Script:Legend += ,@("App Service Plan","appplan.png")
-                            foreach ($appserviceplan in $appserviceplans) {
-                                Export-AppServicePlan $appserviceplan 
-                            }
-                        }
-                    }
-
-                    #APIMs
-                    if ( $false -eq $SkipAPIM ) {
-                        Write-Output "Collecting API Management Services..."
-                        Export-AddToFile "    ##### $subname - API Management Services #####"
-                        $apims = Get-AzApiManagement -ErrorAction Stop
-                        if ($null -ne $apims) {
-                            $Script:Legend += ,@("API Management","apim.png")
-                            foreach ($apim in $apims) {
-                                Export-APIM $apim 
-                            }
-                        }
-                    }
-
-                    #AKS
-                    if ( $false -eq $SkipAKS ) {
-                        Write-Output "Collecting AKS Clusters..."
-                        Export-AddToFile "    ##### $subname - AKS Clusters #####"
-                        $aksclusters = Get-AzAksCluster -ErrorAction Stop
-                        if ($null -ne $aksclusters) {
-                            $Script:Legend += ,@("AKS Cluster","aks-service.png")
-                            foreach ($akscluster in $aksclusters) {
-                                Export-AKSCluster $akscluster
-                            }   
-                        }
-                    }
-
-                    #Compute Galleries
-                    if ( $false -eq $SkipGAL ) {
-                        Write-Output "Collecting Compute Galleries..."
-                        Export-AddToFile "    ##### $subname - Compute Galleries #####"
-                        $computeGalleries = Get-AzGallery -ErrorAction Stop
-                        if ($null -ne $computeGalleries) {
-                            $Script:Legend += ,@("Compute Gallery","computegalleries.png")
-                            foreach ($computeGallery in $computeGalleries) {
-                                Export-ComputeGallery $computeGallery
-                            }
-                        }
-                    }
-
-                    #VMSSs
-                    if ( $false -eq $SkipVMSS -or $false -eq $SkipVM ) {
-                        Write-Output "Collecting VMSS..."
-                        Export-AddToFile "    ##### $subname - VMSS #####"
-                        $VMSSs = Get-AzVMSS -ErrorAction Stop
-                        if ($null -ne $VMSSs) {
-                            $Script:Legend += ,@("Virtual Machine Scale Set","vmss.png")
-                            foreach ($vmss in $VMSSs) {
-                                Export-VMSS $vmss
-                            }
-                        }
-                    }
-
-                    #Managed Identities
-                    if ( $false -eq $SkipMI ) {
-                        Write-Output "Collecting Managed Identities..."
-                        Export-AddToFile "    ##### $subname - User Assigned Managed Identities #####"
-                        $managedIdentities = Get-AzUserAssignedIdentity -ErrorAction Stop
-                        if ($null -ne $managedIdentities) {
-                            $Script:Legend += ,@("Managed Identity","managed-identity.png")
-                            foreach ($managedIdentity in $managedIdentities) {
-                                Export-ManagedIdentity $managedIdentity
-                            }
-                        }
-                    }
-
-                    #ACRs
-                    if ( $false -eq $SkipACR ) {
-                        Write-Output "Collecting Azure Container Registries..."
-                        Export-AddToFile "    ##### $subname - Azure Container Registries #####"
-                        $acrs = Get-AzContainerRegistry -ErrorAction Stop
-                        if ($null -ne $acrs) {
-                            $Script:Legend += ,@("Azure Container Registry","acr.png")
-                            foreach ($acr in $acrs) {
-                                Export-ACR $acr
-                            }   
-                        }
-                    }
-
-                    #SSH Keys
-                    if ( $false -eq $SkipSSHKeys ) {
-                        Write-Output "Collecting SSH Keys..."
-                        Export-AddToFile "    ##### $subname - SSH Keys #####"
-                        $sshkeys = Get-AzSshKey -ErrorAction Stop
-                        if ($null -ne $sshkeys) {
-                            $Script:Legend += ,@("SSH Key","ssh-key.png")
-                            foreach ($sshkey in $sshkeys) {
-                                Export-SSHKey $sshkey
-                            }
-                        }
-                    }
-
-                    #Container App Environments
-                    if ( $false -eq $SkipACA ) {
-                        Write-Output "Collecting Container App Environments..."
-                        Export-AddToFile "    ##### $subname - Container App Environments #####"
-                        $containerAppEnvironments = Get-AzContainerAppManagedEnv -ErrorAction Stop
-                        if ($null -ne $containerAppEnvironments) {
-                            $Script:Legend += ,@("Container App Environment","containerappenv.png")
-                            foreach ($containerAppEnvironment in $containerAppEnvironments) {
-                                Export-ContainerAppEnv $containerAppEnvironment
-                            }
-                        }
-                    }
-
-                    #Static Web Apps
-                    if ( $false -eq $SkipSWA ) {
-                        Write-Output "Collecting Static Web Apps..."
-                        Export-AddToFile "    ##### $subname - Static Web Apps #####"
-                        $StaticWebApps = Get-AzStaticWebApp
-                        if ( $null -ne $StaticWebApps ) {
-                            $Script:Legend += ,@("Static Web App","swa.png")
-                            foreach ( $swa in $StaticWebApps ) {
-                                Export-StaticWebApp -StaticWebApp $swa
-                            }
-                        }
-                    }
-
-                    #Recovery Service Vaults (RSV)
-                    if ( $false -eq $SkipRSV ) {
-                        Write-Output "Collecting Recovery Service Vaults..."
-                        Export-AddToFile "    ##### $subname - Recovery Service Vaults #####"
-                        $RecoveryServiceVaults = Get-AzRecoveryServicesVault
-                        if ( $null -ne $RecoveryServiceVaults ) {
-                            $Script:Legend += ,@("Recovery Service Vault","rsv.png")
-                            foreach ( $rsv in $RecoveryServiceVaults ) {
-                                Export-RecoveryServiceVault -RecoveryServiceVault $rsv
-                            }
-                        }
-                    }
-
-                    #Backup Vaults (BV)
-                    if ( $false -eq $SkipBV ) {
-                        Write-Output "Collecting Backup Vaults..."
-                        Export-AddToFile "    ##### $subname - Backup Vaults #####"
-                        $BackupVaults = Get-AzDataProtectionBackupVault
-                        if ( $null -ne $BackupVaults ) {
-                            $Script:Legend += ,@("Backup Vault","backupvault.png")
-                            foreach ( $bv in $BackupVaults ) {
-                                Export-BackupVault -BackupVault $bv
-                            }
-                        }
-                    }
-
-                    #AVS
-                    if ( $false -eq $SkipAVS ) {
-                        Write-Output "Collecting AVS instances..."
-                        Export-AddToFile "    ##### $subname - Azure VMware Solution (AVS) #####"
-                        $AVSs = Get-AzVMwarePrivateCloud
-                        if ( $null -ne $AVSs ) {
-                            $Script:Legend += ,@("Azure VMware Solution","avs.png")
-                            $Script:Legend += ,@("Express Route Circuit","ercircuit.png")
-                            foreach ( $AVS in $AVSs ) {
-                                Export-AVS -AVS $AVS
-                            }
-                        }
-                    }
-
-                    #AVD
-                    if ( $false -eq $SkipAVD ) {
-                        Write-Output "Collecting AVD pools..."
-                        Export-AddToFile "    ##### $subname - Azure Virtual Desktop (AVD) #####"
-                        $AVDs = Get-AzWvdHostPool
-                        if ( $null -ne $AVDs ) {
-                            $Script:Legend += ,@("AVD Hostpool","avd-hostpool.png")
-                            $Script:Legend += ,@("AVD Workspace","avd-workspace.png")
-                            $Script:Legend += ,@("AVD App Group","avd-appgroup.png")
-                            foreach ( $AVD in $AVDs ) {
-                                Export-AVD -AVD $AVD
-                            }
-                        }
-                    }                    
-                    
                 }
+
+                ### VMs
+                if ( $EnableVM -OR (-not $SkipNonCoreNetwork -AND -not $SkipVM ) ) {
+                    Write-Output "Collecting VMs..."
+                    Export-AddToFile "    ##### $subname - VMs #####"
+                    $VMs = Get-AzVM -ErrorAction Stop
+                    if ($null -ne $VMs) {
+                        $Script:Legend += ,@("Virtual Machine","vm.png")
+                        $Script:Legend += ,@("Network Interface Card","nic.png")
+                        foreach ($vm in $VMs) {
+                            Export-VM $VM
+                        }
+                    }
+                }
+
+                ### Keyvaults
+                if ( $EnableKV -OR (-not $SkipNonCoreNetwork -AND -not $SkipKV ) ) {
+                    Write-Output "Collecting Keyvaults..."
+                    Export-AddToFile "    ##### $subname - Keyvaults #####"
+                    $Keyvaults = Get-AzKeyVault -ErrorAction Stop
+                    if ($null -ne $Keyvaults) {
+                        $Script:Legend += ,@("Key Vault","keyvault.png")
+                        foreach ($keyvault in $Keyvaults) {
+                            Export-Keyvault $Keyvault
+                        }
+                    }
+                }
+
+                ### Storage Accounts
+                if ( $EnableSA -OR (-not $SkipNonCoreNetwork -AND -not $SkipSA ) ) {
+                    Write-Output "Collecting Storage Accounts..."
+                    Export-AddToFile "    ##### $subname - Storage Accounts #####"
+                    $storageaccounts = Get-AzStorageAccount -ErrorAction Stop
+                    if ($null -ne $storageaccounts) {
+                        $Script:Legend += ,@("Storage Account","storage-account.png")
+                        foreach ($storageaccount in $storageaccounts) {
+                            Export-StorageAccount $storageaccount
+                        }
+                    }
+                }
+
+                # Application Gateways
+                if ( $EnableAppGW -OR (-not $SkipNonCoreNetwork -AND -not $SkipAppGW ) ) {
+                    Write-Output "Collecting Application Gateways..."
+                    Export-AddToFile "    ##### $subname - Application Gateways #####"
+                    $agws = Get-AzApplicationGateway -ErrorAction Stop
+                    if ($null -ne $agws) {
+                        $Script:Legend += ,@("Application Gateway","agw.png")
+                        foreach ($agw in $agws) {
+                            Export-ApplicationGateway $agw
+                        }
+                    }
+                }
+
+                #MySQL Servers
+                if ( $EnableMySQL -OR (-not $SkipNonCoreNetwork -AND -not $SkipMySQL ) ) {
+                    Write-Output "Collecting MySQL Flexible Servers..."
+                    Export-AddToFile "    ##### $subname - MySQL Flexible Servers #####"
+                    $mysqlservers = Get-AzMySqlFlexibleServer -ErrorAction Stop
+                    if ($null -ne $mysqlservers) {
+                        $Script:Legend += ,@("MySQL Server","mysql.png")
+                        foreach ($mysqlserver in $mysqlservers) {
+                            Export-MySQLServer $mysqlserver 
+                        }
+                    }
+                }
+
+                #PostgreSQL Servers
+                if ( $EnablePostgreSQL -OR (-not $SkipNonCoreNetwork -AND -not $SkipPostgreSQL ) ) {
+                    Write-Output "Collecting PostgreSQL Servers..."
+                    Export-AddToFile "    ##### $subname - PostgreSQL Servers #####"
+                    $postgresqlservers = Get-AzPostgreSqlFlexibleServer -ErrorAction Stop
+                    if ($null -ne $postgresqlservers) {
+                        $Script:Legend += ,@("PostgreSQL Server","postgresql.png")
+                        foreach ($postgresqlserver in $postgresqlservers) {
+                            Export-PostgreSQLServer $postgresqlserver 
+                        }
+                    }
+                }
+
+                #CosmosDB Servers
+                if ( $EnableCosmosDB -OR (-not $SkipNonCoreNetwork -AND -not $SkipCosmosDB ) ) {
+                    Write-Output "Collecting CosmosDB Servers..."
+                    Export-AddToFile "    ##### $subname - CosmosDB Servers #####"
+                    $resourceGroups = Get-AzResourceGroup -ErrorAction Stop
+                    $GotAzCosmosDBAccounts = $false
+                    foreach ($rg in $resourceGroups) {
+                        $dbaccts = Get-AzCosmosDBAccount -ResourceGroupName $rg.ResourceGroupName -ErrorAction Stop
+                        foreach ($dbaact in $dbaccts) {
+                            $GotAzCosmosDBAccounts = $true
+                            Export-CosmosDBAccount $dbaact
+                        }
+                    }
+                    if ($GotAzCosmosDBAccounts) {
+                        $Script:Legend += ,@("CosmosDB Account","cosmosdb.png")
+                    }
+                }
+
+                #Redis Servers
+                if ( $EnableRedis -OR (-not $SkipNonCoreNetwork -AND -not $SkipRedis ) ) {
+                    Write-Output "Collecting Redis Servers..."
+                    Export-AddToFile "    ##### $subname - Redis Servers #####"
+                    $redisservers = Get-AzRedisCache -ErrorAction Stop
+                    if ($null -ne $redisservers) {
+                        $Script:Legend += ,@("Redis Cache","redis.png")
+                        foreach ($redisserver in $redisservers) {
+                            Export-RedisServer $redisserver 
+                        }
+                    }
+                }
+
+                #SQL Managed Instances
+                if ( $EnableSQLMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipSQLMI ) ) {
+                    Write-Output "Collecting SQL Managed Instances..."
+                    Export-AddToFile "    ##### $subname - SQL Managed Instances #####"
+                    $sqlmanagedinstances = Get-AzSqlInstance -ErrorAction Stop
+                    if ($null -ne $sqlmanagedinstances) {
+                        $Script:Legend += ,@("SQL Managed Instance","sqlmi.png")
+                        foreach ($sqlmanagedinstance in $sqlmanagedinstances) {
+                            Export-SQLManagedInstance $sqlmanagedinstance 
+                        }
+                    }
+                }
+
+                #Azure SQL logical servers
+                if ( $EnableSQLDB -OR (-not $SkipNonCoreNetwork -AND -not $SkipSQLDB ) ) {
+                    Write-Output "Collecting SQL Servers..."
+                    Export-AddToFile "    ##### $subname - SQL Servers #####"
+                    $sqlservers = Get-AzSqlServer -ErrorAction Stop
+                    if ($null -ne $sqlservers) {
+                        $Script:Legend += ,@("SQL Server","sqlserver.png")
+                        foreach ($sqlserver in $sqlservers) {
+                            Export-SQLServer $sqlserver 
+                        }
+                    }
+                }
+
+                #EventHubs
+                if ( $EnableEventHub -OR (-not $SkipNonCoreNetwork -AND -not $SkipEventHub ) ) {
+                    Write-Output "Collecting Event Hubs..."
+                    Export-AddToFile "    ##### $subname - Event Hubs #####"
+                    $namespaces = Get-AzEventHubNamespace -ErrorAction Stop
+                    if ($null -ne $namespaces) {
+                        $Script:Legend += ,@("Event Hub","eventhub.png")
+                        foreach ($namespace in $namespaces) {
+                            Export-EventHub $namespace 
+                        }
+                    }
+                }
+
+                #App Service Plans
+                if ( $EnableASP -OR (-not $SkipNonCoreNetwork -AND -not $SkipASP) ) {
+                    Write-Output "Collecting App Service Plans..."
+                    Export-AddToFile "    ##### $subname - App Service Plans #####"
+                    $appserviceplans = Get-AzAppServicePlan -ErrorAction Stop   
+                    if ($null -ne $appserviceplans) {
+                        $Script:Legend += ,@("App Service Plan","appplan.png")
+                        foreach ($appserviceplan in $appserviceplans) {
+                            Export-AppServicePlan $appserviceplan 
+                        }
+                    }
+                }
+
+                #APIMs
+                if ( $EnableAPIM -OR (-not $SkipNonCoreNetwork -AND -not $SkipAPIM ) ) {
+                    Write-Output "Collecting API Management Services..."
+                    Export-AddToFile "    ##### $subname - API Management Services #####"
+                    $apims = Get-AzApiManagement -ErrorAction Stop
+                    if ($null -ne $apims) {
+                        $Script:Legend += ,@("API Management","apim.png")
+                        foreach ($apim in $apims) {
+                            Export-APIM $apim 
+                        }
+                    }
+                }
+
+                #AKS
+                if ( $EnableAKS -OR (-not $SkipNonCoreNetwork -AND -not $SkipAKS ) ) {
+                    Write-Output "Collecting AKS Clusters..."
+                    Export-AddToFile "    ##### $subname - AKS Clusters #####"
+                    $aksclusters = Get-AzAksCluster -ErrorAction Stop
+                    if ($null -ne $aksclusters) {
+                        $Script:Legend += ,@("AKS Cluster","aks-service.png")
+                        foreach ($akscluster in $aksclusters) {
+                            Export-AKSCluster $akscluster
+                        }   
+                    }
+                }
+
+                #Compute Galleries
+                if ( $EnableGAL -OR (-not $SkipNonCoreNetwork -AND -not $SkipGAL ) ) {
+                    Write-Output "Collecting Compute Galleries..."
+                    Export-AddToFile "    ##### $subname - Compute Galleries #####"
+                    $computeGalleries = Get-AzGallery -ErrorAction Stop
+                    if ($null -ne $computeGalleries) {
+                        $Script:Legend += ,@("Compute Gallery","computegalleries.png")
+                        foreach ($computeGallery in $computeGalleries) {
+                            Export-ComputeGallery $computeGallery
+                        }
+                    }
+                }
+
+                #VMSSs
+                if ( $EnableVMSS -OR (-not $SkipNonCoreNetwork -AND -not $SkipVMSS ) ) {
+                    Write-Output "Collecting VMSS..."
+                    Export-AddToFile "    ##### $subname - VMSS #####"
+                    $VMSSs = Get-AzVMSS -ErrorAction Stop
+                    if ($null -ne $VMSSs) {
+                        $Script:Legend += ,@("Virtual Machine Scale Set","vmss.png")
+                        foreach ($vmss in $VMSSs) {
+                            Export-VMSS $vmss
+                        }
+                    }
+                }
+
+                #Managed Identities
+                if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
+                    Write-Output "Collecting Managed Identities..."
+                    Export-AddToFile "    ##### $subname - User Assigned Managed Identities #####"
+                    $managedIdentities = Get-AzUserAssignedIdentity -ErrorAction Stop
+                    if ($null -ne $managedIdentities) {
+                        $Script:Legend += ,@("Managed Identity","managed-identity.png")
+                        foreach ($managedIdentity in $managedIdentities) {
+                            Export-ManagedIdentity $managedIdentity
+                        }
+                    }
+                }
+
+                #ACRs
+                if ( $EnableACR -OR (-not $SkipNonCoreNetwork -AND -not $SkipACR ) ) {
+                    Write-Output "Collecting Azure Container Registries..."
+                    Export-AddToFile "    ##### $subname - Azure Container Registries #####"
+                    $acrs = Get-AzContainerRegistry -ErrorAction Stop
+                    if ($null -ne $acrs) {
+                        $Script:Legend += ,@("Azure Container Registry","acr.png")
+                        foreach ($acr in $acrs) {
+                            Export-ACR $acr
+                        }   
+                    }
+                }
+
+                #SSH Keys
+                if ( $EnableSSHKeys -OR (-not $SkipNonCoreNetwork -AND -not $SkipSSHKeys ) ) {
+                    Write-Output "Collecting SSH Keys..."
+                    Export-AddToFile "    ##### $subname - SSH Keys #####"
+                    $sshkeys = Get-AzSshKey -ErrorAction Stop
+                    if ($null -ne $sshkeys) {
+                        $Script:Legend += ,@("SSH Key","ssh-key.png")
+                        foreach ($sshkey in $sshkeys) {
+                            Export-SSHKey $sshkey
+                        }
+                    }
+                }
+
+                #Container App Environments
+                if ( $EnableACA -OR (-not $SkipNonCoreNetwork -AND -not $SkipACA ) ) {
+                    Write-Output "Collecting Container App Environments..."
+                    Export-AddToFile "    ##### $subname - Container App Environments #####"
+                    $containerAppEnvironments = Get-AzContainerAppManagedEnv -ErrorAction Stop
+                    if ($null -ne $containerAppEnvironments) {
+                        $Script:Legend += ,@("Container App Environment","containerappenv.png")
+                        foreach ($containerAppEnvironment in $containerAppEnvironments) {
+                            Export-ContainerAppEnv $containerAppEnvironment
+                        }
+                    }
+                }
+
+                #Static Web Apps
+                if ( $EnableSWA -OR (-not $SkipNonCoreNetwork -AND -not $SkipSWA ) ) {
+                    Write-Output "Collecting Static Web Apps..."
+                    Export-AddToFile "    ##### $subname - Static Web Apps #####"
+                    $StaticWebApps = Get-AzStaticWebApp
+                    if ( $null -ne $StaticWebApps ) {
+                        $Script:Legend += ,@("Static Web App","swa.png")
+                        foreach ( $swa in $StaticWebApps ) {
+                            Export-StaticWebApp -StaticWebApp $swa
+                        }
+                    }
+                }
+
+                #Recovery Service Vaults (RSV)
+                if ( $EnableRSV -OR (-not $SkipNonCoreNetwork -AND -not $SkipRSV ) ) {
+                    Write-Output "Collecting Recovery Service Vaults..."
+                    Export-AddToFile "    ##### $subname - Recovery Service Vaults #####"
+                    $RecoveryServiceVaults = Get-AzRecoveryServicesVault
+                    if ( $null -ne $RecoveryServiceVaults ) {
+                        $Script:Legend += ,@("Recovery Service Vault","rsv.png")
+                        foreach ( $rsv in $RecoveryServiceVaults ) {
+                            Export-RecoveryServiceVault -RecoveryServiceVault $rsv
+                        }
+                    }
+                }
+
+                #Backup Vaults (BV)
+                if ( $EnableBV -OR (-not $SkipNonCoreNetwork -AND -not $SkipBV ) ) {
+                    Write-Output "Collecting Backup Vaults..."
+                    Export-AddToFile "    ##### $subname - Backup Vaults #####"
+                    $BackupVaults = Get-AzDataProtectionBackupVault
+                    if ( $null -ne $BackupVaults ) {
+                        $Script:Legend += ,@("Backup Vault","backupvault.png")
+                        foreach ( $bv in $BackupVaults ) {
+                            Export-BackupVault -BackupVault $bv
+                        }
+                    }
+                }
+
+                #AVS
+                if ( $EnableAVS -OR (-not $SkipNonCoreNetwork -AND -not $SkipAVS ) ) {
+                    Write-Output "Collecting AVS instances..."
+                    Export-AddToFile "    ##### $subname - Azure VMware Solution (AVS) #####"
+                    $AVSs = Get-AzVMwarePrivateCloud
+                    if ( $null -ne $AVSs ) {
+                        $Script:Legend += ,@("Azure VMware Solution","avs.png")
+                        $Script:Legend += ,@("Express Route Circuit","ercircuit.png")
+                        foreach ( $AVS in $AVSs ) {
+                            Export-AVS -AVS $AVS
+                        }
+                    }
+                }
+
+                #AVD
+                if ( $EnableAVD -OR (-not $SkipNonCoreNetwork -AND -not $SkipAVD ) ) {
+                    Write-Output "Collecting AVD pools..."
+                    Export-AddToFile "    ##### $subname - Azure Virtual Desktop (AVD) #####"
+                    $AVDs = Get-AzWvdHostPool
+                    if ( $null -ne $AVDs ) {
+                        $Script:Legend += ,@("AVD Hostpool","avd-hostpool.png")
+                        $Script:Legend += ,@("AVD Workspace","avd-workspace.png")
+                        $Script:Legend += ,@("AVD App Group","avd-appgroup.png")
+                        foreach ( $AVD in $AVDs ) {
+                            Export-AVD -AVD $AVD
+                        }
+                    }
+                } 
 
                 Export-AddToFile "`n    ##########################################################################################################"
                 Export-AddToFile "    ##### $subname "

@@ -48,12 +48,14 @@ Import-Module .\AzNetworkDiagram.psm1
 - **-Tenant "tenantId"** Specifies the tenant Id to be used in all subscription authentication. Handy when you have multiple tenants to work with. **Default: current tenant**
 - **-Sanitize $bool** ($true/$false) - Sanitizes all names, locations, IP addresses and CIDR blocks. **Default: $false**
 - **-Prefix "string"** - Adds a prefix to the output file name. For example is cases where you want to do multiple automated runs then the file names will have the prefix per run that you specify. **Default: No Prefix**
-- **-OnlyCoreNetwork** ($true/$false) - if $true/enabled, only cores network resources are processed - ie. non-network resources are skipped for a cleaner diagram - but you will also lack some references from shown resources. Default is $false.
+- **-SkipNonCoreNetwork** ($true/$false) - if $true/enabled, only cores network resources are processed (unless resource types are explicitly enabled using -EnableXXXX options) - ie. non-network resources are skipped for a cleaner diagram - but you will also lack some references from shown resources. Default is $false.
+- **-SkipXXX** ($true/$false) - Skips a chosen non-core network resource type - use tab completion to see current list.
+- **-EnableXXX** ($true/$false) - Enable a chosen non-core network resource type regardless of it being skipped (-EnableXXXX will take precedence!) - use tab completion to see current list.
 - **-OnlyMgmtGroups** ($true/$false) - Creates a Management Group and Subscription overview diagram - everything else is skipped. Default is $false.
 - **-KeepDotFile** ($true/$false) - if $true/enabled, the DOT file is not deleted after the diagrams have been generated. Default is $false and DOT files are deleted.
 - **-OutputFormat** (pdf, svg, png) - One or more output files get generated with the specified formats. Default is PDF.
 - **-EnableLinks** ($true/$false) - Many resources become links to the Azure portal can be enabled using this flag. Default is $false.
-- **-SkipXXX** ($true/$false) - Skips a chosen non-core network resource type - use tab completion to see current list.
+
 
 
 ## Running the Powershell module
@@ -69,17 +71,9 @@ Beware, that by using "-Subscriptions" to limit the scope of data collection, yo
 ---
 
 # Recommendation
-It is inevitable that large environments make the diagram **very large** (in this case "wide"), but zooming into the PDF or SVG works the best. In cases where diagrams gets too bug/wide, you should consider scoping the digram (ie. utilize **-Subscriptions "subid","subid2"....**) to create smaller diagrams with a scope that matches your deployment(s), instead of your entire infrastructure. For many environments, you could probably go with something like this:
+It is inevitable that large environments make the diagram **very large** (in this case "wide"), but zooming into the PDF or SVG works the best. In cases where diagrams gets too big/wide, you should consider scoping the digram (ie. utilize **-Subscriptions "subid","subid2"....**) to create smaller diagrams with a scope that matches your deployment(s), instead of your entire infrastructure. For many environments, you could probably go with something like this:
 - A management group diagram (-OnlyMgmtGroups $true)
-- A core network diagram (-OnlyCoreNetwork $true) that spans part of your infrastructure (or maybe everything), which will include
-  - Route tables
-  - IP Groups
-  - vNets (incl. subnets, peerings, Azure Bastion, Azure Firewall)
-  - NSGs
-  - VPN Connections
-  - Express Route Circuits
-  - vWAN / Virtual WAN
-  - Private Endpoints
+- A core network diagram (-OnlyCoreNetwork $true) that spans part of your infrastructure (or maybe everything), which will include the core network resources listed under "Currently supported resources"
 - Multiple minor diagrams for individual workloads
 
 ---
@@ -100,39 +94,44 @@ The module is now compatible with both Ubuntu and Windows so you can run it succ
 
 This module will include in the diagram in separate colors:
   - Mangement Groups and Subscriptions
-  - vNets & Subnets & Delegations
-  - Route Tables
-  - NSG's
-  - IP Groups
+  - Core network resources
+    - Azure Firewall, including IP Groups
+    - Bastion
+    - NAT Gateway
+    - NSG's
+    - Route Server
+    - Route Tables
+    - VPN/ER Gateways and connections
+      - Express Routes Circuits, ER Direct ports and Links
+    - vNets incl. delegations, peerings and subnets 
+    - vWAN's & Hubs
+  - API Management (APIM)
+  - App Service Plans and App Services
   - Application Gateways
-  - Express Routes Circuits and ER Direct ports & Links
-  - vWAN's & Hubs
-  - Azure Firewall
-  - VPN Gateway
-  - NAT Gateway
-  - Bastion
-  - Route Server
-  - Private Endpoints
-  - SSH Keys
-  - ACR
-  - AKS
-  - Storage Accounts
-  - VM, VMSS
-  - Keyvaults
-  - APIM
-  - MongoDB, MySQL, PostgreSQL
-  - SQL Server (logical server), Azure SQL, SQL Managed Instance
-  - EventHubs
-  - Redis Cache
-  - App Services
-  - Compute Galleries
   - Azure Container Apps
   - Azure Container Instances
-  - Static Web Apps
-  - Recovery Service Vaults
-  - Backup Vaults
+  - Azure Container Registry
+  - Azure Kubernetes Services
   - Azure VMware Solution
   - Azure Virtual Desktop
+  - Backup Vaults
+  - Compute Galleries
+  - EventHubs
+  - Keyvaults
+  - Open Source DBs
+    - CosmosDB
+    - MongoDB
+    - MySQL
+    - PostgreSQL
+  - Private Endpoints
+  - Recovery Service Vaults
+  - Redis Cache
+  - SQL Managed Instance
+  - SQL Server (logical server), Azure SQL
+  - SSH Keys
+  - Static Web Apps
+  - Storage Accounts
+  - Virtual Machines and Virtual Machine Scale Sets
 
 ---
 
@@ -154,6 +153,19 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
   - Azure Route Server
   - NICs connected to VMs now appear as seperate resources, with its own link to subnets and NSGs. That is handy when utilizing NVAs (Network Virtual Appliances) for example.
   - Azure Virtual Desktop (Hostpools, Application Groups, Workspaces), incl. references to session hosts
+  - Multiple IPConfigurations pr. NIC - ie. multiple private and public IPs
+- Parameters changes/added/removed
+  - -OnlyCoreNetwork has been replaced by -SkipNonCoreNetwork to align with new more flexible structure for Skipping/Enabling resources. See next entry
+  - All non-core network resources, now have a corresponding -Skip and -Enable options. -EnableXXXX will take precedence. Use tab-completion for a full list. A few examples:
+    - -SkipSA $true
+    - -EnableSA $true
+    - -SkipVM $true
+    - -EnableVM $true
+- Minor changes
+  - VPN Connections static remote subnets are now sorted
+  - Route table propagation setting now reflected
+  - Viritual Network Gateways now reflect the SKU
+  - Parameters are now sorted for easier tab-completion
 ## v1.2.1
 - Bug fix - versions with a minor of "0", now shows correctly (showed "-1")
 ## v1.2
@@ -169,13 +181,13 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 - Changed parameters for Mangement Groups
   - EnableMgmtGroups removed, rarely a case where it would make sense to have mangement groups in a diagram with everything else. Utilize [-OnlyMgmtGroups $true] for management groups overview moving forward.
 - New parameters
-  - All non-core network resource, now have a corrosponding -Skip option. A few examples:
+  - All non-core network resource, now have a corresponding -Skip option. A few examples:
     - -SkipSA $true
     - -SkipVM $true
     - Use tab completion for a full list
 - New features
   - NAT GW
-    - Link addedd
+    - Link added
   - Routes Tables
     - Routes are now sorted by Address Prefix
     - Route names are now part of the output
