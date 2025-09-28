@@ -148,7 +148,7 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 ---
 
 # Changelog (since v1.0.1)
-## Upcoming release (not released to Powershell Gallary yet)
+## v1.3
 - New support for
   - Azure Route Server
   - NICs connected to VMs now appear as seperate resources, with its own link to subnets and NSGs. That is handy when utilizing NVAs (Network Virtual Appliances) for example.
