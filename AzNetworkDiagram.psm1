@@ -312,14 +312,19 @@ Export-dotHeader
 function Export-dotHeader {
     [CmdletBinding()]
 
+    $rankdir = "TB"
+
+    if ( $script:VerticalView ) { $rankdir = "LR" }
+
     $Data = "digraph AzNetworkDiagram {  
     # Colors
     colorscheme=pastel19;
     bgcolor=9;
 
     fontname=`"Arial,sans-serif`"
-    node [colorscheme=x11; fontname=`"Arial,sans-serif`"]
-    edge [fontname=`"Arial,sans-serif`"]
+    fontsize=24
+    node [colorscheme=x11; fontname=`"Arial,sans-serif`";fontsize=24]
+    edge [fontname=`"Arial,sans-serif`"fontsize=24]
     
     # Ability for peerings arrows/connections to end at border
     compound = true;
@@ -328,7 +333,7 @@ function Export-dotHeader {
     
     # Rank (height in picture) support
     newrank = true;
-    rankdir = TB;
+    rankdir = $script:VerticalView;
     nodesep=`"1.0`"
     "
     Export-CreateFile -Data $Data
@@ -976,9 +981,9 @@ function Export-VMSS {
             bgcolor = 2;
             node [colorscheme = blues9; color = 2;];
         "
-        $extensions = $vmss.VirtualMachineProfile.ExtensionProfile.Extensions | ForEach-Object { $_.Name } | Join-String -Separator ", "
+        $extensions = $vmss.VirtualMachineProfile.ExtensionProfile.Extensions | ForEach-Object { $_.Name } | Join-String -Separator "\n"
         $ImagePath = Join-Path $OutputPath "icons" "vmss.png"
-        $data += "        $vmssid [label = `"\nLocation: $Location\nSKU: $($vmss.Sku.Name)\nCapacity: $($vmss.Sku.Capacity)\nZones: $($vmss.Zones)\nOS Type: $($vmss.StorageProfile.OsDisk.OsType)\nOrchestration Mode: $($vmss.OrchestrationMode)\nUpgrade Policy: $($vmss.UpgradePolicy)\nExtensions: $extensions`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $vmss)];"
+        $data += "        $vmssid [label = `"\nLocation: $Location\nSKU: $($vmss.Sku.Name)\nCapacity: $($vmss.Sku.Capacity)\nZones: $($vmss.Zones)\nOS Type: $($vmss.StorageProfile.OsDisk.OsType)\nOrchestration Mode: $($vmss.OrchestrationMode)\nUpgrade Policy: $($vmss.UpgradePolicy)\n\nExtensions:\n$extensions`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $vmss)];"
         $data += "`n"
 
         $sshid = (Get-AzSshKey | Where-Object { $_.publickey -eq $vmss.VirtualMachineProfile.OsProfile.LinuxConfiguration.Ssh.PublicKeys.KeyData }).Id
@@ -1040,11 +1045,11 @@ function Export-VM {
             bgcolor = 3;
             node [colorscheme = blues9; ];
         "
-        $extensions = $vm.Extensions | ForEach-Object { $_.Id.split("/")[-1] } | Join-String -Separator ", "
+        $extensions = $vm.Extensions | ForEach-Object { $_.Id.split("/")[-1] } | Join-String -Separator "\n"
 
         #VM DOT
         $ImagePath = Join-Path $OutputPath "icons" "vm.png"
-        $data += "    $vmid [label = `"\nLocation: $Location\nSKU: $($vm.HardwareProfile.VmSize)\nZones: $($vm.Zones)\nOS Type: $($vm.StorageProfile.OsDisk.OsType)\nExtensions: $extensions`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $vm)];"
+        $data += "    $vmid [label = `"\nLocation: $Location\nSKU: $($vm.HardwareProfile.VmSize)\nZones: $($vm.Zones)\nOS Type: $($vm.StorageProfile.OsDisk.OsType)\n\nExtensions:\n$extensions`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $vm)];"
         $data += "`n"
 
         # NIC loop for private + public IPs
@@ -1079,7 +1084,7 @@ function Export-VM {
 
             #NIC DOT
             $ImagePath = Join-Path $OutputPath "icons" "nic.png"
-            $data += "            $NICid [label = `"Name: $NICname\nPrivate IP(s): $($PrivateIpAddresses -Join ", ")\nPublic IP(s): $($PublicIpAddresses -Join ", ")\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $NIC)];"
+            $data += "            $NICid [label = `"\nName: $NICname\nPrivate IP(s): $($PrivateIpAddresses -Join ", ")\nPublic IP(s): $($PublicIpAddresses -Join ", ")\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $NIC)];`n"
             $data += "            $VMid -> $NICid;`n"
             $data += "            $NICid -> $subnetid;`n"
         }
@@ -4246,7 +4251,8 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][bool]$SkipVM = $false,
         [Parameter(Mandatory = $false)][bool]$SkipVMSS = $false,
         [Parameter(Mandatory = $false)][string[]]$Subscriptions,
-        [Parameter(Mandatory = $false)][string]$TenantId = $null
+        [Parameter(Mandatory = $false)][string]$TenantId = $null,
+        [Parameter(Mandatory = $false)][bool]$VerticalView = $false
     )
 
     # Remove trailing "\" from path
@@ -4294,6 +4300,7 @@ function Get-AzNetworkDiagram {
     $script:PDNSRId = @()
     $script:AllInScopevNetIds = @()
     $script:DoSanitize = $Sanitize
+    $script:VerticalView = $VerticalView
     $script:Legend = @()
 
     #Ensure Legend has at least 2 entries to avoid weird bug when only one resource types is added
