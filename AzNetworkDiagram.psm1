@@ -2251,7 +2251,7 @@ function Export-Hub {
             $auth = $vpnserverconfig.VpnAuthenticationTypes
             $ImagePath = Join-Path $OutputPath "icons" "VPN-User.png"
             $data += "`n"
-            $data += "        $p2sgwId [label = `"\n\n$(SanitizeString $p2sgwNameShort)\nProtocol: $protocol, Auth: $auth\nP2S Address Prefixes: $(($cidr | ForEach-Object {SanitizeString $_}) -join ", ")`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+            $data += "        $p2sgwId [label = `"\n\n$(SanitizeString $p2sgwNameShort)\nProtocol: $protocol, Auth: $auth\nP2S Address Prefixes: $(($cidr | ForEach-Object {SanitizeString $_}) -join "\n")`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
             $data += "`n    $headid -> $p2sgwId;"
         }
         if ($null -ne $hub.AzureFirewall) {
@@ -2344,7 +2344,7 @@ function Export-VirtualGateway {
             $Script:Legend += ,@("P2S VPN Gateway", "VPN-User.png")
             #P2S config present
             $ImagePath = Join-Path $OutputPath "icons" "VPN-User.png"
-            $data += "            ${GatewayId}P2S [fillcolor = 8;label = `"\n\nProtocol: $protocol, Auth: $auth\nP2S Address Prefix: $(SanitizeString $cidr)\nCustom routes: $(($customroutes | ForEach-Object {SanitizeString $_}) -join ",")`"; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5;]; "
+            $data += "            ${GatewayId}P2S [fillcolor = 8;label = `"\n\nProtocol: $protocol, Auth: $auth\nP2S Address Prefix: $(SanitizeString $cidr)\nCustom routes: $(($customroutes | ForEach-Object {SanitizeString $_}) -join "\n")`"; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5;]; "
             $data += "            $GatewayId -> ${GatewayId}P2S"
         } 
     }
