@@ -333,7 +333,7 @@ function Export-dotHeader {
     
     # Rank (height in picture) support
     newrank = true;
-    rankdir = $script:VerticalView;
+    rankdir = $rankdir;
     nodesep=`"1.0`"
     "
     Export-CreateFile -Data $Data
@@ -357,9 +357,17 @@ function Export-dotFooterRanking {
         Export-AddToFile -Data "    ### AddressSpace ranks"
         Export-AddToFile "    { rank=min; $($script:rankvnetaddressspaces -join '; ') }`n "
     }
+    if ($script:rankVMVnets) {
+        Export-AddToFile -Data "    ### VM + vNet ranks"
+        Export-AddToFile "    { rank=min; $($script:rankVMVnets -join '; ') }`n "
+    }
     if ($script:ranksubnets) {
         Export-AddToFile -Data "`n    ### Subnets ranks"
         Export-AddToFile "    { rank=same; $($script:ranksubnets -join '; ') }`n "
+    }
+    if ($script:ranknsgs) {
+        Export-AddToFile -Data "`n    ### NSG ranks"
+        Export-AddToFile "    { rank=same; $($script:ranknsgs -join '; ') }`n "
     }
     if ($script:rankvgws) {
         Export-AddToFile -Data "`n    ### Virtual Network Gateways ranks"
@@ -777,6 +785,7 @@ function Export-NSG {
     
     try {
         $id = $nsg.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:ranknsgs += $id
         $Location = SanitizeLocation $nsg.Location
         $Name = SanitizeString $nsg.Name
         $ImagePath = Join-Path $OutputPath "icons" "nsg.png"
@@ -971,6 +980,7 @@ function Export-VMSS {
     
     try {
         $vmssid = $vmss.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankVMVnets += $vmssid
         $Location = SanitizeLocation $vmss.Location
         $Name = SanitizeString $vmss.Name
         $data = "
@@ -1035,6 +1045,7 @@ function Export-VM {
     
     try {
         $vmid = $vm.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankVMVnets += $vmid
         $Location = SanitizeLocation $vm.Location
         $Name = SanitizeString $vm.Name
         $data = "
@@ -2636,6 +2647,8 @@ function Export-vnet {
         $id = $vnet.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
         $vnetAddressSpaces = $vnet.AddressSpace.AddressPrefixes
         $script:rankvnetaddressspaces += $id
+        $script:rankVMVnets += $id
+
 
         $header = "
         # $vnetname - $id
@@ -4289,8 +4302,10 @@ function Get-AzNetworkDiagram {
     #Rank (visual) in diagram
     $script:rankrts = @()
     $script:ranksubnets = @()
+    $script:ranknsgs = @()
     $script:rankvgws = @()
     $script:rankvnetaddressspaces = @()
+    $script:rankVMVnets = @()
     $script:rankvwans = @()
     $script:rankvwanhubs = @()
     $script:rankercircuits = @()
