@@ -148,6 +148,11 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 ---
 
 # Changelog (since v1.0.1)
+## Upcoming release - not released to PSGallery yet
+- New parameters
+  - -VerticalView $true - change direction of graph from "Top->bottom" to "Left->Right"
+- Minor changes
+  - VM/VMSS Extensions are now linebreak seperated insted of comma-seperated, for a cleaner diagram
 ## v1.3
 - New support for
   - Azure Route Server
