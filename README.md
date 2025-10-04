@@ -99,6 +99,7 @@ This module will include in the diagram in separate colors:
     - Bastion
     - NAT Gateway
     - NSG's
+    - Private Endpoints
     - Route Server
     - Route Tables
     - VPN/ER Gateways and connections
@@ -116,6 +117,7 @@ This module will include in the diagram in separate colors:
   - Azure Virtual Desktop
   - Backup Vaults
   - Compute Galleries
+  - Elastic SAN
   - EventHubs
   - Keyvaults
   - Open Source DBs
@@ -123,7 +125,6 @@ This module will include in the diagram in separate colors:
     - MongoDB
     - MySQL
     - PostgreSQL
-  - Private Endpoints
   - Recovery Service Vaults
   - Redis Cache
   - SQL Managed Instance
@@ -149,6 +150,8 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 
 # Changelog (since v1.0.1)
 ## Upcoming release - not released to PSGallery yet
+- New support for
+  - Elastic SAN
 - New parameters
   - -VerticalView $true - change direction of graph from "Top->bottom" to "Left->Right"
 - Minor changes
