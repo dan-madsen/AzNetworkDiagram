@@ -61,7 +61,7 @@ Import-Module .\AzNetworkDiagram.psm1
 ## Running the Powershell module
 **Examples:**
 ```powershell
-Get-AzNetworkDiagram [-Tenant tenantId] [-Subscriptions "subid1","subid2","..."] [-OutputPath C:\temp\] [-EnableRanking $true] [-OnlyCoreNetwork $true] [-Sanitize $true] [-Prefix prefixstring] [-KeepDotFile $true] [-OutputFormat [pdf,svg,png]] [-OnlyMgmtGroups  $true] [-EnableLinks $true]
+Get-AzNetworkDiagram [-Tenant tenantId] [-Subscriptions "subid1","subid2","..."] [-OutputPath C:\temp\] [-EnableRanking $true] [-SkipNonCoreNetwork $true] [-Sanitize $true] [-Prefix prefixstring] [-KeepDotFile $true] [-OutputFormat [pdf,svg,png]] [-OnlyMgmtGroups $true] [-EnableLinks $true]
 
 Get-AzNetworkDiagram 
 ```
