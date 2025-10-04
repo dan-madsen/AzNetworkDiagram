@@ -3955,7 +3955,7 @@ function Export-ESAN
         "
 
         $ImagePath = Join-Path $OutputPath "icons" "esan.png"
-        $ESANdata += "            $esanid [fillcolor = 3; label=`"\nName: $name)\nLocation: $location\n\nSKU: $SKUName\nAvailability Zone: $zone\nPublic Access (from select networks): $publicaccess\n\nBase size: $basesize TiB\nExtended Size: $ExtendedCapacity TiB\nTotal size $totalsize TiB\n\nTotal throughput: $TotalMBps MBps\nTotal IOPS: $TotalIops`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $ESAN)]`n"
+        $ESANdata += "            $esanid [fillcolor = 3; label=`"\nName: $name\nLocation: $location\n\nSKU: $SKUName\nAvailability Zone: $zone\nPublic Access (from select networks): $publicaccess\n\nBase size: $basesize TiB\nExtended Size: $ExtendedCapacity TiB\nTotal size $totalsize TiB\n\nTotal throughput: $TotalMBps MBps\nTotal IOPS: $TotalIops`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $ESAN)]`n"
 
         #Volume Groups
         $VGs = Get-AzElasticSanVolumeGroup -ResourceGroupName $ESAN.ResourceGroupName -ElasticSanName $ESAN.name -ErrorAction SilentlyContinue
