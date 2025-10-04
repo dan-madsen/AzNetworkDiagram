@@ -4584,18 +4584,20 @@ function Get-AzNetworkDiagram {
                     }
                 }
 
+                ############################################# Optional elements starts here #############################################
                 ### Private Endpoints
-                Write-Output "Collecting Private Endpoints..."
-                Export-AddToFile "    ##### $subname - Private Endpoints #####"
-                $privateEndpoints = Get-AzPrivateEndpoint -ErrorAction Stop
-                if ($null -ne $privateEndpoints) {
-                    $Script:Legend += ,@("Private Endpoint","private-endpoint.png")
-                    foreach ($pe in $privateEndpoints) {
-                        Export-PrivateEndpoint $pe
+                if ( $EnablePE -OR (-not $SkipNonCoreNetwork -AND -not $SkipPE ) ) {
+                    Write-Output "Collecting Private Endpoints..."
+                    Export-AddToFile "    ##### $subname - Private Endpoints #####"
+                    $privateEndpoints = Get-AzPrivateEndpoint -ErrorAction Stop
+                    if ($null -ne $privateEndpoints) {
+                        $Script:Legend += ,@("Private Endpoint","private-endpoint.png")
+                        foreach ($pe in $privateEndpoints) {
+                            Export-PrivateEndpoint $pe
+                        }
                     }
                 }
 
-                ############################################# Optional elements starts here #############################################
                 #Container Instances
                 if ( $EnableACI -OR (-not $SkipNonCoreNetwork -AND -not $SkipACI ) ) {
                     Write-Output "Collecting Container Instances..."

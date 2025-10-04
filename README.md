@@ -99,7 +99,6 @@ This module will include in the diagram in separate colors:
     - Bastion
     - NAT Gateway
     - NSG's
-    - Private Endpoints
     - Route Server
     - Route Tables
     - VPN/ER Gateways and connections
@@ -125,6 +124,7 @@ This module will include in the diagram in separate colors:
     - MongoDB
     - MySQL
     - PostgreSQL
+  - Private Endpoints
   - Recovery Service Vaults
   - Redis Cache
   - SQL Managed Instance
