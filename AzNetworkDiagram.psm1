@@ -1,5 +1,5 @@
 #Requires -Version 7.1
-#Requires -Modules Az.Accounts, Az.Network, Az.Compute, Az.KeyVault, Az.Storage, Az.MySql, Az.PostgreSql, Az.CosmosDB, Az.RedisCache, Az.Sql, Az.EventHub, Az.Websites, Az.ApiManagement, Az.ContainerRegistry, Az.ManagedServiceIdentity, Az.Resources, Az.vmware
+#Requires -Modules Az.Accounts, Az.Network, Az.Compute, Az.KeyVault, Az.Storage, Az.MySql, Az.PostgreSql, Az.CosmosDB, Az.RedisCache, Az.Sql, Az.EventHub, Az.Websites, Az.ApiManagement, Az.ContainerRegistry, Az.ManagedServiceIdentity, Az.Resources, Az.vmware, Az.ElasticSan
 
 <#
   .SYNOPSIS
@@ -3905,6 +3905,114 @@ function Export-AVD
 
 <#
 .SYNOPSIS
+Exports details of a Elastic SAN instance for inclusion in an infrastructure diagram.
+
+.DESCRIPTION
+The `Export-ESAN` function processes a specified ESAN object, retrieves its details, and formats the data for inclusion in the diagram.
+
+.PARAMETER ESAN
+Specifies the ESAN object to be processed. This parameter is mandatory.
+
+.EXAMPLE
+PS> $ESAN = Get-AzElasticSan
+PS> Export-ESAN $ESAN
+
+This example retrieves an AVD hostpool and exports its details for inclusion in the diagram.
+#>
+function Export-ESAN
+{
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$ESAN
+    )
+
+    try {
+        $esanid = $ESAN.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankESAN += $ESAN.id
+
+        $basesize = $ESAN.BaseSizeTiB
+        $ExtendedCapacity = $ESAN.ExtendedCapacitySizeTiB
+        $totalsize = $ESAN.TotalSizeTiB
+        $name = SanitizeString $ESAN.name
+        $location = SanitizeLocation $ESAN.location
+
+        $publicaccess = $ESAN.PublicNetworkAccess
+        $zone = $ESAN.AvailabilityZone
+
+        $SKUName = $ESAN.SkuName
+        $vgcount = $ESAN.VolumeGroupCount
+        $TotalMBps = $ESAN.TotalMBps
+        $TotalIops = $ESAN.TotalIops
+
+        $header = "
+        # $($ESAN.Name) - $esanid
+        subgraph cluster_$esanid {
+            style = solid;
+            colorscheme = blues9 ;
+            bgcolor = 2;
+            node [colorscheme = blues9 ; style = filled;];
+        "
+
+        $ImagePath = Join-Path $OutputPath "icons" "esan.png"
+        $ESANdata += "            $esanid [fillcolor = 3; label=`"\nName: $name)\nLocation: $location\n\nSKU: $SKUName\nAvailability Zone: $zone\nPublic Access (from select networks): $publicaccess\n\nBase size: $basesize TiB\nExtended Size: $ExtendedCapacity TiB\nTotal size $totalsize TiB\n\nTotal throughput: $TotalMBps MBps\nTotal IOPS: $TotalIops`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $ESAN)]`n"
+
+        #Volume Groups
+        $VGs = Get-AzElasticSanVolumeGroup -ResourceGroupName $ESAN.ResourceGroupName -ElasticSanName $ESAN.name -ErrorAction SilentlyContinue
+        if ( $null -ne $VGs ) {
+            $VGs | ForEach-Object {
+                $VG = $_
+                $VGname = SanitizeString $VG.Name
+                $VGID = $VG.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                
+                $ImagePath = Join-Path $OutputPath "icons" "esan.png"
+                $ESANdata += "            $VGID [fillcolor = 3; label=`"Volume Group Name: $VGName\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"c`";height = 3.0;]`n"
+
+                $ESANdata += "            $esanid -> $VGID`n"
+
+                #Volumes
+                $volumes = Get-AzElasticSanVolume -volumegroupname $vg.name -ElasticSanName $ESAN.name -ResourceGroupName $ESAN.ResourceGroupName -ErrorAction SilentlyContinue
+                if ( $null -ne $volumes ) {
+                    $volumes | foreach-object {
+                        $volume = $_
+                        $volumeID = $volume.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                        $volumeName = SanitizeString $volume.Name
+                        $volumeSize = $volume.SizeGiB
+                        
+                        $ImagePath = Join-Path $OutputPath "icons" "esan.png"
+                        $ESANdata += "            $volumeID [fillcolor = 3; label=`"Volume name: $volumeName\nSize: $volumeSize GiB`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"c`";height = 3.0;]`n"
+                        $ESANdata += "            $VGID -> $volumeID`n"
+
+                    }
+                }
+
+                #PE
+                $PEs = $VG.PrivateEndpointConnection
+                if ( $null -ne $PEs ) {
+                    $PEs | ForEach-Object {
+                        $PE = $_
+                        $PEid = $PE.PrivateEndpointId.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                        $ESANdata += "            $VGID -> $PEid`n"
+                    }
+                }
+            }
+        }
+
+        # End subgraph
+        $footer = "
+            label = `"$(SanitizeString $name)`";
+        }
+        "
+
+        Export-AddToFile -Data ($header + $ESANdata + $footer)
+    }
+    catch {
+        Write-Error "Can't export ESAN: $($ESAN.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+}
+
+<#
+.SYNOPSIS
 Exports details of a Mangement Group for inclusion in an infrastructure diagram.
 
 .DESCRIPTION
@@ -4086,6 +4194,7 @@ function Confirm-Prerequisites {
         "ercircuit.png",
         "ergw.png",
         "erport.png",
+        "esan.png",
         "eventhub.png",
         "firewallpolicy.png",
         "gremlin.png",
@@ -4212,6 +4321,7 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][bool]$EnableBV = $false,
         [Parameter(Mandatory = $false)][bool]$EnableCosmosDB = $false,
         [Parameter(Mandatory = $false)][bool]$EnableEventHub = $false,
+        [Parameter(Mandatory = $false)][bool]$EnableESAN = $false,
         [Parameter(Mandatory = $false)][bool]$EnableGAL = $false,
         [Parameter(Mandatory = $false)][bool]$EnableKV = $false,
         [Parameter(Mandatory = $false)][bool]$EnableLinks = $false,
@@ -4247,6 +4357,7 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][bool]$SkipBV = $false,
         [Parameter(Mandatory = $false)][bool]$SkipCosmosDB = $false,
         [Parameter(Mandatory = $false)][bool]$SkipEventHub = $false,
+        [Parameter(Mandatory = $false)][bool]$SkipESAN = $false,
         [Parameter(Mandatory = $false)][bool]$SkipGAL = $false,
         [Parameter(Mandatory = $false)][bool]$SkipKV = $false,
         [Parameter(Mandatory = $false)][bool]$SkipMI = $false,
@@ -4831,6 +4942,19 @@ function Get-AzNetworkDiagram {
                         $Script:Legend += ,@("AVD App Group","avd-appgroup.png")
                         foreach ( $AVD in $AVDs ) {
                             Export-AVD -AVD $AVD
+                        }
+                    }
+                }
+
+                #Elastic SAN (ESAN)
+                if ( $EnableESAN -OR (-not $SkipNonCoreNetwork -AND -not $SkipESAN ) ) {
+                    Write-Output "Collecting Elastic SANs..."
+                    Export-AddToFile "    ##### $subname - Elastic SAN (ESAN) #####"
+                    $ESANs = Get-AzElasticSan
+                    if ( $null -ne $ESANs ) {
+                        $Script:Legend += ,@("Elastic SAN","esan.png")
+                        foreach ( $ESAN in $ESANs ) {
+                            Export-ESAN -ESAN $ESAN
                         }
                     }
                 } 
