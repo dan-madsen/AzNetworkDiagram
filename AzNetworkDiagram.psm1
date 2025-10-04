@@ -29,20 +29,20 @@
   .PARAMETER Prefix
   -Prefix "string" - Adds a prefix to the output file name. For example is cases where you want to do multiple automated runs then the file names will have the prefix per run that you specify. Default: No Prefix
 
-  .PARAMETER OnlyCoreNetwork
-  -OnlyCoreNetwork ($true/$false) - if $true/enabled, only cores network resources are processed - ie. non-network resources are skipped for a cleaner diagram.
-
   .PARAMETER EnableLinks
   -EnableLinks ($true/$false) - if $true/enabled Azure resource in the PDF output will become links, taking you to the Azure portal. **Default: $false**
 
-  .PARAMETER -KeepDotFile
+  .PARAMETER KeepDotFile
   -KeepDotFile ($true/$false) - if $true/enabled the DOT file will be preserved
 
-  .PARAMETER -OutputFormat
+  .PARAMETER OutputFormat
   -OutputFormat (pdf, svg, png) - One or more output files get generated with the specified formats. Default is PDF.
 
   .PARAMETER OnlyMgmtGroups
   -OnlyMgmtGroups ($true/$false) - Creates a Management Group and Subscription overview diagram - everything else is skipped. Default is $false.
+
+  .PARAMETER SkipNonCoreNetwork
+  -SkipNonCoreNetwork ($true/$false) - if $true/enabled, only cores network resources are processed - ie. non-network resources are skipped for a cleaner diagram. Additional resource types can be enabled using -EnableXXX
 
   .PARAMETER SkipXXX
   -SkipXXX ($true/$false) - Skips a chosen non-core network resource type - use tab completion to see current list.
@@ -54,7 +54,7 @@
   None. .\Get-AzNetworkDiagram.psm1 doesn't generate any output (Powershell-wise). File based output will be save in the OutputPath, if set - otherwise to current working directory
 
   .EXAMPLE
-  PS> Get-AzNetworkDiagram [-Tenant tenantId] [-Subscriptions "subid1","subid2","..."] [-OutputPath C:\temp\] [-EnableRanking $true] [-OnlyCoreNetwork $true] [-Sanitize $true] [-Prefix prefixstring]
+  PS> Get-AzNetworkDiagram [-Tenant tenantId] [-Subscriptions "subid1","subid2","..."] [-OutputPath C:\temp\] [-EnableRanking $true] [-SkipNonCoreNetwork $true] [-Sanitize $true] [-Prefix prefixstring]
   PS> .\Get-AzNetworkDiagram 
 
   .LINK
