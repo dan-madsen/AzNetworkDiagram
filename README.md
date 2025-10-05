@@ -44,6 +44,7 @@ Import-Module .\AzNetworkDiagram.psm1
 ## Runtime options
 - **-OutputPath <path>** - set output directory. Default: "."
 - **-Subscriptions "subid1","subid2","subname","..."** - a list of subscriptions in scope for the diagram. They can be names or Id's
+- **-ManagementGroups** "managementgroup1","managementgroup2","..." - a list of management groups. Subscriptions under any of the listed management groups will be added to the list of subscriptions in scope for data collection.
 - **-EnableRanking $bool** ($true/$false) - enable ranking (equal hight in the output) of certain resource types. For larger networks, this might be worth a shot. **Default: $true**
 - **-Tenant "tenantId"** Specifies the tenant Id to be used in all subscription authentication. Handy when you have multiple tenants to work with. **Default: current tenant**
 - **-Sanitize $bool** ($true/$false) - Sanitizes all names, locations, IP addresses and CIDR blocks. **Default: $false**

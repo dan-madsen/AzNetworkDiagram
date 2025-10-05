@@ -35,6 +35,9 @@
   .PARAMETER KeepDotFile
   -KeepDotFile ($true/$false) - if $true/enabled the DOT file will be preserved
 
+  .PARAMETER ManagementGroups
+  -ManagementGroups "managementgroup1","managementgroup1" - a list of management groups. Subscriptions under any of the listed management groups will be added to the list of subscriptions in scope for data collection.
+
   .PARAMETER OutputFormat
   -OutputFormat (pdf, svg, png) - One or more output files get generated with the specified formats. Default is PDF.
 
@@ -4340,6 +4343,7 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][bool]$EnableVM = $false,
         [Parameter(Mandatory = $false)][bool]$EnableVMSS = $false,
         [Parameter(Mandatory = $false)][bool]$KeepDotFile = $false,
+        [Parameter(Mandatory = $false)][string[]]$ManagementGroups = $null,
         [Parameter(Mandatory = $false)][bool]$OnlyMgmtGroups = $false,
         [Parameter(Mandatory = $false)][ValidateSet('pdf','svg','png')][string[]]$OutputFormat = "pdf",
         [Parameter(Mandatory = $false)][string]$OutputPath = $pwd,
@@ -4437,6 +4441,42 @@ function Get-AzNetworkDiagram {
 
     # Run program and collect data through powershell commands
     Export-dotHeader
+
+    ############################################################################################################
+    # Calculate subscriptions based on management group option
+    if ( $null -ne $ManagementGroups ) {
+        $ManagementGroups | Foreach-object {
+            $ManagementGroup = $_
+            $inScope = Get-AzManagementGroup -GroupName $ManagementGroup -Expand -Recurse -ErrorAction SilentlyContinue
+            if ( $null -ne $inScope ) {
+                $inScope | ForEach-Object {
+                    $scope = $_
+                    $type = $scope.Type
+                    if ( $type -eq "/subscription" ) {
+                        $Subscriptions += $scope.Id
+                    }
+                }
+            }
+            
+            <#
+            $MgmtGroupsEntityObjects = Get-AzManagementGroupEntity -ErrorAction Stop 
+            $mgmtgroupdata = ""
+            if ($null -ne $MgmtGroupsEntityObjects) {
+                $Script:Legend += ,@("Management Group","mgmtgroup.png")
+                $MgmtGroupsEntityObjects | ForEach-Object {
+                    $MgmtGroupEntityObject = $_
+
+                    if ( $MgmtGroupEntityObject.Type -eq "Microsoft.Management/managementGroups" ) {
+                        $MgmtGroup = $_
+                    } 
+                    elseif ( $MgmtGroupEntityObject.Type -eq "/subscriptions" ) {                
+                        $sub = $_
+                    }
+                        #>    
+        }
+    }
+    #Get-AzManagementGroup -GroupName TestGroupParent -Expand -Recurse
+    ############################################################################################################
     # Set subscriptions to every accessible subscription, if unset
     try {
         if ($TenantId) {
