@@ -36,7 +36,7 @@
   -KeepDotFile ($true/$false) - if $true/enabled the DOT file will be preserved
 
   .PARAMETER ManagementGroups
-  -ManagementGroups "managementgroup1","managementgroup1" - a list of management groups. Subscriptions under any of the listed management groups will be added to the list of subscriptions in scope for data collection.
+  - -ManagementGroups "ManagementGroupID1","ManagementGroupID2","..." - a list of management groups. Subscriptions under any of the listed management group IDs (ie. NOT name!) will be added to the list of subscriptions in scope for data collection. Can be used in conjunction with -Subscriptions ""
 
   .PARAMETER OutputFormat
   -OutputFormat (pdf, svg, png) - One or more output files get generated with the specified formats. Default is PDF.
@@ -4250,6 +4250,30 @@ function Confirm-Prerequisites {
     
 }
 
+function Add-ManagementGroupScope {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$ManagementGroup
+    )
+
+    $subEntities = Get-AzManagementGroup -GroupName $ManagementGroup -Expand -Recurse -ErrorAction Stop
+    if ( $null -ne $subEntities ) {
+        $children = $subEntities.Children
+        
+        if ( $null -ne $children ) {
+            $children| ForEach-Object {
+                $subEntity = $_
+                $subEntityName = $subEntity.Name
+                
+                if ( $subEntity.type -eq "/subscriptions" ) { $script:Subscriptions += $subEntityName }
+                if ( $subEntity.type -eq "Microsoft.Management/managementGroups" )  { Add-ManagementGroupScope -ManagementGroup $subEntityName}
+            }
+            
+        }
+    }
+}
+
 <#
 .SYNOPSIS
 Retrieves the path to the Graphviz `dot` executable.
@@ -4437,46 +4461,24 @@ function Get-AzNetworkDiagram {
     $Script:Legend += ,@("Subnet", "snet.png")
     $Script:Legend += ,@("Virtual Network","vnet.png")
     
+    # Calculate subscriptions based on management group option
+    if ( $null -ne $ManagementGroups ) {
+        $script:Subscriptions = $Subscriptions
+        # Add dummy to ensure array type and utilize script-wide array
+        if ( $null -eq $Subscriptions ) { $script:Subscriptions = @("DUMMY","DUMMY")}
+        $ManagementGroups | Foreach-object {
+            $ManagementGroup = $_
+            Add-ManagementGroupScope -ManagementGroup $ManagementGroup
+        }
+        # Remove dummies again, and reassign
+        $Subscriptions = $script:Subscriptions | Where-Object { $_ –ne "DUMMY" } | Sort-Object -Unique
+    }
+    
     ##### Data collection / Execution #####
 
     # Run program and collect data through powershell commands
     Export-dotHeader
 
-    ############################################################################################################
-    # Calculate subscriptions based on management group option
-    if ( $null -ne $ManagementGroups ) {
-        $ManagementGroups | Foreach-object {
-            $ManagementGroup = $_
-            $inScope = Get-AzManagementGroup -GroupName $ManagementGroup -Expand -Recurse -ErrorAction SilentlyContinue
-            if ( $null -ne $inScope ) {
-                $inScope | ForEach-Object {
-                    $scope = $_
-                    $type = $scope.Type
-                    if ( $type -eq "/subscription" ) {
-                        $Subscriptions += $scope.Id
-                    }
-                }
-            }
-            
-            <#
-            $MgmtGroupsEntityObjects = Get-AzManagementGroupEntity -ErrorAction Stop 
-            $mgmtgroupdata = ""
-            if ($null -ne $MgmtGroupsEntityObjects) {
-                $Script:Legend += ,@("Management Group","mgmtgroup.png")
-                $MgmtGroupsEntityObjects | ForEach-Object {
-                    $MgmtGroupEntityObject = $_
-
-                    if ( $MgmtGroupEntityObject.Type -eq "Microsoft.Management/managementGroups" ) {
-                        $MgmtGroup = $_
-                    } 
-                    elseif ( $MgmtGroupEntityObject.Type -eq "/subscriptions" ) {                
-                        $sub = $_
-                    }
-                        #>    
-        }
-    }
-    #Get-AzManagementGroup -GroupName TestGroupParent -Expand -Recurse
-    ############################################################################################################
     # Set subscriptions to every accessible subscription, if unset
     try {
         if ($TenantId) {
