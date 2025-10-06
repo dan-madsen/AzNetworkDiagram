@@ -44,6 +44,7 @@ Import-Module .\AzNetworkDiagram.psm1
 ## Runtime options
 - **-OutputPath <path>** - set output directory. Default: "."
 - **-Subscriptions "subid1","subid2","subname","..."** - a list of subscriptions in scope for the diagram. They can be names or Id's
+- **-ManagementGroups "ManagementGroupID1","ManagementGroupID2","..."** - a list of management groups. Subscriptions under any of the listed management group IDs (ie. NOT name!) will be added to the list of subscriptions in scope for data collection. Can be used in conjunction with -Subscriptions.
 - **-EnableRanking $bool** ($true/$false) - enable ranking (equal hight in the output) of certain resource types. For larger networks, this might be worth a shot. **Default: $true**
 - **-Tenant "tenantId"** Specifies the tenant Id to be used in all subscription authentication. Handy when you have multiple tenants to work with. **Default: current tenant**
 - **-Sanitize $bool** ($true/$false) - Sanitizes all names, locations, IP addresses and CIDR blocks. **Default: $false**
@@ -154,6 +155,7 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
   - Elastic SAN
 - New parameters
   - -VerticalView $true - change direction of graph from "Top->bottom" to "Left->Right"
+  - -ManagementGroups "ManagementGroupID1","ManagementGroupID2","..." - a list of management groups. Subscriptions under any of the listed management group IDs (ie. NOT name!) will be added to the list of subscriptions in scope for data collection. Can be used in conjunction with -Subscriptions.
 - Minor changes
   - VM/VMSS Extensions are now linebreak seperated insted of comma-seperated, for a cleaner diagram
 ## v1.3
