@@ -3920,7 +3920,7 @@ Specifies the ESAN object to be processed. This parameter is mandatory.
 PS> $ESAN = Get-AzElasticSan
 PS> Export-ESAN $ESAN
 
-This example retrieves an AVD hostpool and exports its details for inclusion in the diagram.
+This example retrieves an Elastic SAN and exports its details for inclusion in the diagram.
 #>
 function Export-ESAN
 {
@@ -4011,6 +4011,136 @@ function Export-ESAN
     }
     catch {
         Write-Error "Can't export ESAN: $($ESAN.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+}
+
+<#
+.SYNOPSIS
+Exports details of a Load Balancer instance for inclusion in an infrastructure diagram.
+
+.DESCRIPTION
+The `Export-LB` function processes a specified ESAN object, retrieves its details, and formats the data for inclusion in the diagram.
+
+.PARAMETER ESAN
+Specifies the LB object to be processed. This parameter is mandatory.
+
+.EXAMPLE
+PS> $LB =
+PS> Export-LB -LB $LB
+
+This example retrieves an LB instance and exports its details for inclusion in the diagram.
+#>
+function Export-LB
+{
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$LB
+    )
+
+    try {
+        $LBid = $LB.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankLB += $LB.id
+
+        $name = SanitizeString $LB.name
+        $location = SanitizeLocation $LB.location
+        $SKU = $LB.Sku.Name + " / " + $LB.Sku.Tier
+
+        $header = "
+        # $($name) - $LBid
+        subgraph cluster_$LBid {
+            style = solid;
+            colorscheme = blues9 ;
+            bgcolor = 2;
+            node [colorscheme = blues9 ; style = filled;];
+        "
+
+        #LB DOT
+        $ImagePath = Join-Path $OutputPath "icons" "lb.png"
+        $LBdata += "            $lbid [fillcolor = 3; label=`"\nName: $name\nLocation: $location\n\nSKU: $SKU`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $LB)]`n"
+
+        #Front End IPs
+        $FrontEndIPs = $LB.FrontendIPConfigurations
+        if ( $null -ne $FrontEndIPs ) {
+            $FrontEndIPs | foreach-Object {
+                $FE =  $_
+                $FEid =  $FE.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $FEName = $FE.Name
+                $FEIP = $FE.PrivateIpAddress
+                $FEZones = $FE.Zones
+                $FESubnetRef = $FE.subnet.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                
+                #LB-FE DOT
+                $LBdata += "            $FEid [fillcolor = 3; label=`"Frontend IP Configuration name:\n$FEName\nAvailability Zone(s): $FEZones\n\n IP: $FEIP`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
+                $LBdata += "            $LBid -> $FEid`n"
+                $LBdata += "            $FEid -> $FESubnetRef`n"
+            }
+        }
+
+        #Load Balancing Rules
+        $LoadBalancingRules = $LB.LoadBalancingRules
+        if ( $null -ne $LoadBalancingRules ) {
+            $LoadBalancingRules | foreach-Object {
+                $LBR = $_
+                $LBRid = $LBR.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $LBRName = $LBR.Name
+                $BEAddressPool = $LBR.BackendAddressPool.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $BEAddressPools = $LBR.BackendAddressPools.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                
+                #LB-LBR DOT
+                $LBdata += "            $LBRid [fillcolor = 3; label=`"Load Balancing Rule name:\n$LBRName\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
+                $LBdata += "            $FEid -> $LBRid`n"
+                $LBdata += "            $LBRid -> $BEAddressPools`n"
+            }
+        }
+
+        #Backend pools
+        $BackendPools = $LB.BackendAddressPools
+        if ( $null -ne $BackendPools ) {
+            $BackendPools | foreach-Object {
+                $BE = $_
+                $BEid = $BE.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $BEName = $BE.Name
+                $BEAddressesARMID = ($BE.LoadBalancerBackendAddressesText | ConvertFrom-Json).NetworkInterfaceIpConfiguration.id
+                
+                #LB-BE DOT
+                $LBdata += "            $BEid [fillcolor = 3; label=`"Backend Pool name:\n$BEName\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
+
+                if ( $null -ne $BEAddressesARMID ) {
+                    $BEAddressesARMID | foreach-object {
+                        $BEAddressARMID = $_
+                        #Split for NIC ref
+                        $BEAddressNICDOTID = ($BEAddressARMID.split("/")[0..8] -join "").replace("-", "").replace("/", "").replace(".", "").ToLower()
+                        
+                        $LBdata += "            $BEid -> $BEAddressNICDOTID`n"
+                    }
+                }
+                
+            }
+        }
+<#
+                #PE
+                $PEs = $VG.PrivateEndpointConnection
+                if ( $null -ne $PEs ) {
+                    $PEs | ForEach-Object {
+                        $PE = $_
+                        $PEid = $PE.PrivateEndpointId.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                        $ESANdata += "            $VGID -> $PEid`n"
+                    }
+                }
+            }
+        }
+#>
+        # End subgraph
+        $footer = "
+            label = `"$(SanitizeString $name)`";
+        }
+        "
+
+        Export-AddToFile -Data ($header + $LBdata + $footer)
+    }
+    catch {
+        Write-Error "Can't export LB: $($LB.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
     }
 }
 
@@ -4205,6 +4335,7 @@ function Confirm-Prerequisites {
         "imagedefversions.png",
         "ipgroup.png",
         "keyvault.png",
+        "lb.png",
         #"lgw.png",
         "managed-identity.png",
         #"mariadb.png",
@@ -4352,6 +4483,7 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][bool]$EnableGAL = $false,
         [Parameter(Mandatory = $false)][bool]$EnableKV = $false,
         [Parameter(Mandatory = $false)][bool]$EnableLinks = $false,
+        [Parameter(Mandatory = $false)][bool]$EnableLB = $false,
         [Parameter(Mandatory = $false)][bool]$EnableMI = $false,
         [Parameter(Mandatory = $false)][bool]$EnableMySQL = $false,
         [Parameter(Mandatory = $false)][bool]$EnablePE = $false,
@@ -4388,6 +4520,7 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][bool]$SkipESAN = $false,
         [Parameter(Mandatory = $false)][bool]$SkipGAL = $false,
         [Parameter(Mandatory = $false)][bool]$SkipKV = $false,
+        [Parameter(Mandatory = $false)][bool]$SkipLB = $false,
         [Parameter(Mandatory = $false)][bool]$SkipMI = $false,
         [Parameter(Mandatory = $false)][bool]$SkipMySQL = $false,
         [Parameter(Mandatory = $false)][bool]$SkipNonCoreNetwork = $false,
@@ -5000,7 +5133,19 @@ function Get-AzNetworkDiagram {
                         }
                     }
                 } 
-
+                
+                #Load Balancers (LB)
+                if ( $EnableLB -OR (-not $SkipNonCoreNetwork -AND -not $SkipLB ) ) {
+                    Write-Output "Collecting Load Balancers..."
+                    Export-AddToFile "    ##### $subname - Load Balancers (LB) #####"
+                    $LBs = Get-AzLoadBalancer
+                    if ( $null -ne $LBs ) {
+                        $Script:Legend += ,@("Load Balancer","lb.png")
+                        foreach ( $LB in $LBs ) {
+                            Export-LB -LB $LB
+                        }
+                    }
+                } 
                 Export-AddToFile "`n    ##########################################################################################################"
                 Export-AddToFile "    ##### $subname "
                 Export-AddToFile "    ##### END"
