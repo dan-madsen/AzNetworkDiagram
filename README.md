@@ -120,6 +120,7 @@ This module will include in the diagram in separate colors:
   - Elastic SAN
   - EventHubs
   - Keyvaults
+  - Load Balancers
   - Open Source DBs
     - CosmosDB
     - MongoDB
@@ -153,6 +154,7 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 ## Upcoming release - not released to PSGallery yet
 - New support for
   - Elastic SAN
+  - Load Balancers
 - New parameters
   - -VerticalView $true - change direction of graph from "Top->bottom" to "Left->Right"
   - -ManagementGroups "ManagementGroupID1","ManagementGroupID2","..." - a list of management groups. Subscriptions under any of the listed management group IDs (ie. NOT name!) will be added to the list of subscriptions in scope for data collection. Can be used in conjunction with -Subscriptions.

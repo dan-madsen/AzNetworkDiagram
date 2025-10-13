@@ -996,7 +996,7 @@ function Export-VMSS {
         "
         $extensions = $vmss.VirtualMachineProfile.ExtensionProfile.Extensions | ForEach-Object { $_.Name } | Join-String -Separator "\n"
         $ImagePath = Join-Path $OutputPath "icons" "vmss.png"
-        $data += "        $vmssid [label = `"\nLocation: $Location\nSKU: $($vmss.Sku.Name)\nCapacity: $($vmss.Sku.Capacity)\nZones: $($vmss.Zones)\nOS Type: $($vmss.StorageProfile.OsDisk.OsType)\nOrchestration Mode: $($vmss.OrchestrationMode)\nUpgrade Policy: $($vmss.UpgradePolicy)\n\nExtensions:\n$extensions`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $vmss)];"
+        $data += "        $vmssid [label = `"\nLocation: $Location\nSKU: $($vmss.Sku.Name)\nCapacity: $($vmss.Sku.Capacity)\nZones: $($vmss.Zones)\nOS Type: $($vmss.StorageProfile.OsDisk.OsType)\nOrchestration Mode: $($vmss.OrchestrationMode)\nUpgrade Policy: $($vmss.UpgradePolicy.Mode)\n\nExtensions:\n$extensions`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $vmss)];"
         $data += "`n"
 
         $sshid = (Get-AzSshKey | Where-Object { $_.publickey -eq $vmss.VirtualMachineProfile.OsProfile.LinuxConfiguration.Ssh.PublicKeys.KeyData }).Id
@@ -1022,6 +1022,19 @@ function Export-VMSS {
         }`n"
 
         Export-AddToFile -Data $data
+
+        #VMSS VMs
+        $VMSSVMs = ($vmss | get-azvmssvm).id
+        if ( $null -ne $VMSSVMs ) {
+            $data = ""
+            $VMSSVMs | Foreach-Object {
+                $VMSSVMARM = $_
+                $VMARMID = $VMSSVMARM.split("/")[0,1,2,3,4,5,6,9,10] -join "/"
+                $VMDOTID = $VMARMid.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $data += "        $VMSSid -> $VMDOTid`n"
+            }
+            Export-AddToFile -Data $data
+        }
 
     }
     catch {
@@ -1060,7 +1073,7 @@ function Export-VM {
             node [colorscheme = blues9; ];
         "
         $extensions = $vm.Extensions | ForEach-Object { $_.Id.split("/")[-1] } | Join-String -Separator "\n"
-
+        
         #VM DOT
         $ImagePath = Join-Path $OutputPath "icons" "vm.png"
         $data += "    $vmid [label = `"\nLocation: $Location\nSKU: $($vm.HardwareProfile.VmSize)\nZones: $($vm.Zones)\nOS Type: $($vm.StorageProfile.OsDisk.OsType)\n\nExtensions:\n$extensions`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $vm)];"
@@ -3920,7 +3933,7 @@ Specifies the ESAN object to be processed. This parameter is mandatory.
 PS> $ESAN = Get-AzElasticSan
 PS> Export-ESAN $ESAN
 
-This example retrieves an AVD hostpool and exports its details for inclusion in the diagram.
+This example retrieves an Elastic SAN and exports its details for inclusion in the diagram.
 #>
 function Export-ESAN
 {
@@ -4011,6 +4024,185 @@ function Export-ESAN
     }
     catch {
         Write-Error "Can't export ESAN: $($ESAN.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+}
+
+<#
+.SYNOPSIS
+Exports details of a Load Balancer instance for inclusion in an infrastructure diagram.
+
+.DESCRIPTION
+The `Export-LB` function processes a specified ESAN object, retrieves its details, and formats the data for inclusion in the diagram.
+
+.PARAMETER ESAN
+Specifies the LB object to be processed. This parameter is mandatory.
+
+.EXAMPLE
+PS> $LB =
+PS> Export-LB -LB $LB
+
+This example retrieves an LB instance and exports its details for inclusion in the diagram.
+#>
+function Export-LB
+{
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$LB
+    )
+
+    try {
+        $LBid = $LB.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankLB += $LB.id
+
+        $name = SanitizeString $LB.name
+        $location = SanitizeLocation $LB.location
+        $SKU = $LB.Sku.Name + " / " + $LB.Sku.Tier
+
+        #Type
+        $Type = ""
+        if ( $null -eq $LB.FrontendIPConfigurations[0].PublicIpAddress ) { $Type = "Internal" } else { $Type = "Public"}
+
+        $header = "
+        # $($name) - $LBid
+        subgraph cluster_$LBid {
+            style = solid;
+            colorscheme = blues9 ;
+            bgcolor = 2;
+            node [colorscheme = blues9 ; style = filled;];
+        "
+
+        #LB DOT
+        $ImagePath = Join-Path $OutputPath "icons" "lb.png"
+        $LBdata += "            $lbid [fillcolor = 3; label=`"\nName: $name\nLocation: $location\n\nSKU: $SKU\nType: $Type`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $LB)]`n"
+
+        #Front End IPs
+        $FrontEndIPs = $LB.FrontendIPConfigurations
+        if ( $null -ne $FrontEndIPs ) {
+            $FrontEndIPs | ForEach-Object {
+                $FE =  $_
+                $FEid =  $FE.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $FEName = $FE.Name
+                $FEIP = $FE.PrivateIpAddress
+                $FEZones = $FE.Zones
+                $FEZonesString = "\nAvailability Zone(s): $FEZones"
+                $FESubnetRefARMID = $FE.subnet.Id
+
+                # Public FE ?
+                $FEPubIP = $FE.PublicIpAddress
+                if ( $null -ne $FEPubIP ) { 
+                    $RGName = $FEPubIp.id.split("/")[4]
+                    $IPName = $FEPubIp.id.split("/")[8]
+                    $PUBIP = Get-AzPublicIpAddress -ResourceName $IPName -ResourceGroupName $RGName
+                    $FEIP = $PUBIP.IpAddress
+                    $FEZonesString = ""
+                }
+
+                # Public IP Prefix for FE?
+                $FEIPPrefix = $FE.PublicIPPrefix
+                if ( $null -ne $FEIPPrefix ) {
+                    $RGName = $FEIPPrefix.id.split("/")[4]
+                    $IPName = $FEIPPrefix.id.split("/")[8]
+                    $PubIPPrefix = Get-AzPublicIpPrefix -ResourceGroupName $RGName -Name $IPName
+                    $FEIP = $PubIPPrefix.IPPrefix
+                    $FEZonesString = ""
+                }
+
+                #LB-FE DOT
+                $LBdata += "            $FEid [fillcolor = 3; label=`"Frontend IP Configuration name:\n$($FEName)$($FEZonesString)\n\nIP(s): $FEIP`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
+                $LBdata += "            $LBid -> $FEid`n"
+                if ( $null -ne $FESubnetRefARMID ) {
+                    $FESubnetRef = $FESubnetRefARMID.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $LBdata += "            $FEid -> $FESubnetRef`n"
+                }
+                
+            }
+        }
+
+        #Load Balancing Rules
+        $LoadBalancingRules = $LB.LoadBalancingRules
+        if ( $null -ne $LoadBalancingRules ) {
+            $LoadBalancingRules | foreach-Object {
+                $LBR = $_
+                $LBRid = $LBR.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $LBRName = $LBR.Name
+                #$BEAddressPool = $LBR.BackendAddressPool.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $BEAddressPools = $LBR.BackendAddressPools.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $FEId = $LBR.FrontendIPConfiguration.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                
+                $FEPort = $LBR.FrontendPort
+                $BEPort = $LBR.BackendPort
+                $FloatingIP = $LBR.EnableFloatingIP
+                $LoadDistribution = $LBR.LoadDistribution
+                
+                #LB-LBR DOT
+                $LBdata += "            $LBRid [fillcolor = 3; label=`"\nLoad Balancing Rule name:\n$LBRName\nFloating IP: $FloatingIP\nLoad distribution/Session persistence: $LoadDistribution\n\nFrontend port: $FEPort\nBackend port: $BEPort`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
+                $LBdata += "            $FEid -> $LBRid`n"
+                $LBdata += "            $LBRid -> $BEAddressPools`n"
+            }
+        }
+
+        #Backend pools
+        $BackendPools = $LB.BackendAddressPools
+        if ( $null -ne $BackendPools ) {
+            $BackendPools | foreach-Object {
+                $BE = $_
+                $BEid = $BE.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $BEName = $BE.Name
+                $BEAddressesARMID = ($BE.LoadBalancerBackendAddressesText | ConvertFrom-Json).NetworkInterfaceIpConfiguration.id
+                
+                #Manual IPs set ?
+                $ManualIPs = ($BE.LoadBalancerBackendAddressesText | ConvertFrom-Json).IpAddress
+                $IPString = ""
+                if ( $null -ne $ManualIPs ) {
+                    $ManualIPs | ForEach-Object {
+                        $IP = SanitizeString $_
+                        if ( $IP.contains(".") ) { #Fix to avoid a certain condition where VMSS get processed, even when no manual IPs are present
+                            if ( "" -eq $IPString ) { $IPString = "IP(s):\n" }
+                            $IPString += "$IP\n" 
+                        }
+                    }
+                    
+                }
+                
+                #LB-BE DOT
+                $LBdata += "            $BEid [fillcolor = 3; label=`"\nBackend Pool name:\n$BEName\n\n$IPString`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
+
+                if ( $null -ne $BEAddressesARMID ) {
+                    $BEAddressesARMID | foreach-object {
+                        $BEAddressARMID = $_
+                        #Split for NIC ref
+                        $BEAddressNICDOTID = ($BEAddressARMID.split("/")[0..8] -join "").replace("-", "").replace("/", "").replace(".", "").ToLower()
+                        
+                        $LBdata += "            $BEid -> $BEAddressNICDOTID`n"
+                    }
+                }
+                
+            }
+        }
+<#
+                #PE
+                $PEs = $VG.PrivateEndpointConnection
+                if ( $null -ne $PEs ) {
+                    $PEs | ForEach-Object {
+                        $PE = $_
+                        $PEid = $PE.PrivateEndpointId.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                        $ESANdata += "            $VGID -> $PEid`n"
+                    }
+                }
+            }
+        }
+#>
+        # End subgraph
+        $footer = "
+            label = `"$(SanitizeString $name)`";
+        }
+        "
+
+        Export-AddToFile -Data ($header + $LBdata + $footer)
+    }
+    catch {
+        Write-Error "Can't export LB: $($LB.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
     }
 }
 
@@ -4205,6 +4397,7 @@ function Confirm-Prerequisites {
         "imagedefversions.png",
         "ipgroup.png",
         "keyvault.png",
+        "lb.png",
         #"lgw.png",
         "managed-identity.png",
         #"mariadb.png",
@@ -4352,6 +4545,7 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][bool]$EnableGAL = $false,
         [Parameter(Mandatory = $false)][bool]$EnableKV = $false,
         [Parameter(Mandatory = $false)][bool]$EnableLinks = $false,
+        [Parameter(Mandatory = $false)][bool]$EnableLB = $false,
         [Parameter(Mandatory = $false)][bool]$EnableMI = $false,
         [Parameter(Mandatory = $false)][bool]$EnableMySQL = $false,
         [Parameter(Mandatory = $false)][bool]$EnablePE = $false,
@@ -4388,6 +4582,7 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][bool]$SkipESAN = $false,
         [Parameter(Mandatory = $false)][bool]$SkipGAL = $false,
         [Parameter(Mandatory = $false)][bool]$SkipKV = $false,
+        [Parameter(Mandatory = $false)][bool]$SkipLB = $false,
         [Parameter(Mandatory = $false)][bool]$SkipMI = $false,
         [Parameter(Mandatory = $false)][bool]$SkipMySQL = $false,
         [Parameter(Mandatory = $false)][bool]$SkipNonCoreNetwork = $false,
@@ -5000,7 +5195,19 @@ function Get-AzNetworkDiagram {
                         }
                     }
                 } 
-
+                
+                #Load Balancers (LB)
+                if ( $EnableLB -OR (-not $SkipNonCoreNetwork -AND -not $SkipLB ) ) {
+                    Write-Output "Collecting Load Balancers..."
+                    Export-AddToFile "    ##### $subname - Load Balancers (LB) #####"
+                    $LBs = Get-AzLoadBalancer
+                    if ( $null -ne $LBs ) {
+                        $Script:Legend += ,@("Load Balancer","lb.png")
+                        foreach ( $LB in $LBs ) {
+                            Export-LB -LB $LB
+                        }
+                    }
+                } 
                 Export-AddToFile "`n    ##########################################################################################################"
                 Export-AddToFile "    ##### $subname "
                 Export-AddToFile "    ##### END"
