@@ -1023,6 +1023,19 @@ function Export-VMSS {
 
         Export-AddToFile -Data $data
 
+        #VMSS VMs
+        $VMSSVMs = ($vmss | get-azvmssvm).id
+        if ( $null -ne $VMSSVMs ) {
+            $data = ""
+            $VMSSVMs | Foreach-Object {
+                $VMSSVMARM = $_
+                $VMARMID = $VMSSVMARM.split("/")[0,1,2,3,4,5,6,9,10] -join "/"
+                $VMDOTID = $VMARMid.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $data += "        $VMSSid -> $VMDOTid`n"
+            }
+            Export-AddToFile -Data $data
+        }
+
     }
     catch {
         Write-Host "Can't export VMSS: $($vmss.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
