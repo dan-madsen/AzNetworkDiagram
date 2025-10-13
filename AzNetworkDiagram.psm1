@@ -1079,14 +1079,6 @@ function Export-VM {
         $data += "    $vmid [label = `"\nLocation: $Location\nSKU: $($vm.HardwareProfile.VmSize)\nZones: $($vm.Zones)\nOS Type: $($vm.StorageProfile.OsDisk.OsType)\n\nExtensions:\n$extensions`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $vm)];"
         $data += "`n"
 
-        # Part of VMSS ?
-        # WORK - but combines one VM in the VMSS box, hence disabled
-        #$VMSSid = $vm.VirtualMachineScaleSet.id
-        #if ( $null -ne $VMSSid ) {
-        #    $VMSSid = $VMSSid.replace("-", "").replace("/", "").replace(".", "").ToLower()
-        #    $data += "            $VMSSid -> $VMid;`n"
-        #}
-
         # NIC loop for private + public IPs
         $NICs = $vm.NetworkProfile.NetworkInterfaces.id
         $NICs | Foreach-Object {
