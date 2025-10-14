@@ -667,26 +667,6 @@ function Export-ApplicationGateway {
         else {
             $sslcerts = "None"
         }
-        if ($agw.FrontendIPConfigurations) {
-            $pvtips = ""
-            foreach ($ipconfig in $agw.FrontendIPConfigurations) {
-                if ($pvtips -ne "") {
-                    $pvtips += ", "
-                }
-                if ($ipconfig.PrivateIPAllocationMethod -eq "Dynamic") {
-                    if ($ipconfig.PublicIPAddress.Id) {
-                        $pip = Get-AzPublicIpAddress -ResourceGroupName $agw.ResourceGroupName -Name $ipconfig.PublicIPAddress.Id.split("/")[-1] -ErrorAction SilentlyContinue
-                        $pvtips += $(SanitizeString $pip.IPAddress) + " (Public)"
-                    }
-                }
-                elseif ($ipconfig.PrivateIPAllocationMethod -eq "Static") {
-                    $pvtips += $(SanitizeString $ipconfig.PrivateIPAddress) + " (Private)"
-                }
-            }
-        }
-        else {
-            $pvtips = "None"
-        }
         if ($agw.FirewallPolicy.Id) {
             $polname = SanitizeString $agw.FirewallPolicy.Id.split("/")[-1]
         }
@@ -706,10 +686,83 @@ function Export-ApplicationGateway {
             $feports = "None"
         }
         $ImagePath = Join-Path $OutputPath "icons" "agw.png"
-        $data += "        $agwid [label = `"\nLocation: $Location\nPolicy name: $polname\nIPs: $pvtips\nSKU: $skuname\nZones: $zones\nSSL Certificates: $sslcerts\nFrontend ports: $feports\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $agw)];"
+        $data += "        $agwid [label = `"\nLocation: $Location\nPolicy name: $polname\nSKU: $skuname\nZones: $zones\nSSL Certificates: $sslcerts\nFrontend ports: $feports\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $agw)];"
         $data += "`n"
         $data += "        $agwid -> $agwSubnetId;`n"
 
+        # Front End
+        if ($agw.FrontendIPConfigurations) {
+            foreach ($ipconfig in $agw.FrontendIPConfigurations) {
+                $FEname = $ipconfig.Name
+                $feid = $ipconfig.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                if ($ipconfig.PrivateIPAllocationMethod -eq "Dynamic") {
+                    if ($ipconfig.PublicIPAddress.Id) {
+                        $pip = Get-AzPublicIpAddress -ResourceGroupName $agw.ResourceGroupName -Name $ipconfig.PublicIPAddress.Id.split("/")[-1] -ErrorAction SilentlyContinue
+                        $pubip = $(SanitizeString $pip.IPAddress) + " (Public)"
+                        $data += "        $feid [label = `"Frontend IP Config name:\n$FEname\n\nIP: $pubip`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n"
+                        $data += "        $agwid -> $feid;`n"
+        
+                    }
+                }
+                elseif ($ipconfig.PrivateIPAllocationMethod -eq "Static") {
+                    $privip = $(SanitizeString $ipconfig.PrivateIPAddress) + " (Private)"
+                    $data += "        $feid [label = `"Frontend IP Config name:\n$FEname\n\nIP: $privip`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n"
+                    $data += "        $agwid -> $feid;`n"
+                }
+            }
+        }
+
+        # Listeners
+        $Listeners = $agw.HttpListeners
+        if ( $null -ne $Listeners ) {
+            $Listeners | ForEach-Object {
+                $listener = $_
+                $listenerid = $listener.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $feid = $listener.FrontendIpConfiguration.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $ListenerName = $listener.Name
+                $Protocol = $listener.Protocol
+                $Hostname = $listener.Hostname
+                if ( $null -eq $Hostname ) { $Hostname = "None" }
+                $FEport = ($listener.FrontendPortText | ConvertFrom-Json).id.split("/")[10].replace("port_","")
+
+                #DOT
+                $data += "        $listenerid [label = `"Listener name:$ListenerName\nHostname: $Hostname\nPort: $Protocol/$FEport`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n"
+                $data += "        $feid -> $listenerid;`n"
+            }
+        }
+
+        # Rules
+        $RoutingRules = $agw.RequestRoutingRules
+        if ( $null -ne $RoutingRules ) {
+            $RoutingRules | ForEach-Object {
+                $rule = $_
+                $ruleid = $rule.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $listenerId = ($rule.HttpListenerText | ConvertFrom-Json).id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $ruleName = $rule.name
+                $poolid = ($rule.BackendAddressPoolText | ConvertFrom-Json).id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+
+                #DOT
+                $data += "        $ruleid [label = `"Routing rule name:$ruleName\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n"
+                $data += "        $listenerid -> $ruleid;`n"
+                $data += "        $ruleid -> $poolid;`n"
+            }
+        }
+
+        # Backends
+        $BackendPools = $agw.BackendAddressPools
+        if ( $null -ne $BackendPools ) {
+            $BackendPools | ForEach-Object {
+                $pool = $_ 
+                $poolid = $pool.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $poolName = $pool.Name
+                
+                #DOT
+                $data += "        $poolid [label = `"Backend pool name:$poolName\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n"
+                ###### BACKEND REF PENDING ########
+            }
+        }
+
+        # User Assigned Managed Identities
         if ($agw.Identity.UserAssignedIdentities.Keys) {
             foreach ($identity in $agw.Identity.UserAssignedIdentities.Keys) { 
                 $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower()
