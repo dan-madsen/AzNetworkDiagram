@@ -693,7 +693,7 @@ function Export-ApplicationGateway {
         # Front End
         if ($agw.FrontendIPConfigurations) {
             foreach ($ipconfig in $agw.FrontendIPConfigurations) {
-                $FEname = $ipconfig.Name
+                $FEname = SanitizeString $ipconfig.Name
                 $feid = $ipconfig.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
                 if ($ipconfig.PrivateIPAllocationMethod -eq "Dynamic") {
                     if ($ipconfig.PublicIPAddress.Id) {
@@ -719,9 +719,9 @@ function Export-ApplicationGateway {
                 $listener = $_
                 $listenerid = $listener.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
                 $feid = $listener.FrontendIpConfiguration.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $ListenerName = $listener.Name
+                $ListenerName = SanitizeString $listener.Name
                 $Protocol = $listener.Protocol
-                $Hostname = $listener.Hostname
+                $Hostname = SanitizeString $listener.Hostname
                 if ( $null -eq $Hostname ) { $Hostname = "None" }
                 $FEport = ($listener.FrontendPortText | ConvertFrom-Json).id.split("/")[10].replace("port_","")
 
@@ -738,7 +738,7 @@ function Export-ApplicationGateway {
                 $rule = $_
                 $ruleid = $rule.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
                 $listenerId = ($rule.HttpListenerText | ConvertFrom-Json).id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $ruleName = $rule.name
+                $ruleName = SanitizeString $rule.name
                 $poolid = ($rule.BackendAddressPoolText | ConvertFrom-Json).id.replace("-", "").replace("/", "").replace(".", "").ToLower()
 
                 #DOT
@@ -754,11 +754,41 @@ function Export-ApplicationGateway {
             $BackendPools | ForEach-Object {
                 $pool = $_ 
                 $poolid = $pool.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $poolName = $pool.Name
+                $poolName = SanitizeString $pool.Name
                 
+                $BackendAddresses = $pool.BackendAddresses
+                $IPInfo = ""
+                if ( $null -ne $BackendAddresses ) {
+                    $BackendAddresses | ForEach-Object {
+                        $object = $_
+                        $addresses = $object.IPAddress
+                        if ( $null -ne $addresses ) {
+                            $addresses | foreach-Object {
+                                $address = SanitizeString $_
+                                if ( $address.contains(".") ) {
+                                    $IPInfo += "$address\n"
+                                }
+                            }
+                        }
+                    }
+                }
+
                 #DOT
-                $data += "        $poolid [label = `"Backend pool name:$poolName\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n"
-                ###### BACKEND REF PENDING ########
+                $data += "        $poolid [label = `"Backend pool name:$poolName\n$IPInfo`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n"
+                
+                # IP Configurations
+                $IPCs = $pool.BackendIpConfigurations
+                if ( $null -ne $IPCs ) {
+                    $IPCs | ForEach-Object {
+                        $IPC = $_.id
+                        $IPCid = (($IPC.split("/")[0..8]) -join "" ).replace("-", "").replace("/", "").replace(".", "").ToLower()
+                        $data += "        $poolid -> $IPCid`n"
+                    }
+                }
+
+                # AGW cases
+                #$pool[3].BackendAddresses.fqdn
+                #$app.DefaultHostName
             }
         }
 
@@ -1077,18 +1107,19 @@ function Export-VMSS {
         Export-AddToFile -Data $data
 
         #VMSS VMs
-        $VMSSVMs = ($vmss | get-azvmssvm).id
-        if ( $null -ne $VMSSVMs ) {
-            $data = ""
-            $VMSSVMs | Foreach-Object {
-                $VMSSVMARM = $_
-                $VMARMID = $VMSSVMARM.split("/")[0,1,2,3,4,5,6,9,10] -join "/"
-                $VMDOTID = $VMARMid.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $data += "        $VMSSid -> $VMDOTid`n"
+        if ( $vmss.OrchestrationMode -eq "Flexible" ) {
+            $VMSSVMs = ($vmss | get-azvmssvm).id
+            if ( $null -ne $VMSSVMs ) {
+                $data = ""
+                $VMSSVMs | Foreach-Object {
+                    $VMSSVMARM = $_
+                    $VMARMID = $VMSSVMARM.split("/")[0,1,2,3,4,5,6,9,10] -join "/"
+                    $VMDOTID = $VMARMid.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $data += "        $VMSSid -> $VMDOTid`n"
+                }
+                Export-AddToFile -Data $data
             }
-            Export-AddToFile -Data $data
         }
-
     }
     catch {
         Write-Host "Can't export VMSS: $($vmss.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
@@ -4135,7 +4166,7 @@ function Export-LB
             $FrontEndIPs | ForEach-Object {
                 $FE =  $_
                 $FEid =  $FE.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $FEName = $FE.Name
+                $FEName = SanitizeString $FE.Name
                 $FEIP = $FE.PrivateIpAddress
                 $FEZones = $FE.Zones
                 $FEZonesString = "\nAvailability Zone(s): $FEZones"
@@ -4178,14 +4209,14 @@ function Export-LB
             $LoadBalancingRules | foreach-Object {
                 $LBR = $_
                 $LBRid = $LBR.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $LBRName = $LBR.Name
+                $LBRName = SanitizeString $LBR.Name
                 #$BEAddressPool = $LBR.BackendAddressPool.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
                 $BEAddressPools = $LBR.BackendAddressPools.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
                 $FEId = $LBR.FrontendIPConfiguration.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
                 
                 $FEPort = $LBR.FrontendPort
                 $BEPort = $LBR.BackendPort
-                $FloatingIP = $LBR.EnableFloatingIP
+                $FloatingIP = SanitizeString $LBR.EnableFloatingIP
                 $LoadDistribution = $LBR.LoadDistribution
                 
                 #LB-LBR DOT
@@ -4201,7 +4232,7 @@ function Export-LB
             $BackendPools | foreach-Object {
                 $BE = $_
                 $BEid = $BE.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $BEName = $BE.Name
+                $BEName = SanitizeString $BE.Name
                 $BEAddressesARMID = ($BE.LoadBalancerBackendAddressesText | ConvertFrom-Json).NetworkInterfaceIpConfiguration.id
                 
                 #Manual IPs set ?
@@ -4917,6 +4948,19 @@ function Get-AzNetworkDiagram {
                     }
                 }
 
+                #VMSSs
+                if ( $EnableVMSS -OR (-not $SkipNonCoreNetwork -AND -not $SkipVMSS ) ) {
+                    Write-Output "Collecting VMSS..."
+                    Export-AddToFile "    ##### $subname - VMSS #####"
+                    $VMSSs = Get-AzVMSS -ErrorAction Stop
+                    if ($null -ne $VMSSs) {
+                        $Script:Legend += ,@("Virtual Machine Scale Set","vmss.png")
+                        foreach ($vmss in $VMSSs) {
+                            Export-VMSS $vmss
+                        }
+                    }
+                }
+
                 ### Keyvaults
                 if ( $EnableKV -OR (-not $SkipNonCoreNetwork -AND -not $SkipKV ) ) {
                     Write-Output "Collecting Keyvaults..."
@@ -5100,19 +5144,6 @@ function Get-AzNetworkDiagram {
                         $Script:Legend += ,@("Compute Gallery","computegalleries.png")
                         foreach ($computeGallery in $computeGalleries) {
                             Export-ComputeGallery $computeGallery
-                        }
-                    }
-                }
-
-                #VMSSs
-                if ( $EnableVMSS -OR (-not $SkipNonCoreNetwork -AND -not $SkipVMSS ) ) {
-                    Write-Output "Collecting VMSS..."
-                    Export-AddToFile "    ##### $subname - VMSS #####"
-                    $VMSSs = Get-AzVMSS -ErrorAction Stop
-                    if ($null -ne $VMSSs) {
-                        $Script:Legend += ,@("Virtual Machine Scale Set","vmss.png")
-                        foreach ($vmss in $VMSSs) {
-                            Export-VMSS $vmss
                         }
                     }
                 }
