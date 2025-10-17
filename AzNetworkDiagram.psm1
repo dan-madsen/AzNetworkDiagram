@@ -4476,6 +4476,7 @@ function Confirm-Prerequisites {
         "ssh-key.png",
         "storage-account.png",
         "storage-account-container.png",
+        "snet.png",
         "sub.png"
         "swa.png",
         "table.png",
