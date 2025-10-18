@@ -151,7 +151,7 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 ---
 
 # Changelog (since v1.0.1)
-## Upcoming release - not released to PSGallery yet
+## v1.4
 - New support for
   - Elastic SAN
   - Load Balancers
