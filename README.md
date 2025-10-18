@@ -163,7 +163,7 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
   - VM/VMSS Extensions are now linebreak seperated insted of comma-seperated, for a cleaner diagram
 - Bug fixes
   - Subnet icon (snet.png) now gets downloaded along with everything else
-  - References to Private Endpoints, VMs, Managed Identities and SSH Key are now only added, if resoruce type is enabled at runtime (avoid referneces to undefined resources in the output)
+  - References to Private Endpoints, VMs, Managed Identities and SSH Key are now only added, if resoruce type is enabled at runtime (avoid references to undefined resources in the output)
 ## v1.3
 - New support for
   - Azure Route Server
