@@ -4264,7 +4264,7 @@ function Export-LB
                 $FE =  $_
                 $FEid =  $FE.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
                 $FEName = SanitizeString $FE.Name
-                $FEIP = $FE.PrivateIpAddress
+                $FEIP = SanitizeString $FE.PrivateIpAddress
                 $FEZones = $FE.Zones
                 $FEZonesString = "\nAvailability Zone(s): $FEZones"
                 $FESubnetRefARMID = $FE.subnet.Id
@@ -4275,7 +4275,7 @@ function Export-LB
                     $RGName = $FEPubIp.id.split("/")[4]
                     $IPName = $FEPubIp.id.split("/")[8]
                     $PUBIP = Get-AzPublicIpAddress -ResourceName $IPName -ResourceGroupName $RGName
-                    $FEIP = $PUBIP.IpAddress
+                    $FEIP = SanitizeString $PUBIP.IpAddress
                     $FEZonesString = ""
                 }
 
@@ -4285,7 +4285,7 @@ function Export-LB
                     $RGName = $FEIPPrefix.id.split("/")[4]
                     $IPName = $FEIPPrefix.id.split("/")[8]
                     $PubIPPrefix = Get-AzPublicIpPrefix -ResourceGroupName $RGName -Name $IPName
-                    $FEIP = $PubIPPrefix.IPPrefix
+                    $FEIP = SanitizeString $PubIPPrefix.IPPrefix
                     $FEZonesString = ""
                 }
 
