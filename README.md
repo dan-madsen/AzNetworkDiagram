@@ -155,11 +155,15 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 - New support for
   - Elastic SAN
   - Load Balancers
+  - Application Gateway - more information added, and references where applicable
 - New parameters
   - -VerticalView $true - change direction of graph from "Top->bottom" to "Left->Right"
   - -ManagementGroups "ManagementGroupID1","ManagementGroupID2","..." - a list of management groups. Subscriptions under any of the listed management group IDs (ie. NOT name!) will be added to the list of subscriptions in scope for data collection. Can be used in conjunction with -Subscriptions.
 - Minor changes
   - VM/VMSS Extensions are now linebreak seperated insted of comma-seperated, for a cleaner diagram
+- Bug fixes
+  - Subnet icon (snet.png) now gets downloaded along with everything else
+  - References to Private Endpoints, VMs, Managed Identities and SSH Key are now only added, if resource type is enabled at runtime (avoid references to undefined resources in the output)
 ## v1.3
 - New support for
   - Azure Route Server

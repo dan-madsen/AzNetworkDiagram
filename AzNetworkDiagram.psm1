@@ -564,24 +564,33 @@ function Export-AKSCluster {
         if ($aksacr -ne "None") {
             $data += "        $aksid -> $aksacrid [label = `"Container Registry`"];`n"
         }   
-        $sshid = (Get-AzSshKey | Where-Object { $_.publickey -eq $Aks.LinuxProfile.Ssh.Publickeys.Keydata }).Id
-        if ($sshid) {
-            $sshid = $sshid.replace("-", "").replace("/", "").replace(".", "").ToLower()
-            $data += "        $aksid -> $sshid;`n"
+        # SSHKeys enabled at runtime?
+        if ( $EnableSSHKeys -OR (-not $SkipNonCoreNetwork -AND -not $SkipSSHKeys ) ) {
+            $sshid = (Get-AzSshKey | Where-Object { $_.publickey -eq $Aks.LinuxProfile.Ssh.Publickeys.Keydata }).Id
+            if ($sshid) {
+                $sshid = $sshid.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $data += "        $aksid -> $sshid;`n"
+            }
         }
         # Check for User Assign Identity
-        if ($aks.Identity.UserAssignedIdentities.Keys) {
-            foreach ($identity in $aks.Identity.UserAssignedIdentities.Keys) { 
-                $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower() 
-                $data += "        $aksid -> $managedIdentityId;`n"
-            } 
+        # User Assigned Managed Identities enabled at runtime?
+        if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
+            if ($aks.Identity.UserAssignedIdentities.Keys) {
+                foreach ($identity in $aks.Identity.UserAssignedIdentities.Keys) { 
+                    $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower() 
+                    $data += "        $aksid -> $managedIdentityId;`n"
+                } 
+            }
         }
         # Check for Private Endpoints
-        $pvtendpoints = get-azprivateEndpointConnection -PrivateLinkResourceId $aks.id -ErrorAction SilentlyContinue
-        if ($pvtendpoints) {
-            foreach ($pe in $($pvtendpoints.PrivateEndpoint)) {
-                $peid = $pe.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $data += "        $aksid -> $peid [label = `"Private Endpoint`"; ];`n"
+        # Private Endpoints enabled at runtime?
+        if ( $EnablePE -OR (-not $SkipNonCoreNetwork -AND -not $SkipPE ) ) {
+            $pvtendpoints = get-azprivateEndpointConnection -PrivateLinkResourceId $aks.id -ErrorAction SilentlyContinue
+            if ($pvtendpoints) {
+                foreach ($pe in $($pvtendpoints.PrivateEndpoint)) {
+                    $peid = $pe.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $data += "        $aksid -> $peid [label = `"Private Endpoint`"; ];`n"
+                }
             }
         }
         # Match VMSS to node pools
@@ -667,26 +676,6 @@ function Export-ApplicationGateway {
         else {
             $sslcerts = "None"
         }
-        if ($agw.FrontendIPConfigurations) {
-            $pvtips = ""
-            foreach ($ipconfig in $agw.FrontendIPConfigurations) {
-                if ($pvtips -ne "") {
-                    $pvtips += ", "
-                }
-                if ($ipconfig.PrivateIPAllocationMethod -eq "Dynamic") {
-                    if ($ipconfig.PublicIPAddress.Id) {
-                        $pip = Get-AzPublicIpAddress -ResourceGroupName $agw.ResourceGroupName -Name $ipconfig.PublicIPAddress.Id.split("/")[-1] -ErrorAction SilentlyContinue
-                        $pvtips += $(SanitizeString $pip.IPAddress) + " (Public)"
-                    }
-                }
-                elseif ($ipconfig.PrivateIPAllocationMethod -eq "Static") {
-                    $pvtips += $(SanitizeString $ipconfig.PrivateIPAddress) + " (Private)"
-                }
-            }
-        }
-        else {
-            $pvtips = "None"
-        }
         if ($agw.FirewallPolicy.Id) {
             $polname = SanitizeString $agw.FirewallPolicy.Id.split("/")[-1]
         }
@@ -706,16 +695,135 @@ function Export-ApplicationGateway {
             $feports = "None"
         }
         $ImagePath = Join-Path $OutputPath "icons" "agw.png"
-        $data += "        $agwid [label = `"\nLocation: $Location\nPolicy name: $polname\nIPs: $pvtips\nSKU: $skuname\nZones: $zones\nSSL Certificates: $sslcerts\nFrontend ports: $feports\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $agw)];"
+        $data += "        $agwid [label = `"\nLocation: $Location\nPolicy name: $polname\nSKU: $skuname\nZones: $zones\nSSL Certificates: $sslcerts\nFrontend ports: $feports\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $agw)];"
         $data += "`n"
         $data += "        $agwid -> $agwSubnetId;`n"
 
-        if ($agw.Identity.UserAssignedIdentities.Keys) {
-            foreach ($identity in $agw.Identity.UserAssignedIdentities.Keys) { 
-                $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $data += "        $agwid -> $managedIdentityId;`n"
+        # Front End
+        if ($agw.FrontendIPConfigurations) {
+            foreach ($ipconfig in $agw.FrontendIPConfigurations) {
+                $FEname = SanitizeString $ipconfig.Name
+                $feid = $ipconfig.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                if ($ipconfig.PrivateIPAllocationMethod -eq "Dynamic") {
+                    if ($ipconfig.PublicIPAddress.Id) {
+                        $pip = Get-AzPublicIpAddress -ResourceGroupName $agw.ResourceGroupName -Name $ipconfig.PublicIPAddress.Id.split("/")[-1] -ErrorAction SilentlyContinue
+                        $pubip = $(SanitizeString $pip.IPAddress) + " (Public)"
+                        $data += "        $feid [label = `"Frontend IP Config name:\n$FEname\n\nIP: $pubip`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n"
+                        $data += "        $agwid -> $feid;`n"
+        
+                    }
+                }
+                elseif ($ipconfig.PrivateIPAllocationMethod -eq "Static") {
+                    $privip = $(SanitizeString $ipconfig.PrivateIPAddress) + " (Private)"
+                    $data += "        $feid [label = `"Frontend IP Config name:\n$FEname\n\nIP: $privip`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n"
+                    $data += "        $agwid -> $feid;`n"
+                }
             }
         }
+
+        # Listeners
+        $Listeners = $agw.HttpListeners
+        if ( $null -ne $Listeners ) {
+            $Listeners | ForEach-Object {
+                $listener = $_
+                $listenerid = $listener.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $feid = $listener.FrontendIpConfiguration.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $ListenerName = SanitizeString $listener.Name
+                $Protocol = $listener.Protocol
+                $Hostname = SanitizeString $listener.Hostname
+                if ( $null -eq $Hostname -or "" -eq $Hostname ) { $Hostname = "None" }
+                $FEport = ($listener.FrontendPortText | ConvertFrom-Json).id.split("/")[10].replace("port_","")
+
+                #DOT
+                $data += "        $listenerid [label = `"Listener name:$ListenerName\nHostname: $Hostname\nPort: $Protocol/$FEport`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n"
+                $data += "        $feid -> $listenerid;`n"
+            }
+        }
+
+        # Rules
+        $RoutingRules = $agw.RequestRoutingRules
+        if ( $null -ne $RoutingRules ) {
+            $RoutingRules | ForEach-Object {
+                $rule = $_
+                $ruleid = $rule.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $listenerId = ($rule.HttpListenerText | ConvertFrom-Json).id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $ruleName = SanitizeString $rule.name
+                $poolid = ($rule.BackendAddressPoolText | ConvertFrom-Json).id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+
+                #DOT
+                #$data += "        $ruleid [label = `"Routing rule name:$ruleName\n\n\n `" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n"
+                #$data += "        $listenerid -> $ruleid;`n"
+                #$data += "        $ruleid -> $poolid;`n"
+                $data += "        $listenerid -> $poolid;`n"
+            }
+        }
+
+        # Backends
+        $BackendPools = $agw.BackendAddressPools
+        if ( $null -ne $BackendPools ) {
+            $BackendPools | ForEach-Object {
+                $pool = $_ 
+                $poolid = $pool.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $poolName = SanitizeString $pool.Name
+                
+                $BackendAddresses = $pool.BackendAddresses
+                $IPInfo = ""
+                if ( $null -ne $BackendAddresses ) {
+                    $BackendAddresses | ForEach-Object {
+                        $object = $_
+                        $addresses = $object.IPAddress
+                        if ( $null -ne $addresses ) {
+                            $addresses | foreach-Object {
+                                $address = SanitizeString $_
+                                if ( $address.contains(".") ) {
+                                    if ( $IPInfo -eq "" ) { $IPInfo += "IP(s):\n"}
+                                    $IPInfo += "$address\n"
+                                }
+                            }
+                        }
+                    }
+                }
+
+                # AppService / FQDN cases
+                $FQDNs = $pool.BackendAddresses.fqdn
+                $FQDNInfo = ""
+                if ( $null -ne $FQDNs ) {
+                    $FQDNs | ForEach-Object {
+                        $FQDN = SanitizeString $_
+                        if ( $FQDNInfo -eq "" ) { $FQDNInfo += "FQDN(s):\n"}
+                        if ( $null -ne $FQDN -and "" -ne $FQDN ) { $FQDNInfo += "$FQDN\n" }
+                    }
+                }
+
+                #DOT
+                $data += "        $poolid [label = `"\nBackend pool name: $poolName\n\n$IPInfo\n$FQDNInfo`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n"
+                
+                # IP Configurations
+                # VMs enabled at runtime?
+                if ( $EnableVM -OR (-not $SkipNonCoreNetwork -AND -not $SkipVM ) ) {
+                    $IPCs = $pool.BackendIpConfigurations
+                    if ( $null -ne $IPCs ) {
+                        $IPCs | ForEach-Object {
+                            $IPC = $_.id
+                            $IPCid = (($IPC.split("/")[0..8]) -join "" ).replace("-", "").replace("/", "").replace(".", "").ToLower()
+                            $data += "        $poolid -> $IPCid`n"
+                        }
+                    }
+                }
+            }
+        }
+
+        # User Assigned Managed Identities
+        # User Assigned Managed Identities enabled at runtime?
+        if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
+            if ($agw.Identity.UserAssignedIdentities.Keys) {
+                foreach ($identity in $agw.Identity.UserAssignedIdentities.Keys) { 
+                    $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $data += "        $agwid -> $managedIdentityId;`n"
+                }
+            }
+        }
+
         $data += "   label = `"$Name`";
                 }`n"
 
@@ -949,9 +1057,12 @@ function Export-Keyvault {
 
             $id [label = `"\nLocation: $Location\nSKU: $($properties.Properties.Sku.Name)\nSoft Delete Enabled: $($properties.Properties.enableSoftDelete)\nRBAC Authorization Enabled: $($properties.Properties.enableRbacAuthorization)\nPublic Network Access: $($properties.Properties.publicNetworkAccess)\nPurge Protection Enabled: $($properties.Properties.enablePurgeProtection)`"; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;$(Generate-DotURL -resource $keyvault)];
         "
-        if ($properties.Properties.privateEndpointConnections.properties.PrivateEndpoint.Id) {
-            $peid = $properties.Properties.privateEndpointConnections.properties.PrivateEndpoint.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-            $data += "        $id -> $peid [label = `"Private Endpoint`"; ];`n"
+        # Private Endpoints enabled at runtime?
+        if ( $EnablePE -OR (-not $SkipNonCoreNetwork -AND -not $SkipPE ) ) {
+            if ($properties.Properties.privateEndpointConnections.properties.PrivateEndpoint.Id) {
+                $peid = $properties.Properties.privateEndpointConnections.properties.PrivateEndpoint.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $data += "        $id -> $peid [label = `"Private Endpoint`"; ];`n"
+            }
         }
         $data += "
             label = `"$Name`";
@@ -995,20 +1106,27 @@ function Export-VMSS {
             node [colorscheme = blues9; color = 2;];
         "
         $extensions = $vmss.VirtualMachineProfile.ExtensionProfile.Extensions | ForEach-Object { $_.Name } | Join-String -Separator "\n"
+        if ( $extensions -eq "" ) { $extensions = "None" }
         $ImagePath = Join-Path $OutputPath "icons" "vmss.png"
-        $data += "        $vmssid [label = `"\nLocation: $Location\nSKU: $($vmss.Sku.Name)\nCapacity: $($vmss.Sku.Capacity)\nZones: $($vmss.Zones)\nOS Type: $($vmss.StorageProfile.OsDisk.OsType)\nOrchestration Mode: $($vmss.OrchestrationMode)\nUpgrade Policy: $($vmss.UpgradePolicy.Mode)\n\nExtensions:\n$extensions`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $vmss)];"
+        $data += "        $vmssid [label = `"\nLocation: $Location\nSKU: $($vmss.Sku.Name)\nCapacity: $($vmss.Sku.Capacity)\nZones: $($vmss.Zones)\nOS Type: $($vmss.VirtualMachineProfile.StorageProfile.OsDisk.OsType)\nOrchestration Mode: $($vmss.OrchestrationMode)\nUpgrade Policy: $($vmss.UpgradePolicy.Mode)\n\nExtensions:\n$extensions`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $vmss)];"
         $data += "`n"
 
-        $sshid = (Get-AzSshKey | Where-Object { $_.publickey -eq $vmss.VirtualMachineProfile.OsProfile.LinuxConfiguration.Ssh.PublicKeys.KeyData }).Id
-        if ($sshid) {
-            $sshid = $sshid.replace("-", "").replace("/", "").replace(".", "").ToLower()
-            $data += "        $vmssid -> $sshid;`n"
+        # SSHKeys enabled at runtime?
+        if ( $EnableSSHKeys -OR (-not $SkipNonCoreNetwork -AND -not $SkipSSHKeys ) ) {
+            $sshid = (Get-AzSshKey | Where-Object { $_.publickey -eq $vmss.VirtualMachineProfile.OsProfile.LinuxConfiguration.Ssh.PublicKeys.KeyData }).Id
+            if ($sshid) {
+                $sshid = $sshid.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $data += "        $vmssid -> $sshid;`n"
+            }
         }
-        if ($vmss.Identity.UserAssignedIdentities.Keys) {
-            foreach ($identity in $vmss.Identity.UserAssignedIdentities.Keys) { 
-                $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower() 
-                $data += "        $vmssid -> $managedIdentityId;`n"
-            } 
+        # User Assigned Managed Identities enabled at runtime?
+        if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
+            if ($vmss.Identity.UserAssignedIdentities.Keys) {
+                foreach ($identity in $vmss.Identity.UserAssignedIdentities.Keys) { 
+                    $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower() 
+                    $data += "        $vmssid -> $managedIdentityId;`n"
+                } 
+            }
         }
         if ($vmss.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations.IpConfigurations.Subnet.Id) {
             $subnetid = $vmss.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations.IpConfigurations.Subnet.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
@@ -1024,18 +1142,37 @@ function Export-VMSS {
         Export-AddToFile -Data $data
 
         #VMSS VMs
-        $VMSSVMs = ($vmss | get-azvmssvm).id
-        if ( $null -ne $VMSSVMs ) {
-            $data = ""
-            $VMSSVMs | Foreach-Object {
-                $VMSSVMARM = $_
-                $VMARMID = $VMSSVMARM.split("/")[0,1,2,3,4,5,6,9,10] -join "/"
-                $VMDOTID = $VMARMid.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $data += "        $VMSSid -> $VMDOTid`n"
+        # VMs enabled at runtime ?
+        if ( $EnableVM -OR (-not $SkipNonCoreNetwork -AND -not $SkipVM ) ) {
+            if ( $vmss.OrchestrationMode -eq "Flexible" ) {
+                $VMSSVMs = ($vmss | get-azvmssvm).id
+                if ( $null -ne $VMSSVMs ) {
+                    $data = ""
+                    $VMSSVMs | Foreach-Object {
+                        $VMSSVMARM = $_
+                        $VMARMID = $VMSSVMARM.split("/")[0,1,2,3,4,5,6,9,10] -join "/"
+                        $VMDOTID = $VMARMid.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                        $data += "        $VMSSid -> $VMDOTid`n"
+                    }
+                    Export-AddToFile -Data $data
+                }
             }
-            Export-AddToFile -Data $data
         }
 
+        # Attached to AGW ?
+        # AGW enabled at runtime ?
+        if ( $EnableAppGW -OR (-not $SkipNonCoreNetwork -AND -not $SkipAppGW ) ) {
+            $AGWBEPools = $vmss.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations.ipconfigurations.ApplicationGatewayBackendAddressPools.id
+            if ( $null -ne $AGWBEPools ) {
+                $data = ""
+                $AGWBEPools | ForEach-Object {
+                    $pool = $_
+                    $poolDOTID = $pool.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $data += "        $poolDOTID -> $VMSSid`n"
+                }
+                Export-AddToFile -Data $data
+            }
+        }
     }
     catch {
         Write-Host "Can't export VMSS: $($vmss.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
@@ -1073,6 +1210,7 @@ function Export-VM {
             node [colorscheme = blues9; ];
         "
         $extensions = $vm.Extensions | ForEach-Object { $_.Id.split("/")[-1] } | Join-String -Separator "\n"
+        if ( $extensions -eq "" ) { $extensions = "None" }
         
         #VM DOT
         $ImagePath = Join-Path $OutputPath "icons" "vm.png"
@@ -1116,13 +1254,15 @@ function Export-VM {
             $data += "            $NICid -> $subnetid;`n"
         }
 
-        if ($vm.Identity.UserAssignedIdentities.Keys) {
-            foreach ($identity in $vm.Identity.UserAssignedIdentities.Keys) { 
-                $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $data += "            $vmid -> $managedIdentityId;`n"
+        # User Assigned Managed Identities enabled at runtime?
+        if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
+            if ($vm.Identity.UserAssignedIdentities.Keys) {
+                foreach ($identity in $vm.Identity.UserAssignedIdentities.Keys) { 
+                    $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $data += "            $vmid -> $managedIdentityId;`n"
+                }
             }
         }
-
         # VM (NIC) -> NSG
         $NetworkProfiles = $vm.NetworkProfile.networkinterfaces
         $NetworkProfiles | Foreach-Object {
@@ -1211,10 +1351,13 @@ function Export-MySQLServer {
             $mysqlsubnetid = $properties.properties.network.delegatedSubnetResourceId.replace("-", "").replace("/", "").replace(".", "").ToLower()
             $data += "        $mysqlid -> $($mysqlsubnetid);`n"
         }
-        if ($properties.Identity.UserAssignedIdentities.Keys) {
-            foreach ($identity in $properties.Identity.UserAssignedIdentities.Keys) { 
-                $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower() 
-                $data += "        $mysqlid -> $managedIdentityId;`n"
+        # User Assigned Managed Identities enabled at runtime?
+        if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
+            if ($properties.Identity.UserAssignedIdentities.Keys) {
+                foreach ($identity in $properties.Identity.UserAssignedIdentities.Keys) { 
+                    $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower() 
+                    $data += "        $mysqlid -> $managedIdentityId;`n"
+                }
             }
         }
         $data += "   label = `"$Name`";
@@ -1394,15 +1537,21 @@ function Export-CosmosDBAccount {
             $vnRuleid = $vnRule.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
             $data += "        $cosmosdbactid -> $($vnRuleid) [label = `"Virtual Network Rule`"; ];`n"
         }
-        if ($cosmosdbact.PrivateEndpointConnections.PrivateEndpoint.Id) {
-            $peid = $cosmosdbact.PrivateEndpointConnections.PrivateEndpoint.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-            $data += "        $cosmosdbactid -> $peid [label = `"Private Endpoint`"; ];`n"
+    	# Private Endpoints enabled at runtime?
+        if ( $EnablePE -OR (-not $SkipNonCoreNetwork -AND -not $SkipPE ) ) {
+            if ($cosmosdbact.PrivateEndpointConnections.PrivateEndpoint.Id) {
+                $peid = $cosmosdbact.PrivateEndpointConnections.PrivateEndpoint.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $data += "        $cosmosdbactid -> $peid [label = `"Private Endpoint`"; ];`n"
+            }
         }
-        if ($cosmosdbact.Identity.UserAssignedIdentities.Keys) {
-            foreach ($identity in $cosmosdbact.Identity.UserAssignedIdentities.Keys) { 
-                $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower() 
-                $data += "        $cosmosdbactid -> $managedIdentityId;`n"
-            } 
+        # User Assigned Managed Identities enabled at runtime?
+        if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
+            if ($cosmosdbact.Identity.UserAssignedIdentities.Keys) {
+                foreach ($identity in $cosmosdbact.Identity.UserAssignedIdentities.Keys) { 
+                    $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower() 
+                    $data += "        $cosmosdbactid -> $managedIdentityId;`n"
+                } 
+            }
         }
         $data += "   label = `"$Name`";
                 }`n"
@@ -1466,11 +1615,14 @@ function Export-PostgreSQLServer {
             $postgresqlsubnetid = $postgresql.NetworkDelegatedSubnetResourceId.replace("-", "").replace("/", "").replace(".", "").ToLower()
             $data += "        $postgresqlid -> $($postgresqlsubnetid);`n"
         }
-        if ($resource.Identity.UserAssignedIdentities.Keys) {
-            foreach ($identity in $resource.Identity.UserAssignedIdentities.Keys) { 
-                $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower() 
-                $data += "        $postgresqlid -> $managedIdentityId;`n"
-            } 
+        # User Assigned Managed Identities enabled at runtime?
+        if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
+            if ($resource.Identity.UserAssignedIdentities.Keys) {
+                foreach ($identity in $resource.Identity.UserAssignedIdentities.Keys) { 
+                    $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower() 
+                    $data += "        $postgresqlid -> $managedIdentityId;`n"
+                } 
+            }
         }
         $data += "   label = `"$Name`";
                 }`n"
@@ -1515,15 +1667,22 @@ function Export-RedisServer {
         $ImagePath = Join-Path $OutputPath "icons" "redis.png"
         $data += "        $redisid [label = `"\nLocation: $Location\nSKU: $($redis.Sku)\nRedis Version: $($redis.RedisVersion)\nZones: $($redis.Zone -join ", ")\nShard Count: $($redis.ShardCount)\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;$(Generate-DotURL -resource $redis)];"
         $data += "`n"
-        if ($redis.PrivateEndpointConnection.PrivateEndpoint.Id) {
-            $peid = $redis.PrivateEndpointConnection.PrivateEndpoint.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-            $data += "        $redisid -> $peid [label = `"Private Endpoint`"; ];`n"
+        
+        # Private Endpoints enabled at runtime?
+        if ( $EnablePE -OR (-not $SkipNonCoreNetwork -AND -not $SkipPE ) ) {
+            if ($redis.PrivateEndpointConnection.PrivateEndpoint.Id) {
+                $peid = $redis.PrivateEndpointConnection.PrivateEndpoint.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $data += "        $redisid -> $peid [label = `"Private Endpoint`"; ];`n"
+            }
         }
-        if ($redis.Identity.UserAssignedIdentities.Keys) {
-            foreach ($identity in $redis.Identity.UserAssignedIdentities.Keys) { 
-                $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower() 
-                $data += "        $redisid -> $managedIdentityId;`n"
-            } 
+        # User Assigned Managed Identities enabled at runtime?
+        if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
+            if ($redis.Identity.UserAssignedIdentities.Keys) {
+                foreach ($identity in $redis.Identity.UserAssignedIdentities.Keys) { 
+                    $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower() 
+                    $data += "        $redisid -> $managedIdentityId;`n"
+                } 
+            }
         }
         $data += "   label = `"$Name`";
                 }`n"
@@ -1695,9 +1854,12 @@ function Export-EventHub {
             $data += "        $($eventhubid) [label = `"\n\nLocation: $Location\nName: $(SanitizeString $eventhub.Name)\nMessage Retention: $($eventhub.MessageRetentionInDays)\nPartition Count: $($eventhub.PartitionCount)\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $_)];`n" 
             $data += "        $namespaceid -> $eventhubid;`n"
         }
-        if ($namespace.PrivateEndpointConnection.PrivateEndpointId) {
-            $peid = $namespace.PrivateEndpointConnection.PrivateEndpointId.replace("-", "").replace("/", "").replace(".", "").ToLower()
-            $data += "        $namespaceid -> $peid [label = `"Private Endpoint`"; ];`n"
+        # Private Endpoints enabled at runtime?
+        if ( $EnablePE -OR (-not $SkipNonCoreNetwork -AND -not $SkipPE ) ) {
+            if ($namespace.PrivateEndpointConnection.PrivateEndpointId) {
+                $peid = $namespace.PrivateEndpointConnection.PrivateEndpointId.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $data += "        $namespaceid -> $peid [label = `"Private Endpoint`"; ];`n"
+            }
         }
         $data += "   label = `"$Name`";
                 }`n"    
@@ -1755,11 +1917,14 @@ function Export-AppServicePlan {
             $data += "        $planid -> $appid;`n"
 
             # Add links to Private Endpoints and Managed Identities
-            if ($app.Identity.UserAssignedIdentities.Keys) {
-                foreach ($identity in $app.Identity.UserAssignedIdentities.Keys) { 
-                    $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower() 
-                    $data += "        $appid -> $managedIdentityId;`n"
-                } 
+            # User Assigned Managed Identities enabled at runtime?
+            if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
+                if ($app.Identity.UserAssignedIdentities.Keys) {
+                    foreach ($identity in $app.Identity.UserAssignedIdentities.Keys) { 
+                        $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower() 
+                        $data += "        $appid -> $managedIdentityId;`n"
+                    } 
+                }
             }
         }
         $data += "   label = `"$Name`";
@@ -1822,9 +1987,12 @@ function Export-APIM {
             $subnetid = $apim.VirtualNetwork.SubnetResourceId.replace("-", "").replace("/", "").replace(".", "").ToLower()
             $data += "        $apimid -> $subnetid;`n"
         }
-        if ($apim.PrivateEndpointConnections.Id) {
-            $peid = $apim.PrivateEndpointConnections.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-            $data += "        $apimid -> $peid [label = `"Private Endpoint`"; ];`n"
+        # Private Endpoints enabled at runtime?
+        if ( $EnablePE -OR (-not $SkipNonCoreNetwork -AND -not $SkipPE ) ) {
+            if ($apim.PrivateEndpointConnections.Id) {
+                $peid = $apim.PrivateEndpointConnections.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $data += "        $apimid -> $peid [label = `"Private Endpoint`"; ];`n"
+            }
         }
         $data += "   label = `"$Name`";
                 }`n"
@@ -1883,10 +2051,12 @@ function Export-ACR {
             #$tags = Get-AzContainerRegistryTag -RepositoryName $repo -RegistryName $acr.name
         }
 
-
-        if ($acr.PrivateEndpointConnection.PrivateEndpointId) {
-            $acrpeid = $acr.PrivateEndpointConnection.PrivateEndpointId.ToString().replace("-", "").replace("/", "").replace(".", "").ToLower()
-            $data += "        $acrid -> $($acrpeid) [label = `"Private Endpoint`"; ];`n"
+        # Private Endpoints enabled at runtime?
+        if ( $EnablePE -OR (-not $SkipNonCoreNetwork -AND -not $SkipPE ) ) {
+            if ($acr.PrivateEndpointConnection.PrivateEndpointId) {
+                $acrpeid = $acr.PrivateEndpointConnection.PrivateEndpointId.ToString().replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $data += "        $acrid -> $($acrpeid) [label = `"Private Endpoint`"; ];`n"
+            }
         }
         $data += "   label = `"$Name`";
                 }`n"
@@ -1999,13 +2169,15 @@ function Export-StorageAccount {
             $data += "      $staid -> $($staid)containernoaccess`n"
         }
         
-        
-        $peids = Get-AzPrivateEndpointConnection -PrivateLinkResourceId $storageaccount.Id -ErrorAction Stop
-        
-        if ($peids) {
-            foreach ($peid in $peids) {
-                $stapeid = $peid.PrivateEndpoint.Id.ToString().replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $data += "        $staid -> $($stapeid) [label = `"Private Endpoint`"; ];`n"
+        # Private Endpoints enabled at runtime?
+        if ( $EnablePE -OR (-not $SkipNonCoreNetwork -AND -not $SkipPE ) ) {
+            $peids = Get-AzPrivateEndpointConnection -PrivateLinkResourceId $storageaccount.Id -ErrorAction Stop
+            
+            if ($peids) {
+                foreach ($peid in $peids) {
+                    $stapeid = $peid.PrivateEndpoint.Id.ToString().replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $data += "        $staid -> $($stapeid) [label = `"Private Endpoint`"; ];`n"
+                }
             }
         }
         $data += "   label = `"$Name`";
@@ -2578,9 +2750,12 @@ function Export-SubnetConfig {
                         $data = $data + "            $id [label = `"\n\n$(SanitizeString $name)\n$AddressPrefix`" ; fillcolor = 9; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; " 
                     }
                     $data += "`n"
-                    foreach ($pe in $subnet.PrivateEndpoints) {
-                        $peid = $pe.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                        $data += "            $id -> $peid [label = `"Private Endpoint`"; ] ; `n"
+                    # Private Endpoints enabled at runtime?
+                    if ( $EnablePE -OR (-not $SkipNonCoreNetwork -AND -not $SkipPE ) ) {
+                        foreach ($pe in $subnet.PrivateEndpoints) {
+                            $peid = $pe.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                            $data += "            $id -> $peid [label = `"Private Endpoint`"; ] ; `n"
+                        }
                     }
                 }
             }
@@ -3842,13 +4017,16 @@ function Export-AVD
         $AVDdata += "    $hostpoolid [fillcolor = 3; label=`"\n\nHost pool: $(SanitizeString $name)\nFriendly name: $friendlyName\nLocation: $location\n\nHost pool type: $hostpooltype\nLoad balancing algoritm: $lb\nSession limit: $sessionLimit\nValidation Environment: $ValidationEnvironment`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $AVD)]`n"
         
         #Session Hosts
-        $sessionHosts = Get-AzWvdSessionHost -HostPoolName $name -ResourceGroupName $rgname -ErrorAction SilentlyContinue
-        if ( $null -ne $sessionHosts ) {
-            $sessionHosts | foreach-object {
-                $sessionhost = $_
-                $sessionhostid = $sessionhost.ResourceId.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                #$drainmode = ! $sessionhost.AllowNewSession
-                $AVDdata += "            $hostpoolid -> $sessionhostid `n" #[label=`"Drain mode: $drainmode`"]
+        # VMs enabled at runtime ?
+        if ( $EnableVM -OR (-not $SkipNonCoreNetwork -AND -not $SkipVM ) ) {
+            $sessionHosts = Get-AzWvdSessionHost -HostPoolName $name -ResourceGroupName $rgname -ErrorAction SilentlyContinue
+            if ( $null -ne $sessionHosts ) {
+                $sessionHosts | foreach-object {
+                    $sessionhost = $_
+                    $sessionhostid = $sessionhost.ResourceId.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    #$drainmode = ! $sessionhost.AllowNewSession
+                    $AVDdata += "            $hostpoolid -> $sessionhostid `n" #[label=`"Drain mode: $drainmode`"]
+                }
             }
         }
         
@@ -4003,12 +4181,15 @@ function Export-ESAN
                 }
 
                 #PE
-                $PEs = $VG.PrivateEndpointConnection
-                if ( $null -ne $PEs ) {
-                    $PEs | ForEach-Object {
-                        $PE = $_
-                        $PEid = $PE.PrivateEndpointId.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                        $ESANdata += "            $VGID -> $PEid`n"
+                # Private Endpoints enabled at runtime?
+                if ( $EnablePE -OR (-not $SkipNonCoreNetwork -AND -not $SkipPE ) ) {
+                    $PEs = $VG.PrivateEndpointConnection
+                    if ( $null -ne $PEs ) {
+                        $PEs | ForEach-Object {
+                            $PE = $_
+                            $PEid = $PE.PrivateEndpointId.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                            $ESANdata += "            $VGID -> $PEid`n"
+                        }
                     }
                 }
             }
@@ -4082,8 +4263,8 @@ function Export-LB
             $FrontEndIPs | ForEach-Object {
                 $FE =  $_
                 $FEid =  $FE.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $FEName = $FE.Name
-                $FEIP = $FE.PrivateIpAddress
+                $FEName = SanitizeString $FE.Name
+                $FEIP = SanitizeString $FE.PrivateIpAddress
                 $FEZones = $FE.Zones
                 $FEZonesString = "\nAvailability Zone(s): $FEZones"
                 $FESubnetRefARMID = $FE.subnet.Id
@@ -4094,7 +4275,7 @@ function Export-LB
                     $RGName = $FEPubIp.id.split("/")[4]
                     $IPName = $FEPubIp.id.split("/")[8]
                     $PUBIP = Get-AzPublicIpAddress -ResourceName $IPName -ResourceGroupName $RGName
-                    $FEIP = $PUBIP.IpAddress
+                    $FEIP = SanitizeString $PUBIP.IpAddress
                     $FEZonesString = ""
                 }
 
@@ -4104,7 +4285,7 @@ function Export-LB
                     $RGName = $FEIPPrefix.id.split("/")[4]
                     $IPName = $FEIPPrefix.id.split("/")[8]
                     $PubIPPrefix = Get-AzPublicIpPrefix -ResourceGroupName $RGName -Name $IPName
-                    $FEIP = $PubIPPrefix.IPPrefix
+                    $FEIP = SanitizeString $PubIPPrefix.IPPrefix
                     $FEZonesString = ""
                 }
 
@@ -4125,14 +4306,14 @@ function Export-LB
             $LoadBalancingRules | foreach-Object {
                 $LBR = $_
                 $LBRid = $LBR.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $LBRName = $LBR.Name
+                $LBRName = SanitizeString $LBR.Name
                 #$BEAddressPool = $LBR.BackendAddressPool.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
                 $BEAddressPools = $LBR.BackendAddressPools.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
                 $FEId = $LBR.FrontendIPConfiguration.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
                 
                 $FEPort = $LBR.FrontendPort
                 $BEPort = $LBR.BackendPort
-                $FloatingIP = $LBR.EnableFloatingIP
+                $FloatingIP = SanitizeString $LBR.EnableFloatingIP
                 $LoadDistribution = $LBR.LoadDistribution
                 
                 #LB-LBR DOT
@@ -4148,7 +4329,7 @@ function Export-LB
             $BackendPools | foreach-Object {
                 $BE = $_
                 $BEid = $BE.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $BEName = $BE.Name
+                $BEName = SanitizeString $BE.Name
                 $BEAddressesARMID = ($BE.LoadBalancerBackendAddressesText | ConvertFrom-Json).NetworkInterfaceIpConfiguration.id
                 
                 #Manual IPs set ?
@@ -4168,16 +4349,18 @@ function Export-LB
                 #LB-BE DOT
                 $LBdata += "            $BEid [fillcolor = 3; label=`"\nBackend Pool name:\n$BEName\n\n$IPString`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
 
-                if ( $null -ne $BEAddressesARMID ) {
-                    $BEAddressesARMID | foreach-object {
-                        $BEAddressARMID = $_
-                        #Split for NIC ref
-                        $BEAddressNICDOTID = ($BEAddressARMID.split("/")[0..8] -join "").replace("-", "").replace("/", "").replace(".", "").ToLower()
-                        
-                        $LBdata += "            $BEid -> $BEAddressNICDOTID`n"
+                # VMs enabled at runtime ?
+                if ( $EnableVM -OR (-not $SkipNonCoreNetwork -AND -not $SkipVM ) ) {
+                    if ( $null -ne $BEAddressesARMID ) {
+                        $BEAddressesARMID | foreach-object {
+                            $BEAddressARMID = $_
+                            #Split for NIC ref
+                            $BEAddressNICDOTID = ($BEAddressARMID.split("/")[0..8] -join "").replace("-", "").replace("/", "").replace(".", "").ToLower()
+                            
+                            $LBdata += "            $BEid -> $BEAddressNICDOTID`n"
+                        }
                     }
                 }
-                
             }
         }
 <#
@@ -4423,6 +4606,7 @@ function Confirm-Prerequisites {
         "ssh-key.png",
         "storage-account.png",
         "storage-account-container.png",
+        "snet.png",
         "sub.png"
         "swa.png",
         "table.png",
@@ -4863,6 +5047,19 @@ function Get-AzNetworkDiagram {
                     }
                 }
 
+                #VMSSs
+                if ( $EnableVMSS -OR (-not $SkipNonCoreNetwork -AND -not $SkipVMSS ) ) {
+                    Write-Output "Collecting VMSS..."
+                    Export-AddToFile "    ##### $subname - VMSS #####"
+                    $VMSSs = Get-AzVMSS -ErrorAction Stop
+                    if ($null -ne $VMSSs) {
+                        $Script:Legend += ,@("Virtual Machine Scale Set","vmss.png")
+                        foreach ($vmss in $VMSSs) {
+                            Export-VMSS $vmss
+                        }
+                    }
+                }
+
                 ### Keyvaults
                 if ( $EnableKV -OR (-not $SkipNonCoreNetwork -AND -not $SkipKV ) ) {
                     Write-Output "Collecting Keyvaults..."
@@ -5046,19 +5243,6 @@ function Get-AzNetworkDiagram {
                         $Script:Legend += ,@("Compute Gallery","computegalleries.png")
                         foreach ($computeGallery in $computeGalleries) {
                             Export-ComputeGallery $computeGallery
-                        }
-                    }
-                }
-
-                #VMSSs
-                if ( $EnableVMSS -OR (-not $SkipNonCoreNetwork -AND -not $SkipVMSS ) ) {
-                    Write-Output "Collecting VMSS..."
-                    Export-AddToFile "    ##### $subname - VMSS #####"
-                    $VMSSs = Get-AzVMSS -ErrorAction Stop
-                    if ($null -ne $VMSSs) {
-                        $Script:Legend += ,@("Virtual Machine Scale Set","vmss.png")
-                        foreach ($vmss in $VMSSs) {
-                            Export-VMSS $vmss
                         }
                     }
                 }
