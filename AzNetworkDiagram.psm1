@@ -356,6 +356,127 @@ function Export-dotFooterRanking {
     Export-AddToFile -Data "`n    ##########################################################################################################"
     Export-AddToFile -Data "    ##### RANKS"
     Export-AddToFile -Data "    ##########################################################################################################`n"
+
+    Export-AddToFile -Data @"
+
+    #Rank control
+    rank1 -> rank2 -> rank3 -> rank4 -> rank5 -> rank6 -> rank7 -> rank8 -> rank9 [style = invis; constraint = true;];
+    rank1 [style = invis;];
+    rank2 [style = invis;];
+    rank3 [style = invis;];
+    rank4 [style = invis;];
+    rank5 [style = invis;];
+    rank6 [style = invis;];
+    rank7 [style = invis;];
+    rank8 [style = invis;];
+    rank9 [style = invis;];
+    
+    subgraph rank1 {
+        rank = same;
+        rank1;
+        ### LEGEND / Does not span ranks - has been put in rank 9 - lowest
+        #l1
+        ### VM
+        $($script:rankvm -join '; ')
+        ### VNet
+        $($script:rankvnet -join '; ')
+        ### Appplication GW)
+        $($script:rankagw -join '; ')
+        ### Load Balancer
+        $($script:ranklb -join '; ')
+        ### AVD Host pool
+        $($script:rankavdhostpool -join '; ')
+        ### vWAN
+        $($script:rankvwans -join '; ')
+        ### Recovery Service Vault
+        $($script:rankrsv -join '; ')
+        ### Backup Vault
+        $($script:rankbv -join '; ')
+        ### App Service Plan
+        $($script:rankasp -join '; ') 
+    }
+
+    subgraph rank2 {
+        rank = same
+        rank2
+        ### NIC
+        $($script:ranknic -join '; ')
+        ### vWAN hub
+        $($script:rankvwanhubs -join '; ') #####
+        ### Recovery Service Vault Policies
+        $($script:rankrsvpol -join '; ') 
+        ### App Service
+        $($script:rankas -join '; ')
+        
+    }
+
+    subgraph rank3 {
+        rank = same;
+        rank3;
+        ### Subnet
+        $($script:ranksubnet -join '; ')
+    }
+
+    subgraph rank4 {
+        rank=same
+        rank4;
+        ### Azure Firewall
+        $($script:rankazfw -join '; ') #####
+        ### Bastion
+        $($script:rankbas -join '; ') #####
+        ### Virtual Network GW (non-vWAN)
+        $($script:rankvngw -join '; ') 
+        ### Route Tables
+        $($script:rankrt -join '; ')
+        ### Route Servers
+        $($script:rankrts -join '; ')
+        ### NSG
+        $($script:ranknsg -join '; ')
+        ### Private Endpoint
+        $($script:rankpe -join '; ')
+    }
+
+    subgraph rank5 {
+        rank = same;
+        rank5;
+        ### ER Circuit
+        $($script:rankercircuit -join '; ') 
+        ### VPN / Local Network GW / VPN Sites (non-vWAN)
+        $($script:rankvngwcon -join '; ')
+        ### IP Groups (for Azure Firewall)
+        $($script:rankipg -join '; ')
+    }
+
+    subgraph rank6 {
+        rank = same;
+        rank6;
+        ### Key Vault
+        $($script:rankkv -join '; ')
+        ### SSH Key
+        $($script:rankSSHKey -join '; ')
+        ### Azure Container Registry
+        $($script:rankacr -join '; ')
+        ### Managed Identities
+        $($script:rankmi -join '; ')
+        ### Azure VMware Solution / AVS
+        $($script:rankavs -join '; ')
+        ### Static Web App
+        $($script:rankswa -join '; ')
+    }
+
+    subgraph rank7 {
+        rank = same;
+        rank7;
+        ### Storage Account
+        $($script:ranksa -join '; ')
+    }
+
+    subgraph rank8 {
+        rank = same;
+        rank8;
+    }
+"@
+<#
     if ($script:rankvnetaddressspaces) {
         Export-AddToFile -Data "    ### AddressSpace ranks"
         Export-AddToFile "    { rank=min; $($script:rankvnetaddressspaces -join '; ') }`n "
@@ -400,6 +521,7 @@ function Export-dotFooterRanking {
         Export-AddToFile -Data "`n    ### IP Groups ranks"
         Export-AddToFile "    { rank=max; $($script:rankipgroups -join '; ') }`n "        
     }
+    #>
 }
 
 <#
@@ -451,7 +573,7 @@ function Export-dotFooter {
     }
     $data += "                                             </TABLE>>]; 
             }
-            { rank=max; l1; }
+            { rank=same; l1; rank9}
     }"
     Export-AddToFile -Data $data #EOF
 }
@@ -854,6 +976,8 @@ function Export-ManagedIdentity {
     
     try {
         $id = $managedIdentity.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankmi += $id
+
         $Location = SanitizeLocation $managedIdentity.Location
         $Name = SanitizeString $managedIdentity.Name
         $ImagePath = Join-Path $OutputPath "icons" "managed-identity.png"
@@ -896,7 +1020,7 @@ function Export-NSG {
     
     try {
         $id = $nsg.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-        $script:ranknsgs += $id
+        $script:ranknsg += $id
         $Location = SanitizeLocation $nsg.Location
         $Name = SanitizeString $nsg.Name
         $ImagePath = Join-Path $OutputPath "icons" "nsg.png"
@@ -937,6 +1061,8 @@ function Export-SSHKey {
     
     try {
         $id = $sshkey.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankSSHKey += $id
+
         $Location = SanitizeLocation $sshkey.Location
         $Name = SanitizeString $sshkey.Name
         $ImagePath = Join-Path $OutputPath "icons" "ssh-key.png"
@@ -1044,6 +1170,8 @@ function Export-Keyvault {
         $properties = Get-AzResource -ResourceId $keyvault.ResourceId -ErrorAction Stop
         $Location = SanitizeLocation $keyvault.Location
         $id = $keyvault.ResourceId.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankkv += $id
+
         $Name = SanitizeString $keyvault.VaultName
         $ImagePath = Join-Path $OutputPath "icons" "keyvault.png"
         $data = "
@@ -1094,9 +1222,10 @@ function Export-VMSS {
     
     try {
         $vmssid = $vmss.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-        $script:rankVMVnets += $vmssid
+        $script:rankvm += $vmssid
         $Location = SanitizeLocation $vmss.Location
         $Name = SanitizeString $vmss.Name
+        
         $data = "
         # $Name - $vmssid
         subgraph cluster_$vmssid {
@@ -1198,7 +1327,8 @@ function Export-VM {
     
     try {
         $vmid = $vm.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-        $script:rankVMVnets += $vmid
+        $script:rankvm += $vmid
+        
         $Location = SanitizeLocation $vm.Location
         $Name = SanitizeString $vm.Name
         $data = "
@@ -1227,6 +1357,8 @@ function Export-VM {
             $nicref = $_
             $nic = Get-AzNetworkInterface -ResourceId $nicref -ErrorAction Stop
             $NICid = $nic.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $script:ranknic += $NICid
+
             $NICname = $nic.Name
 
             $nic.IpConfigurations | ForEach-Object {
@@ -1890,6 +2022,8 @@ function Export-AppServicePlan {
     try {
         $resourceGroupName = $plan.Id.split("/")[4]
         $planid = $plan.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankasp += $planid
+
         $Location = SanitizeLocation $plan.Location
         $Name = SanitizeString $plan.Name
         $data = "
@@ -1911,6 +2045,8 @@ function Export-AppServicePlan {
         ForEach-Object {
             $app = $_
             $appid = $_.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $script:rankas += $appid
+
             $Location = SanitizeLocation $app.Location
 
             $data += "        $($appid) [label = `"\n\nLocation: $Location\nName: $(SanitizeString $app.Name)\nKind: $($app.Kind)\nHost Name: $(SanitizeString $app.DefaultHostName)\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $_)];`n" 
@@ -2023,6 +2159,8 @@ function Export-ACR {
     
     try {
         $acrid = $acr.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankacr += $acrid
+        
         $Location = SanitizeLocation $acr.Location
         $Name = SanitizeString $acr.Name
         $data = "
@@ -2088,6 +2226,7 @@ function Export-StorageAccount {
     
     try {
         $staid = $storageaccount.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:ranksa += $staid
         $Location = SanitizeLocation $storageaccount.Location
         $Name = SanitizeString $storageaccount.StorageAccountName
         $data = "
@@ -2138,7 +2277,7 @@ function Export-StorageAccount {
             # No access to shares
             $Script:Legend += ,@("Azure File Share", "azurefileshare.png")
             $ImagePath = Join-Path $OutputPath "icons" "azurefileshare.png"
-            $data += "        $($staid)sharenoaccess [label = `"Unknown\nPermission denied when looking look up File Shares`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n"
+            $data += "        $($staid)sharenoaccess [label = `"Unknown\nPermission denied when looking up File Shares`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n"
             $data += "      $staid -> $($staid)sharenoaccess`n"
         }
 
@@ -2165,7 +2304,7 @@ function Export-StorageAccount {
             # No access to Containers
             $Script:Legend += ,@("Azure Storage Account Container", "storage-account-container.png")
             $ImagePath = Join-Path $OutputPath "icons" "storage-account-container.png"
-            $data += "        $($staid)containernoaccess [label = `"Unknown\nPermission denied when looking look up containers`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n"
+            $data += "        $($staid)containernoaccess [label = `"Unknown\nPermission denied when looking up containers`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n"
             $data += "      $staid -> $($staid)containernoaccess`n"
         }
         
@@ -2506,7 +2645,7 @@ function Export-VirtualGateway {
     $gwtype = $gw.Gatewaytype
     $gwsku = $gw.Sku.Name
 
-    $script:rankvgws += $GatewayId
+    $script:rankvngw += $GatewayId
 
     # ER vs VPN GWs are handled differently
     if ($gwtype -eq "Vpn" ) {
@@ -2530,6 +2669,7 @@ function Export-VirtualGateway {
 
         if ($null -ne $auth) {
             $Script:Legend += ,@("P2S VPN Gateway", "VPN-User.png")
+            $script:rankvngwcon += "${GatewayId}P2S"
             #P2S config present
             $ImagePath = Join-Path $OutputPath "icons" "VPN-User.png"
             $data += "            ${GatewayId}P2S [fillcolor = 8;label = `"\n\nProtocol: $protocol, Auth: $auth\nP2S Address Prefix: $(SanitizeString $cidr)\nCustom routes: $(($customroutes | ForEach-Object {SanitizeString $_}) -join "\n")`"; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5;]; "
@@ -2581,7 +2721,7 @@ function Export-SubnetConfig {
             $id = $subnet.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
             $name = $subnet.Name
             $AddressPrefix = SanitizeString $subnet.AddressPrefix
-            $script:ranksubnets += $id
+            $script:ranksubnet += $id
 
             # vNet      
             $vnetid = $subnet.id
@@ -2630,6 +2770,7 @@ function Export-SubnetConfig {
 
                         $data += Export-AzureFirewall -FirewallId $AzFWid -ResourceGroupName $AzFWrg
                         $AzFWDotId = $AzFWid.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                        $script:rankazfw += $AzFWDotId
                         $data += "`n            $id -> $azFWDotId"
                     }
                     else {
@@ -2699,6 +2840,7 @@ function Export-SubnetConfig {
                             $rtservrg = $rtservid.split("/")[4].ToLower()
                             $rtserv = Get-AzRouteServer -ResourceGroupName $rtservrg -RouteServerName $rtservname -ErrorAction SilentlyContinue
                             $rtservid = $rtservid.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                            $script:rankrts += $rtservid
 
                             if ( $null -ne $rtserv ) {
                                 $ASN = SanitizeString $rtserv.RouteServerAsn
@@ -2837,10 +2979,8 @@ function Export-vnet {
         $Location = SanitizeLocation $vnet.Location
         $id = $vnet.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
         $vnetAddressSpaces = $vnet.AddressSpace.AddressPrefixes
-        $script:rankvnetaddressspaces += $id
-        $script:rankVMVnets += $id
-
-
+        $script:rankvnet += $id
+        
         $header = "
         # $vnetname - $id
         subgraph cluster_$id {
@@ -3015,6 +3155,8 @@ function Export-ExpressRouteCircuit {
 
     $ername = SanitizeString $er.Name
     $id = $er.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+    $script:rankercircuit += $id
+
     if ($er.ServiceProviderProperties) {
         $ServiceProviderName = $er.ServiceProviderProperties.ServiceProviderName
         $Peeringlocation = SanitizeLocation $er.ServiceProviderProperties.PeeringLocation
@@ -3101,7 +3243,7 @@ function Export-ExpressRouteCircuit {
             <TR><TD>Location</TD><VR/><TD>$Peeringlocation</TD></TR><HR/>
             <TR><TD>Bandwidth</TD><VR/><TD>$Bandwidth</TD></TR>
     "
-    $script:rankercircuits += $id
+    #$script:rankercircuit += $id
     # End table
     $header = $header + "</TABLE>>;
             ];
@@ -3179,7 +3321,7 @@ function Export-RouteTable {
         $id = $routetable.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
         $RoutePropagationEnabled = ! $routetable.DisableBgpRoutePropagation
 
-        $script:rankrts += $id
+        $script:rankrt += $id
 
         $header = "
         subgraph cluster_$id {
@@ -3258,7 +3400,7 @@ function Export-IpGroup {
 
     $id = $ipGroup.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
     $Location = SanitizeLocation $ipGroup.Location
-    $script:rankipgroups += $id
+    $script:rankipg += $id
     if ($ipGroup.IpAddresses) {
         $IpAddresses = ($ipGroup.IpAddresses | ForEach-Object { SanitizeString $_ }) -join "\n"
     }
@@ -3326,6 +3468,8 @@ function Export-Connection {
     if ($S2S) {
         $Script:Legend += ,@("Site-to-Site VPN", "VPN-Site.png")
         $lgwid = $connection.LocalNetworkGateway2.id.replace("-", "").replace("/", "").replace(".", "").replace("`"", "").ToLower()
+        $script:rankvngwcon += $lgwid
+
         $lgwname = $connection.LocalNetworkGateway2.id.split("/")[-1]
         $lgwrg = $connection.LocalNetworkGateway2.id.split("/")[4]
         $lgwobject = (Get-AzLocalNetworkGateway -ResourceGroupName $lgwrg -name $lgwname -ErrorAction Stop)
@@ -3359,6 +3503,7 @@ function Export-Connection {
     # ER (Peer set = ER Circuit - circuit defined seperately)
     if ($ER -and $vpngwid -ne 0) {
         $peerid = $connection.Peer.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        #$script:rankvngwcon = $peerid
         
         # Validate ER Circuit access
         $peerSub = $connection.Peer.id.Split("/")[2]
@@ -3414,6 +3559,7 @@ function Export-PrivateEndpoint {
         # Get the private link service connection information
         $connections = @()
         $peid = $pe.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankpe += $peid
         
         # Check for standard service connections
         if ($pe.PrivateLinkServiceConnections) {
@@ -3632,7 +3778,7 @@ function Export-StaticWebApp
 
     try {
         $id = $StaticWebApp.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-        $script:rankstaticwebapp += $id
+        $script:rankswa += $id
         
         $header = "
         # $($StaticWebApp.Name) - $id
@@ -3695,7 +3841,7 @@ function Export-RecoveryServiceVault
 
     try {
         $id = $RecoveryServiceVault.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-        $script:rankrecoveryservicevault += $id
+        $script:rankrsv += $id
         
         $header = "
         # $($RecoveryServiceVault.Name) - $id
@@ -3724,6 +3870,7 @@ function Export-RecoveryServiceVault
             $policy = $_
             $policyname = SanitizeString $policy.Name
             $policyid = $policy.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $script:rankrsvpol += $policyid
             
             #$containertype = $item.containertype
             $workloadtype = $policy.WorkloadType
@@ -3825,7 +3972,7 @@ function Export-BackupVault
 
     try {
         $id = $BackupVault.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-        $script:rankbackupvault += $id
+        $script:rankbv += $id
         
         $header = "
         # $($BackupVault.Name) - $id
@@ -4234,7 +4381,7 @@ function Export-LB
 
     try {
         $LBid = $LB.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-        $script:rankLB += $LB.id
+        $script:rankLB += $LBid
 
         $name = SanitizeString $LB.name
         $location = SanitizeLocation $LB.location
@@ -4294,7 +4441,7 @@ function Export-LB
                 $LBdata += "            $LBid -> $FEid`n"
                 if ( $null -ne $FESubnetRefARMID ) {
                     $FESubnetRef = $FESubnetRefARMID.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                    $LBdata += "            $FEid -> $FESubnetRef`n"
+                    $LBdata += "            $FEid -> $FESubnetRef [constraint=false]`n"
                 }
                 
             }
@@ -4357,7 +4504,7 @@ function Export-LB
                             #Split for NIC ref
                             $BEAddressNICDOTID = ($BEAddressARMID.split("/")[0..8] -join "").replace("-", "").replace("/", "").replace(".", "").ToLower()
                             
-                            $LBdata += "            $BEid -> $BEAddressNICDOTID`n"
+                            $LBdata += "            $BEid -> $BEAddressNICDOTID [constraint=false]`n"
                         }
                     }
                 }
@@ -4817,20 +4964,81 @@ function Get-AzNetworkDiagram {
     Write-Output "Checking prerequisites ..."
     Confirm-Prerequisites
     ##### Global runtime vars #####
-    #Rank (visual) in diagram
-    $script:rankrts = @()
-    $script:ranksubnets = @()
-    $script:ranknsgs = @()
-    $script:rankvgws = @()
+    #Rank (visual) in diagram - OLD
+    #$script:rankrts = @()
+    #$script:ranksubnets = @()
+    #$script:ranknsgs = @()
+    #$script:rankvgws = @()
     $script:rankvnetaddressspaces = @()
     $script:rankVMVnets = @()
     $script:rankvwans = @()
     $script:rankvwanhubs = @()
-    $script:rankercircuits = @()
+    #$script:rankercircuits = @()
     $script:rankvpnsites = @()
-    $script:rankipgroups = @()
+    #$script:rankipgroups = @()
     $script:PDNSREpIp = @()
     $script:PDNSRId = @()
+
+    #Ranks control placement in digram
+    $script:rankac = @()
+    $script:rankaca = @()
+    $script:rankaci = @()
+    $script:rankacr = @()
+    $script:rankagw = @()
+    $script:rankaks = @()
+    $script:rankapim = @()
+    $script:rankasp = @()
+    $script:rankas = @()
+    $script:rankAVDAppGroup = @()
+    $script:rankAVDHostpool = @()
+    $script:rankAVDWorkspace = @()
+    $script:rankavs = @()
+    $script:rankazfw = @()
+    $script:rankbas = @()
+    $script:rankbv = @()
+    $script:rankcontainerappenv = @()
+    $script:rankcontainerapps = @()
+    $script:rankcontainergroups = @()
+    $script:rankcosmosdb = @()
+    $script:rankdnspr = @()
+    $script:rankercircuit = @()
+    $script:rankergw = @()
+    $script:rankesan = @()
+    $script:rankeventhub = @()
+    $script:rankgal = @()
+    $script:rankipg = @()
+    $script:rankkv = @()
+    $script:ranklb = @()
+    $script:rankmi = @()
+    $script:rankmysql = @()
+    $script:ranknic = @()
+    $script:ranknsg = @()
+    $script:rankpe = @()
+    $script:rankpostgresql = @()
+    $script:rankredis = @()
+    $script:rankrsv = @()
+    $script:rankrsvpol = @()
+    $script:rankrt = @()
+    $script:rankrts = @()
+    $script:ranksa = @()
+    $script:ranksac = @()
+    $script:ranksafs = @()
+    $script:rankSQLMI = @()
+    $script:rankSQLServer = @()
+    $script:rankSQLServerDB = @()
+    $script:rankSSHKey = @()
+    $script:ranksubnet = @()
+    $script:rankswa = @()
+    $script:rankvm = @()
+    $script:rankvmss = @()
+    $script:rankvnet = @()
+    $script:rankvngw = @() #(P2S, Site2Site, ER, VPNConnection, vpnsites)
+    $script:rankvngwcon = @()
+    $script:rankvWANHub = @()
+    $script:rankvwans = @()
+    $script:rankwvanvngw = @() #(P2S, Site2Site, ER, VPNConnection, vpnsites)
+
+    #Other
     $script:AllInScopevNetIds = @()
     $script:DoSanitize = $Sanitize
     $script:VerticalView = $VerticalView

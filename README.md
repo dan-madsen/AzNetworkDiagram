@@ -151,6 +151,8 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 ---
 
 # Changelog (since v1.0.1)
+## Not released @ Powershell Gallery, yet
+- Improved ranking (visual layput) for diagrams. On by default, but adjusted ranking can be disabled by "-EnableRanking $false"
 ## v1.4
 - New support for
   - Elastic SAN
