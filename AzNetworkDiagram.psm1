@@ -415,6 +415,10 @@ function Export-dotFooterRanking {
         rank3;
         ### Subnet
         $($script:ranksubnet -join '; ')
+        ### SSH Key
+        $($script:rankSSHKey -join '; ')
+        ### Managed Identities
+        $($script:rankmi -join '; ')
     }
 
     subgraph rank4 {
@@ -452,12 +456,9 @@ function Export-dotFooterRanking {
         rank6;
         ### Key Vault
         $($script:rankkv -join '; ')
-        ### SSH Key
-        $($script:rankSSHKey -join '; ')
+
         ### Azure Container Registry
         $($script:rankacr -join '; ')
-        ### Managed Identities
-        $($script:rankmi -join '; ')
         ### Azure VMware Solution / AVS
         $($script:rankavs -join '; ')
         ### Static Web App
@@ -2227,6 +2228,7 @@ function Export-StorageAccount {
     try {
         $staid = $storageaccount.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
         $script:ranksa += $staid
+
         $Location = SanitizeLocation $storageaccount.Location
         $Name = SanitizeString $storageaccount.StorageAccountName
         $data = "
@@ -2249,8 +2251,11 @@ function Export-StorageAccount {
             $PublicNetworkAccess = "Enabled from selected virtual`nnetworks and IP addresses"
         }
         $HierarchicalNamespace = $storageaccount.EnableHierarchicalNamespace ? "Enabled" : "Disabled"
+        $AccessTier = $storageaccount.AccessTier
+        if ( "" -eq $AccessTier -or $null -eq $AccessTier ) { $AccessTier = "N/A" }
+
         $ImagePath = Join-Path $OutputPath "icons" "storage-account.png"
-        $data += "        $staid [label = `"\n\nLocation: $Location\nSKU: $($storageaccount.Sku.Name)\nKind: $($storageaccount.Kind)\nPublic Network Access: $PublicNetworkAccess\nAccess Tier: $($storageaccount.AccessTier)\nHierarchical Namespace: $HierarchicalNamespace\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $storageaccount)];"
+        $data += "        $staid [label = `"\n\nLocation: $Location\nSKU: $($storageaccount.Sku.Name)\nKind: $($storageaccount.Kind)\nPublic Network Access: $PublicNetworkAccess\nAccess Tier: $AccessTier\nHierarchical Namespace: $HierarchicalNamespace\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $storageaccount)];"
         $data += "`n"
         
         #File Shares
@@ -5111,7 +5116,7 @@ function Get-AzNetworkDiagram {
                 $subid = $context.Subscription.Id
                 $subname = $context.Subscription.Name
                 
-                Write-Output "`nCollecting data from subscription: $subname ($subid)"
+                Write-Output "`nCollecting data from subscription ($($Subscriptions.indexOf($_)+1)/$($Subscriptions.count)): $subname ($subid)"
                 Export-AddToFile "`n    ##########################################################################################################"
                 Export-AddToFile "    ##### $subname "
                 Export-AddToFile "    ##########################################################################################################`n"
