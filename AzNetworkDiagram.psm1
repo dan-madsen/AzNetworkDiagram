@@ -2048,8 +2048,14 @@ function Export-AppServicePlan {
             $script:rankas += $appid
 
             $Location = SanitizeLocation $app.Location
+            $kind = $app.Kind
+            if ( $kind.Contains("functionapp") ) {
+                $ImagePath = Join-Path $OutputPath "icons" "functionapp.png"
+            } else {
+                $ImagePath = Join-Path $OutputPath "icons" "appservices.png" 
+            }
 
-            $data += "        $($appid) [label = `"\n\nLocation: $Location\nName: $(SanitizeString $app.Name)\nKind: $($app.Kind)\nHost Name: $(SanitizeString $app.DefaultHostName)\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $_)];`n" 
+            $data += "        $($appid) [label = `"\n\nLocation: $Location\nName: $(SanitizeString $app.Name)\nKind: $kind\nHost Name: $(SanitizeString $app.DefaultHostName)\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $_)];`n" 
             $data += "        $planid -> $appid;`n"
 
             #vNet integration
@@ -4758,6 +4764,7 @@ function Confirm-Prerequisites {
         "esan.png",
         "eventhub.png",
         "firewallpolicy.png",
+        "functionapp.png",
         "gremlin.png",
         "imagedef.png",
         "imagedefversions.png",
