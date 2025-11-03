@@ -392,8 +392,6 @@ function Export-dotFooterRanking {
         $($script:rankrsv -join '; ')
         ### Backup Vault
         $($script:rankbv -join '; ')
-        ### App Service Plan
-        $($script:rankasp -join '; ') 
     }
 
     subgraph rank2 {
@@ -405,9 +403,6 @@ function Export-dotFooterRanking {
         $($script:rankvwanhubs -join '; ') #####
         ### Recovery Service Vault Policies
         $($script:rankrsvpol -join '; ') 
-        ### App Service
-        $($script:rankas -join '; ')
-        
     }
 
     subgraph rank3 {
@@ -438,6 +433,8 @@ function Export-dotFooterRanking {
         $($script:ranknsg -join '; ')
         ### Private Endpoint
         $($script:rankpe -join '; ')
+        ### App Service Plan
+        $($script:rankasp -join '; ') 
     }
 
     subgraph rank5 {
@@ -449,6 +446,8 @@ function Export-dotFooterRanking {
         $($script:rankvngwcon -join '; ')
         ### IP Groups (for Azure Firewall)
         $($script:rankipg -join '; ')
+        ### App Service
+        $($script:rankas -join '; ')
     }
 
     subgraph rank6 {
@@ -2053,6 +2052,12 @@ function Export-AppServicePlan {
             $data += "        $($appid) [label = `"\n\nLocation: $Location\nName: $(SanitizeString $app.Name)\nKind: $($app.Kind)\nHost Name: $(SanitizeString $app.DefaultHostName)\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $_)];`n" 
             $data += "        $planid -> $appid;`n"
 
+            #vNet integration
+            if ($null -ne $app.VirtualNetworkSubnetId) {
+                $subnetref = $app.VirtualNetworkSubnetId.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $data += "        $appid -> $subnetref [label = `"vNet integration`"; ];`n"
+            }
+            
             # Add links to Private Endpoints and Managed Identities
             # User Assigned Managed Identities enabled at runtime?
             if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
@@ -2063,7 +2068,20 @@ function Export-AppServicePlan {
                     } 
                 }
             }
+
+            # Private Endpoints enabled at runtime?
+            if ( $EnablePE -OR (-not $SkipNonCoreNetwork -AND -not $SkipPE ) ) {
+                $peids = Get-AzPrivateEndpointConnection -PrivateLinkResourceId $app.Id -ErrorAction Stop
+                
+                if ($peids) {
+                    foreach ($peid in $peids) {
+                        $stapeid = $peid.PrivateEndpoint.Id.ToString().replace("-", "").replace("/", "").replace(".", "").ToLower()
+                        $data += "        $appid -> $($stapeid) [label = `"Private Endpoint`"; ];`n"
+                    }
+                }
+            }
         }
+
         $data += "   label = `"$Name`";
                 }`n"
         Export-AddToFile -Data $data
@@ -2877,7 +2895,7 @@ function Export-SubnetConfig {
                 }
                 default { 
                     ##### Subnet delegations #####
-                    $subnetDelegationName = $subnet.Delegations.Name
+                    $subnetDelegationName = $subnet.Delegations.ServiceName
                     
                     if ( $null -ne $subnetDelegationName ) {
                         # Delegated
@@ -3576,13 +3594,26 @@ function Export-PrivateEndpoint {
             $connections += $pe.ManualPrivateLinkServiceConnections
         }
 
-        $pedetails = $(SanitizeString $pe.name) + "\n"
+        $pedetails = "Name: " + $(SanitizeString $pe.name) + "\n"
         # Process each connection for this private endpoint
         foreach ($connection in $connections) {
             if ($connection.PrivateLinkServiceId) {
-                $pedetails += $(SanitizeString $connection.PrivateLinkServiceId.Split('/')[-1]) + "\n"
+                $pedetails += "Reference: $(SanitizeString $connection.PrivateLinkServiceId.Split('/')[-1]) \n"
             }
         }
+
+        #IPs
+        if ($null -ne $pe.CustomDnsConfigs ) {
+            $IPs = ($pe.CustomDnsConfigs).IpAddresses | Sort-Object -uniq
+            $IPDetails = ""
+            $IPs | ForEach-Object {
+                if ( "" -eq $IPDetails ) { $IPDetails = "IP(s):\n"}
+                $IPDetails += "$_ \n"
+                
+            }
+            $pedetails += $IPDetails
+        }
+
         $ImagePath = Join-Path $OutputPath "icons" "private-endpoint.png"
         $data = "`n                     $peid [colorscheme = rdylgn11; color = 1; fontcolor = white; label = `"\n$pedetails`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $pe)];" 
         Export-AddToFile -Data $data
