@@ -376,65 +376,65 @@ function Export-dotFooterRanking {
         rank1;
         ### LEGEND / Does not span ranks - has been put in rank 9 - lowest
         #l1
-        ### VM
-        $($script:rankvm -join '; ')
         ### VNet
         $($script:rankvnet -join '; ')
-        ### Appplication GW)
+        ### Application GW
         $($script:rankagw -join '; ')
         ### Load Balancer
         $($script:ranklb -join '; ')
-        ### AVD Host pool
-        $($script:rankavdhostpool -join '; ')
-        ### vWAN
+        ### vWAN instance
         $($script:rankvwans -join '; ')
-        ### Recovery Service Vault
-        $($script:rankrsv -join '; ')
-        ### Backup Vault
-        $($script:rankbv -join '; ')
     }
 
     subgraph rank2 {
         rank = same
         rank2
-        ### NIC
-        $($script:ranknic -join '; ')
+        ### Subnet
+        $($script:ranksubnet -join '; ')
         ### vWAN hub
-        $($script:rankvwanhubs -join '; ') #####
-        ### Recovery Service Vault Policies
-        $($script:rankrsvpol -join '; ') 
+        $($script:rankvwanhubs -join '; ')
     }
 
     subgraph rank3 {
         rank = same;
         rank3;
-        ### Subnet
-        $($script:ranksubnet -join '; ')
         ### SSH Key
         $($script:rankSSHKey -join '; ')
         ### Managed Identities
         $($script:rankmi -join '; ')
+        ### NIC
+        $($script:ranknic -join '; ')
+        ### NSG
+        $($script:ranknsg -join '; ')
+        ### Route Tables
+        $($script:rankrt -join '; ')
+        ### Azure Firewall
+        $($script:rankazfw -join '; ')
+        ### Bastion
+        #$($script:rankbas -join '; ') #####
+        ### Virtual Network GW (non-vWAN)
+        $($script:rankvngw -join '; ')
+        ### Route Servers
+        $($script:rankrts -join '; ')
     }
 
     subgraph rank4 {
         rank=same
         rank4;
-        ### Azure Firewall
-        $($script:rankazfw -join '; ') #####
-        ### Bastion
-        $($script:rankbas -join '; ') #####
-        ### Virtual Network GW (non-vWAN)
-        $($script:rankvngw -join '; ') 
-        ### Route Tables
-        $($script:rankrt -join '; ')
-        ### Route Servers
-        $($script:rankrts -join '; ')
-        ### NSG
-        $($script:ranknsg -join '; ')
         ### Private Endpoint
         $($script:rankpe -join '; ')
         ### App Service Plan
         $($script:rankasp -join '; ') 
+        ### VM
+        $($script:rankvm -join '; ')
+        ### SQL MI
+        $($script:rankSQLMI -join '; ')
+        ### SQL Server
+        $($script:rankSQLServer -join '; ')
+        ### PostgreSQL
+        $($script:rankpostgresql -join '; ')
+        ### MySQL
+        $($script:rankmysql -join '; ')
     }
 
     subgraph rank5 {
@@ -448,6 +448,39 @@ function Export-dotFooterRanking {
         $($script:rankipg -join '; ')
         ### App Service
         $($script:rankas -join '; ')
+        ### AVD Host pool
+        $($script:rankavdhostpool -join '; ')
+        ### Recovery Service Vault Policies
+        $($script:rankrsvpol -join '; ')
+        ### SQL DB
+        $($script:rankSQLServerDB -join '; ')
+        ### Redis
+        $($script:rankredis -join '; ')
+        ### APIM
+        $($script:rankapim -join '; ')
+        ### AKS
+        $($script:rankaks -join '; ')
+        ### ACI
+        $($script:rankaci -join '; ')
+        ### AC App Container
+        #$($script:rankac -join '; ') ###
+        ### Container App Env
+        $($script:rankcontainerappenv -join '; ')
+        ### Container Apps
+        $($script:rankcontainerapps -join '; ')
+        #$($script:rankaca -join '; ') ###
+        ### Container Group
+        $($script:rankcontainergroups -join '; ') 
+        ### CosmosDB
+        $($script:rankcosmosdb -join '; ')
+        ### DNSPR
+        $($script:rankdnspr -join '; ')
+        ### ESAN
+        $($script:rankesan -join '; ')
+        ### Eventhub
+        $($script:rankeventhub -join '; ')
+        ### GAL - Compute Gallary
+        $($script:rankgal -join '; ')
     }
 
     subgraph rank6 {
@@ -455,13 +488,16 @@ function Export-dotFooterRanking {
         rank6;
         ### Key Vault
         $($script:rankkv -join '; ')
-
         ### Azure Container Registry
         $($script:rankacr -join '; ')
         ### Azure VMware Solution / AVS
         $($script:rankavs -join '; ')
         ### Static Web App
         $($script:rankswa -join '; ')
+        ### Recovery Service Vault
+        $($script:rankrsv -join '; ')
+        ### Backup Vault
+        $($script:rankbv -join '; ')
     }
 
     subgraph rank7 {
@@ -656,6 +692,8 @@ function Export-AKSCluster {
             }
         }
         $aksid = $Aks.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankaks += $aksid
+
         $Name = SanitizeString $Aks.Name
         $data = "
         # $Name - $aksid
@@ -778,6 +816,8 @@ function Export-ApplicationGateway {
     
     try {
         $agwid = $agw.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankagw += $agwid
+
         $agwSubnetId = $agw.GatewayIPConfigurations.Subnet.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
         $Name = SanitizeString $agw.Name
         $Location = SanitizeLocation $agw.Location
@@ -1095,6 +1135,8 @@ function Export-ComputeGallery {
     
     try {
         $id = $computeGallery.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankGAL += $id
+
         $sharing = $computeGallery.SharingProfile.Permissions ? "Shared" : "Private"
         $Location = SanitizeLocation $computeGallery.Location
         $Name = SanitizeString $computeGallery.Name
@@ -1382,8 +1424,8 @@ function Export-VM {
             #NIC DOT
             $ImagePath = Join-Path $OutputPath "icons" "nic.png"
             $data += "            $NICid [label = `"\nName: $NICname\nPrivate IP(s): $($PrivateIpAddresses -Join ", ")\nPublic IP(s): $($PublicIpAddresses -Join ", ")\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $NIC)];`n"
-            $data += "            $VMid -> $NICid;`n"
-            $data += "            $NICid -> $subnetid;`n"
+            $data += "            $NICid -> $VMid;`n"
+            $data += "            $subnetid -> $NICid;`n"
         }
 
         # User Assigned Managed Identities enabled at runtime?
@@ -1581,6 +1623,8 @@ function Export-CosmosDBAccount {
     
     try {
         $cosmosdbactid = $cosmosdbact.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankcosmosdb += $cosmosdbactid
+
         $Locations = ($cosmosdbact.Locations.LocationName | ForEach-Object { SanitizeLocation $_ }) -join ", "
         $Name = SanitizeString $cosmosdbact.Name
         $data = "
@@ -1965,6 +2009,8 @@ function Export-EventHub {
     )
     try {
         $namespaceid = $namespace.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankeventhub += $namespaceid
+
         $Location = SanitizeLocation $namespace.Location
         $Name = SanitizeString $namespace.Name
         $data = "
@@ -2116,6 +2162,8 @@ function Export-APIM {
     )
     try {
         $apimid = $apim.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankapim += $apimid
+
         $Location = SanitizeLocation $apim.Location
         $Name = SanitizeString $apim.Name
         $data = "
@@ -3045,6 +3093,8 @@ function Export-vnet {
                 $outboundEp = (Get-AzDnsResolverOutboundEndpoint -DnsResolverName $resolverName -ResourceGroupName $vnet.resourceGroupName -ErrorAction Stop)
                 $inboundEpIp = $inboundEp.IPConfiguration.PrivateIPAddress 
                 $pdnsrId = $resolver.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $script:rankdnspr += $pdnsrId
+
                 $dnsFrs = Get-AzDnsForwardingRuleset -ResourceGroupName $vnet.ResourceGroupName -ErrorAction Stop | Where-Object { ($_.DnsResolverOutboundEndpoint).id -eq $outboundEp.id }
                 
                 if ($dnsFrs) {
@@ -3655,6 +3705,8 @@ function Export-ContainerGroup
 
     $name = SanitizeString $containerGroup.Name
     $id = $containerGroup.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+    $script:rankaci += $id
+
     $location = SanitizeLocation $containerGroup.Location
     $script:rankcontainergroups += $id
 
