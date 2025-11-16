@@ -398,10 +398,6 @@ function Export-dotFooterRanking {
     subgraph rank3 {
         rank = same;
         rank3;
-        ### SSH Key
-        $($script:rankSSHKey -join '; ')
-        ### Managed Identities
-        $($script:rankmi -join '; ')
         ### NIC
         $($script:ranknic -join '; ')
         ### NSG
@@ -490,6 +486,10 @@ function Export-dotFooterRanking {
         rank6;
         ### Key Vault
         $($script:rankkv -join '; ')
+        ### SSH Key
+        $($script:rankSSHKey -join '; ')
+        ### Managed Identities
+        $($script:rankmi -join '; ')
         ### Azure Container Registry
         $($script:rankacr -join '; ')
         ### Azure VMware Solution / AVS
