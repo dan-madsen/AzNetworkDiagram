@@ -158,6 +158,7 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 - AzureFirewallManagementSubnet, now has a proper icon
 - Private Endpoints now have the IP address displayed
 - App Services which are function apps, now have a proper icon
+- Azure SQL Server - Private Endpoint reference
 ## v1.4
 - New support for
   - Elastic SAN

@@ -406,6 +406,8 @@ function Export-dotFooterRanking {
         $($script:ranknic -join '; ')
         ### NSG
         $($script:ranknsg -join '; ')
+        ### Private Endpoint
+        $($script:rankpe -join '; ')
         ### Route Tables
         $($script:rankrt -join '; ')
         ### Azure Firewall
@@ -423,8 +425,6 @@ function Export-dotFooterRanking {
     subgraph rank4 {
         rank=same
         rank4;
-        ### Private Endpoint
-        $($script:rankpe -join '; ')
         ### App Service Plan
         $($script:rankasp -join '; ') 
         ### VM
@@ -437,6 +437,8 @@ function Export-dotFooterRanking {
         $($script:rankpostgresql -join '; ')
         ### MySQL
         $($script:rankmysql -join '; ')
+        ### CosmosDB
+        $($script:rankcosmosdb -join '; ')
         ### DNSPRRS
         $($script:rankdnsprrs -join '; ')
     }
@@ -475,8 +477,6 @@ function Export-dotFooterRanking {
         #$($script:rankaca -join '; ') ###
         ### Container Group
         $($script:rankcontainergroups -join '; ') 
-        ### CosmosDB
-        $($script:rankcosmosdb -join '; ')
         ### ESAN
         $($script:rankesan -join '; ')
         ### Eventhub
@@ -1946,6 +1946,8 @@ function Export-SQLServer {
     )
     try {
         $sqlserverid = $sqlserver.ResourceId.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankSQLServer += $sqlserverid
+
         $Location = SanitizeLocation $sqlserver.Location
         $Name = SanitizeString $sqlserver.ServerName
         $data = "
@@ -1966,6 +1968,7 @@ function Export-SQLServer {
             $dbid = $_.ResourceId.replace("-", "").replace("/", "").replace(".", "").ToLower()
 
             if ($db.Edition -ne "System" -and $db.SkuName -ne "System") {
+                $script:rankSQLServerDB += $dbid
                 # Master databases
                 # pricing tier , vCore-based DBs expose Family
                 if ($db.Family) {
@@ -1981,6 +1984,18 @@ function Export-SQLServer {
                 $ImagePath = Join-Path $OutputPath "icons" "sqldb.png"
                 $data += "        $($dbid) [label = `"\n\nLocation: $Location\nName: $(SanitizeString $db.DatabaseName)\nPricing Tier: $pricingTier\nMax Size: $gb GB\nZone Redundant: $($db.ZoneRedundant)\nElastic Pool Name: $($db.ElasticPoolName ? (SanitizeString $db.ElasticPoolName) : 'N/A')`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $_)];`n" 
                 $data += "        $sqlserverid -> $($dbid);`n"
+            }
+        }
+
+        # Private Endpoints enabled at runtime?
+        if ( $EnablePE -OR (-not $SkipNonCoreNetwork -AND -not $SkipPE ) ) {
+            $peids = Get-AzPrivateEndpointConnection -PrivateLinkResourceId $sqlserver.ResourceId -ErrorAction Stop
+            
+            if ($peids) {
+                foreach ($peid in $peids) {
+                    $pedotid = $peid.PrivateEndpoint.Id.ToString().replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $data += "        $sqlserverid -> $($pedotid) [label = `"Private Endpoint`"; ];`n"
+                }
             }
         }
 
@@ -2042,6 +2057,7 @@ function Export-EventHub {
                 $data += "        $namespaceid -> $peid [label = `"Private Endpoint`"; ];`n"
             }
         }
+        
         $data += "   label = `"$Name`";
                 }`n"    
         Export-AddToFile -Data $data
@@ -3720,7 +3736,7 @@ function Export-PrivateEndpoint {
             $IPs = ($pe.CustomDnsConfigs).IpAddresses | Sort-Object -uniq
             $IPDetails = ""
             $IPs | ForEach-Object {
-                if ( "" -eq $IPDetails ) { $IPDetails = "IP(s):\n"}
+                if ( "" -eq $IPDetails ) { $IPDetails = "\nIP(s):\n"}
                 $IPDetails += "$_ \n"
                 
             }
@@ -4031,8 +4047,8 @@ function Export-RecoveryServiceVault
             $policyProtectedItemsCount = $items.count
             
             #DOT
-            $rsvdata += "$vaultid -> $policyid`n"
-            $rsvdata += "$policyid [fillcolor = 4; label=`"$policyname\nWorkload type: $workloadtype\nPolicy subtype: $policysubtype\nProtected Items: $policyProtectedItemsCount`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;]`n"
+            $rsvdata += "               $vaultid -> $policyid [constraint=false]`n"
+            $rsvdata += "               $policyid [fillcolor = 4; label=`"$policyname\nWorkload type: $workloadtype\nPolicy subtype: $policysubtype\nProtected Items: $policyProtectedItemsCount`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;]`n"
 
             $items | ForEach-Object {
                 $item = $_
