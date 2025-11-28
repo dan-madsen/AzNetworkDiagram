@@ -3,14 +3,13 @@ The **Get-AzNetworkDiagram** (Powershell)Cmdlet visualizes Azure infrastructure 
 
 At this point it is now quite capable of documentating quite a bit of resourse types. Initially it was with network as a focus - but it has emerged into some more. It will document network and infrastructure in a diagram, useful for documentation and/or troubleshooting.
 
-```diff
-- Disclaimer: We take no resposibility for any actions caused by this script!
-```
-
-==Created by:==
+Created by:
 - [Dan](https://github.com/dan-madsen/) - Creator
 - [Hanno](https://github.com/hannovdm) - Major contributor
 
+```diff
+- Disclaimer: We take no resposibility for any actions caused by running AzNetworkDiagram!
+```
 ---
 
 # Demo output v1.1
