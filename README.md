@@ -7,7 +7,7 @@ At this point it is now quite capable of documentating quite a bit of resourse t
 - Disclaimer: We take no resposibility for any actions caused by this script!
 ```
 
-Created by
+==Created by:==
 - [Dan](https://github.com/dan-madsen/) - Creator
 - [Hanno](https://github.com/hannovdm) - Major contributor
 
