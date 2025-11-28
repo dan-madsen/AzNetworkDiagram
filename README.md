@@ -1,11 +1,15 @@
 # Introduction 
-The **Get-AzNetworkDiagram** (Powershell)Cmdlet visualizes Azure infrastructure utilizing Graphviz and the "DOT" (diagram-as-code) language to export a PDF, SVG or PNG with a digram containing the supported resources (see below list)
+The **Get-AzNetworkDiagram** (Powershell)Cmdlet visualizes Azure infrastructure utilizing Graphviz and the "DOT" (diagram-as-code) language to export a PDF, SVG or PNG with a digram containing the supported resources (see below list).
 
 At this point it is now quite capable of documentating quite a bit of resourse types. Initially it was with network as a focus - but it has emerged into some more. It will document network and infrastructure in a diagram, useful for documentation and/or troubleshooting.
 
 ```diff
 - Disclaimer: We take no resposibility for any actions caused by this script!
 ```
+
+Created by
+- [Dan](https://github.com/dan-madsen/) - Creator
+- [Hanno](https://github.com/hannovdm) - Major contributor
 
 ---
 
@@ -30,13 +34,14 @@ It can also be installed using "Winget", but that will _NOT_ add the executable 
 ---
 
 # Getting started 
-## Install using PSGallery (prefered method)
+The recommended way of running AzNetworkDiagram is by installing for PSGallery. But should you wish to have the absolute latest and greatest, you could opt for a version from GitHub, potentially with not-yet released features.
+## Install using PSGallery (recommended method)
 ```powershell
 Install-Module -Name AzNetworkDiagram
 ```
 
-## Install from Github repo 
-Clone repository (or download the file referenced), switch to the cloned directory, then:
+## Install from GitHub repo 
+Clone repository (or download the file referenced below), switch to the cloned directory, then:
 ```powershell
 Import-Module .\AzNetworkDiagram.psm1
 ```
