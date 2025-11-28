@@ -408,8 +408,6 @@ function Export-dotFooterRanking {
         $($script:rankrt -join '; ')
         ### Azure Firewall
         $($script:rankazfw -join '; ')
-        ### Bastion
-        #$($script:rankbas -join '; ') #####
         ### DNSPR
         $($script:rankdnspr -join '; ')
         ### Virtual Network GW (non-vWAN)
@@ -451,7 +449,7 @@ function Export-dotFooterRanking {
         ### App Service
         $($script:rankas -join '; ')
         ### AVD Host pool
-        $($script:rankAVDHostpool -join '; ') #########
+        $($script:rankAVDHostpool -join '; ')
         ### Recovery Service Vault Policies
         $($script:rankrsvpol -join '; ')
         ### SQL DB
@@ -470,7 +468,6 @@ function Export-dotFooterRanking {
         $($script:rankcontainerappenv -join '; ')
         ### Container Apps
         $($script:rankcontainerapps -join '; ')
-        #$($script:rankaca -join '; ') ###
         ### Container Group
         $($script:rankcontainergroups -join '; ') 
         ### ESAN
@@ -514,52 +511,6 @@ function Export-dotFooterRanking {
         rank8;
     }
 "@
-<#
-    if ($script:rankvnetaddressspaces) {
-        Export-AddToFile -Data "    ### AddressSpace ranks"
-        Export-AddToFile "    { rank=min; $($script:rankvnetaddressspaces -join '; ') }`n "
-    }
-    if ($script:rankVMVnets) {
-        Export-AddToFile -Data "    ### VM + vNet ranks"
-        Export-AddToFile "    { rank=min; $($script:rankVMVnets -join '; ') }`n "
-    }
-    if ($script:ranksubnets) {
-        Export-AddToFile -Data "`n    ### Subnets ranks"
-        Export-AddToFile "    { rank=same; $($script:ranksubnets -join '; ') }`n "
-    }
-    if ($script:ranknsgs) {
-        Export-AddToFile -Data "`n    ### NSG ranks"
-        Export-AddToFile "    { rank=same; $($script:ranknsgs -join '; ') }`n "
-    }
-    if ($script:rankvgws) {
-        Export-AddToFile -Data "`n    ### Virtual Network Gateways ranks"
-        Export-AddToFile "    { rank=same; $($script:rankvgws -join '; ') }`n "
-    }
-    if ($script:rankrts) {
-        Export-AddToFile -Data "`n    ### Route table ranks"
-        Export-AddToFile "    { rank=same; $($script:rankrts -join '; ') }`n "
-    }
-    if ($script:rankvwans) {
-        Export-AddToFile -Data "`n    ### vWAN ranks"
-        Export-AddToFile "    { rank=same; $($script:rankvwans -join '; ') }`n "
-    }
-    if ($script:rankvwanhubs) {
-        Export-AddToFile -Data "`n    ### vWAN Hub ranks"
-        Export-AddToFile "    { rank=same; $($script:rankvwanhubs -join '; ') }`n "
-    }
-    if ($script:rankercircuits) {
-        Export-AddToFile -Data "`n    ### ER Circuit ranks"
-        Export-AddToFile "    { rank=same; $($script:rankercircuits -join '; ') }`n "
-    }
-    if ($script:rankvpnsites) {
-        Export-AddToFile -Data "`n    ### VPN Site ranks"
-        Export-AddToFile "    { rank=same; $($script:rankvpnsites -join '; ') }`n "        
-    }
-    if ($script:rankipgroups) {
-        Export-AddToFile -Data "`n    ### IP Groups ranks"
-        Export-AddToFile "    { rank=max; $($script:rankipgroups -join '; ') }`n "        
-    }
-    #>
 }
 
 <#
@@ -4339,7 +4290,7 @@ function Export-AVD
                     $sessionhost = $_
                     $sessionhostid = $sessionhost.ResourceId.replace("-", "").replace("/", "").replace(".", "").ToLower()
                     #$drainmode = ! $sessionhost.AllowNewSession
-                    $AVDdata += "            $hostpoolid -> $sessionhostid `n" #[label=`"Drain mode: $drainmode`"]
+                    $AVDdata += "            $hostpoolid -> $sessionhostid [constraint=false]`n" #[label=`"Drain mode: $drainmode`"]
                 }
             }
         }
@@ -5148,8 +5099,8 @@ function Get-AzNetworkDiagram {
     $script:PDNSRId = @()
 
     #Ranks control placement in digram
-    $script:rankac = @()
-    $script:rankaca = @()
+    #$script:rankac = @()
+    #$script:rankaca = @()
     $script:rankaci = @()
     $script:rankacr = @()
     $script:rankagw = @()
@@ -5162,7 +5113,7 @@ function Get-AzNetworkDiagram {
     #$script:rankAVDWorkspace = @()
     $script:rankavs = @()
     $script:rankazfw = @()
-    $script:rankbas = @()
+    #$script:rankbas = @()
     $script:rankbv = @()
     $script:rankcontainerappenv = @()
     $script:rankcontainerapps = @()
@@ -5278,12 +5229,16 @@ function Get-AzNetworkDiagram {
                     $TenantId = $context.Tenant.Id
                 }
                 $subid = $context.Subscription.Id
+                $dotsubid = $subid.replace("-", "").replace("/", "").replace(".", "").ToLower()
                 $subname = $context.Subscription.Name
                 
                 Write-Output "`nCollecting data from subscription ($($Subscriptions.indexOf($_)+1)/$($Subscriptions.count)): $subname ($subid)"
                 Export-AddToFile "`n    ##########################################################################################################"
                 Export-AddToFile "    ##### $subname "
                 Export-AddToFile "    ##########################################################################################################`n"
+                #Export-AddToFile "    subgraph cluster_$dotsubid {"
+                #Export-AddToFile "        label=`"Subscription: $subname`""
+                #Export-AddToFile "        style=`"dashed`"`n"
 
                 ### RTs
                 Write-Output "Collecting Route Tables..."
@@ -5768,7 +5723,8 @@ function Get-AzNetworkDiagram {
                             Export-LB -LB $LB
                         }
                     }
-                } 
+                }
+                #Export-AddToFile "    }" 
                 Export-AddToFile "`n    ##########################################################################################################"
                 Export-AddToFile "    ##### $subname "
                 Export-AddToFile "    ##### END"
@@ -5777,6 +5733,10 @@ function Get-AzNetworkDiagram {
             
             # vNet Peerings
             Write-Output "`nConnecting in-scope peered vNets..."
+            Export-AddToFile -Data "`n    ##########################################################################################################"
+            Export-AddToFile -Data "    ##### VNet peerings"
+            Export-AddToFile -Data "    ##########################################################################################################`n"
+            
             foreach ($InScopevNetId in $script:AllInScopevNetIds) {
                 $vnetname = $InScopevNetId.split("/")[-1]
                 $vnetsub = $InScopevNetId.split("/")[2]

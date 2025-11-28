@@ -155,14 +155,18 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 ---
 
 # Changelog (since v1.0.1)
-## Not released @ Powershell Gallery, yet
-- Improved ranking (visual layput) for diagrams. On by default, but adjusted ranking can be disabled by "-EnableRanking $false"
-- DNS Private Resolver references to subnets (inbound and outbound)
-- App Service references to subnets
-- AzureFirewallManagementSubnet, now has a proper icon
-- Private Endpoints now have the IP address displayed
-- App Services which are function apps, now have a proper icon
-- Azure SQL Server - Private Endpoint reference
+## v1.4.1
+- New features
+  - Improved ranking (visual layout) for diagrams. This will ensure a more predictable output, which will be regocnizeable across environments. On by default, but adjusted ranking can be disabled by "-EnableRanking $false".
+  - Resource references in output
+    - DNS Private Resolver references to subnets (inbound and outbound)
+    - App Service references to subnets
+  - Icons
+    - AzureFirewallManagementSubnet, now has a proper icon  
+    - App Services which are function apps, now have a proper icon
+  - Private end point feautes:
+    - Private Endpoints now have the IP address displayed
+    - Azure SQL Server - Private Endpoint reference
 ## v1.4
 - New support for
   - Elastic SAN
