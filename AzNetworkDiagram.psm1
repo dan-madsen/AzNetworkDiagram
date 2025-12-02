@@ -1184,7 +1184,7 @@ function Export-Keyvault {
         if ( $EnablePE -OR (-not $SkipNonCoreNetwork -AND -not $SkipPE ) ) {
             if ($properties.Properties.privateEndpointConnections.properties.PrivateEndpoint.Id) {
                 $peid = $properties.Properties.privateEndpointConnections.properties.PrivateEndpoint.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $data += "        $id -> $peid [label = `"Private Endpoint`"; ];`n"
+                $data += "        $id -> $peid [label = `"Private Endpoint`"; constraint=false ];`n"
             }
         }
         $data += "
