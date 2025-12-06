@@ -1337,8 +1337,14 @@ function Export-VM {
         $extensions = $vm.Extensions | ForEach-Object { $_.Id.split("/")[-1] } | Join-String -Separator "\n"
         if ( $extensions -eq "" ) { $extensions = "None" }
         
+        #Test if VM is SQL VM
+        $vmIsSQLVM = $false
+        if ( $(Get-AzSqlVM -Name $vm.Name -ResourceGroupName $vm.resourceGroupName -ErrorAction Ignore) ) { $vmIsSQLVM = $true } 
+
         #VM DOT
-        $ImagePath = Join-Path $OutputPath "icons" "vm.png"
+        if ( $vmIsSQLVM ) { $ImagePath = Join-Path $OutputPath "icons" "vm-sql.png" }
+        else { $ImagePath = Join-Path $OutputPath "icons" "vm.png" }
+
         $data += "    $vmid [label = `"\nLocation: $Location\nSKU: $($vm.HardwareProfile.VmSize)\nZones: $($vm.Zones)\nOS Type: $($vm.StorageProfile.OsDisk.OsType)\n\nExtensions:\n$extensions`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $vm)];"
         $data += "`n"
 
@@ -4880,6 +4886,7 @@ function Confirm-Prerequisites {
         "vWAN.png",
         "vgw.png",
         "vm.png",
+        "vm-sql.png",
         "vmss.png",
         "vnet.png",
         "VPN-Site.png",
@@ -5372,6 +5379,7 @@ function Get-AzNetworkDiagram {
                     $VMs = Get-AzVM -ErrorAction Stop
                     if ($null -ne $VMs) {
                         $Script:Legend += ,@("Virtual Machine","vm.png")
+                        $Script:Legend += ,@("Virtual Machine (MSSQL)","vm-sql.png")
                         $Script:Legend += ,@("Network Interface Card","nic.png")
                         foreach ($vm in $VMs) {
                             Export-VM $VM
