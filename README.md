@@ -155,6 +155,9 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 ---
 
 # Changelog (since v1.0.1)
+## Not released to Powershell Gallery yet
+- New features
+  - VMs with MSSQL registered, now have a proper icon
 ## v1.4.1
 - New features
   - Improved ranking (visual layout) for diagrams. This will ensure a more predictable output, which will be regocnizeable across environments. On by default, but adjusted ranking can be disabled by "-EnableRanking $false".
