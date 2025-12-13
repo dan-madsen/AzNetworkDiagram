@@ -49,25 +49,25 @@ Import-Module .\AzNetworkDiagram.psm1
 - **-OutputPath <path>** - set output directory. Default: "."
 - **-Subscriptions "subid1","subid2","subname","..."** - a list of subscriptions in scope for the diagram. They can be names or Id's
 - **-ManagementGroups "ManagementGroupID1","ManagementGroupID2","..."** - a list of management groups. Subscriptions under any of the listed management group IDs (ie. NOT name!) will be added to the list of subscriptions in scope for data collection. Can be used in conjunction with -Subscriptions.
-- **-EnableRanking $bool** ($true/$false) - enable ranking (equal hight in the output) of certain resource types. For larger networks, this might be worth a shot. **Default: $true**
+- **-DisableRanking** - Disables automatic ranking for resource types. For larger networks, this might be worth a shot.
 - **-Tenant "tenantId"** Specifies the tenant Id to be used in all subscription authentication. Handy when you have multiple tenants to work with. **Default: current tenant**
-- **-Sanitize $bool** ($true/$false) - Sanitizes all names, locations, IP addresses and CIDR blocks. **Default: $false**
+- **-Sanitize** Sanitizes all names, locations, IP addresses and CIDR blocks.
 - **-Prefix "string"** - Adds a prefix to the output file name. For example is cases where you want to do multiple automated runs then the file names will have the prefix per run that you specify. **Default: No Prefix**
-- **-SkipNonCoreNetwork** ($true/$false) - if $true/enabled, only cores network resources are processed (unless resource types are explicitly enabled using -EnableXXXX options) - ie. non-network resources are skipped for a cleaner diagram - but you will also lack some references from shown resources. Default is $false.
-- **-SkipXXX** ($true/$false) - Skips a chosen non-core network resource type - use tab completion to see current list.
-- **-EnableXXX** ($true/$false) - Enable a chosen non-core network resource type regardless of it being skipped (-EnableXXXX will take precedence!) - use tab completion to see current list.
-- **-OnlyMgmtGroups** ($true/$false) - Creates a Management Group and Subscription overview diagram - everything else is skipped. Default is $false.
-- **-KeepDotFile** ($true/$false) - if $true/enabled, the DOT file is not deleted after the diagrams have been generated. Default is $false and DOT files are deleted.
+- **-SkipNonCoreNetwork** - Only rocess cores network resources (unless resource types are explicitly enabled using -EnableXXXX options) - ie. non-network resources are skipped for a cleaner diagram - but you will also lack some references from shown resources. 
+- **-SkipXXX** - Skips a chosen non-core network resource type - use tab completion to see current list.
+- **-EnableXXX** - Enable a chosen non-core network resource type regardless of it being skipped (-EnableXXXX will take precedence!) - use tab completion to see current list.
+- **-OnlyMgmtGroups** - Creates a Management Group and Subscription overview diagram - everything else is skipped.
+- **-KeepDotFile** - the DOT file is not deleted after the diagrams have been generated. Default is $false and DOT files are deleted.
 - **-OutputFormat** (pdf, svg, png) - One or more output files get generated with the specified formats. Default is PDF.
-- **-EnableLinks** ($true/$false) - Many resources become links to the Azure portal can be enabled using this flag. Default is $false.
+- **-EnableLinks** - Many resources become links to the Azure portal can be enabled using this flag.
 
 
 
 ## Running the Powershell module
 **Examples:**
 ```powershell
-Get-AzNetworkDiagram [-Tenant tenantId] [-Subscriptions "subid1","subid2","..."] [-OutputPath C:\temp\] [-EnableRanking $true] [-SkipNonCoreNetwork $true] [-Sanitize $true] [-Prefix prefixstring] [-KeepDotFile $true] [-OutputFormat [pdf,svg,png]] [-OnlyMgmtGroups $true] [-EnableLinks $true]
-
+Get-AzNetworkDiagram [-Tenant tenantId] [-Subscriptions "subid1","subid2","..."] [-OutputPath C:\temp\] [-SkipNonCoreNetwork] [-Sanitize] [-Prefix prefixstring] [-KeepDotFile] [-OutputFormat [pdf,svg,png]] [-OnlyMgmtGroups] [-EnableLinks]
+Get-AzNetworkDiagram [-Tenant tenantId] [-OutputPath C:\temp\] [-OnlyMgmtGroups] [-Sanitize] [-Prefix prefixstring] [-KeepDotFile] [-OutputFormat [pdf,svg,png]]
 Get-AzNetworkDiagram 
 ```
 
@@ -77,8 +77,8 @@ Beware, that by using "-Subscriptions" to limit the scope of data collection, yo
 
 # Recommendation
 It is inevitable that large environments make the diagram **very large** (in this case "wide"), but zooming into the PDF or SVG works the best. In cases where diagrams gets too big/wide, you should consider scoping the digram (ie. utilize **-Subscriptions "subid","subid2"....**) to create smaller diagrams with a scope that matches your deployment(s), instead of your entire infrastructure. For many environments, you could probably go with something like this:
-- A management group diagram (-OnlyMgmtGroups $true)
-- A core network diagram (-OnlyCoreNetwork $true) that spans part of your infrastructure (or maybe everything), which will include the core network resources listed under "Currently supported resources"
+- A management group diagram (-OnlyMgmtGroups)
+- A core network diagram (-SkipNonCoreNetwork) that spans part of your core infrastructure (or maybe everything), which will only include the core network resources listed under "Currently supported resources"
 - Multiple minor diagrams for individual workloads
 
 ---
@@ -99,7 +99,7 @@ The module is now compatible with both Ubuntu and Windows so you can run it succ
 
 This module will include in the diagram in separate colors:
   - Mangement Groups and Subscriptions
-  - Core network resources
+  - **Core network resources**
     - Azure Firewall, including IP Groups
     - Bastion
     - NAT Gateway
@@ -156,8 +156,20 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 
 # Changelog (since v1.0.1)
 ## Not released to Powershell Gallery yet
+- **BREAKING CHANGE**, for easier usage
+ - Paramaters with $bool ($true/$false) no longer need the $true/$false parameter - they are now "switches" which enables without prepending a value. 
+ - For example "-SkipNonCoreNetwork $true" is now just "-SkipNonCoreNetwork". 
+ - This will **break/alter intent of the script** if values are still supplied, due to a feature in PowerShell. An effort has been made to catch this error in v1.4.2+ and inform the user. In v2.0 that feature will be disabled for script, in order to ensure proper usage.
 - New features
+  - The ability to have a logo added to the output (see new parameter section)
   - VMs with MSSQL registered, now have a proper icon
+- "help Get-AzNetworkDiagram" will now be more accurate (Synopsis moved to funktion instead of the top of the script)
+- New/changed parameters
+  - -LogoPath "image.ext"
+    - Absolute path for the your logo of choice. Supports most popular image formats, but only .PNG and .JPG/.JPEG have been tested.
+  - LogoLink "https://example.com"
+    - Will make the logo a clickable link
+  - "-EnableRanking $true/$false" changed to "-DisableRanking" (due to above breaking change)
 ## v1.4.1
 - New features
   - Improved ranking (visual layout) for diagrams. This will ensure a more predictable output, which will be regocnizeable across environments. On by default, but adjusted ranking can be disabled by "-EnableRanking $false".

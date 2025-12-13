@@ -1,69 +1,6 @@
 #Requires -Version 7.1
 #Requires -Modules Az.Accounts, Az.Network, Az.Compute, Az.KeyVault, Az.Storage, Az.MySql, Az.PostgreSql, Az.CosmosDB, Az.RedisCache, Az.Sql, Az.EventHub, Az.Websites, Az.ApiManagement, Az.ContainerRegistry, Az.ManagedServiceIdentity, Az.Resources, Az.vmware, Az.ElasticSan
 
-<#
-  .SYNOPSIS
-  Creates a Network Diagram of your Azure networking infrastructure.
-
-  .DESCRIPTION
-  The Get-AzNetworkDiagram (Powershell)Cmdlet visualizes Azure resources utilizing Graphviz and the "DOT", diagram-as-code language to export a PDF and PNG with an infrastructure digram containing the supported resource and relevant information.
-
-  IMPORTANT:
-  Icons in the .\icons\ folder is necessary in order to generate the diagram. If not present, they will be downloaded to the output directory during runtime.
-  
-  .PARAMETER OutputPath
-  -OutputPath specifies the path for the DOT-based output file. If unset - current working directory will be used.
-
-  .PARAMETER Tenant
-  -Tenant "tenantId" Specifies the tenant Id to be used in all subscription authentication. Handy when you have multiple tenants to work with. Default: current tenant
-
-  .PARAMETER Subscriptions
-  -Subscriptions "subid1","subid2","..."** - a list of subscriptions in scope for the digram. Default is all available subscriptions.
-
-  .PARAMETER EnableRanking
-  -EnableRanking $true ($true/$false) - enable ranking (equal hight in the output) of certain resource types. For larger environments, this might be worth a shot. **Default: $true**
-
-  .PARAMETER Sanitize
-  -Sanitize $bool ($true/$false) - Sanitizes all names, locations, IP addresses and CIDR blocks. Default: $false
-
-  .PARAMETER Prefix
-  -Prefix "string" - Adds a prefix to the output file name. For example is cases where you want to do multiple automated runs then the file names will have the prefix per run that you specify. Default: No Prefix
-
-  .PARAMETER EnableLinks
-  -EnableLinks ($true/$false) - if $true/enabled Azure resource in the PDF output will become links, taking you to the Azure portal. **Default: $false**
-
-  .PARAMETER KeepDotFile
-  -KeepDotFile ($true/$false) - if $true/enabled the DOT file will be preserved
-
-  .PARAMETER ManagementGroups
-  - -ManagementGroups "ManagementGroupID1","ManagementGroupID2","..." - a list of management groups. Subscriptions under any of the listed management group IDs (ie. NOT name!) will be added to the list of subscriptions in scope for data collection. Can be used in conjunction with -Subscriptions ""
-
-  .PARAMETER OutputFormat
-  -OutputFormat (pdf, svg, png) - One or more output files get generated with the specified formats. Default is PDF.
-
-  .PARAMETER OnlyMgmtGroups
-  -OnlyMgmtGroups ($true/$false) - Creates a Management Group and Subscription overview diagram - everything else is skipped. Default is $false.
-
-  .PARAMETER SkipNonCoreNetwork
-  -SkipNonCoreNetwork ($true/$false) - if $true/enabled, only cores network resources are processed - ie. non-network resources are skipped for a cleaner diagram. Additional resource types can be enabled using -EnableXXX
-
-  .PARAMETER SkipXXX
-  -SkipXXX ($true/$false) - Skips a chosen non-core network resource type - use tab completion to see current list.
-
-  .INPUTS
-  None. It will however require previous authentication to Azure
-
-  .OUTPUTS
-  None. .\Get-AzNetworkDiagram.psm1 doesn't generate any output (Powershell-wise). File based output will be save in the OutputPath, if set - otherwise to current working directory
-
-  .EXAMPLE
-  PS> Get-AzNetworkDiagram [-Tenant tenantId] [-Subscriptions "subid1","subid2","..."] [-OutputPath C:\temp\] [-EnableRanking $true] [-SkipNonCoreNetwork $true] [-Sanitize $true] [-Prefix prefixstring]
-  PS> .\Get-AzNetworkDiagram 
-
-  .LINK
-   https://github.com/dan-madsen/AzNetworkDiagram
-#>
-
 # Change Execution Policy for current process, if prohibited by policy
 # Set-ExecutionPolicy -scope process -ExecutionPolicy bypass
 
@@ -317,6 +254,7 @@ function Export-dotHeader {
 
     $rankdir = "TB"
 
+    # Change rank_direction from TB (Top->Bottom) to LR (Left->Right) ?
     if ( $script:VerticalView ) { $rankdir = "LR" }
 
     $Data = "digraph AzNetworkDiagram {  
@@ -339,6 +277,17 @@ function Export-dotHeader {
     rankdir = $rankdir;
     nodesep=`"1.0`"
     "
+
+    if ( $null -ne $LogoPath -and (Test-Path $LogoPath -PathType Leaf) ) {
+        if ( $LogoURL ) { $URLLINK = "URL=`"$LogoURL`"" }
+        $data += "
+        subgraph cluster_logo {
+            label = `"`"; // No label for the cluster itself
+            style=invis; // Make the cluster invisible
+            logo [label=`"`", labelloc=b, shape=none, image=`"$LogoPath`", width=0, height=0;$URLLINK];
+        }
+        "
+    }
     Export-CreateFile -Data $Data
 }
 
@@ -542,7 +491,20 @@ function Export-dotFooter {
     Export-AddToFile -Data "    ##### Legend"
     Export-AddToFile -Data "    ##########################################################################################################`n"
     
-    $data = "    subgraph clusterLegend {
+    $data = "
+    #Rank control for Legend only - ie. without messing with resources
+    rank1 -> rank2 -> rank3 -> rank4 -> rank5 -> rank6 -> rank7 -> rank8 -> rank9 [style = invis; constraint = true;];
+    rank1 [style = invis;];
+    rank2 [style = invis;];
+    rank3 [style = invis;];
+    rank4 [style = invis;];
+    rank5 [style = invis;];
+    rank6 [style = invis;];
+    rank7 [style = invis;];
+    rank8 [style = invis;];
+    rank9 [style = invis;];
+
+    subgraph clusterLegend {
                     style = solid;
                     margin = 0;
                     colorscheme = rdpu7;
@@ -562,7 +524,7 @@ function Export-dotFooter {
     }
     $data += "                                             </TABLE>>]; 
             }
-            { rank=same; l1; rank9}
+            { rank=max; l1; rank9 }
     }"
     Export-AddToFile -Data $data #EOF
 }
@@ -1336,6 +1298,9 @@ function Export-VM {
         "
         $extensions = $vm.Extensions | ForEach-Object { $_.Id.split("/")[-1] } | Join-String -Separator "\n"
         if ( $extensions -eq "" ) { $extensions = "None" }
+
+        $zones = $($vm.Zones)
+        if ( "" -eq $zones ) { $zones = "N/A" }
         
         #Test if VM is SQL VM
         $vmIsSQLVM = $false
@@ -1345,7 +1310,7 @@ function Export-VM {
         if ( $vmIsSQLVM ) { $ImagePath = Join-Path $OutputPath "icons" "vm-sql.png" }
         else { $ImagePath = Join-Path $OutputPath "icons" "vm.png" }
 
-        $data += "    $vmid [label = `"\nLocation: $Location\nSKU: $($vm.HardwareProfile.VmSize)\nZones: $($vm.Zones)\nOS Type: $($vm.StorageProfile.OsDisk.OsType)\n\nExtensions:\n$extensions`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $vm)];"
+        $data += "    $vmid [label = `"\nLocation: $Location\nSKU: $($vm.HardwareProfile.VmSize)\nZones: $zones\nOS Type: $($vm.StorageProfile.OsDisk.OsType)\n\nExtensions:\n$extensions`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $vm)];"
         $data += "`n"
 
         # NIC loop for private + public IPs
@@ -4906,7 +4871,7 @@ function Add-ManagementGroupScope {
         [Parameter(Mandatory = $true)]
         [PSCustomObject]$ManagementGroup
     )
-
+    
     $subEntities = Get-AzManagementGroup -GroupName $ManagementGroup -Expand -Recurse -ErrorAction Stop
     if ( $null -ne $subEntities ) {
         $children = $subEntities.Children
@@ -4960,104 +4925,315 @@ function Get-DOTExecutable {
 }
 
 <#
-.SYNOPSIS
-Generates a detailed infrastructure diagram of Azure resources for specified subscriptions.
+  .SYNOPSIS
+  Generates a detailed infrastructure diagram of Azure resources for specified subscriptions.
 
-.DESCRIPTION
-The `Get-AzNetworkDiagram` function collects and visualizes Azure resources, including networking, infrastructure and more. It uses Graphviz to create a DOT-based diagram and outputs it in PDF, PNG, and SVG formats. The diagram includes relationships and dependencies between resources, providing a comprehensive view of the Azure network infrastructure.
+  .DESCRIPTION
+  The `Get-AzNetworkDiagram` function collects and visualizes Azure resources, including networking, infrastructure and more. It uses Graphviz to create a DOT-based diagram and outputs it in PDF, PNG, and SVG formats. The diagram includes relationships and dependencies between resources, providing a comprehensive view of the Azure network infrastructure.
 
-.PARAMETER OutputPath
-Specifies the directory where the output files (DOT, PDF, PNG, SVG) will be saved. Defaults to the current working directory.
+  IMPORTANT:
+  Icons in the .\icons\ folder is necessary in order to generate the diagram. If not present, they will be downloaded to the output directory during runtime.
+  
+  .PARAMETER OutputPath
+  Specifies the path for the DOT-based output file (DOT, PDF, PNG, SVG). If unset - current working directory will be used.
 
-.PARAMETER Subscriptions
-A list of Azure subscription IDs to include in the diagram. If not specified, all accessible subscriptions are used.
+  .PARAMETER TenantId
+  Specifies the tenantId to be used in all subscription authentication. Handy when you have multiple tenants to work with. Default: current tenant
 
-.PARAMETER EnableRanking
-Enables ranking of certain resource types in the diagram for better visualization. Defaults to `$true`.
+  .PARAMETER Subscriptions
+  A list of subscriptions in scope for the digram. IE. -Subscriptions "subid1","subid2","..."** . Default is all available subscriptions.
 
-.PARAMETER TenantId
-Specifies the Azure tenant ID to scope the subscriptions. If not provided, the default tenant is used.
+  .PARAMETER DisableRanking
+  Many resource types have default rank (ie. height placement) in the diagram. This option disables it, but the resulting diagram can be a bit messy.
+  
+  .PARAMETER Sanitize
+  Sanitizes all names, locations, IP addresses and CIDR blocks
 
-.EXAMPLE
-PS> Get-AzNetworkDiagram -Subscriptions "subid1","subid2" -OutputPath "C:\Diagrams" -EnableRanking $true
+  .PARAMETER Prefix
+  Adds a prefix to the output file name. For example is cases where you want to do multiple automated runs then the file names will have the prefix per run that you specify. Default: No Prefix
 
+  .PARAMETER EnableLinks
+  -EnableLinks ($true/$false) - if $true/enabled Azure resource in the PDF output will become links, taking you to the Azure portal. **Default: $false**
+
+  .PARAMETER KeepDotFile
+  Preserve the DOT file after diagram generation
+
+  .PARAMETER LogoURL
+  If supplied along with -LogoPath, the logo will become a clickable link
+  
+  .PARAMETER LogoPath
+  Absolute/full path for the your logo/image of choice. Size matters (pixels), don't use a logo that is too big! 
+  Logo will be at rank 1 - ie., top in a standard horizontal diagram and left in a vertical diagram. A large image will make the diagram move in the output, creating unecessary whitespace.
+  Supports most popular image formats, but only .PNG and .JPG/.JPEG have been tested. 
+
+  .PARAMETER ManagementGroups
+  A list of management groups in scope for processing. Ie. -ManagementGroups "ManagementGroupID1","ManagementGroupID2","..." . Subscriptions under any of the listed management group IDs (ie. NOT name!) will be added to the list of subscriptions in scope for data collection. Can be used in conjunction with -Subscriptions ""
+
+  .PARAMETER OutputFormat
+  One or more output files get generated with the specified formats. Choose between (pdf, svg, png) - Default is PDF.
+
+  .PARAMETER OnlyMgmtGroups
+  Creates a Management Group and Subscription overview diagram - everything else is skipped.
+
+  .PARAMETER SkipNonCoreNetwork
+  Only cores network resources are processed - ie. non-network resources are skipped for a cleaner diagram. Additional resource types can be enabled using -EnableXXX
+
+  .PARAMETER SkipXXX
+  Skips a chosen non-core network resource type - use tab completion to see current list.
+
+  .INPUTS
+  None. It will however require previous authentication to Azure
+
+  .OUTPUTS
+  None. .\Get-AzNetworkDiagram.psm1 doesn't generate any output (Powershell-wise). File based output will be save in the OutputPath, if set - otherwise to current working directory
+
+  .EXAMPLE
+  PS> Get-AzNetworkDiagram [-TenantId tenantId] [-Subscriptions "subid1","subid2","..."] [-OutputPath C:\temp\] [-SkipNonCoreNetwork] [-Sanitize] [-Prefix prefixstring]
+  PS> .\Get-AzNetworkDiagram 
+
+  .LINK
+   https://github.com/dan-madsen/AzNetworkDiagram
 #>
 function Get-AzNetworkDiagram {
     [CmdletBinding()]
+    #[CmdletBinding(PositionalBinding=$false)] #Does not give an option to inform the users, 42 Catch variables was added below instead ! Once we move to v2.0 at some point - this will be enabled and the 42 catch variables will be removed
     # Parameters
     param (
-        [Parameter(Mandatory = $false)][bool]$EnableACA = $false,
-        [Parameter(Mandatory = $false)][bool]$EnableACI = $false,
-        [Parameter(Mandatory = $false)][bool]$EnableACR = $false,
-        [Parameter(Mandatory = $false)][bool]$EnableAKS = $false,
-        [Parameter(Mandatory = $false)][bool]$EnableAPIM = $false,
-        [Parameter(Mandatory = $false)][bool]$EnableASP = $false,
-        [Parameter(Mandatory = $false)][bool]$EnableAVD = $false,
-        [Parameter(Mandatory = $false)][bool]$EnableAVS = $false,
-        [Parameter(Mandatory = $false)][bool]$EnableAppGW = $false,
-        [Parameter(Mandatory = $false)][bool]$EnableBV = $false,
-        [Parameter(Mandatory = $false)][bool]$EnableCosmosDB = $false,
-        [Parameter(Mandatory = $false)][bool]$EnableEventHub = $false,
-        [Parameter(Mandatory = $false)][bool]$EnableESAN = $false,
-        [Parameter(Mandatory = $false)][bool]$EnableGAL = $false,
-        [Parameter(Mandatory = $false)][bool]$EnableKV = $false,
-        [Parameter(Mandatory = $false)][bool]$EnableLinks = $false,
-        [Parameter(Mandatory = $false)][bool]$EnableLB = $false,
-        [Parameter(Mandatory = $false)][bool]$EnableMI = $false,
-        [Parameter(Mandatory = $false)][bool]$EnableMySQL = $false,
-        [Parameter(Mandatory = $false)][bool]$EnablePE = $false,
-        [Parameter(Mandatory = $false)][bool]$EnablePostgreSQL = $false,
-        [Parameter(Mandatory = $false)][bool]$EnableRanking = $true,
-        [Parameter(Mandatory = $false)][bool]$EnableRedis = $false,
-        [Parameter(Mandatory = $false)][bool]$EnableRSV = $false,
-        [Parameter(Mandatory = $false)][bool]$EnableSA = $false,
-        [Parameter(Mandatory = $false)][bool]$EnableSQLDB = $false,
-        [Parameter(Mandatory = $false)][bool]$EnableSQLMI = $false,
-        [Parameter(Mandatory = $false)][bool]$EnableSSHKeys = $false,
-        [Parameter(Mandatory = $false)][bool]$EnableSWA = $false,
-        [Parameter(Mandatory = $false)][bool]$EnableVM = $false,
-        [Parameter(Mandatory = $false)][bool]$EnableVMSS = $false,
-        [Parameter(Mandatory = $false)][bool]$KeepDotFile = $false,
-        [Parameter(Mandatory = $false)][string[]]$ManagementGroups = $null,
-        [Parameter(Mandatory = $false)][bool]$OnlyMgmtGroups = $false,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch1,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch2,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch3,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch4,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch5,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch6,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch7,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch8,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch9,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch10,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch11,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch12,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch13,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch14,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch15,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch16,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch17,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch18,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch19,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch20,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch21,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch22,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch23,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch24,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch25,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch26,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch27,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch28,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch29,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch30,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch31,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch32,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch33,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch34,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch35,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch36,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch37,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch38,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch39,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch40,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch41,
+        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch42,
+        [Parameter(Mandatory = $false,DontShow = $true)][switch]$DebugParameters,
+        [Parameter(Mandatory = $false)][switch]$DisableRanking,    
+        [Parameter(Mandatory = $false)][switch]$EnableACA,
+        [Parameter(Mandatory = $false)][switch]$EnableACI,
+        [Parameter(Mandatory = $false)][switch]$EnableACR,
+        [Parameter(Mandatory = $false)][switch]$EnableAKS,
+        [Parameter(Mandatory = $false)][switch]$EnableAPIM,
+        [Parameter(Mandatory = $false)][switch]$EnableASP,
+        [Parameter(Mandatory = $false)][switch]$EnableAVD,
+        [Parameter(Mandatory = $false)][switch]$EnableAVS,
+        [Parameter(Mandatory = $false)][switch]$EnableAppGW,
+        [Parameter(Mandatory = $false)][switch]$EnableBV,
+        [Parameter(Mandatory = $false)][switch]$EnableCosmosDB,
+        [Parameter(Mandatory = $false)][switch]$EnableEventHub,
+        [Parameter(Mandatory = $false)][switch]$EnableESAN,
+        [Parameter(Mandatory = $false)][switch]$EnableGAL,
+        [Parameter(Mandatory = $false)][switch]$EnableKV,
+        [Parameter(Mandatory = $false)][switch]$EnableLinks,
+        [Parameter(Mandatory = $false)][switch]$EnableLB,
+        [Parameter(Mandatory = $false)][switch]$EnableMI,
+        [Parameter(Mandatory = $false)][switch]$EnableMySQL,
+        [Parameter(Mandatory = $false)][switch]$EnablePE,
+        [Parameter(Mandatory = $false)][switch]$EnablePostgreSQL,
+        [Parameter(Mandatory = $false)][switch]$EnableRedis,
+        [Parameter(Mandatory = $false)][switch]$EnableRSV,
+        [Parameter(Mandatory = $false)][switch]$EnableSA,
+        [Parameter(Mandatory = $false)][switch]$EnableSQLDB,
+        [Parameter(Mandatory = $false)][switch]$EnableSQLMI,
+        [Parameter(Mandatory = $false)][switch]$EnableSSHKeys,
+        [Parameter(Mandatory = $false)][switch]$EnableSWA,
+        [Parameter(Mandatory = $false)][switch]$EnableVM,
+        [Parameter(Mandatory = $false)][switch]$EnableVMSS,
+        [Parameter(Mandatory = $false)][switch]$KeepDotFile,
+        [Parameter(Mandatory = $false)][string]$LogoPath = $null,
+        [Parameter(Mandatory = $false)][string]$LogoURL = $null,
+        [Parameter(Mandatory = $false)][string[]]$ManagementGroups,
+        [Parameter(Mandatory = $false)][switch]$OnlyMgmtGroups,
         [Parameter(Mandatory = $false)][ValidateSet('pdf','svg','png')][string[]]$OutputFormat = "pdf",
         [Parameter(Mandatory = $false)][string]$OutputPath = $pwd,
         [Parameter(Mandatory = $false)][string]$Prefix = $null,
-        [Parameter(Mandatory = $false)][bool]$Sanitize = $false,
-        [Parameter(Mandatory = $false)][bool]$SkipACA = $false,
-        [Parameter(Mandatory = $false)][bool]$SkipACI = $false,
-        [Parameter(Mandatory = $false)][bool]$SkipACR = $false,
-        [Parameter(Mandatory = $false)][bool]$SkipAKS = $false,
-        [Parameter(Mandatory = $false)][bool]$SkipAPIM = $false,
-        [Parameter(Mandatory = $false)][bool]$SkipASP = $false,
-        [Parameter(Mandatory = $false)][bool]$SkipAVD = $false,
-        [Parameter(Mandatory = $false)][bool]$SkipAVS = $false,
-        [Parameter(Mandatory = $false)][bool]$SkipAppGW = $false,
-        [Parameter(Mandatory = $false)][bool]$SkipBV = $false,
-        [Parameter(Mandatory = $false)][bool]$SkipCosmosDB = $false,
-        [Parameter(Mandatory = $false)][bool]$SkipEventHub = $false,
-        [Parameter(Mandatory = $false)][bool]$SkipESAN = $false,
-        [Parameter(Mandatory = $false)][bool]$SkipGAL = $false,
-        [Parameter(Mandatory = $false)][bool]$SkipKV = $false,
-        [Parameter(Mandatory = $false)][bool]$SkipLB = $false,
-        [Parameter(Mandatory = $false)][bool]$SkipMI = $false,
-        [Parameter(Mandatory = $false)][bool]$SkipMySQL = $false,
-        [Parameter(Mandatory = $false)][bool]$SkipNonCoreNetwork = $false,
-        [Parameter(Mandatory = $false)][bool]$SkipPE = $false,
-        [Parameter(Mandatory = $false)][bool]$SkipPostgreSQL = $false,
-        [Parameter(Mandatory = $false)][bool]$SkipRSV = $false,
-        [Parameter(Mandatory = $false)][bool]$SkipRedis = $false,
-        [Parameter(Mandatory = $false)][bool]$SkipSA = $false,
-        [Parameter(Mandatory = $false)][bool]$SkipSQLDB = $false,
-        [Parameter(Mandatory = $false)][bool]$SkipSQLMI = $false,
-        [Parameter(Mandatory = $false)][bool]$SkipSSHKeys = $false,
-        [Parameter(Mandatory = $false)][bool]$SkipSWA = $false,
-        [Parameter(Mandatory = $false)][bool]$SkipVM = $false,
-        [Parameter(Mandatory = $false)][bool]$SkipVMSS = $false,
+        [Parameter(Mandatory = $false)][switch]$Sanitize,
+        [Parameter(Mandatory = $false)][switch]$SkipACA,
+        [Parameter(Mandatory = $false)][switch]$SkipACI,
+        [Parameter(Mandatory = $false)][switch]$SkipACR,
+        [Parameter(Mandatory = $false)][switch]$SkipAKS,
+        [Parameter(Mandatory = $false)][switch]$SkipAPIM,
+        [Parameter(Mandatory = $false)][switch]$SkipASP,
+        [Parameter(Mandatory = $false)][switch]$SkipAVD,
+        [Parameter(Mandatory = $false)][switch]$SkipAVS,
+        [Parameter(Mandatory = $false)][switch]$SkipAppGW,
+        [Parameter(Mandatory = $false)][switch]$SkipBV,
+        [Parameter(Mandatory = $false)][switch]$SkipCosmosDB,
+        [Parameter(Mandatory = $false)][switch]$SkipEventHub,
+        [Parameter(Mandatory = $false)][switch]$SkipESAN,
+        [Parameter(Mandatory = $false)][switch]$SkipGAL,
+        [Parameter(Mandatory = $false)][switch]$SkipKV,
+        [Parameter(Mandatory = $false)][switch]$SkipLB,
+        [Parameter(Mandatory = $false)][switch]$SkipMI,
+        [Parameter(Mandatory = $false)][switch]$SkipMySQL,
+        [Parameter(Mandatory = $false)][switch]$SkipNonCoreNetwork,
+        [Parameter(Mandatory = $false)][switch]$SkipPE,
+        [Parameter(Mandatory = $false)][switch]$SkipPostgreSQL,
+        [Parameter(Mandatory = $false)][switch]$SkipRSV,
+        [Parameter(Mandatory = $false)][switch]$SkipRedis,
+        [Parameter(Mandatory = $false)][switch]$SkipSA,
+        [Parameter(Mandatory = $false)][switch]$SkipSQLDB,
+        [Parameter(Mandatory = $false)][switch]$SkipSQLMI,
+        [Parameter(Mandatory = $false)][switch]$SkipSSHKeys,
+        [Parameter(Mandatory = $false)][switch]$SkipSWA,
+        [Parameter(Mandatory = $false)][switch]$SkipVM,
+        [Parameter(Mandatory = $false)][switch]$SkipVMSS,
         [Parameter(Mandatory = $false)][string[]]$Subscriptions,
         [Parameter(Mandatory = $false)][string]$TenantId = $null,
-        [Parameter(Mandatory = $false)][bool]$VerticalView = $false
+        [Parameter(Mandatory = $false)][switch]$VerticalView
     )
+
+    if ( $DebugParameters ) {
+        Write-Host "-PositionalBindingErrorCatch1 $PositionalBindingErrorCatch1"
+        Write-Host "-PositionalBindingErrorCatch2 $PositionalBindingErrorCatch2"
+        Write-Host "-PositionalBindingErrorCatch3 $PositionalBindingErrorCatch3"
+        Write-Host "-PositionalBindingErrorCatch4 $PositionalBindingErrorCatch4"
+        Write-Host "-PositionalBindingErrorCatch5 $PositionalBindingErrorCatch5"
+        Write-Host "-PositionalBindingErrorCatch6 $PositionalBindingErrorCatch6"
+        Write-Host "-PositionalBindingErrorCatch7 $PositionalBindingErrorCatch7"
+        Write-Host "-PositionalBindingErrorCatch8 $PositionalBindingErrorCatch8"
+        Write-Host "-PositionalBindingErrorCatch9 $PositionalBindingErrorCatch9"
+        Write-Host "-PositionalBindingErrorCatch10 $PositionalBindingErrorCatch10"
+        Write-Host "-PositionalBindingErrorCatch11 $PositionalBindingErrorCatch11"
+        Write-Host "-PositionalBindingErrorCatch12 $PositionalBindingErrorCatch12"
+        Write-Host "-PositionalBindingErrorCatch13 $PositionalBindingErrorCatch13"
+        Write-Host "-PositionalBindingErrorCatch14 $PositionalBindingErrorCatch14"
+        Write-Host "-PositionalBindingErrorCatch15 $PositionalBindingErrorCatch15"
+        Write-Host "-PositionalBindingErrorCatch16 $PositionalBindingErrorCatch16"
+        Write-Host "-PositionalBindingErrorCatch17 $PositionalBindingErrorCatch17"
+        Write-Host "-PositionalBindingErrorCatch18 $PositionalBindingErrorCatch18"
+        Write-Host "-PositionalBindingErrorCatch19 $PositionalBindingErrorCatch19"
+        Write-Host "-PositionalBindingErrorCatch20 $PositionalBindingErrorCatch20"
+        Write-Host "-PositionalBindingErrorCatch21 $PositionalBindingErrorCatch21"
+        Write-Host "-PositionalBindingErrorCatch22 $PositionalBindingErrorCatch22"
+        Write-Host "-PositionalBindingErrorCatch23 $PositionalBindingErrorCatch23"
+        Write-Host "-PositionalBindingErrorCatch24 $PositionalBindingErrorCatch24"
+        Write-Host "-PositionalBindingErrorCatch25 $PositionalBindingErrorCatch25"
+        Write-Host "-PositionalBindingErrorCatch26 $PositionalBindingErrorCatch26"
+        Write-Host "-PositionalBindingErrorCatch27 $PositionalBindingErrorCatch27"
+        Write-Host "-PositionalBindingErrorCatch28 $PositionalBindingErrorCatch28"
+        Write-Host "-PositionalBindingErrorCatch29 $PositionalBindingErrorCatch29"
+        Write-Host "-PositionalBindingErrorCatch30 $PositionalBindingErrorCatch30"
+        Write-Host "-PositionalBindingErrorCatch31 $PositionalBindingErrorCatch31"
+        Write-Host "-PositionalBindingErrorCatch32 $PositionalBindingErrorCatch32"
+        Write-Host "-PositionalBindingErrorCatch33 $PositionalBindingErrorCatch33"
+        Write-Host "-PositionalBindingErrorCatch34 $PositionalBindingErrorCatch34"
+        Write-Host "-PositionalBindingErrorCatch35 $PositionalBindingErrorCatch35"
+        Write-Host "-PositionalBindingErrorCatch36 $PositionalBindingErrorCatch36"
+        Write-Host "-PositionalBindingErrorCatch37 $PositionalBindingErrorCatch37"
+        Write-Host "-PositionalBindingErrorCatch38 $PositionalBindingErrorCatch38"
+        Write-Host "-PositionalBindingErrorCatch39 $PositionalBindingErrorCatch39"
+        Write-Host "-PositionalBindingErrorCatch40 $PositionalBindingErrorCatch40"
+        write-host "-PositionalBindingErrorCatch41 : $PositionalBindingErrorCatch41"
+        write-host "-PositionalBindingErrorCatch42 : $PositionalBindingErrorCatch42"
+        write-host "-DisableRanking : $DisableRanking"
+        write-host "-EnableACA : $EnableACA"
+        write-host "-EnableACI : $EnableACI"
+        write-host "-EnableACR : $EnableACR"
+        write-host "-EnableAKS : $EnableAKS"
+        write-host "-EnableAPIM : $EnableAPIM"
+        write-host "-EnableASP : $EnableASP"
+        write-host "-EnableAVD : $EnableAVD"
+        write-host "-EnableAVS : $EnableAVS"
+        write-host "-EnableAppGW : $EnableAppGW"
+        write-host "-EnableBV : $EnableBV"
+        write-host "-EnableCosmosDB : $EnableCosmosDB"
+        write-host "-EnableEventHub : $EnableEventHub"
+        write-host "-EnableESAN : $EnableESAN"
+        write-host "-EnableGAL : $EnableGAL"
+        write-host "-EnableKV : $EnableKV"
+        write-host "-EnableLinks : $EnableLinks"
+        write-host "-EnableLB : $EnableLB"
+        write-host "-EnableMI : $EnableMI"
+        write-host "-EnableMySQL : $EnableMySQL"
+        write-host "-EnablePE : $EnablePE"
+        write-host "-EnablePostgreSQL : $EnablePostgreSQL"
+        write-host "-EnableRedis : $EnableRedis"
+        write-host "-EnableRSV : $EnableRSV"
+        write-host "-EnableSA : $EnableSA"
+        write-host "-EnableSQLDB : $EnableSQLDB"
+        write-host "-EnableSQLMI : $EnableSQLMI"
+        write-host "-EnableSSHKeys : $EnableSSHKeys"
+        write-host "-EnableSWA : $EnableSWA"
+        write-host "-EnableVM : $EnableVM"
+        write-host "-EnableVMSS : $EnableVMSS"
+        write-host "-KeepDotFile : $KeepDotFile"
+        write-host "-LogoPath : $LogoPath"
+        write-host "-LogoURL : $LogoURL"
+        write-host "-ManagementGroups : $ManagementGroups"
+        write-host "-OnlyMgmtGroups : $OnlyMgmtGroups"
+        write-host "-OutputFormat : $OutputFormat"
+        write-host "-OutputPath : $OutputPath"
+        write-host "-Prefix : $Prefix"
+        write-host "-Sanitize : $Sanitize"
+        write-host "-SkipACA : $SkipACA"
+        write-host "-SkipACI : $SkipACI"
+        write-host "-SkipACR : $SkipACR"
+        write-host "-SkipAKS : $SkipAKS"
+        write-host "-SkipAPIM : $SkipAPIM"
+        write-host "-SkipASP : $SkipASP"
+        write-host "-SkipAVD : $SkipAVD"
+        write-host "-SkipAVS : $SkipAVS"
+        write-host "-SkipAppGW : $SkipAppGW"
+        write-host "-SkipBV : $SkipBV"
+        write-host "-SkipCosmosDB : $SkipCosmosDB"
+        write-host "-SkipEventHub : $SkipEventHub"
+        write-host "-SkipESAN : $SkipESAN"
+        write-host "-SkipGAL : $SkipGAL"
+        write-host "-SkipKV : $SkipKV"
+        write-host "-SkipLB : $SkipLB"
+        write-host "-SkipMI : $SkipMI"
+        write-host "-SkipMySQL : $SkipMySQL"
+        write-host "-SkipNonCoreNetwork : $SkipNonCoreNetwork"
+        write-host "-SkipPE : $SkipPE"
+        write-host "-SkipPostgreSQL : $SkipPostgreSQL"
+        write-host "-SkipRSV : $SkipRSV"
+        write-host "-SkipRedis : $SkipRedis"
+        write-host "-SkipSA : $SkipSA"
+        write-host "-SkipSQLDB : $SkipSQLDB"
+        write-host "-SkipSQLMI : $SkipSQLMI"
+        write-host "-SkipSSHKeys : $SkipSSHKeys"
+        write-host "-SkipSWA : $SkipSWA"
+        write-host "-SkipVM : $SkipVM"
+        write-host "-SkipVMSS : $SkipVMSS"
+        write-host "-Subscriptions : $Subscriptions"
+        write-host "-TenantId : $TenantId"
+        write-host "-VerticalView : $VerticalView"
+    }
 
     # Remove trailing "\" from path
     $OutputPath = $OutputPath.TrimEnd('\')
@@ -5086,6 +5262,21 @@ function Get-AzNetworkDiagram {
     Write-Output "$ver"
     Write-Output "##############################################################################################`n"
 
+        
+    # PositionalBinding "overflow"
+    if ( $PositionalBindingErrorCatch1 ) { 
+        Write-host "You might have set one or more value(s) for switches that where previously `$bool(s), which doesn't support it. This typically happens for parameters with `$true/`$false values"
+        Write-host "Please review your paramters and remove **unsupported values** from `"switches`" to ensure functionality functions as it was designed"
+        Write-host "This warning will be removed when v2.0 is released in the future"
+        Write-host
+        Write-host "# Example:"
+        Write-host "Previous paramter: `"-SkipNonCoreNetwork `$true`""
+        Write-host "New paramter: `"-SkipNonCoreNetwork`""
+        Write-host
+        Write-host
+        Write-host "Press Enter to continue (and risk error and/or misbehavior) OR CTRL+C to cancel..."
+        Read-Host
+    }
 
     Write-Output "Checking prerequisites ..."
     Confirm-Prerequisites
@@ -5784,7 +5975,7 @@ function Get-AzNetworkDiagram {
     }
     
     try {
-        if ( $EnableRanking ) { Export-dotFooterRanking }
+        if ( ! $DisableRanking ) { Export-dotFooterRanking }
         Export-dotFooter
 
         ##### Generate diagram #####
