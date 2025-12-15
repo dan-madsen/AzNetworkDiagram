@@ -4998,52 +4998,10 @@ function Get-DOTExecutable {
    https://github.com/dan-madsen/AzNetworkDiagram
 #>
 function Get-AzNetworkDiagram {
-    [CmdletBinding()]
-    #[CmdletBinding(PositionalBinding=$false)] #Does not give an option to inform the users, 42 Catch variables was added below instead ! Once we move to v2.0 at some point - this will be enabled and the 42 catch variables will be removed
+    #[CmdletBinding()]
+    [CmdletBinding(PositionalBinding=$false)]
     # Parameters
     param (
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch1,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch2,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch3,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch4,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch5,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch6,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch7,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch8,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch9,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch10,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch11,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch12,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch13,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch14,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch15,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch16,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch17,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch18,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch19,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch20,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch21,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch22,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch23,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch24,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch25,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch26,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch27,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch28,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch29,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch30,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch31,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch32,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch33,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch34,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch35,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch36,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch37,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch38,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch39,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch40,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch41,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch42,
         [Parameter(Mandatory = $false,DontShow = $true)][switch]$DebugParameters,
         [Parameter(Mandatory = $false)][switch]$DisableRanking,    
         [Parameter(Mandatory = $false)][switch]$EnableACA,
@@ -5121,48 +5079,6 @@ function Get-AzNetworkDiagram {
     )
 
     if ( $DebugParameters ) {
-        Write-Host "-PositionalBindingErrorCatch1 $PositionalBindingErrorCatch1"
-        Write-Host "-PositionalBindingErrorCatch2 $PositionalBindingErrorCatch2"
-        Write-Host "-PositionalBindingErrorCatch3 $PositionalBindingErrorCatch3"
-        Write-Host "-PositionalBindingErrorCatch4 $PositionalBindingErrorCatch4"
-        Write-Host "-PositionalBindingErrorCatch5 $PositionalBindingErrorCatch5"
-        Write-Host "-PositionalBindingErrorCatch6 $PositionalBindingErrorCatch6"
-        Write-Host "-PositionalBindingErrorCatch7 $PositionalBindingErrorCatch7"
-        Write-Host "-PositionalBindingErrorCatch8 $PositionalBindingErrorCatch8"
-        Write-Host "-PositionalBindingErrorCatch9 $PositionalBindingErrorCatch9"
-        Write-Host "-PositionalBindingErrorCatch10 $PositionalBindingErrorCatch10"
-        Write-Host "-PositionalBindingErrorCatch11 $PositionalBindingErrorCatch11"
-        Write-Host "-PositionalBindingErrorCatch12 $PositionalBindingErrorCatch12"
-        Write-Host "-PositionalBindingErrorCatch13 $PositionalBindingErrorCatch13"
-        Write-Host "-PositionalBindingErrorCatch14 $PositionalBindingErrorCatch14"
-        Write-Host "-PositionalBindingErrorCatch15 $PositionalBindingErrorCatch15"
-        Write-Host "-PositionalBindingErrorCatch16 $PositionalBindingErrorCatch16"
-        Write-Host "-PositionalBindingErrorCatch17 $PositionalBindingErrorCatch17"
-        Write-Host "-PositionalBindingErrorCatch18 $PositionalBindingErrorCatch18"
-        Write-Host "-PositionalBindingErrorCatch19 $PositionalBindingErrorCatch19"
-        Write-Host "-PositionalBindingErrorCatch20 $PositionalBindingErrorCatch20"
-        Write-Host "-PositionalBindingErrorCatch21 $PositionalBindingErrorCatch21"
-        Write-Host "-PositionalBindingErrorCatch22 $PositionalBindingErrorCatch22"
-        Write-Host "-PositionalBindingErrorCatch23 $PositionalBindingErrorCatch23"
-        Write-Host "-PositionalBindingErrorCatch24 $PositionalBindingErrorCatch24"
-        Write-Host "-PositionalBindingErrorCatch25 $PositionalBindingErrorCatch25"
-        Write-Host "-PositionalBindingErrorCatch26 $PositionalBindingErrorCatch26"
-        Write-Host "-PositionalBindingErrorCatch27 $PositionalBindingErrorCatch27"
-        Write-Host "-PositionalBindingErrorCatch28 $PositionalBindingErrorCatch28"
-        Write-Host "-PositionalBindingErrorCatch29 $PositionalBindingErrorCatch29"
-        Write-Host "-PositionalBindingErrorCatch30 $PositionalBindingErrorCatch30"
-        Write-Host "-PositionalBindingErrorCatch31 $PositionalBindingErrorCatch31"
-        Write-Host "-PositionalBindingErrorCatch32 $PositionalBindingErrorCatch32"
-        Write-Host "-PositionalBindingErrorCatch33 $PositionalBindingErrorCatch33"
-        Write-Host "-PositionalBindingErrorCatch34 $PositionalBindingErrorCatch34"
-        Write-Host "-PositionalBindingErrorCatch35 $PositionalBindingErrorCatch35"
-        Write-Host "-PositionalBindingErrorCatch36 $PositionalBindingErrorCatch36"
-        Write-Host "-PositionalBindingErrorCatch37 $PositionalBindingErrorCatch37"
-        Write-Host "-PositionalBindingErrorCatch38 $PositionalBindingErrorCatch38"
-        Write-Host "-PositionalBindingErrorCatch39 $PositionalBindingErrorCatch39"
-        Write-Host "-PositionalBindingErrorCatch40 $PositionalBindingErrorCatch40"
-        write-host "-PositionalBindingErrorCatch41 : $PositionalBindingErrorCatch41"
-        write-host "-PositionalBindingErrorCatch42 : $PositionalBindingErrorCatch42"
         write-host "-DisableRanking : $DisableRanking"
         write-host "-EnableACA : $EnableACA"
         write-host "-EnableACI : $EnableACI"
@@ -5264,23 +5180,6 @@ function Get-AzNetworkDiagram {
     write-output "                                                                 /____/                       "
     Write-Output "$ver"
     Write-Output "##############################################################################################`n"
-
-        
-    # PositionalBinding "overflow"
-    if ( $PositionalBindingErrorCatch1 ) { 
-        Write-host "# Unsupported values supplied for one or more parameters:"
-        Write-host "You might have set one or more value(s) for parameters that where previously booleans (ie. `$true/`$false), which is no longer needed."
-        Write-host "Please review your parameters and remove any unsupported values to ensure proper functionality."
-        Write-host "When v2.0 is released: This warning will be removed and an error will be thrown."
-        Write-host
-        Write-host "# Example:"
-        Write-host "Previous paramter:\n`"-SkipNonCoreNetwork `$true`""
-        Write-host "\nNew paramter:\n`"-SkipNonCoreNetwork`""
-        Write-host
-        Write-host
-        Write-host "Press Enter to continue (and risk error and/or misbehavior) OR CTRL+C to cancel and cleanup parameters..."
-        Read-Host
-    }
 
     Write-Output "Checking prerequisites ..."
     Confirm-Prerequisites

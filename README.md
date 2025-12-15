@@ -176,10 +176,10 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 
 # Changelog (since v1.0.1)
 ## v2.0 release - under construction
-- **_BREAKING CHANGE - see v1.5 for additional info_**
+- [x] **_BREAKING CHANGE - see v1.5 for additional info_**
 - New features
-  - IP Plan overview, based on VNets in scope
-  - The breaking change from v1.5 will be fully implemented
+  - [] IP Plan overview, based on VNets in scope
+  - [x] The breaking change from v1.5 will be fully implemented
 ## v1.5
 - **_SEMI BREAKING CHANGE_**, for easier usage
   - Paramaters with $bool ($true/$false) no longer need the $true/$false parameter - they are now "switches" which enables flags/features without prepending a value. 
