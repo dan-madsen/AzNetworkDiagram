@@ -156,10 +156,10 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 
 # Changelog (since v1.0.1)
 ## Not released to Powershell Gallery yet
-- **BREAKING CHANGE**, for easier usage
- - Paramaters with $bool ($true/$false) no longer need the $true/$false parameter - they are now "switches" which enables without prepending a value. 
- - For example "-SkipNonCoreNetwork $true" is now just "-SkipNonCoreNetwork". 
- - This will **break/alter intent of the script** if values are still supplied, due to a feature in PowerShell. An effort has been made to catch this error in v1.4.2+ and inform the user. In v2.0 that feature will be disabled for script, in order to ensure proper usage.
+- $${\color{red}**BREAKING CHANGE**}$$, for easier usage
+  - Paramaters with $bool ($true/$false) no longer need the $true/$false parameter - they are now "switches" which enables without prepending a value. 
+  - For example "-SkipNonCoreNetwork $true" is now just "-SkipNonCoreNetwork". 
+  - This will **break/alter intent of the script** if values are still supplied, due to a feature in PowerShell. An effort has been made to catch this error in v1.4.2+ and inform the user. In v2.0 that feature will be disabled for script, in order to ensure proper usage.
 - New features
   - The ability to have a logo added to the output (see new parameter section)
   - VMs with MSSQL registered, now have a proper icon
