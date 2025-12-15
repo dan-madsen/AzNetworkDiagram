@@ -156,7 +156,7 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 
 # Changelog (since v1.0.1)
 ## Not released to Powershell Gallery yet
-- $${\color{red}**BREAKING CHANGE**}$$, for easier usage
+- **BREAKING CHANGE**, for easier usage
   - Paramaters with $bool ($true/$false) no longer need the $true/$false parameter - they are now "switches" which enables without prepending a value. 
   - For example "-SkipNonCoreNetwork $true" is now just "-SkipNonCoreNetwork". 
   - This will **break/alter intent of the script** if values are still supplied, due to a feature in PowerShell. An effort has been made to catch this error in v1.4.2+ and inform the user. In v2.0 that feature will be disabled for script, in order to ensure proper usage.
@@ -167,7 +167,7 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 - New/changed parameters
   - -LogoPath "image.ext"
     - Absolute path for the your logo of choice. Supports most popular image formats, but only .PNG and .JPG/.JPEG have been tested.
-  - LogoLink "https://example.com"
+  - -LogoLink "https://example.com"
     - Will make the logo a clickable link
   - "-EnableRanking $true/$false" changed to "-DisableRanking" (due to above breaking change)
 ## v1.4.1
