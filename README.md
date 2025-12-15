@@ -1,7 +1,26 @@
-# Introduction 
-The **Get-AzNetworkDiagram** (Powershell)Cmdlet visualizes Azure infrastructure utilizing Graphviz and the "DOT" (diagram-as-code) language to export a PDF, SVG or PNG with a digram containing the supported resources (see below list).
+# Table of contents
+* [Introduction](#introduction)
+* [Demo Output](#demo-output-v11)
+* [Requirements](#Requirements)
+* [Getting started](#Getting-started)
+  - [Install](#install-using-psgallery-recommended-method)
+  - [Runtime options](#runtime-options)
+    - [Primary (Setting scope and output)](#primary-setting-scope-and-output)
+    - [Others (Change behavior and/or features)](#others-change-behavior-andor-features)
+  - [Running the Powershell module](#running-the-powershell-module)
+* [Recommendation](#recommendation)
+* [Runtime flow](#Runtime-flow)
+* [Currently Supported Resources](#currently-supported-resources)
+* [Pipeline runs](#pipeline-runs)
+* [Changelog](#changelog-since-v101)
+* [Issues, bugs, comments and ideas](#issues-bugs-comments-and-ideas)
 
-At this point it is now quite capable of documentating quite a bit of resourse types. Initially it was with network as a focus - but it has emerged into some more. It will document network and infrastructure in a diagram, useful for documentation and/or troubleshooting.
+---
+
+# Introduction 
+The **Get-AzNetworkDiagram** (Powershell)Cmdlet visualizes Azure infrastructure leveraging Graphviz and the "DOT" (diagram-as-code) language to export a PDF, SVG or PNG with a digram containing the [supported resources](#currently-supported-resources).
+
+Initially it was with network as a focus, but it has emerged into some more - it is quite capable of documenting a broader spectrum of resource types. It is a robust utility for generating comprehensive network and infrastructure diagrams, useful for documentation and/or troubleshooting.
 
 ## Created by
 - [Dan](https://github.com/dan-madsen/) - Creator, inventor
@@ -24,16 +43,16 @@ Some examples of the diagrams. **Additional demo outputs are available in the "D
 ---
 
 # Requirements
-**The script depends on Graphviz** (the "DOT", diagram-as-code language) to genereate the graphical output.
+**The script depends on _Graphviz_** (the "DOT", diagram-as-code language) to generate the graphical output.
 
-Graphviz can be downloaded from: https://graphviz.org/. But note that the default install doesn't add the executable to $PATH, so make sure to enable that during install.
+Graphviz can be downloaded from: https://graphviz.org/. But note that the default install doesn't add the executable to $PATH, so make sure to enable that during install (or manually afterwards).
 
-It can also be installed using "Winget", but that will _NOT_ add the executable to $PATH - so you will have to do that manually.
+It can also be installed using "Winget", but that will **_NOT_** add the executable to $PATH - so you will have to do that **_manually_**.
 
 ---
 
 # Getting started 
-The recommended way of running AzNetworkDiagram is by installing for PSGallery. But should you wish to have the absolute latest and greatest, you could opt for a version from GitHub, potentially with not-yet released features.
+The recommended way of running AzNetworkDiagram is by installing from PSGallery. But should you wish to have the absolute latest and greatest, you could opt for a version from GitHub, potentially with not-yet released features.
 ## Install using PSGallery (recommended method)
 ```powershell
 Install-Module -Name AzNetworkDiagram
@@ -46,28 +65,29 @@ Import-Module .\AzNetworkDiagram.psm1
 ```
 
 ## Runtime options
-- **-OutputPath <path>** - set output directory. Default: "."
-- **-Subscriptions "subid1","subid2","subname","..."** - a list of subscriptions in scope for the diagram. They can be names or Id's
+### Primary (setting scope and output)
 - **-ManagementGroups "ManagementGroupID1","ManagementGroupID2","..."** - a list of management groups. Subscriptions under any of the listed management group IDs (ie. NOT name!) will be added to the list of subscriptions in scope for data collection. Can be used in conjunction with -Subscriptions.
-- **-EnableRanking $bool** ($true/$false) - enable ranking (equal hight in the output) of certain resource types. For larger networks, this might be worth a shot. **Default: $true**
-- **-Tenant "tenantId"** Specifies the tenant Id to be used in all subscription authentication. Handy when you have multiple tenants to work with. **Default: current tenant**
-- **-Sanitize $bool** ($true/$false) - Sanitizes all names, locations, IP addresses and CIDR blocks. **Default: $false**
+- **-OnlyMgmtGroups** - Creates a Management Group and Subscription overview diagram - everything else is skipped.
+- **-OutputPath <path>** - set output directory. Default: "."
 - **-Prefix "string"** - Adds a prefix to the output file name. For example is cases where you want to do multiple automated runs then the file names will have the prefix per run that you specify. **Default: No Prefix**
-- **-SkipNonCoreNetwork** ($true/$false) - if $true/enabled, only cores network resources are processed (unless resource types are explicitly enabled using -EnableXXXX options) - ie. non-network resources are skipped for a cleaner diagram - but you will also lack some references from shown resources. Default is $false.
-- **-SkipXXX** ($true/$false) - Skips a chosen non-core network resource type - use tab completion to see current list.
-- **-EnableXXX** ($true/$false) - Enable a chosen non-core network resource type regardless of it being skipped (-EnableXXXX will take precedence!) - use tab completion to see current list.
-- **-OnlyMgmtGroups** ($true/$false) - Creates a Management Group and Subscription overview diagram - everything else is skipped. Default is $false.
-- **-KeepDotFile** ($true/$false) - if $true/enabled, the DOT file is not deleted after the diagrams have been generated. Default is $false and DOT files are deleted.
+- **-Subscriptions "subid1","subid2","subname","..."** - a list of subscriptions in scope for the diagram. They can be names or Id's
+- **-Tenant "tenantId"** Specifies the tenant Id to be used in all subscription authentication. Handy when you have multiple tenants to work with. **Default: current tenant**
+
+### Others (change behavior and/or features)
+- **-DisableRanking** - Disables automatic ranking for resource types. For larger networks, this might be worth a shot.
+- **-EnableLinks** - Many resources become links to the Azure portal can be enabled using this flag.
+- **-EnableXXX** - Enable a chosen non-core network resource type regardless of it being skipped (-EnableXXXX will take precedence!) - use tab completion to see current list.
+- **-KeepDotFile** - Keep the DOT file after the diagrams have been generated (normally it is deleted)
 - **-OutputFormat** (pdf, svg, png) - One or more output files get generated with the specified formats. Default is PDF.
-- **-EnableLinks** ($true/$false) - Many resources become links to the Azure portal can be enabled using this flag. Default is $false.
-
-
+- **-Sanitize** Sanitizes all names, locations, IP addresses and CIDR blocks.
+- **-SkipNonCoreNetwork** - Only rocess cores network resources (unless resource types are explicitly enabled using -EnableXXXX options) - ie. non-network resources are skipped for a cleaner diagram - but you will also lack some references from shown resources. 
+- **-SkipXXX** - Skips a chosen non-core network resource type - use tab completion to see current list.
 
 ## Running the Powershell module
 **Examples:**
 ```powershell
-Get-AzNetworkDiagram [-Tenant tenantId] [-Subscriptions "subid1","subid2","..."] [-OutputPath C:\temp\] [-EnableRanking $true] [-SkipNonCoreNetwork $true] [-Sanitize $true] [-Prefix prefixstring] [-KeepDotFile $true] [-OutputFormat [pdf,svg,png]] [-OnlyMgmtGroups $true] [-EnableLinks $true]
-
+Get-AzNetworkDiagram [-Tenant tenantId] [-Subscriptions "subid1","subid2","..."] [-OutputPath C:\temp\] [-SkipNonCoreNetwork] [-Sanitize] [-Prefix prefixstring] [-KeepDotFile] [-OutputFormat [pdf,svg,png]] [-OnlyMgmtGroups] [-EnableLinks]
+Get-AzNetworkDiagram [-Tenant tenantId] [-OutputPath C:\temp\] [-OnlyMgmtGroups] [-Sanitize] [-Prefix prefixstring] [-KeepDotFile] [-OutputFormat [pdf,svg,png]]
 Get-AzNetworkDiagram 
 ```
 
@@ -77,8 +97,8 @@ Beware, that by using "-Subscriptions" to limit the scope of data collection, yo
 
 # Recommendation
 It is inevitable that large environments make the diagram **very large** (in this case "wide"), but zooming into the PDF or SVG works the best. In cases where diagrams gets too big/wide, you should consider scoping the digram (ie. utilize **-Subscriptions "subid","subid2"....**) to create smaller diagrams with a scope that matches your deployment(s), instead of your entire infrastructure. For many environments, you could probably go with something like this:
-- A management group diagram (-OnlyMgmtGroups $true)
-- A core network diagram (-OnlyCoreNetwork $true) that spans part of your infrastructure (or maybe everything), which will include the core network resources listed under "Currently supported resources"
+- A management group diagram (-OnlyMgmtGroups)
+- A core network diagram (-SkipNonCoreNetwork) that spans part of your core infrastructure (or maybe everything), which will only include the core network resources listed under "Currently supported resources"
 - Multiple minor diagrams for individual workloads
 
 ---
@@ -99,7 +119,7 @@ The module is now compatible with both Ubuntu and Windows so you can run it succ
 
 This module will include in the diagram in separate colors:
   - Mangement Groups and Subscriptions
-  - Core network resources
+  - **Core network resources**
     - Azure Firewall, including IP Groups
     - Bastion
     - NAT Gateway
@@ -155,9 +175,26 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 ---
 
 # Changelog (since v1.0.1)
-## Not released to Powershell Gallery yet
+## v2.0 release - under construction
+- **_BREAKING CHANGE - see v1.5 for additional info_**
 - New features
+  - IP Plan overview, based on VNets in scope
+  - The breaking change from v1.5 will be fully implemented
+## v1.5
+- **_SEMI BREAKING CHANGE_**, for easier usage
+  - Paramaters with $bool ($true/$false) no longer need the $true/$false parameter - they are now "switches" which enables flags/features without prepending a value. 
+  - For example "-SkipNonCoreNetwork $true" is now just "-SkipNonCoreNetwork". 
+  - This will **break/alter intent of the script** if values are still supplied, due to a feature in PowerShell. An effort has been made to catch this error in v1.5+ and inform the user. In v2.0+ that feature will be disabled for the script, in order to ensure proper usage.
+- New features
+  - The ability to have a logo added to the output (see new parameter section)
   - VMs with MSSQL registered, now have a proper icon
+- "help Get-AzNetworkDiagram" will now be more accurate
+- New/changed parameters
+  - -LogoPath "image.ext"
+    - Absolute path for the your logo of choice. Should support most popular image formats, but only .PNG and .JPG/.JPEG have been tested.
+  - -LogoLink "https://example.com"
+    - Will make the logo a clickable link to the specied URL
+  - "-EnableRanking $true/$false" changed to "-DisableRanking" (due to above breaking change)
 ## v1.4.1
 - New features
   - Improved ranking (visual layout) for diagrams. This will ensure a more predictable output, which will be regocnizeable across environments. On by default, but adjusted ranking can be disabled by "-EnableRanking $false".
