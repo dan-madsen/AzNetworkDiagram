@@ -4981,6 +4981,9 @@ function Get-DOTExecutable {
   .PARAMETER SkipXXX
   Skips a chosen non-core network resource type - use tab completion to see current list.
 
+  .PARAMETER VerticalView
+  If set, the diagram will have the direction change to "Left -> Right", instead of the usual "Top-Down" direction.
+
   .INPUTS
   None. It will however require previous authentication to Azure
 
