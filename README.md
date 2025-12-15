@@ -188,7 +188,7 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 - New features
   - The ability to have a logo added to the output (see new parameter section)
   - VMs with MSSQL registered, now have a proper icon
-- "help Get-AzNetworkDiagram" will now be more accurate (Synopsis moved to funktion instead of the top of the script)
+- "help Get-AzNetworkDiagram" will now be more accurate
 - New/changed parameters
   - -LogoPath "image.ext"
     - Absolute path for the your logo of choice. Should support most popular image formats, but only .PNG and .JPG/.JPEG have been tested.
