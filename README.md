@@ -77,7 +77,7 @@ Import-Module .\AzNetworkDiagram.psm1
 - **-DisableRanking** - Disables automatic ranking for resource types. For larger networks, this might be worth a shot.
 - **-EnableLinks** - Many resources become links to the Azure portal can be enabled using this flag.
 - **-EnableXXX** - Enable a chosen non-core network resource type regardless of it being skipped (-EnableXXXX will take precedence!) - use tab completion to see current list.
-- **-KeepDotFile** - the DOT file is not deleted after the diagrams have been generated. Default is $false and DOT files are deleted.
+- **-KeepDotFile** - Keep the DOT file after the diagrams have been generated (normally it is deleted)
 - **-OutputFormat** (pdf, svg, png) - One or more output files get generated with the specified formats. Default is PDF.
 - **-Sanitize** Sanitizes all names, locations, IP addresses and CIDR blocks.
 - **-SkipNonCoreNetwork** - Only rocess cores network resources (unless resource types are explicitly enabled using -EnableXXXX options) - ie. non-network resources are skipped for a cleaner diagram - but you will also lack some references from shown resources. 
