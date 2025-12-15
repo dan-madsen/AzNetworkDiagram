@@ -67,6 +67,7 @@ Import-Module .\AzNetworkDiagram.psm1
 ## Runtime options
 ### Primary (setting scope and output)
 - **-ManagementGroups "ManagementGroupID1","ManagementGroupID2","..."** - a list of management groups. Subscriptions under any of the listed management group IDs (ie. NOT name!) will be added to the list of subscriptions in scope for data collection. Can be used in conjunction with -Subscriptions.
+- **-OnlyIPPlan** - Creates an IP Plan of all VNets in scope. Defaults to console output, but can be output´ed via Out-GridView with the "-IPPlanAsGrid" switch - everything else is skipped.
 - **-OnlyMgmtGroups** - Creates a Management Group and Subscription overview diagram - everything else is skipped.
 - **-OutputPath <path>** - set output directory. Default: "."
 - **-Prefix "string"** - Adds a prefix to the output file name. For example is cases where you want to do multiple automated runs then the file names will have the prefix per run that you specify. **Default: No Prefix**

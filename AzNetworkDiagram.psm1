@@ -4957,6 +4957,9 @@ function Get-DOTExecutable {
 
   .PARAMETER KeepDotFile
   Preserve the DOT file after diagram generation
+  
+  .PARAMETER IPPlanAsGrid
+  Outputs IP Plan via "Out-GridView" (graphical table) instead of "Format-Table" (command line table)
 
   .PARAMETER LogoURL
   If supplied along with -LogoPath, the logo will become a clickable link
@@ -4972,6 +4975,9 @@ function Get-DOTExecutable {
   .PARAMETER OutputFormat
   One or more output files get generated with the specified formats. Choose between (pdf, svg, png) - Default is PDF.
 
+  .PARAMETER OnlyIPPlan
+  Creates a (command line) table of VNet address spaces and subnets - everything else is skipped.
+  
   .PARAMETER OnlyMgmtGroups
   Creates a Management Group and Subscription overview diagram - everything else is skipped.
 
@@ -5035,9 +5041,11 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][switch]$EnableVM,
         [Parameter(Mandatory = $false)][switch]$EnableVMSS,
         [Parameter(Mandatory = $false)][switch]$KeepDotFile,
+        [Parameter(Mandatory = $false)][switch]$IPPlanAsGrid,
         [Parameter(Mandatory = $false)][string]$LogoPath = $null,
         [Parameter(Mandatory = $false)][string]$LogoURL = $null,
         [Parameter(Mandatory = $false)][string[]]$ManagementGroups,
+        [Parameter(Mandatory = $false)][switch]$OnlyIPPlan,
         [Parameter(Mandatory = $false)][switch]$OnlyMgmtGroups,
         [Parameter(Mandatory = $false)][ValidateSet('pdf','svg','png')][string[]]$OutputFormat = "pdf",
         [Parameter(Mandatory = $false)][string]$OutputPath = $pwd,
@@ -5111,9 +5119,11 @@ function Get-AzNetworkDiagram {
         write-host "-EnableVM : $EnableVM"
         write-host "-EnableVMSS : $EnableVMSS"
         write-host "-KeepDotFile : $KeepDotFile"
+        write-host "-IPPlanAsGrid : $IPPlanAsGrid"
         write-host "-LogoPath : $LogoPath"
         write-host "-LogoURL : $LogoURL"
         write-host "-ManagementGroups : $ManagementGroups"
+        write-host "-OnlyIPPlan : $OnlyIPPlan"
         write-host "-OnlyMgmtGroups : $OnlyMgmtGroups"
         write-host "-OutputFormat : $OutputFormat"
         write-host "-OutputPath : $OutputPath"
@@ -5285,7 +5295,9 @@ function Get-AzNetworkDiagram {
     ##### Data collection / Execution #####
 
     # Run program and collect data through powershell commands
-    Export-dotHeader
+    if ( !$OnlyIPPlan -or $OnlyMgmtGroups) {
+        Export-dotHeader
+    }
 
     # Set subscriptions to every accessible subscription, if unset
     try {
@@ -5316,8 +5328,81 @@ function Get-AzNetworkDiagram {
             $Script:Legend += ,@("Management Group","mgmtgroup.png")
             $Script:Legend += ,@("Subscription","sub.png")
             Export-MgmtGroups
-        }
-        if ( $false -eq $OnlyMgmtGroups ) {
+        } elseif ( $OnlyIPPlan ) {
+            Write-Output "`nCollecting Data for IP Plan..."
+            $script:IPPlan = @()
+            
+                $Subscriptions | ForEach-Object {
+                    # Set Context
+                    if ($TenantId) {
+                        # If TenantId is specified, use it to set the context               
+                        $context = Set-AzContext -Subscription $_ -Tenant $TenantId -Force -ErrorAction Stop
+                    }
+                    else {
+                        $context = Set-AzContext -Subscription $_ -Force -ErrorAction Stop
+                        $TenantId = $context.Tenant.Id
+                    }
+                    $subid = $context.Subscription.Id
+                    $subname = $context.Subscription.Name
+
+                    Get-AzVirtualNetwork | ForEach-Object {
+                        $vnet = $_
+                        
+                        # AddressSpaces
+                        $vnet.AddressSpace.AddressPrefixes | ForEach-Object {
+                            $obj = [pscustomobject]@{
+                                AddressSpace     = ''
+                                Subnet           = ''
+                                VNet             = ''
+                                ResourceGroup    = ''
+                                SubscriptionName = ''
+                                SubscriptionId   = ''
+                                #vnetid          = ''
+                            }
+                            $prefix = $_
+                            $obj.SubscriptionName = $subname
+                            $obj.SubscriptionId = $subid
+                            $obj.ResourceGroup = $vnet.ResourceGroupName
+                            $obj.VNet = $vnet.Name
+                            $obj.AddressSpace = $prefix
+                            #$obj.vnetid = $vnet.id
+
+                            $script:IPPlan += $obj
+                        }
+                        
+                        # Subnets
+                        $subnets = $vnet.Subnets.AddressPrefix
+                        $subnets | ForEach-Object {
+                            $obj = [pscustomobject]@{
+                                AddressSpace     = ''
+                                Subnet           = ''
+                                VNet             = ''
+                                ResourceGroup    = ''
+                                SubscriptionName = ''
+                                SubscriptionId   = ''
+                                #vnetid          = ''
+                            }
+                            $prefix = $_
+                            $obj.SubscriptionName = $subname
+                            $obj.SubscriptionId = $subid
+                            $obj.ResourceGroup = $vnet.ResourceGroupName
+                            $obj.VNet = $vnet.Name
+                            $obj.Subnet = $prefix
+                            #$obj.vnetid = $vnet.id
+
+                            $script:IPPlan += $obj
+                        }
+                    }
+            }
+            # Sort IPPlan
+            #$script:IPPlan = $script:IPPlan | Sort-Object -Property SubscriptionName, ResourceGroup, VNet, AddressSpace, Subnet
+            if ( $IPPlanAsGrid ) {
+                $script:IPPlan | Out-GridView
+            } else {
+                $script:IPPlan | Format-Table
+            }
+
+        } else {
             # Collect all vNet ID's in scope otherwise we can end up with 1 vNet peered to 1000 other vNets which are not in scope
             # Errors will appear like: dot: graph is too large for cairo-renderer bitmaps. Scaling by 0.324583 to fit
             
@@ -5338,7 +5423,7 @@ function Get-AzNetworkDiagram {
                 
                 Write-Output "`nCollecting data from subscription ($($Subscriptions.indexOf($_)+1)/$($Subscriptions.count)): $subname ($subid)"
                 Export-AddToFile "`n    ##########################################################################################################"
-                Export-AddToFile "    ##### $subname "
+                Export-AddToFile "    ##### $subname - $dotsubid"
                 Export-AddToFile "    ##########################################################################################################`n"
                 #Export-AddToFile "    subgraph cluster_$dotsubid {"
                 #Export-AddToFile "        label=`"Subscription: $subname`""
@@ -5881,32 +5966,34 @@ function Get-AzNetworkDiagram {
     }
     
     try {
-        if ( ! $DisableRanking ) { Export-dotFooterRanking }
-        Export-dotFooter
+        if ( !$OnlyIPPlan -or $OnlyMgmtGroups) {
+            if ( ! $DisableRanking ) { Export-dotFooterRanking }
+            Export-dotFooter
 
-        ##### Generate diagram #####
-        # Generate diagram using Graphviz
-        $OutputFileName = "AzNetworkDiagram"
-        if ($Prefix) {
-            $OutputFileName = $Prefix + "-" + $OutputFileName
-        }
-        $OutputFileName = Join-Path $OutputPath -ChildPath $OutputFileName  # OS-safe, works on Linux as well as Windows
+            ##### Generate diagram #####
+            # Generate diagram using Graphviz
+            $OutputFileName = "AzNetworkDiagram"
+            if ($Prefix) {
+                $OutputFileName = $Prefix + "-" + $OutputFileName
+            }
+            $OutputFileName = Join-Path $OutputPath -ChildPath $OutputFileName  # OS-safe, works on Linux as well as Windows
 
-    #    dot -q1 -Tpdf $OutputPath\AzNetworkDiagram.dot -o "$OutputFileName.pdf"
+        #    dot -q1 -Tpdf $OutputPath\AzNetworkDiagram.dot -o "$OutputFileName.pdf"
 
-        $DOT = (Get-DOTExecutable).Fullname
-        $esc = '--%'
-        foreach ($format in $OutputFormat) {
-            Write-Output "`nGenerating $OutputFileName.$format ..."
-            #GenerateDotFile -OutputPath $OutputPath -OutputFileName $OutputFileName -Format $OutputFormat
-            $DOTFileName = Join-Path $OutputPath -ChildPath "AzNetworkDiagram.dot"
-            $arguments = "-v -T$format $DOTFileName -o $OutputFileName.$format"
-            $errorOutput = $( $output = & $DOT $esc $arguments) 2>&1
-            # Check the exit code and error output
-            if ($LastExitCode -ne 0) {
-                Write-Host "The executable failed with exit code: $LastExitCode"
-                Write-Host "Error details: $errorOutput"
-                Write-Host "Output: $output"
+            $DOT = (Get-DOTExecutable).Fullname
+            $esc = '--%'
+            foreach ($format in $OutputFormat) {
+                Write-Output "`nGenerating $OutputFileName.$format ..."
+                #GenerateDotFile -OutputPath $OutputPath -OutputFileName $OutputFileName -Format $OutputFormat
+                $DOTFileName = Join-Path $OutputPath -ChildPath "AzNetworkDiagram.dot"
+                $arguments = "-v -T$format $DOTFileName -o $OutputFileName.$format"
+                $errorOutput = $( $output = & $DOT $esc $arguments) 2>&1
+                # Check the exit code and error output
+                if ($LastExitCode -ne 0) {
+                    Write-Host "The executable failed with exit code: $LastExitCode"
+                    Write-Host "Error details: $errorOutput"
+                    Write-Host "Output: $output"
+                }
             }
         }
     } catch {
