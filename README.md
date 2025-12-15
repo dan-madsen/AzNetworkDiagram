@@ -1,3 +1,17 @@
+# Table of contents
+* [Introduction](#introduction)
+* [Demo Output](#demo-output-v11)
+* [Requirements](#Requirements)
+* [Getting started](#Getting-started)
+* [Recommendation](#recommendation)
+* [Runtime flow](#Runtime-flow)
+* [Currently Supported Resources](#currently-supported-resources)
+* [Pipeline runs](#pipeline-runs)
+* [Changelog](#changelog-since-v101)
+* [Issues, bugs, comments and ideas](#issues-bugs-comments-and-ideas)
+
+---
+
 # Introduction 
 The **Get-AzNetworkDiagram** (Powershell)Cmdlet visualizes Azure infrastructure utilizing Graphviz and the "DOT" (diagram-as-code) language to export a PDF, SVG or PNG with a digram containing the supported resources (see below list).
 
@@ -10,18 +24,6 @@ At this point it is now quite capable of documentating quite a bit of resourse t
 ```diff
 - Disclaimer: We take no resposibility for any actions caused by running AzNetworkDiagram!
 ```
----
-# Table of contents
-* [Introduction](#introduction)
-* [Demo Output](#Demo-output-v1.1)
-* [Requirements](#Requirements)
-* [Getting started](#Getting-started)
-* [Recommendation](#recommendation)
-* [Runtime flow](#Runtime-flow)
-* [Currently Supported Resources](#currently-supported-resources)
-* [Pipeline runs](#pipeline-runs)
-* [Changelog](#changelog-since-v101)
-* [Issues, bugs, comments and ideas](#issues-bugs-comments-and-ideas)
 ---
 
 # Demo output v1.1
