@@ -5410,6 +5410,9 @@ function Get-AzNetworkDiagram {
     try {
         if ( $OnlyMgmtGroups ) {
             Write-Output "`nCollecting management groups and subscriptions..."
+            $script:Legend = @()
+            $Script:Legend += ,@("Management Group","mgmtgroup.png")
+            $Script:Legend += ,@("Subscription","sub.png")
             Export-MgmtGroups
         }
         if ( $false -eq $OnlyMgmtGroups ) {
