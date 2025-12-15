@@ -5,6 +5,8 @@
 * [Getting started](#Getting-started)
   - [Install](#install-using-psgallery-recommended-method)
   - [Runtime options](#runtime-options)
+    - [Primary (Setting scope and output)](#primary-setting-scope-and-output)
+    - [Others (Change behavior and/or features)](#others-change-behavior-andor-features)
   - [Running the Powershell module](#running-the-powershell-module)
 * [Recommendation](#recommendation)
 * [Runtime flow](#Runtime-flow)
@@ -16,9 +18,9 @@
 ---
 
 # Introduction 
-The **Get-AzNetworkDiagram** (Powershell)Cmdlet visualizes Azure infrastructure utilizing Graphviz and the "DOT" (diagram-as-code) language to export a PDF, SVG or PNG with a digram containing the supported resources (see below list).
+The **Get-AzNetworkDiagram** (Powershell)Cmdlet visualizes Azure infrastructure leveraging Graphviz and the "DOT" (diagram-as-code) language to export a PDF, SVG or PNG with a digram containing the [supported resources](#currently-supported-resources).
 
-At this point it is now quite capable of documentating quite a bit of resourse types. Initially it was with network as a focus - but it has emerged into some more. It will document network and infrastructure in a diagram, useful for documentation and/or troubleshooting.
+Initially it was with network as a focus, but it has emerged into some more - it is quite capable of documenting a broader spectrum of resource types. It is a robust utility for generating comprehensive network and infrastructure diagrams, useful for documentation and/or troubleshooting.
 
 ## Created by
 - [Dan](https://github.com/dan-madsen/) - Creator, inventor
@@ -41,16 +43,16 @@ Some examples of the diagrams. **Additional demo outputs are available in the "D
 ---
 
 # Requirements
-**The script depends on Graphviz** (the "DOT", diagram-as-code language) to genereate the graphical output.
+**The script depends on _Graphviz_** (the "DOT", diagram-as-code language) to generate the graphical output.
 
-Graphviz can be downloaded from: https://graphviz.org/. But note that the default install doesn't add the executable to $PATH, so make sure to enable that during install.
+Graphviz can be downloaded from: https://graphviz.org/. But note that the default install doesn't add the executable to $PATH, so make sure to enable that during install (or manually afterwards).
 
-It can also be installed using "Winget", but that will _NOT_ add the executable to $PATH - so you will have to do that manually.
+It can also be installed using "Winget", but that will **_NOT_** add the executable to $PATH - so you will have to do that **_manually_**.
 
 ---
 
 # Getting started 
-The recommended way of running AzNetworkDiagram is by installing for PSGallery. But should you wish to have the absolute latest and greatest, you could opt for a version from GitHub, potentially with not-yet released features.
+The recommended way of running AzNetworkDiagram is by installing from PSGallery. But should you wish to have the absolute latest and greatest, you could opt for a version from GitHub, potentially with not-yet released features.
 ## Install using PSGallery (recommended method)
 ```powershell
 Install-Module -Name AzNetworkDiagram
@@ -63,22 +65,23 @@ Import-Module .\AzNetworkDiagram.psm1
 ```
 
 ## Runtime options
-- **-OutputPath <path>** - set output directory. Default: "."
-- **-Subscriptions "subid1","subid2","subname","..."** - a list of subscriptions in scope for the diagram. They can be names or Id's
+### Primary (setting scope and output)
 - **-ManagementGroups "ManagementGroupID1","ManagementGroupID2","..."** - a list of management groups. Subscriptions under any of the listed management group IDs (ie. NOT name!) will be added to the list of subscriptions in scope for data collection. Can be used in conjunction with -Subscriptions.
-- **-DisableRanking** - Disables automatic ranking for resource types. For larger networks, this might be worth a shot.
-- **-Tenant "tenantId"** Specifies the tenant Id to be used in all subscription authentication. Handy when you have multiple tenants to work with. **Default: current tenant**
-- **-Sanitize** Sanitizes all names, locations, IP addresses and CIDR blocks.
-- **-Prefix "string"** - Adds a prefix to the output file name. For example is cases where you want to do multiple automated runs then the file names will have the prefix per run that you specify. **Default: No Prefix**
-- **-SkipNonCoreNetwork** - Only rocess cores network resources (unless resource types are explicitly enabled using -EnableXXXX options) - ie. non-network resources are skipped for a cleaner diagram - but you will also lack some references from shown resources. 
-- **-SkipXXX** - Skips a chosen non-core network resource type - use tab completion to see current list.
-- **-EnableXXX** - Enable a chosen non-core network resource type regardless of it being skipped (-EnableXXXX will take precedence!) - use tab completion to see current list.
 - **-OnlyMgmtGroups** - Creates a Management Group and Subscription overview diagram - everything else is skipped.
+- **-OutputPath <path>** - set output directory. Default: "."
+- **-Prefix "string"** - Adds a prefix to the output file name. For example is cases where you want to do multiple automated runs then the file names will have the prefix per run that you specify. **Default: No Prefix**
+- **-Subscriptions "subid1","subid2","subname","..."** - a list of subscriptions in scope for the diagram. They can be names or Id's
+- **-Tenant "tenantId"** Specifies the tenant Id to be used in all subscription authentication. Handy when you have multiple tenants to work with. **Default: current tenant**
+
+### Others (change behavior and/or features)
+- **-DisableRanking** - Disables automatic ranking for resource types. For larger networks, this might be worth a shot.
+- **-EnableLinks** - Many resources become links to the Azure portal can be enabled using this flag.
+- **-EnableXXX** - Enable a chosen non-core network resource type regardless of it being skipped (-EnableXXXX will take precedence!) - use tab completion to see current list.
 - **-KeepDotFile** - the DOT file is not deleted after the diagrams have been generated. Default is $false and DOT files are deleted.
 - **-OutputFormat** (pdf, svg, png) - One or more output files get generated with the specified formats. Default is PDF.
-- **-EnableLinks** - Many resources become links to the Azure portal can be enabled using this flag.
-
-
+- **-Sanitize** Sanitizes all names, locations, IP addresses and CIDR blocks.
+- **-SkipNonCoreNetwork** - Only rocess cores network resources (unless resource types are explicitly enabled using -EnableXXXX options) - ie. non-network resources are skipped for a cleaner diagram - but you will also lack some references from shown resources. 
+- **-SkipXXX** - Skips a chosen non-core network resource type - use tab completion to see current list.
 
 ## Running the Powershell module
 **Examples:**
@@ -173,6 +176,7 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 
 # Changelog (since v1.0.1)
 ## v2.0 release - under construction
+- **_BREAKING CHANGE - see v1.5 for additional info_**
 - New features
   - IP Plan overview, based on VNets in scope
   - The breaking change from v1.5 will be fully implemented
