@@ -4820,7 +4820,6 @@ function Confirm-Prerequisites {
         "lb.png",
         #"lgw.png",
         "managed-identity.png",
-        #"mariadb.png",
         "mgmtgroup.png"
         "mongodb.png",
         "mysql.png",
