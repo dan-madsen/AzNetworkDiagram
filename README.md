@@ -11,6 +11,18 @@ At this point it is now quite capable of documentating quite a bit of resourse t
 - Disclaimer: We take no resposibility for any actions caused by running AzNetworkDiagram!
 ```
 ---
+# Table of contents
+* [Introduction](#introduction)
+* [Demo Output](#Demo-output-v1.1)
+* [Requirements](#Requirements)
+* [Getting started](#Getting-started)
+* [Recommendation](#recommendation)
+* [Runtime flow](#Runtime-flow)
+* [Currently Supported Resources](#currently-supported-resources)
+* [Pipeline runs](#pipeline-runs)
+* [Changelog](#changelog-since-v101)
+* [Issues, bugs, comments and ideas](#issues-bugs-comments-and-ideas)
+---
 
 # Demo output v1.1
 Some examples of the diagrams. **Additional demo outputs are available in the "DemoOutput" folder.**
@@ -155,15 +167,15 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 ---
 
 # Changelog (since v1.0.1)
-## Planned v2.0 release
+## v2.0 release - under construction
 - New features
   - IP Plan overview, based on VNets in scope
   - The breaking change from v1.5 will be fully implemented
-## v1.5 (Not released to Powershell Gallery yet)
-- **_BREAKING CHANGE_**, for easier usage
+## v1.5
+- **_SEMI BREAKING CHANGE_**, for easier usage
   - Paramaters with $bool ($true/$false) no longer need the $true/$false parameter - they are now "switches" which enables flags/features without prepending a value. 
   - For example "-SkipNonCoreNetwork $true" is now just "-SkipNonCoreNetwork". 
-  - This will **break/alter intent of the script** if values are still supplied, due to a feature in PowerShell. An effort has been made to catch this error in v1.4.2+ and inform the user. In v2.0+ that feature will be disabled for the script, in order to ensure proper usage.
+  - This will **break/alter intent of the script** if values are still supplied, due to a feature in PowerShell. An effort has been made to catch this error in v1.5+ and inform the user. In v2.0+ that feature will be disabled for the script, in order to ensure proper usage.
 - New features
   - The ability to have a logo added to the output (see new parameter section)
   - VMs with MSSQL registered, now have a proper icon

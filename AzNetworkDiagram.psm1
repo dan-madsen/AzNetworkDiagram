@@ -5265,16 +5265,17 @@ function Get-AzNetworkDiagram {
         
     # PositionalBinding "overflow"
     if ( $PositionalBindingErrorCatch1 ) { 
-        Write-host "You might have set one or more value(s) for switches that where previously `$bool(s), which doesn't support it. This typically happens for parameters with `$true/`$false values"
-        Write-host "Please review your paramters and remove **unsupported values** from `"switches`" to ensure functionality functions as it was designed"
-        Write-host "This warning will be removed when v2.0 is released in the future"
+        Write-host "# Unsupported values supplied for one or more parameters:"
+        Write-host "You might have set one or more value(s) for parameters that where previously booleans (ie. `$true/`$false), which is no longer needed."
+        Write-host "Please review your parameters and remove any unsupported values to ensure proper functionality."
+        Write-host "When v2.0 is released: This warning will be removed and an error will be thrown."
         Write-host
         Write-host "# Example:"
-        Write-host "Previous paramter: `"-SkipNonCoreNetwork `$true`""
-        Write-host "New paramter: `"-SkipNonCoreNetwork`""
+        Write-host "Previous paramter:\n`"-SkipNonCoreNetwork `$true`""
+        Write-host "\nNew paramter:\n`"-SkipNonCoreNetwork`""
         Write-host
         Write-host
-        Write-host "Press Enter to continue (and risk error and/or misbehavior) OR CTRL+C to cancel..."
+        Write-host "Press Enter to continue (and risk error and/or misbehavior) OR CTRL+C to cancel and cleanup parameters..."
         Read-Host
     }
 
