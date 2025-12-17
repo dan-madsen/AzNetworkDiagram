@@ -181,8 +181,9 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 - [x] **_BREAKING CHANGE - see v1.5 for additional info_**
 - New features
   - [ ] IP Plan overview, based on VNets in scope
-    - [x] First draft to command line and Out-GridView
-    - [ ] PDF output ?
+    - [x] Azure resources
+    - [ ] VPN
+    - [ ] ER
   - [x] The breaking change from v1.5 fully implemented
 ## v1.5
 - **_SEMI BREAKING CHANGE_**, for easier usage
