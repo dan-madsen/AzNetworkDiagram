@@ -4739,8 +4739,9 @@ function Export-vnet2IPPlan {
         $subnets | ForEach-Object {
             $obj = [pscustomobject]@{
                 AddressSpace     = ''
-                Type           = ''
-                Resource             = ''
+                Type             = ''
+                Delegation       = ''
+                Resource         = ''
                 ResourceGroup    = ''
                 SubscriptionName = ''
                 SubscriptionId   = ''
@@ -4752,6 +4753,7 @@ function Export-vnet2IPPlan {
             $obj.SubscriptionName = $subname
             $obj.SubscriptionId = $subid
             $obj.Type = "Subnet"
+            $obj.Delegation = $subnet.Delegations.ServiceName
             $obj.ResourceGroup = $vnet.ResourceGroupName
             $obj.Resource = "$($vnet.Name) / $subnetName"
             $obj.AddressSpace = $prefix
@@ -4910,7 +4912,7 @@ function Export-IPPlan {
             IPPlanSubnets [label = <
                 <TABLE border=`"1`" style=`"rounded`">
                 <TR><TD border=`"0`" align=`"left`"><B>Subnets in Azure</B><BR/><BR/></TD></TR>
-                <TR><TD align=`"left`"><B>Subnet</B></TD><TD align=`"left`"><B>Type</B></TD><TD align=`"left`"><B>Resource</B></TD><TD align=`"left`"><B>Resource Group</B></TD><TD align=`"left`"><B>Subscription Name</B></TD></TR>
+                <TR><TD align=`"left`"><B>Subnet</B></TD><TD align=`"left`"><B>Type</B></TD><TD align=`"left`"><B>Delegation</B></TD><TD align=`"left`"><B>Resource</B></TD><TD align=`"left`"><B>Resource Group</B></TD><TD align=`"left`"><B>Subscription Name</B></TD></TR>
                 <HR/>"
         
         # Individual Routes        
@@ -4921,10 +4923,11 @@ function Export-IPPlan {
         ForEach ($subnet in $subnets ) {
             $addressSpace = SanitizeString $subnet.addressSpace
             $type = $subnet.type
+            $delegation = $subnet.delegation
             $resource = SanitizeString $subnet.resource
             $rg = SanitizeString $subnet.ResourceGroup
             $subname = SanitizeString $subnet.SubscriptionName
-            $data = $data + "<TR><TD align=`"left`">$addressSpace</TD><TD align=`"left`">$type</TD><TD align=`"left`">$resource</TD><TD align=`"left`">$rg</TD><TD align=`"left`">$subname</TD></TR>"
+            $data = $data + "<TR><TD align=`"left`">$addressSpace</TD><TD align=`"left`">$type</TD><TD align=`"left`">$delegation</TD><TD align=`"left`">$resource</TD><TD align=`"left`">$rg</TD><TD align=`"left`">$subname</TD></TR>"
         }
 
         # End table
