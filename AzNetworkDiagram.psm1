@@ -522,9 +522,15 @@ function Export-dotFooter {
         $icon = Join-Path $OutputPath "icons" $Item[1]
         $data += "                                             <TR><TD align=`"left`"><IMG SCALE=`"TRUE`" SRC=`"$icon`"/></TD><TD align=`"left`">$($Item[0])</TD></TR>`n"
     }
+    
+    $logorank=""
+    if ( $null -ne $LogoPath -and (Test-Path $LogoPath -PathType Leaf) ) {
+       $logorank="logo;"
+    }
+
     $data += "                                             </TABLE>>]; 
             }
-            { rank=max; l1; rank9 }
+            { rank=max; l1; rank9; $logorank }
     }"
     Export-AddToFile -Data $data #EOF
 }
@@ -4675,6 +4681,270 @@ function Export-MgmtGroups
     }
 }
 
+
+<#
+.SYNOPSIS
+Exports details of VNet for inclusion in an IP Plan.
+
+.DESCRIPTION
+The `Export-vnet2IPPlan` function processes a specified Azure VNet object, retrieves its details, and formats the data for inclusion in an IP Plan.
+
+.PARAMETER VNet
+Specifies the Azure vnet object to be processed. This parameter is mandatory.
+
+.EXAMPLE
+PS> $vnet = Get-AzVirtualNetwork
+PS> $vnet | Foreach-Object { Export-vnet2IPPlan -vnet $_ }
+
+This example retrieves specified Azure VNet object, retrieves its details, and formats the data for inclusion in an in an IP Plan.
+#>
+function Export-vnet2IPPlan {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$vnet
+    )
+
+    try {
+        #$data = ""
+        #$id = $MgmtGroupEntityObject.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        #$subid = $context.Subscription.Id
+        $subname = (Get-AzContext).Subscription.Name
+                       
+        # AddressSpaces
+        $vnet.AddressSpace.AddressPrefixes | ForEach-Object {
+            $obj = [pscustomobject]@{
+                AddressSpace     = ''
+                Type             = ''
+                Resource         = ''
+                ResourceGroup    = ''
+                SubscriptionName = ''
+                SubscriptionId   = ''
+                #vnetid          = ''
+            }
+            $prefix = $_
+            $obj.SubscriptionName = $subname
+            $obj.SubscriptionId = $subid
+            $obj.Type = "VNet"
+            $obj.ResourceGroup = $vnet.ResourceGroupName
+            $obj.Resource = $vnet.Name
+            $obj.AddressSpace = $prefix
+            #$obj.vnetid = $vnet.id
+
+            $script:IPPlan += $obj
+        }
+        
+        # Subnets
+        $subnets = $vnet.Subnets
+        $subnets | ForEach-Object {
+            $obj = [pscustomobject]@{
+                AddressSpace     = ''
+                Type             = ''
+                Delegation       = ''
+                Resource         = ''
+                ResourceGroup    = ''
+                SubscriptionName = ''
+                SubscriptionId   = ''
+                #vnetid          = ''
+            }
+            $subnet = $_
+            $subnetName = $subnet.Name
+            $prefix = $subnet.AddressPrefix
+            $obj.SubscriptionName = $subname
+            $obj.SubscriptionId = $subid
+            $obj.Type = "Subnet"
+            $obj.Delegation = $subnet.Delegations.ServiceName
+            $obj.ResourceGroup = $vnet.ResourceGroupName
+            $obj.Resource = "$($vnet.Name) / $subnetName"
+            $obj.AddressSpace = $prefix
+            #$obj.vnetid = $vnet.id
+
+            $script:IPPlan += $obj
+        }
+    }
+    catch {
+        Write-Error "Can't export vnet 2 IP Plan at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+} 
+
+<#
+.SYNOPSIS
+Exports details of Local Gateway for inclusion in an IP Plan.
+
+.DESCRIPTION
+The `Export-LGW2IPPlan` function processes a specified Azure Local Gateway object, retrieves its details, and formats the data for inclusion in an IP Plan.
+
+.PARAMETER LGW
+Specifies the Local Gateway object to be processed. This parameter is mandatory.
+
+.EXAMPLE
+PS> $vnet = Get-AzVirtualNetwork
+PS> $vnet | Foreach-Object { Export-vnet2IPPlan -vnet $_ }
+
+This example retrieves specified Local Gateway object, retrieves its details, and formats the data for inclusion in an in an IP Plan.
+#>
+function Export-LGW2IPPlan {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$LGW
+    )
+
+    try {
+        #$data = ""
+        #$id = $MgmtGroupEntityObject.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        #$subid = $context.Subscription.Id
+        $subname = (Get-AzContext).Subscription.Name
+        
+        $lgwobject = $LGW
+        $lgwsubnetsarray = $lgwobject.addressSpaceText | ConvertFrom-Json
+        $lgwsubnetsarray.AddressPrefixes | Sort-Object | ForEach-Object {
+            $obj = [pscustomobject]@{
+                AddressSpace     = ''
+                Type             = ''
+                Resource         = ''
+                ResourceGroup    = ''
+                SubscriptionName = ''
+                SubscriptionId   = ''
+                #vnetid          = ''
+            }
+            $prefix = $_
+            $obj.SubscriptionName = $subname
+            $obj.SubscriptionId = $subid
+            $obj.Type = "VPN"
+            $obj.ResourceGroup = $lgwobject.ResourceGroupName
+            $obj.Resource = $lgwobject.Name
+            $obj.AddressSpace = $prefix
+            #$obj.vnetid = $vnet.id
+
+            $script:IPPlan += $obj
+        }
+    }
+    catch {
+        Write-Error "Can't export Local Gateway 2 IP Plan at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+}
+
+<#
+.SYNOPSIS
+Exports details of IP Plan for inclusion in an infrastructure diagram.
+
+.DESCRIPTION
+The `Export-IPPlan` function processes a specified IPPlan
+
+.PARAMETER IPPlan
+Specifies the IPPlan object to be processed.
+
+.EXAMPLE
+PS> Export-IPPlan -IPPlan $script:IPPlan
+
+This example processes the specified route table and exports its details for inclusion in an infrastructure diagram.
+
+#>
+function Export-IPPlan {
+    [CmdletBinding()]
+    param ([PSCustomObject[]]$IPPlan)
+
+    try {
+        $AddressSpaces = $IPPlan | Where-Object { $_.Type -eq "VNet" -or $_.Type -eq "VPN"}
+        $Subnets = $IPPlan | Where-Object { $_.Type -eq "Subnet" }
+
+        # Object reference
+        # $obj = [pscustomobject]@{
+        #     AddressSpace     = ''
+        #     Type             = ''
+        #     Resource         = ''
+        #     ResourceGroup    = ''
+        #     SubscriptionName = ''
+        #     SubscriptionId   = ''
+        #     #vnetid          = ''
+        # }
+
+        ### Address Spaces
+        $header = "
+        subgraph cluster_IPPlan_AddressSpaces {
+            style = solid;
+            colorscheme = purples9;
+            bgcolor = 5;
+            margin = 0;
+            node [colorscheme = purples9; shape = box; color = 5; margin = 0;];
+            
+            IPPlanAddressSpaces [label = <
+                <TABLE border=`"0`" style=`"rounded`">
+                <TR><TD border=`"0`" align=`"left`"><B>Address Spaces in Azure</B><BR/><BR/></TD></TR>
+                <TR><TD border=`"0`" align=`"left`"><B>VNets + Local Network Gateways</B><BR/><BR/></TD></TR>
+                <TR><TD align=`"left`"><B>Address Space</B></TD><TD align=`"left`"><B>Type</B></TD><TD align=`"left`"><B>Resource</B></TD><TD align=`"left`"><B>Resource Group</B></TD><TD align=`"left`"><B>Subscription Name</B></TD></TR>
+                <HR/>"
+        
+        # Individual Routes        
+        $data = ""
+
+        #Sort routes for easier reading
+        $AddressSpaces = $AddressSpaces | Sort-Object { [regex]::Replace($_.AddressSpace, '\d+', { $args[0].Value.PadLeft(100) }) }
+        ForEach ($addressSpace in $AddressSpaces ) {
+            $addressSpaceCIDR = SanitizeString $addressSpace.addressSpace
+            $type = $addressSpace.type
+            $resource = SanitizeString $addressSpace.resource
+            $rg = SanitizeString $addressSpace.ResourceGroup
+            $subname = SanitizeString $addressSpace.SubscriptionName
+            $data = $data + "<TR><TD align=`"left`">$addressSpaceCIDR</TD><TD align=`"left`">$type</TD><TD align=`"left`">$resource</TD><TD align=`"left`">$rg</TD><TD align=`"left`">$subname</TD></TR>"
+        }
+
+        # End table
+        $ImagePath = Join-Path $OutputPath "icons" "vnet.png"
+        $footer = "
+                </TABLE>>;
+                image = `"$ImagePath`";imagepos = `"tr`"; labelloc = `"b`";height = 2.5;];
+        }
+                "
+        $alldata = $header + $data + $footer
+        Export-AddToFile -Data $alldata
+
+        ### Subnets
+        $header = "
+        subgraph cluster_IPPlan_Subnets {
+            style = solid;
+            colorscheme = purples9;
+            bgcolor = 5;
+            margin = 0;
+            node [colorscheme = purples9; shape = box; color = 5; margin = 0;];
+            
+            IPPlanSubnets [label = <
+                <TABLE border=`"1`" style=`"rounded`">
+                <TR><TD border=`"0`" align=`"left`"><B>Subnets in Azure</B><BR/><BR/></TD></TR>
+                <TR><TD align=`"left`"><B>Subnet</B></TD><TD align=`"left`"><B>Type</B></TD><TD align=`"left`"><B>Delegation</B></TD><TD align=`"left`"><B>Resource</B></TD><TD align=`"left`"><B>Resource Group</B></TD><TD align=`"left`"><B>Subscription Name</B></TD></TR>
+                <HR/>"
+        
+        # Individual Routes        
+        $data = ""
+
+        #Sort routes for easier reading
+        $subnets = $subnets | Sort-Object { [regex]::Replace($_.AddressSpace, '\d+', { $args[0].Value.PadLeft(100) }) }
+        ForEach ($subnet in $subnets ) {
+            $addressSpace = SanitizeString $subnet.addressSpace
+            $type = $subnet.type
+            $delegation = $subnet.delegation
+            $resource = SanitizeString $subnet.resource
+            $rg = SanitizeString $subnet.ResourceGroup
+            $subname = SanitizeString $subnet.SubscriptionName
+            $data = $data + "<TR><TD align=`"left`">$addressSpace</TD><TD align=`"left`">$type</TD><TD align=`"left`">$delegation</TD><TD align=`"left`">$resource</TD><TD align=`"left`">$rg</TD><TD align=`"left`">$subname</TD></TR>"
+        }
+
+        # End table
+        $ImagePath = Join-Path $OutputPath "icons" "snet.png"
+        $footer = "
+                </TABLE>>;
+                image = `"$ImagePath`";imagepos = `"tr`"; labelloc = `"b`";height = 2.5;];
+        }
+                "
+        $alldata = $header + $data + $footer
+        Export-AddToFile -Data $alldata
+    }
+    catch {   
+        Write-Host "Can't export IP Plan Table at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+}
+
 <#
 .SYNOPSIS
 Exports details of a Mangement Group for inclusion in an infrastructure diagram.
@@ -4820,7 +5090,6 @@ function Confirm-Prerequisites {
         "lb.png",
         #"lgw.png",
         "managed-identity.png",
-        #"mariadb.png",
         "mgmtgroup.png"
         "mongodb.png",
         "mysql.png",
@@ -4957,13 +5226,16 @@ function Get-DOTExecutable {
 
   .PARAMETER KeepDotFile
   Preserve the DOT file after diagram generation
+  
+  #.PARAMETER IPPlanAsGrid
+  #Outputs IP Plan via "Out-GridView" (graphical table) instead of "Format-Table" (command line table)
 
   .PARAMETER LogoURL
   If supplied along with -LogoPath, the logo will become a clickable link
   
   .PARAMETER LogoPath
   Absolute/full path for the your logo/image of choice. Size matters (pixels), don't use a logo that is too big! 
-  Logo will be at rank 1 - ie., top in a standard horizontal diagram and left in a vertical diagram. A large image will make the diagram move in the output, creating unecessary whitespace.
+  Logo will be at rank 9 - ie., bottom in a standard horizontal diagram and right in a vertical diagram.
   Supports most popular image formats, but only .PNG and .JPG/.JPEG have been tested. 
 
   .PARAMETER ManagementGroups
@@ -4972,6 +5244,9 @@ function Get-DOTExecutable {
   .PARAMETER OutputFormat
   One or more output files get generated with the specified formats. Choose between (pdf, svg, png) - Default is PDF.
 
+  .PARAMETER OnlyIPPlan
+  Creates a (command line) table of VNet address spaces and subnets - everything else is skipped.
+  
   .PARAMETER OnlyMgmtGroups
   Creates a Management Group and Subscription overview diagram - everything else is skipped.
 
@@ -4998,52 +5273,10 @@ function Get-DOTExecutable {
    https://github.com/dan-madsen/AzNetworkDiagram
 #>
 function Get-AzNetworkDiagram {
-    [CmdletBinding()]
-    #[CmdletBinding(PositionalBinding=$false)] #Does not give an option to inform the users, 42 Catch variables was added below instead ! Once we move to v2.0 at some point - this will be enabled and the 42 catch variables will be removed
+    #[CmdletBinding()]
+    [CmdletBinding(PositionalBinding=$false)]
     # Parameters
     param (
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch1,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch2,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch3,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch4,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch5,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch6,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch7,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch8,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch9,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch10,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch11,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch12,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch13,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch14,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch15,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch16,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch17,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch18,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch19,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch20,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch21,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch22,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch23,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch24,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch25,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch26,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch27,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch28,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch29,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch30,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch31,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch32,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch33,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch34,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch35,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch36,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch37,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch38,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch39,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch40,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch41,
-        [Parameter(Mandatory = $false,DontShow = $true)][string]$PositionalBindingErrorCatch42,
         [Parameter(Mandatory = $false,DontShow = $true)][switch]$DebugParameters,
         [Parameter(Mandatory = $false)][switch]$DisableRanking,    
         [Parameter(Mandatory = $false)][switch]$EnableACA,
@@ -5077,9 +5310,11 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][switch]$EnableVM,
         [Parameter(Mandatory = $false)][switch]$EnableVMSS,
         [Parameter(Mandatory = $false)][switch]$KeepDotFile,
+        [Parameter(Mandatory = $false)][switch]$IPPlanAsGrid,
         [Parameter(Mandatory = $false)][string]$LogoPath = $null,
         [Parameter(Mandatory = $false)][string]$LogoURL = $null,
         [Parameter(Mandatory = $false)][string[]]$ManagementGroups,
+        [Parameter(Mandatory = $false)][switch]$OnlyIPPlan,
         [Parameter(Mandatory = $false)][switch]$OnlyMgmtGroups,
         [Parameter(Mandatory = $false)][ValidateSet('pdf','svg','png')][string[]]$OutputFormat = "pdf",
         [Parameter(Mandatory = $false)][string]$OutputPath = $pwd,
@@ -5121,48 +5356,6 @@ function Get-AzNetworkDiagram {
     )
 
     if ( $DebugParameters ) {
-        Write-Host "-PositionalBindingErrorCatch1 $PositionalBindingErrorCatch1"
-        Write-Host "-PositionalBindingErrorCatch2 $PositionalBindingErrorCatch2"
-        Write-Host "-PositionalBindingErrorCatch3 $PositionalBindingErrorCatch3"
-        Write-Host "-PositionalBindingErrorCatch4 $PositionalBindingErrorCatch4"
-        Write-Host "-PositionalBindingErrorCatch5 $PositionalBindingErrorCatch5"
-        Write-Host "-PositionalBindingErrorCatch6 $PositionalBindingErrorCatch6"
-        Write-Host "-PositionalBindingErrorCatch7 $PositionalBindingErrorCatch7"
-        Write-Host "-PositionalBindingErrorCatch8 $PositionalBindingErrorCatch8"
-        Write-Host "-PositionalBindingErrorCatch9 $PositionalBindingErrorCatch9"
-        Write-Host "-PositionalBindingErrorCatch10 $PositionalBindingErrorCatch10"
-        Write-Host "-PositionalBindingErrorCatch11 $PositionalBindingErrorCatch11"
-        Write-Host "-PositionalBindingErrorCatch12 $PositionalBindingErrorCatch12"
-        Write-Host "-PositionalBindingErrorCatch13 $PositionalBindingErrorCatch13"
-        Write-Host "-PositionalBindingErrorCatch14 $PositionalBindingErrorCatch14"
-        Write-Host "-PositionalBindingErrorCatch15 $PositionalBindingErrorCatch15"
-        Write-Host "-PositionalBindingErrorCatch16 $PositionalBindingErrorCatch16"
-        Write-Host "-PositionalBindingErrorCatch17 $PositionalBindingErrorCatch17"
-        Write-Host "-PositionalBindingErrorCatch18 $PositionalBindingErrorCatch18"
-        Write-Host "-PositionalBindingErrorCatch19 $PositionalBindingErrorCatch19"
-        Write-Host "-PositionalBindingErrorCatch20 $PositionalBindingErrorCatch20"
-        Write-Host "-PositionalBindingErrorCatch21 $PositionalBindingErrorCatch21"
-        Write-Host "-PositionalBindingErrorCatch22 $PositionalBindingErrorCatch22"
-        Write-Host "-PositionalBindingErrorCatch23 $PositionalBindingErrorCatch23"
-        Write-Host "-PositionalBindingErrorCatch24 $PositionalBindingErrorCatch24"
-        Write-Host "-PositionalBindingErrorCatch25 $PositionalBindingErrorCatch25"
-        Write-Host "-PositionalBindingErrorCatch26 $PositionalBindingErrorCatch26"
-        Write-Host "-PositionalBindingErrorCatch27 $PositionalBindingErrorCatch27"
-        Write-Host "-PositionalBindingErrorCatch28 $PositionalBindingErrorCatch28"
-        Write-Host "-PositionalBindingErrorCatch29 $PositionalBindingErrorCatch29"
-        Write-Host "-PositionalBindingErrorCatch30 $PositionalBindingErrorCatch30"
-        Write-Host "-PositionalBindingErrorCatch31 $PositionalBindingErrorCatch31"
-        Write-Host "-PositionalBindingErrorCatch32 $PositionalBindingErrorCatch32"
-        Write-Host "-PositionalBindingErrorCatch33 $PositionalBindingErrorCatch33"
-        Write-Host "-PositionalBindingErrorCatch34 $PositionalBindingErrorCatch34"
-        Write-Host "-PositionalBindingErrorCatch35 $PositionalBindingErrorCatch35"
-        Write-Host "-PositionalBindingErrorCatch36 $PositionalBindingErrorCatch36"
-        Write-Host "-PositionalBindingErrorCatch37 $PositionalBindingErrorCatch37"
-        Write-Host "-PositionalBindingErrorCatch38 $PositionalBindingErrorCatch38"
-        Write-Host "-PositionalBindingErrorCatch39 $PositionalBindingErrorCatch39"
-        Write-Host "-PositionalBindingErrorCatch40 $PositionalBindingErrorCatch40"
-        write-host "-PositionalBindingErrorCatch41 : $PositionalBindingErrorCatch41"
-        write-host "-PositionalBindingErrorCatch42 : $PositionalBindingErrorCatch42"
         write-host "-DisableRanking : $DisableRanking"
         write-host "-EnableACA : $EnableACA"
         write-host "-EnableACI : $EnableACI"
@@ -5195,9 +5388,11 @@ function Get-AzNetworkDiagram {
         write-host "-EnableVM : $EnableVM"
         write-host "-EnableVMSS : $EnableVMSS"
         write-host "-KeepDotFile : $KeepDotFile"
+        #write-host "-IPPlanAsGrid : $IPPlanAsGrid"
         write-host "-LogoPath : $LogoPath"
         write-host "-LogoURL : $LogoURL"
         write-host "-ManagementGroups : $ManagementGroups"
+        write-host "-OnlyIPPlan : $OnlyIPPlan"
         write-host "-OnlyMgmtGroups : $OnlyMgmtGroups"
         write-host "-OutputFormat : $OutputFormat"
         write-host "-OutputPath : $OutputPath"
@@ -5264,23 +5459,6 @@ function Get-AzNetworkDiagram {
     write-output "                                                                 /____/                       "
     Write-Output "$ver"
     Write-Output "##############################################################################################`n"
-
-        
-    # PositionalBinding "overflow"
-    if ( $PositionalBindingErrorCatch1 ) { 
-        Write-host "# Unsupported values supplied for one or more parameters:"
-        Write-host "You might have set one or more value(s) for parameters that where previously booleans (ie. `$true/`$false), which is no longer needed."
-        Write-host "Please review your parameters and remove any unsupported values to ensure proper functionality."
-        Write-host "When v2.0 is released: This warning will be removed and an error will be thrown."
-        Write-host
-        Write-host "# Example:"
-        Write-host "Previous paramter:\n`"-SkipNonCoreNetwork `$true`""
-        Write-host "\nNew paramter:\n`"-SkipNonCoreNetwork`""
-        Write-host
-        Write-host
-        Write-host "Press Enter to continue (and risk error and/or misbehavior) OR CTRL+C to cancel and cleanup parameters..."
-        Read-Host
-    }
 
     Write-Output "Checking prerequisites ..."
     Confirm-Prerequisites
@@ -5387,7 +5565,7 @@ function Get-AzNetworkDiagram {
 
     # Run program and collect data through powershell commands
     Export-dotHeader
-
+    
     # Set subscriptions to every accessible subscription, if unset
     try {
         if ($TenantId) {
@@ -5417,8 +5595,51 @@ function Get-AzNetworkDiagram {
             $Script:Legend += ,@("Management Group","mgmtgroup.png")
             $Script:Legend += ,@("Subscription","sub.png")
             Export-MgmtGroups
-        }
-        if ( $false -eq $OnlyMgmtGroups ) {
+        } elseif ( $OnlyIPPlan ) {
+            Write-Output "`nCollecting Data for IP Plan..."
+            $script:IPPlan = @()
+
+            #Process all subs and vnets
+            $Subscriptions | ForEach-Object {
+                # Set Context
+                if ($TenantId) {
+                    # If TenantId is specified, use it to set the context               
+                    $context = Set-AzContext -Subscription $_ -Tenant $TenantId -Force -ErrorAction Stop
+                }
+                else {
+                    $context = Set-AzContext -Subscription $_ -Force -ErrorAction Stop
+                    $TenantId = $context.Tenant.Id
+                }
+                $subid = $context.Subscription.Id
+                $subname = $context.Subscription.Name
+                Write-Output "Collecting IP Plan info from subscription ($($Subscriptions.indexOf($_)+1)/$($Subscriptions.count)): $subname ($subid)"
+
+                # Populate $script:IPPlan with VNets
+                Get-AzVirtualNetwork | ForEach-Object {
+                    Export-vnet2IPPlan $_
+                }
+
+                # Populate $script:IPPlan with Local Network Gateway IP scopes
+                $lgwStandardObjects = Get-AzResource | Where-Object { $_.ResourceType -eq "Microsoft.Network/localNetworkGateways" }
+                $lgwStandardObjects | ForEach-Object {
+                    $standardObject = $_
+                    $lgwObject = Get-AzLocalNetworkGateway -ResourceGroupName $standardObject.ResourceGroupName -Name $standardObject.Name 
+                    Export-LGW2IPPlan -LGW $lgwObject
+                }
+            }
+            # Output to console
+            #if ( $IPPlanAsGrid ) {
+            #    $script:IPPlan | Out-GridView
+            #} else {
+            #    $script:IPPlan | Format-Table
+            #}
+
+            #Output data to DOTfile
+            #.....
+            Export-IPPlan -IPPlan $script:IPPlan
+
+
+        } else {
             # Collect all vNet ID's in scope otherwise we can end up with 1 vNet peered to 1000 other vNets which are not in scope
             # Errors will appear like: dot: graph is too large for cairo-renderer bitmaps. Scaling by 0.324583 to fit
             
@@ -5439,7 +5660,7 @@ function Get-AzNetworkDiagram {
                 
                 Write-Output "`nCollecting data from subscription ($($Subscriptions.indexOf($_)+1)/$($Subscriptions.count)): $subname ($subid)"
                 Export-AddToFile "`n    ##########################################################################################################"
-                Export-AddToFile "    ##### $subname "
+                Export-AddToFile "    ##### $subname - $dotsubid"
                 Export-AddToFile "    ##########################################################################################################`n"
                 #Export-AddToFile "    subgraph cluster_$dotsubid {"
                 #Export-AddToFile "        label=`"Subscription: $subname`""

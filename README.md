@@ -67,6 +67,8 @@ Import-Module .\AzNetworkDiagram.psm1
 ## Runtime options
 ### Primary (setting scope and output)
 - **-ManagementGroups "ManagementGroupID1","ManagementGroupID2","..."** - a list of management groups. Subscriptions under any of the listed management group IDs (ie. NOT name!) will be added to the list of subscriptions in scope for data collection. Can be used in conjunction with -Subscriptions.
+- **-OnlyIPPlan** - Creates an IP Plan of all VNets in scope. Everything else is skipped.
+  - If **-OnlyMgmtGroups** is set - that will take precedence over the IP Plan !
 - **-OnlyMgmtGroups** - Creates a Management Group and Subscription overview diagram - everything else is skipped.
 - **-OutputPath <path>** - set output directory. Default: "."
 - **-Prefix "string"** - Adds a prefix to the output file name. For example is cases where you want to do multiple automated runs then the file names will have the prefix per run that you specify. **Default: No Prefix**
@@ -176,10 +178,12 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 
 # Changelog (since v1.0.1)
 ## v2.0 release - under construction
-- **_BREAKING CHANGE - see v1.5 for additional info_**
+- [x] **_BREAKING CHANGE - see v1.5 for additional info_**
 - New features
-  - IP Plan overview, based on VNets in scope
-  - The breaking change from v1.5 will be fully implemented
+  - [x] IP Plan overview, based on VNets in scope
+    - [x] Azure resources
+    - [x] VPN
+  - [x] The breaking change from v1.5 fully implemented
 ## v1.5
 - **_SEMI BREAKING CHANGE_**, for easier usage
   - Paramaters with $bool ($true/$false) no longer need the $true/$false parameter - they are now "switches" which enables flags/features without prepending a value. 
