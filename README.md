@@ -180,10 +180,9 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 ## v2.0 release - under construction
 - [x] **_BREAKING CHANGE - see v1.5 for additional info_**
 - New features
-  - [ ] IP Plan overview, based on VNets in scope
+  - [x] IP Plan overview, based on VNets in scope
     - [x] Azure resources
-    - [ ] VPN
-    - [ ] ER
+    - [x] VPN
   - [x] The breaking change from v1.5 fully implemented
 ## v1.5
 - **_SEMI BREAKING CHANGE_**, for easier usage

@@ -522,9 +522,15 @@ function Export-dotFooter {
         $icon = Join-Path $OutputPath "icons" $Item[1]
         $data += "                                             <TR><TD align=`"left`"><IMG SCALE=`"TRUE`" SRC=`"$icon`"/></TD><TD align=`"left`">$($Item[0])</TD></TR>`n"
     }
+    
+    $logorank=""
+    if ( $null -ne $LogoPath -and (Test-Path $LogoPath -PathType Leaf) ) {
+       $logorank="logo;"
+    }
+
     $data += "                                             </TABLE>>]; 
             }
-            { rank=max; l1; rank9 }
+            { rank=max; l1; rank9; $logorank }
     }"
     Export-AddToFile -Data $data #EOF
 }
@@ -4709,8 +4715,8 @@ function Export-vnet2IPPlan {
         $vnet.AddressSpace.AddressPrefixes | ForEach-Object {
             $obj = [pscustomobject]@{
                 AddressSpace     = ''
-                Subnet           = ''
-                VNet             = ''
+                Type             = ''
+                Resource         = ''
                 ResourceGroup    = ''
                 SubscriptionName = ''
                 SubscriptionId   = ''
@@ -4719,8 +4725,9 @@ function Export-vnet2IPPlan {
             $prefix = $_
             $obj.SubscriptionName = $subname
             $obj.SubscriptionId = $subid
+            $obj.Type = "VNet"
             $obj.ResourceGroup = $vnet.ResourceGroupName
-            $obj.VNet = $vnet.Name
+            $obj.Resource = $vnet.Name
             $obj.AddressSpace = $prefix
             #$obj.vnetid = $vnet.id
 
@@ -4728,23 +4735,26 @@ function Export-vnet2IPPlan {
         }
         
         # Subnets
-        $subnets = $vnet.Subnets.AddressPrefix
+        $subnets = $vnet.Subnets
         $subnets | ForEach-Object {
             $obj = [pscustomobject]@{
                 AddressSpace     = ''
-                Subnet           = ''
-                VNet             = ''
+                Type           = ''
+                Resource             = ''
                 ResourceGroup    = ''
                 SubscriptionName = ''
                 SubscriptionId   = ''
                 #vnetid          = ''
             }
-            $prefix = $_
+            $subnet = $_
+            $subnetName = $subnet.Name
+            $prefix = $subnet.AddressPrefix
             $obj.SubscriptionName = $subname
             $obj.SubscriptionId = $subid
+            $obj.Type = "Subnet"
             $obj.ResourceGroup = $vnet.ResourceGroupName
-            $obj.VNet = $vnet.Name
-            $obj.Subnet = $prefix
+            $obj.Resource = "$($vnet.Name) / $subnetName"
+            $obj.AddressSpace = $prefix
             #$obj.vnetid = $vnet.id
 
             $script:IPPlan += $obj
@@ -4757,12 +4767,70 @@ function Export-vnet2IPPlan {
 
 <#
 .SYNOPSIS
+Exports details of Local Gateway for inclusion in an IP Plan.
+
+.DESCRIPTION
+The `Export-LGW2IPPlan` function processes a specified Azure Local Gateway object, retrieves its details, and formats the data for inclusion in an IP Plan.
+
+.PARAMETER LGW
+Specifies the Local Gateway object to be processed. This parameter is mandatory.
+
+.EXAMPLE
+PS> $vnet = Get-AzVirtualNetwork
+PS> $vnet | Foreach-Object { Export-vnet2IPPlan -vnet $_ }
+
+This example retrieves specified Local Gateway object, retrieves its details, and formats the data for inclusion in an in an IP Plan.
+#>
+function Export-LGW2IPPlan {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$LGW
+    )
+
+    try {
+        #$data = ""
+        #$id = $MgmtGroupEntityObject.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        #$subid = $context.Subscription.Id
+        $subname = (Get-AzContext).Subscription.Name
+        
+        $lgwobject = $LGW
+        $lgwsubnetsarray = $lgwobject.addressSpaceText | ConvertFrom-Json
+        $lgwsubnetsarray.AddressPrefixes | Sort-Object | ForEach-Object {
+            $obj = [pscustomobject]@{
+                AddressSpace     = ''
+                Type             = ''
+                Resource         = ''
+                ResourceGroup    = ''
+                SubscriptionName = ''
+                SubscriptionId   = ''
+                #vnetid          = ''
+            }
+            $prefix = $_
+            $obj.SubscriptionName = $subname
+            $obj.SubscriptionId = $subid
+            $obj.Type = "VPN"
+            $obj.ResourceGroup = $lgwobject.ResourceGroupName
+            $obj.Resource = $lgwobject.Name
+            $obj.AddressSpace = $prefix
+            #$obj.vnetid = $vnet.id
+
+            $script:IPPlan += $obj
+        }
+    }
+    catch {
+        Write-Error "Can't export Local Gateway 2 IP Plan at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+}
+
+<#
+.SYNOPSIS
 Exports details of IP Plan for inclusion in an infrastructure diagram.
 
 .DESCRIPTION
 The `Export-IPPlan` function processes a specified IPPlan
 
-.PARAMETER routetable
+.PARAMETER IPPlan
 Specifies the IPPlan object to be processed.
 
 .EXAMPLE
@@ -4776,14 +4844,14 @@ function Export-IPPlan {
     param ([PSCustomObject[]]$IPPlan)
 
     try {
-        $AddressSpaces = $IPPlan | Where-Object { $_.Subnet -eq "" }
-        $Subnets = $IPPlan | Where-Object { $_.AddressSpace -eq "" }
+        $AddressSpaces = $IPPlan | Where-Object { $_.Type -eq "VNet" -or $_.Type -eq "VPN"}
+        $Subnets = $IPPlan | Where-Object { $_.Type -eq "Subnet" }
 
         # Object reference
         # $obj = [pscustomobject]@{
         #     AddressSpace     = ''
-        #     Subnet           = ''
-        #     VNet             = ''
+        #     Type             = ''
+        #     Resource         = ''
         #     ResourceGroup    = ''
         #     SubscriptionName = ''
         #     SubscriptionId   = ''
@@ -4802,7 +4870,8 @@ function Export-IPPlan {
             IPPlanAddressSpaces [label = <
                 <TABLE border=`"0`" style=`"rounded`">
                 <TR><TD border=`"0`" align=`"left`"><B>Address Spaces in Azure</B><BR/><BR/></TD></TR>
-                <TR><TD align=`"left`"><B>Address Space</B></TD><TD align=`"left`"><B>VNET</B></TD><TD align=`"left`"><B>Resource Group</B></TD><TD align=`"left`"><B>Subscription Name</B></TD></TR>
+                <TR><TD border=`"0`" align=`"left`"><B>VNets + Local Network Gateways</B><BR/><BR/></TD></TR>
+                <TR><TD align=`"left`"><B>Address Space</B></TD><TD align=`"left`"><B>Type</B></TD><TD align=`"left`"><B>Resource</B></TD><TD align=`"left`"><B>Resource Group</B></TD><TD align=`"left`"><B>Subscription Name</B></TD></TR>
                 <HR/>"
         
         # Individual Routes        
@@ -4812,10 +4881,11 @@ function Export-IPPlan {
         $AddressSpaces = $AddressSpaces | Sort-Object { [regex]::Replace($_.AddressSpace, '\d+', { $args[0].Value.PadLeft(100) }) }
         ForEach ($addressSpace in $AddressSpaces ) {
             $addressSpaceCIDR = SanitizeString $addressSpace.addressSpace
-            $vnet = SanitizeString $addressSpace.vnet
+            $type = $addressSpace.type
+            $resource = SanitizeString $addressSpace.resource
             $rg = SanitizeString $addressSpace.ResourceGroup
             $subname = SanitizeString $addressSpace.SubscriptionName
-            $data = $data + "<TR><TD align=`"left`">$addressSpaceCIDR</TD><TD align=`"left`">$vnet</TD><TD align=`"left`">$rg</TD><TD align=`"left`">$subname</TD></TR>"
+            $data = $data + "<TR><TD align=`"left`">$addressSpaceCIDR</TD><TD align=`"left`">$type</TD><TD align=`"left`">$resource</TD><TD align=`"left`">$rg</TD><TD align=`"left`">$subname</TD></TR>"
         }
 
         # End table
@@ -4840,20 +4910,21 @@ function Export-IPPlan {
             IPPlanSubnets [label = <
                 <TABLE border=`"1`" style=`"rounded`">
                 <TR><TD border=`"0`" align=`"left`"><B>Subnets in Azure</B><BR/><BR/></TD></TR>
-                <TR><TD align=`"left`"><B>Subnet</B></TD><TD align=`"left`"><B>VNET</B></TD><TD align=`"left`"><B>Resource Group</B></TD><TD align=`"left`"><B>Subscription Name</B></TD></TR>
+                <TR><TD align=`"left`"><B>Subnet</B></TD><TD align=`"left`"><B>Type</B></TD><TD align=`"left`"><B>Resource</B></TD><TD align=`"left`"><B>Resource Group</B></TD><TD align=`"left`"><B>Subscription Name</B></TD></TR>
                 <HR/>"
         
         # Individual Routes        
         $data = ""
 
         #Sort routes for easier reading
-        $subnets = $subnets | Sort-Object { [regex]::Replace($_.Subnet, '\d+', { $args[0].Value.PadLeft(100) }) }
+        $subnets = $subnets | Sort-Object { [regex]::Replace($_.AddressSpace, '\d+', { $args[0].Value.PadLeft(100) }) }
         ForEach ($subnet in $subnets ) {
-            $subnetCIDR = SanitizeString $subnet.subnet
-            $vnet = SanitizeString $subnet.vnet
+            $addressSpace = SanitizeString $subnet.addressSpace
+            $type = $subnet.type
+            $resource = SanitizeString $subnet.resource
             $rg = SanitizeString $subnet.ResourceGroup
             $subname = SanitizeString $subnet.SubscriptionName
-            $data = $data + "<TR><TD align=`"left`">$subnetCIDR</TD><TD align=`"left`">$vnet</TD><TD align=`"left`">$rg</TD><TD align=`"left`">$subname</TD></TR>"
+            $data = $data + "<TR><TD align=`"left`">$addressSpace</TD><TD align=`"left`">$type</TD><TD align=`"left`">$resource</TD><TD align=`"left`">$rg</TD><TD align=`"left`">$subname</TD></TR>"
         }
 
         # End table
@@ -5161,7 +5232,7 @@ function Get-DOTExecutable {
   
   .PARAMETER LogoPath
   Absolute/full path for the your logo/image of choice. Size matters (pixels), don't use a logo that is too big! 
-  Logo will be at rank 1 - ie., top in a standard horizontal diagram and left in a vertical diagram. A large image will make the diagram move in the output, creating unecessary whitespace.
+  Logo will be at rank 9 - ie., bottom in a standard horizontal diagram and right in a vertical diagram.
   Supports most popular image formats, but only .PNG and .JPG/.JPEG have been tested. 
 
   .PARAMETER ManagementGroups
@@ -5536,15 +5607,23 @@ function Get-AzNetworkDiagram {
                     $context = Set-AzContext -Subscription $_ -Force -ErrorAction Stop
                     $TenantId = $context.Tenant.Id
                 }
-                #$subid = $context.Subscription.Id
-                #$subname = $context.Subscription.Name
+                $subid = $context.Subscription.Id
+                $subname = $context.Subscription.Name
+                Write-Output "Collecting IP Plan info from subscription ($($Subscriptions.indexOf($_)+1)/$($Subscriptions.count)): $subname ($subid)"
 
-                # Populate $script:IPPlan
+                # Populate $script:IPPlan with VNets
                 Get-AzVirtualNetwork | ForEach-Object {
                     Export-vnet2IPPlan $_
                 }
-            }
 
+                # Populate $script:IPPlan with Local Network Gateway IP scopes
+                $lgwStandardObjects = Get-AzResource | Where-Object { $_.ResourceType -eq "Microsoft.Network/localNetworkGateways" }
+                $lgwStandardObjects | ForEach-Object {
+                    $standardObject = $_
+                    $lgwObject = Get-AzLocalNetworkGateway -ResourceGroupName $standardObject.ResourceGroupName -Name $standardObject.Name 
+                    Export-LGW2IPPlan -LGW $lgwObject
+                }
+            }
             # Output to console
             #if ( $IPPlanAsGrid ) {
             #    $script:IPPlan | Out-GridView
