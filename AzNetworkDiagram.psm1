@@ -5069,9 +5069,7 @@ function Export-AzureDevOps
             @{Name="AccountUri (legacy)";Expression={$_.accountUri}},
             @{Name="AccountId";Expression={$_.accountId}}
 
-        if (-not $orgs) {
-            Write-Host "No organizations found for this identity (or it lacks membership)."
-        } else {
+        if ($orgs) {
             $Script:Legend += ,@("Azure DevOps Organization","ado.png")
             $orgs | ForEach-Object {
                 $org = $_
@@ -5086,7 +5084,7 @@ function Export-AzureDevOps
         "
 
                 $link = ""
-                if ( $EnableLinks) { $link = "URL=`"$($org.OrganizationUrl)`";"}
+                if ( $EnableLinks -AND -not $script:DoSanitize) { $link = "URL=`"$($org.OrganizationUrl)`";"}
                 
                 $organization = $org.OrganizationName
                 $url = "https://dev.azure.com/$organization/_apis/projects?api-version=7.1&stateFilter=WellFormed&`$top=200"
@@ -5096,14 +5094,14 @@ function Export-AzureDevOps
                 # ADO Org header/table
                 $data += "  ado_$orgDOTName [label = <
                         <TABLE border=`"0`" style=`"rounded`">
-                        <TR><TD border=`"0`" align=`"left`"><B>Organization Name: $($org.OrganizationName)</B></TD></TR>
+                        <TR><TD border=`"0`" align=`"left`"><B>Organization Name: $(SanitizeString $org.OrganizationName)</B></TD></TR>
                         <TR><TD border=`"0`" align=`"left`"><BR/><B>Projects ($($ADOProjects.count)):</B></TD></TR>
                         <HR/>
                 "
                 $ADOProjects | ForEach-Object {
                     $project = $_
                     $projectName = $project.Name
-                    $data += "      <TR><TD border=`"0`" align=`"left`">- $projectName</TD></TR>
+                    $data += "      <TR><TD border=`"0`" align=`"left`">- $(SanitizeString $projectName)</TD></TR>
                     "
                 }
 
