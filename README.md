@@ -180,10 +180,15 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 ## v2.0 release - under construction
 - [x] **_BREAKING CHANGE - see v1.5 for additional info_**
 - New features
+  - [x] The breaking change from v1.5 fully implemented
   - [x] IP Plan overview, based on VNets in scope
     - [x] Azure resources
     - [x] VPN
-  - [x] The breaking change from v1.5 fully implemented
+    - [] P2S VPN
+  - [x] DevOps Organizations added to diagram
+  - [] Entra Licenses in some form, maybe just relevant Entra ID/ARM licenses
+- [] Fixes
+  - [] Proper sorting of IP addresses/routes
 ## v1.5
 - **_SEMI BREAKING CHANGE_**, for easier usage
   - Paramaters with $bool ($true/$false) no longer need the $true/$false parameter - they are now "switches" which enables flags/features without prepending a value. 

@@ -459,6 +459,13 @@ function Export-dotFooterRanking {
         rank = same;
         rank8;
     }
+
+    subgraph rank9 {
+        rank = same;
+        rank9;
+        $($script:rankADO -join '; ')
+    }
+    
 "@
 }
 
@@ -4871,8 +4878,8 @@ function Export-IPPlan {
             
             IPPlanAddressSpaces [label = <
                 <TABLE border=`"0`" style=`"rounded`">
-                <TR><TD border=`"0`" align=`"left`"><B>Address Spaces in Azure</B><BR/><BR/></TD></TR>
-                <TR><TD border=`"0`" align=`"left`"><B>VNets + Local Network Gateways</B><BR/><BR/></TD></TR>
+                <TR><TD border=`"0`" align=`"left`" colspan=`"2`"><B>Address Spaces in Azure</B><BR/><BR/></TD></TR>
+                <TR><TD border=`"0`" align=`"left`" colspan=`"2`"><B>VNets + Local Network Gateways</B><BR/><BR/></TD></TR>
                 <TR><TD align=`"left`"><B>Address Space</B></TD><TD align=`"left`"><B>Type</B></TD><TD align=`"left`"><B>Resource</B></TD><TD align=`"left`"><B>Resource Group</B></TD><TD align=`"left`"><B>Subscription Name</B></TD></TR>
                 <HR/>"
         
@@ -4911,7 +4918,7 @@ function Export-IPPlan {
             
             IPPlanSubnets [label = <
                 <TABLE border=`"1`" style=`"rounded`">
-                <TR><TD border=`"0`" align=`"left`"><B>Subnets in Azure</B><BR/><BR/></TD></TR>
+                <TR><TD border=`"0`" align=`"left`" colspan=`"2`"><B>Subnets in Azure</B><BR/><BR/></TD></TR>
                 <TR><TD align=`"left`"><B>Subnet</B></TD><TD align=`"left`"><B>Type</B></TD><TD align=`"left`"><B>Delegation</B></TD><TD align=`"left`"><B>Resource</B></TD><TD align=`"left`"><B>Resource Group</B></TD><TD align=`"left`"><B>Subscription Name</B></TD></TR>
                 <HR/>"
         
@@ -5012,6 +5019,140 @@ function Export-MgmtGroupEntityObject
 
 <#
 .SYNOPSIS
+Exports details of a Azure DevOps for inclusion in an infrastructure diagram.
+
+.DESCRIPTION
+The `Export-AzureDevOps` function processes all DevOps organizations, retrieves its details, and formats the data for inclusion in an infrastructure diagram.
+
+.EXAMPLE
+PS> $MgmtGroupEntityObject = Get-AzManagementGroupEntity
+PS> $MgmtGroupEntityObject | Foreach-Object { Export-AzureDevOps -MgmtGroupEntityObject $MgmtGroupEntityObject }
+
+This example retrieves specified Azure Management Group object, retrieves its details, and formats the data for inclusion in an infrastructure diagram.
+#>
+function Export-AzureDevOps
+{
+    [CmdletBinding()]
+    param(
+        # [Parameter(Mandatory = $true)]
+        # [PSCustomObject]$PARAMNAME
+    )
+
+    try {
+        $data = ""
+        
+        ### Collect organization info
+        # Get Entra access token for Azure DevOps (resource app ID)
+        # Note: Get-AzAccessToken returns a SecureString in newer Az versions; convert to plain text for the header
+        $secureToken = (Get-AzAccessToken -ResourceUrl "499b84ac-1321-427f-aa17-267ca6975798").Token
+        $tokenPtr   = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureToken)
+        $accessToken = [Runtime.InteropServices.Marshal]::PtrToStringAuto($tokenPtr)
+        
+        $headers = @{
+        Authorization = "Bearer $accessToken"
+        }
+
+        # Resolve profile (to get your member/profile ID)
+        $profileUrl = "https://app.vssps.visualstudio.com/_apis/profile/profiles/me?api-version=7.1-preview.3"
+        $profileADO = Invoke-RestMethod -Method Get -Uri $profileUrl -Headers $headers
+        $memberId = $profileADO.id
+        if (-not $memberId) { throw "Could not resolve member/profile ID." }
+
+        # List organizations (accounts) for this memberId
+        $accountsUrl = "https://app.vssps.visualstudio.com/_apis/accounts?memberId=$memberId&api-version=7.1"
+        $accountsResponse = Invoke-RestMethod -Method Get -Uri $accountsUrl -Headers $headers
+        
+        # Shape the output
+        $orgs = $accountsResponse.value | Select-Object `
+            @{Name="OrganizationName";Expression={$_.accountName}},
+            @{Name="OrganizationUrl";Expression={ "https://dev.azure.com/$($_.accountName)" }},
+            @{Name="AccountUri (legacy)";Expression={$_.accountUri}},
+            @{Name="AccountId";Expression={$_.accountId}}
+
+        if (-not $orgs) {
+            Write-Host "No organizations found for this identity (or it lacks membership)."
+        } else {
+            $Script:Legend += ,@("Azure DevOps Organization","ado.png")
+            $orgs | ForEach-Object {
+                $org = $_
+                $orgDOTName = $org.OrganizationName.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $script:rankADO += "ado_$orgDOTName"
+                $header = "        subgraph cluster_ado {
+            style = solid;
+            colorscheme = blues9;
+            bgcolor = 3;
+            margin = 0;
+            node [colorscheme = blues9; color = 3; margin = 0;];
+        "
+
+                $link = ""
+                if ( $EnableLinks) { $link = "URL=`"$($org.OrganizationUrl)`";"}
+                
+                $organization = $org.OrganizationName
+                $url = "https://dev.azure.com/$organization/_apis/projects?api-version=7.1&stateFilter=WellFormed&`$top=200"
+                $projects = Invoke-RestMethod -Method Get -Uri $url -Headers $headers
+                $ADOProjects = $projects.value | Select-Object @{N='Organization';E={$organization}}, name, id, state
+                
+                # ADO Org header/table
+                $data += "  ado_$orgDOTName [label = <
+                        <TABLE border=`"0`" style=`"rounded`">
+                        <TR><TD border=`"0`" align=`"left`"><B>Organization Name: $($org.OrganizationName)</B></TD></TR>
+                        <TR><TD border=`"0`" align=`"left`"><BR/><B>Projects ($($ADOProjects.count)):</B></TD></TR>
+                        <HR/>
+                "
+                $ADOProjects | ForEach-Object {
+                    $project = $_
+                    $projectName = $project.Name
+                    $data += "      <TR><TD border=`"0`" align=`"left`">- $projectName</TD></TR>
+                    "
+                }
+
+                # End table
+                $ImagePath = Join-Path $OutputPath "icons" "ado.png"               
+                $footer = "
+                        </TABLE>>;
+                        image = `"$ImagePath`";imagepos = `"tr`"; labelloc = `"b`";height = 2.5;$link];
+                }"
+            $alldata = $header + $data + $footer
+            Export-AddToFile -Data $alldata
+            }
+
+        }
+    }
+    catch {
+        Write-Error "Can't export Azrue DevOps at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+  
+}
+
+<#
+.SYNOPSIS
+Confirms that all prerequisites are met for generating the Azure infrastructure diagram.
+
+.DESCRIPTION
+The `Confirm-Prerequisites` function ensures that all required tools, modules, and configurations are in place before generating the Azure infrastructure diagram. It verifies the presence of Graphviz (`dot.exe`), required PowerShell modules (`Az.Network` and `Az.Accounts`), Azure authentication, and necessary icons for the diagram. If any prerequisites are missing, it provides guidance for resolving the issues.
+
+#>
+function Update-OrderIPs {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$IPArray
+    )
+
+    try {
+        #Sort IP/routes for easier reading
+        $IPArray = $IPArray | Sort-Object { [regex]::Replace($_.AddressSpace, '\d+', { $args[0].Value.PadLeft(100) }) }
+        return $IPArray
+    }
+    catch {
+        Write-Error "Can't export Management Groups Entity Object at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+  
+}
+
+<#
+.SYNOPSIS
 Confirms that all prerequisites are met for generating the Azure infrastructure diagram.
 
 .DESCRIPTION
@@ -5047,6 +5188,7 @@ function Confirm-Prerequisites {
     $icons = @(
         "LICENSE",
         "acr.png",
+        "ado.png",
         "afw.png",
         "agw.png",
         "aks-node-pool.png",
@@ -5281,6 +5423,7 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][switch]$DisableRanking,    
         [Parameter(Mandatory = $false)][switch]$EnableACA,
         [Parameter(Mandatory = $false)][switch]$EnableACI,
+        [Parameter(Mandatory = $false)][switch]$EnableADO,
         [Parameter(Mandatory = $false)][switch]$EnableACR,
         [Parameter(Mandatory = $false)][switch]$EnableAKS,
         [Parameter(Mandatory = $false)][switch]$EnableAPIM,
@@ -5323,6 +5466,7 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][switch]$SkipACA,
         [Parameter(Mandatory = $false)][switch]$SkipACI,
         [Parameter(Mandatory = $false)][switch]$SkipACR,
+        [Parameter(Mandatory = $false)][switch]$SkipADO,
         [Parameter(Mandatory = $false)][switch]$SkipAKS,
         [Parameter(Mandatory = $false)][switch]$SkipAPIM,
         [Parameter(Mandatory = $false)][switch]$SkipASP,
@@ -5483,6 +5627,7 @@ function Get-AzNetworkDiagram {
     #$script:rankaca = @()
     $script:rankaci = @()
     $script:rankacr = @()
+    $script:rankADO = @()
     $script:rankagw = @()
     $script:rankaks = @()
     $script:rankapim = @()
@@ -6157,6 +6302,14 @@ function Get-AzNetworkDiagram {
                 Export-AddToFile "    ##### END"
                 Export-AddToFile "    ##########################################################################################################`n"
             }
+            
+            # Azure DevOps (ADO)
+            if ( $EnableADO -OR (-not $SkipADO ) ) {
+                Write-Output "`nCollecting Azure DevOps Organizations..."
+                Export-AddToFile "    ##### Azure DevOps Organizations #####"
+                Export-AzureDevOps
+            }
+            
             
             # vNet Peerings
             Write-Output "`nConnecting in-scope peered vNets..."
