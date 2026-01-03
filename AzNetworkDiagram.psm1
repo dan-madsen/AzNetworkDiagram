@@ -6304,7 +6304,7 @@ function Get-AzNetworkDiagram {
             }
             
             # Azure DevOps (ADO)
-            if ( $EnableADO -OR (-not $SkipADO ) ) {
+            if ( $EnableADO -OR (-not $SkipNonCoreNetwork -AND -not $SkipADO ) ) {
                 Write-Output "`nCollecting Azure DevOps Organizations..."
                 Export-AddToFile "    ##### Azure DevOps Organizations #####"
                 Export-AzureDevOps
