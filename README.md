@@ -177,7 +177,7 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 ---
 
 # Changelog (since v1.0.1)
-## v2.0 release - under construction
+## v2.0.0 release - under construction
 - [x] **_BREAKING CHANGE - see v1.5 for additional info_**
 - New features
   - [x] The breaking change from v1.5 fully implemented
@@ -186,9 +186,10 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
     - [x] VPN
     - [] P2S VPN
   - [x] DevOps Organizations added to diagram
-  - [] Entra Licenses in some form, maybe just relevant Entra ID/ARM licenses
+  - [x] Entra Licenses in some form, maybe just relevant Entra ID/ARM licenses
+  - [] Azure Firewall Policy parant relationships
 - [] Fixes
-  - [] Proper sorting of IP addresses/routes
+  - [] Proper sorting of IP addresses/routes for different objects
 ## v1.5
 - **_SEMI BREAKING CHANGE_**, for easier usage
   - Paramaters with $bool ($true/$false) no longer need the $true/$false parameter - they are now "switches" which enables flags/features without prepending a value. 
