@@ -5782,13 +5782,15 @@ function Get-AzNetworkDiagram {
     $vermajor = $module.Version.Major
     $verminor = $module.Version.Minor
     $verbuild = $module.Version.Build
-    $ver = "${vermajor}.${verminor}.${verbuild}"
+    $prerelease = $module.PrivateData.PSData.Prerelease ? "-$($module.PrivateData.PSData.Prerelease)" : ""
+
+    $ver = "${vermajor}.${verminor}.${verbuild}${prerelease}"
 
     if ( $ver -eq "0.0.-1" ) { $ver = "(Non-PSGallery version)" } # Module loaded from file - not from PSGallery
     elseif ( $ver -eq ".." ) { $ver = "(Non-PSGallery version)" } # Module not imported - ran directly from .psm1 file ?
     else { 
         if ( $verbuild -eq "-1" ) { $verbuild = "0" }
-        $ver = "${vermajor}.${verminor}.${verbuild}"
+        $ver = "${vermajor}.${verminor}.${verbuild}${prerelease}"
     }
     
     Write-Output "##############################################################################################"
