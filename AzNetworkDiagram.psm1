@@ -6513,16 +6513,18 @@ function Get-AzNetworkDiagram {
                 Export-AddToFile "    ##########################################################################################################`n"
             }
 
+            Write-host "" #Empty line
+            
             # Licenses
             if ( $EnableLicense -OR (-not $SkipNonCoreNetwork -AND -not $SkipLicense ) ) {
-                Write-Output "`nCollecting Entra Licenses..."
+                Write-Output "Collecting Entra Licenses..."
                 Export-AddToFile "    ##### Licenses #####"
                 Export-Licenses
             }
 
             # Azure DevOps (ADO)
             if ( $EnableADO -OR (-not $SkipNonCoreNetwork -AND -not $SkipADO ) ) {
-                Write-Output "`nCollecting Azure DevOps Organizations..."
+                Write-Output "Collecting Azure DevOps Organizations..."
                 Export-AddToFile "    ##### Azure DevOps Organizations #####"
                 Export-AzureDevOps
             }
