@@ -464,6 +464,7 @@ function Export-dotFooterRanking {
         rank = same;
         rank9;
         $($script:rankADO -join '; ')
+        $($script:rankLicense -join '; ')
     }
     
 "@
@@ -2424,6 +2425,8 @@ function Export-AzureFirewall {
             $firewallPolicyName = $azfw.FirewallPolicy.id.split("/")[-1]
             $firewallPolicy = Get-AzFirewallPolicy -ResourceGroupName $ResourceGroupName -Name $firewallPolicyName -ErrorAction Stop
             $fwpolid = $firewallPolicy.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            #$parentPolicy = $firewallPolicy.BasePolicy.id
+            #$parentPolicyId =  $parentPolicy ? $parentPolicy.replace("-", "").replace("/", "").replace(".", "").ToLower() : ""
 
             $dnsservers = $firewallPolicy.DnsSettings.Servers
             if ( $null -eq $dnsserver) { $dnsservers = "None"}
@@ -5125,6 +5128,196 @@ function Export-AzureDevOps
 
 <#
 .SYNOPSIS
+Exports details of Entra licenses for inclusion in an infrastructure diagram.
+
+.DESCRIPTION
+The `Export-Licenses` function processes all Entra licenses, retrieves its details, and formats the data for inclusion in an infrastructure diagram.
+
+This example retrieves specified Azure Management Group object, retrieves its details, and formats the data for inclusion in an infrastructure diagram.
+#>
+function Export-Licenses
+{
+    [CmdletBinding()]
+    param(
+        # [Parameter(Mandatory = $true)]
+        # [PSCustomObject]$PARAMNAME
+    )
+
+    try {
+        $data = ""
+        
+       # Acquire Graph access token (SecureString) and convert to plain text
+        $secureToken = (Get-AzAccessToken -ResourceUrl "https://graph.microsoft.com/").Token
+        $tokenPtr    = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureToken)
+        $accessToken = [Runtime.InteropServices.Marshal]::PtrToStringAuto($tokenPtr)
+
+        $headers = @{
+        Authorization = "Bearer $accessToken"
+        Accept        = "application/json"
+        }
+
+        # ----- 1) TENANT LICENSE INVENTORY (subscribedSkus) -----
+        $skusUrl = "https://graph.microsoft.com/v1.0/subscribedSkus"
+        $skusResp = Invoke-RestMethod -Method Get -Uri $skusUrl -Headers $headers
+
+        # Static mapping: skuPartNumber -> Friendly Product Name
+        # (Curate and extend as needed for your tenant)
+        $skuMap = @{
+            # --- Microsoft 365 / Office 365 Enterprise plans ---
+            "STANDARDPACK"                 = "Office 365 E1"
+            "ENTERPRISEPACK"               = "Office 365 E3"
+            "ENTERPRISEPREMIUM"            = "Office 365 E5"
+
+            # --- Microsoft 365 Enterprise ---
+            "SPE_E3"                       = "Microsoft 365 E3"
+            "SPE_E5"                       = "Microsoft 365 E5"
+            "SPE_F1"                       = "Microsoft 365 F1"
+            "SPE_F3"                       = "Microsoft 365 F3"
+
+            # --- Microsoft 365 Business plans ---
+            "M365_BUSINESS_BASIC"          = "Microsoft 365 Business Basic"
+            "M365_BUSINESS_STANDARD"       = "Microsoft 365 Business Standard"
+            "SPB"                          = "Microsoft 365 Business Premium"
+            "O365_BUSINESS_ESSENTIALS"     = "Office 365 Business Basic"
+
+            # --- Entra ID (Azure AD) ---
+            "AAD_BASIC"                    = "Microsoft Entra ID Basic"
+            "AAD_PREMIUM"                  = "Microsoft Entra ID P1"
+            "AAD_PREMIUM_P2"               = "Microsoft Entra ID P2"
+
+            # --- Enterprise Mobility + Security ---
+            "EMS"                          = "Enterprise Mobility + Security E3"
+            "EMSPREMIUM"                   = "Enterprise Mobility + Security E5"
+
+            # --- Exchange / SharePoint / OneDrive / Apps ---
+            "EXCHANGESTANDARD"             = "Exchange Online (Plan 1)"
+            "EXCHANGEENTERPRISE"           = "Exchange Online (Plan 2)"
+            "SHAREPOINTSTANDARD"           = "SharePoint Online (Plan 1)"
+            "SHAREPOINTENTERPRISE"         = "SharePoint Online (Plan 2)"
+            "OFFICESUBSCRIPTION"           = "Microsoft 365 Apps for Enterprise"
+            "ONEDRIVEENTERPRISE"           = "OneDrive for Business (Plan 2)"
+
+            # --- Teams ---
+            "TEAMS1"                       = "Microsoft Teams (Standalone)"
+            "MICROSOFT_TEAMS_PREMIUM"      = "Microsoft Teams Premium"
+            "ADV_COMMS"                    = "Microsoft 365 Advanced Communications"
+
+            # --- Power BI ---
+            "POWER_BI_STANDARD"            = "Power BI (Free)"
+            "POWER_BI_PRO"                 = "Power BI Pro"
+            "POWER_BI_PREMIUM_PER_USER"    = "Power BI Premium Per User"
+
+            # --- Visio ---
+            "VISIOONLINEPLAN1"             = "Visio Plan 1"
+            "VISIOONLINEPLAN2"             = "Visio Plan 2"
+            "VISIOCLIENT"                  = "Visio Plan 2 (Desktop Client)"
+
+            # --- Project ---
+            "PROJECTESSENTIALS"            = "Project Online Essentials"
+            "PROJECTPROFESSIONAL"          = "Project Online Professional"
+            "PROJECTPREMIUM"               = "Project Online Premium"
+
+            # --- Security / Defender ---
+            "ATP_ENTERPRISE"               = "Microsoft Defender for Office 365 (Plan 1)"
+            "ATP_ENTERPRISE_PREMIUM"       = "Microsoft Defender for Office 365 (Plan 2)"
+            "MICROSOFT_DEFENDER_XDR"       = "Microsoft Defender XDR"
+
+            # --- Compliance / Purview ---
+            "EQUIV_COMPLIANCE"             = "Microsoft Purview Compliance Add-on"
+
+            # --- Education SKUs ---
+            "STANDARDWOFFPACK_IW_FACULTY"  = "Office 365 A1 for Faculty"
+            "STANDARDWOFFPACK_STUDENT"     = "Office 365 A1 for Students"
+            "ENTERPRISEPACK_STUDENT"       = "Office 365 A3 for Students"
+            "ENTERPRISEPACK_FACULTY"       = "Office 365 A3 for Faculty"
+            "ENTERPRISEPREMIUM_STUDENT"    = "Office 365 A5 for Students"
+            "ENTERPRISEPREMIUM_FACULTY"    = "Office 365 A5 for Faculty"
+
+            # --- Dynamics 365 ---
+            "DYN365_ENTERPRISE_SALES"      = "Dynamics 365 Sales Enterprise"
+            "DYN365_CDS"                   = "Dynamics 365 Customer Service"
+
+            # --- Copilot ---
+            "MICROSOFT_365_COPILOT"        = "Microsoft 365 Copilot"
+
+            # --- Windows Store / Business ---
+            "WINDOWS_STORE"                = "Microsoft Store for Business"
+
+            # --- Misc ---
+            "FLOW_FREE"                    = "Power Automate Free"
+            "POWERAPPS_VIRAL"              = "Power Apps Developer/Trial"
+            "EXCHANGE_S_FOUNDATION"        = "Exchange Foundation (Service Plan)"
+        }
+
+
+        $inventory = @()
+        foreach ($sku in $skusResp.value) {
+            $inventory += [PSCustomObject]@{
+                SkuPartNumber  = $sku.skuPartNumber
+                SkuId          = $sku.skuId
+                SkuFriendlyName = $skuMap[$sku.skuPartNumber]
+                TotalEnabled   = $sku.prepaidUnits.enabled
+                ConsumedUnits  = $sku.consumedUnits
+                #WarningUnits   = $sku.prepaidUnits.warning
+                #SuspendedUnits = $sku.prepaidUnits.suspended            
+            }
+        }
+
+        if ($inventory.count -gt 0) {
+            $Script:Legend += ,@("Entra Licenses","licenses.png")
+            $script:rankLicense += "licenses"
+            $header = "        subgraph cluster_licenses {
+            style = solid;
+            colorscheme = blues9;
+            bgcolor = 3;
+            margin = 0;
+            node [colorscheme = blues9; color = 3; margin = 0;];
+        "
+        }
+
+        $link = ""
+        if ( $EnableLinks -AND -not $script:DoSanitize) { $link = "URL=`"https://entra.microsoft.com`";" }
+        
+        # License header/table
+        $data += "  licenses [label = <
+                <TABLE border=`"0`" style=`"rounded`">
+                <TR><TD border=`"0`" align=`"left`"><B>Licenses:</B></TD></TR>
+                <HR/>
+                <TR><TD border=`"0`" align=`"left`"><BR/><B>License</B></TD><TD border=`"0`" align=`"right`"><B>Total</B></TD><TD border=`"0`" align=`"right`"><B>Available</B></TD><TD border=`"0`" align=`"right`"><B>Utilized</B></TD></TR>
+        "
+
+        $inventory = $inventory | Sort-Object -Property "SkuFriendlyName"
+        $inventory | ForEach-Object {
+            $license = $_
+            $amount = $license.TotalEnabled
+            $assigned = $license.ConsumedUnits
+            $available = $amount - $assigned
+            $licenseName = $license.SkuFriendlyName
+            #$licenseName = $license.SkuPartNumber
+            if ( $null -eq $licenseName -or $licenseName -eq "" ) { $licenseName = $license.SkuPartNumber }
+
+            $data += "      <TR><TD border=`"0`" align=`"left`">$licenseName</TD><TD border=`"0`" align=`"right`">$amount</TD><TD border=`"0`" align=`"right`">$available</TD><TD border=`"0`" align=`"right`">$assigned</TD></TR>
+            "
+        }
+
+        # End table
+        $ImagePath = Join-Path $OutputPath "icons" "licenses.png"               
+        $footer = "
+                </TABLE>>;
+                image = `"$ImagePath`";imagepos = `"tr`"; labelloc = `"b`";height = 2.5;$link];
+        }"
+        $alldata = $header + $data + $footer
+        Export-AddToFile -Data $alldata
+        
+    }
+    catch {
+        Write-Error "Can't export Azrue DevOps at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+  
+}
+
+<#
+.SYNOPSIS
 Confirms that all prerequisites are met for generating the Azure infrastructure diagram.
 
 .DESCRIPTION
@@ -5228,6 +5421,7 @@ function Confirm-Prerequisites {
         "ipgroup.png",
         "keyvault.png",
         "lb.png",
+        "licenses.png",
         #"lgw.png",
         "managed-identity.png",
         "mgmtgroup.png"
@@ -5435,8 +5629,9 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][switch]$EnableESAN,
         [Parameter(Mandatory = $false)][switch]$EnableGAL,
         [Parameter(Mandatory = $false)][switch]$EnableKV,
-        [Parameter(Mandatory = $false)][switch]$EnableLinks,
         [Parameter(Mandatory = $false)][switch]$EnableLB,
+        [Parameter(Mandatory = $false)][switch]$EnableLicense,
+        [Parameter(Mandatory = $false)][switch]$EnableLinks,
         [Parameter(Mandatory = $false)][switch]$EnableMI,
         [Parameter(Mandatory = $false)][switch]$EnableMySQL,
         [Parameter(Mandatory = $false)][switch]$EnablePE,
@@ -5478,6 +5673,7 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][switch]$SkipGAL,
         [Parameter(Mandatory = $false)][switch]$SkipKV,
         [Parameter(Mandatory = $false)][switch]$SkipLB,
+        [Parameter(Mandatory = $false)][switch]$SkipLicense,
         [Parameter(Mandatory = $false)][switch]$SkipMI,
         [Parameter(Mandatory = $false)][switch]$SkipMySQL,
         [Parameter(Mandatory = $false)][switch]$SkipNonCoreNetwork,
@@ -5514,8 +5710,9 @@ function Get-AzNetworkDiagram {
         write-host "-EnableESAN : $EnableESAN"
         write-host "-EnableGAL : $EnableGAL"
         write-host "-EnableKV : $EnableKV"
-        write-host "-EnableLinks : $EnableLinks"
         write-host "-EnableLB : $EnableLB"
+        write-host "-EnableLB : $EnableLicense"
+        write-host "-EnableLinks : $EnableLinks"
         write-host "-EnableMI : $EnableMI"
         write-host "-EnableMySQL : $EnableMySQL"
         write-host "-EnablePE : $EnablePE"
@@ -5556,6 +5753,7 @@ function Get-AzNetworkDiagram {
         write-host "-SkipGAL : $SkipGAL"
         write-host "-SkipKV : $SkipKV"
         write-host "-SkipLB : $SkipLB"
+        write-host "-SkipLB : $SkipLicense"
         write-host "-SkipMI : $SkipMI"
         write-host "-SkipMySQL : $SkipMySQL"
         write-host "-SkipNonCoreNetwork : $SkipNonCoreNetwork"
@@ -5573,6 +5771,7 @@ function Get-AzNetworkDiagram {
         write-host "-Subscriptions : $Subscriptions"
         write-host "-TenantId : $TenantId"
         write-host "-VerticalView : $VerticalView"
+        write-host ""
     }
 
     # Remove trailing "\" from path
@@ -5652,6 +5851,7 @@ function Get-AzNetworkDiagram {
     $script:rankipg = @()
     $script:rankkv = @()
     $script:ranklb = @()
+    $script:rankLicense = @()
     $script:rankmi = @()
     $script:rankmysql = @()
     $script:ranknic = @()
@@ -5769,6 +5969,16 @@ function Get-AzNetworkDiagram {
                     $lgwObject = Get-AzLocalNetworkGateway -ResourceGroupName $standardObject.ResourceGroupName -Name $standardObject.Name 
                     Export-LGW2IPPlan -LGW $lgwObject
                 }
+
+                #P2S VPNs
+                <#
+                $VNGs = Get-AzResource | Where-Object { $_.ResourceType -eq "Microsoft.Network/virtualNetworkGateways" }
+                $VNGs | ForEach-Object {
+                    $standardObject = $_
+                    $gwObject = Get-AzVirtualNetworkGateway -ResourceGroupName $standardObject.ResourceGroupName -Name $standardObject.Name 
+                    Export-GW2IPPlan -GW $gwObject
+                }
+                #>
             }
             # Output to console
             #if ( $IPPlanAsGrid ) {
@@ -6300,7 +6510,14 @@ function Get-AzNetworkDiagram {
                 Export-AddToFile "    ##### END"
                 Export-AddToFile "    ##########################################################################################################`n"
             }
-            
+
+            # Licenses
+            if ( $EnableLicense -OR (-not $SkipNonCoreNetwork -AND -not $SkipLicense ) ) {
+                Write-Output "`nCollecting Entra Licenses..."
+                Export-AddToFile "    ##### Licenses #####"
+                Export-Licenses
+            }
+
             # Azure DevOps (ADO)
             if ( $EnableADO -OR (-not $SkipNonCoreNetwork -AND -not $SkipADO ) ) {
                 Write-Output "`nCollecting Azure DevOps Organizations..."
