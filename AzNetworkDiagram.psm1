@@ -5052,72 +5052,81 @@ function Export-AzureDevOps
         $accessToken = [Runtime.InteropServices.Marshal]::PtrToStringAuto($tokenPtr)
         
         $headers = @{
-        Authorization = "Bearer $accessToken"
+            Authorization = "Bearer $accessToken"
+            Accept                   = "application/json"
+            "X-TFS-FedAuthRedirect"  = "Suppress"
         }
 
         # Resolve profile (to get your member/profile ID)
         $profileUrl = "https://app.vssps.visualstudio.com/_apis/profile/profiles/me?api-version=7.1-preview.3"
-        $profileADO = Invoke-RestMethod -Method Get -Uri $profileUrl -Headers $headers
+        $profileADO = Invoke-RestMethod -Method Get -Uri $profileUrl -Headers $headers -SkipHttpErrorCheck
         $memberId = $profileADO.id
-        if (-not $memberId) { throw "Could not resolve member/profile ID." }
-
-        # List organizations (accounts) for this memberId
-        $accountsUrl = "https://app.vssps.visualstudio.com/_apis/accounts?memberId=$memberId&api-version=7.1"
-        $accountsResponse = Invoke-RestMethod -Method Get -Uri $accountsUrl -Headers $headers
         
-        # Shape the output
-        $orgs = $accountsResponse.value | Select-Object `
-            @{Name="OrganizationName";Expression={$_.accountName}},
-            @{Name="OrganizationUrl";Expression={ "https://dev.azure.com/$($_.accountName)" }},
-            @{Name="AccountUri (legacy)";Expression={$_.accountUri}},
-            @{Name="AccountId";Expression={$_.accountId}}
+        if ($memberId) { # Continue ADO export
+            # List organizations (accounts) for this memberId
+            $accountsUrl = "https://app.vssps.visualstudio.com/_apis/accounts?memberId=$memberId&api-version=7.1"
+            $accountsResponse = Invoke-RestMethod -Method Get -Uri $accountsUrl -Headers $headers -SkipHttpErrorCheck
+            
+            # Shape the output
+            $orgs = $accountsResponse.value | Select-Object `
+                @{Name="OrganizationName";Expression={$_.accountName}},
+                @{Name="OrganizationUrl";Expression={ "https://dev.azure.com/$($_.accountName)" }},
+                @{Name="AccountUri (legacy)";Expression={$_.accountUri}},
+                @{Name="AccountId";Expression={$_.accountId}}
 
-        if ($orgs) {
-            $Script:Legend += ,@("Azure DevOps Organization","ado.png")
-            $orgs | ForEach-Object {
-                $org = $_
-                $orgDOTName = $org.OrganizationName.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $script:rankADO += "ado_$orgDOTName"
-                $header = "        subgraph cluster_ado {
-            style = solid;
-            colorscheme = blues9;
-            bgcolor = 3;
-            margin = 0;
-            node [colorscheme = blues9; color = 3; margin = 0;];
-        "
+            if ($orgs) {
+                $Script:Legend += ,@("Azure DevOps Organization","ado.png")
+                $orgs | ForEach-Object {
+                    $org = $_
+                    $orgDOTName = $org.OrganizationName.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $script:rankADO += "ado_$orgDOTName"
+                    $header = "        subgraph cluster_ado {
+                style = solid;
+                colorscheme = blues9;
+                bgcolor = 3;
+                margin = 0;
+                node [colorscheme = blues9; color = 3; margin = 0;];
+            "
 
-                $link = ""
-                if ( $EnableLinks -AND -not $script:DoSanitize) { $link = "URL=`"$($org.OrganizationUrl)`";"}
-                
-                $organization = $org.OrganizationName
-                $url = "https://dev.azure.com/$organization/_apis/projects?api-version=7.1&stateFilter=WellFormed&`$top=200"
-                $projects = Invoke-RestMethod -Method Get -Uri $url -Headers $headers
-                $ADOProjects = $projects.value | Select-Object @{N='Organization';E={$organization}}, name, id, state
-                
-                # ADO Org header/table
-                $data += "  ado_$orgDOTName [label = <
+                    $link = ""
+                    if ( $EnableLinks -AND -not $script:DoSanitize) { $link = "URL=`"$($org.OrganizationUrl)`";"}
+                    
+                    $organization = $org.OrganizationName
+                    $url = "https://dev.azure.com/$organization/_apis/projects?api-version=7.1&stateFilter=WellFormed&`$top=200"
+                    $projects = Invoke-RestMethod -Method Get -Uri $url -Headers $headers
+                    $ADOProjects = $projects.value | Select-Object @{N='Organization';E={$organization}}, name, id, state
+                    
+                    # ADO Org header/table
+                    $data += "  ado_$orgDOTName [label = <
                         <TABLE border=`"0`" style=`"rounded`">
                         <TR><TD border=`"0`" align=`"left`"><B>Organization Name: $(SanitizeString $org.OrganizationName)</B></TD></TR>
                         <TR><TD border=`"0`" align=`"left`"><BR/><B>Projects ($($ADOProjects.count)):</B></TD></TR>
                         <HR/>
-                "
-                $ADOProjects | ForEach-Object {
-                    $project = $_
-                    $projectName = $project.Name
-                    $data += "      <TR><TD border=`"0`" align=`"left`">- $(SanitizeString $projectName)</TD></TR>
                     "
+
+                    if ( $ADOProjects ) {
+                        $ADOProjects | ForEach-Object {
+                            $project = $_
+                            $projectName = $project.Name
+                            $data += "      <TR><TD border=`"0`" align=`"left`">- $(SanitizeString $projectName)</TD></TR>
+                            "
+                        }
+                    } else {
+                        $data += "      <TR><TD border=`"0`" align=`"left`">- No projects found !</TD></TR>
+                        "
+                    }
+
+                    # End table
+                    $ImagePath = Join-Path $OutputPath "icons" "ado.png"               
+                    $footer = "
+                            </TABLE>>;
+                            image = `"$ImagePath`";imagepos = `"tr`"; labelloc = `"b`";height = 2.5;$link];
+                    }"
                 }
-
-                # End table
-                $ImagePath = Join-Path $OutputPath "icons" "ado.png"               
-                $footer = "
-                        </TABLE>>;
-                        image = `"$ImagePath`";imagepos = `"tr`"; labelloc = `"b`";height = 2.5;$link];
-                }"
-            $alldata = $header + $data + $footer
-            Export-AddToFile -Data $alldata
-            }
-
+                
+                $alldata = $header + $data + $footer
+                Export-AddToFile -Data $alldata
+            } 
         }
     }
     catch {
@@ -5152,13 +5161,14 @@ function Export-Licenses
         $accessToken = [Runtime.InteropServices.Marshal]::PtrToStringAuto($tokenPtr)
 
         $headers = @{
-        Authorization = "Bearer $accessToken"
-        Accept        = "application/json"
+            Authorization = "Bearer $accessToken"
+            Accept        = "application/json"
+            #"X-TFS-FedAuthRedirect"  = "Suppress"
         }
 
         # ----- 1) TENANT LICENSE INVENTORY (subscribedSkus) -----
         $skusUrl = "https://graph.microsoft.com/v1.0/subscribedSkus"
-        $skusResp = Invoke-RestMethod -Method Get -Uri $skusUrl -Headers $headers
+        $skusResp = Invoke-RestMethod -Method Get -Uri $skusUrl -Headers $headers -SkipHttpErrorCheck
 
         # Static mapping: skuPartNumber -> Friendly Product Name
         # (Curate and extend as needed for your tenant)
@@ -5273,41 +5283,41 @@ function Export-Licenses
             margin = 0;
             node [colorscheme = blues9; color = 3; margin = 0;];
         "
-        }
-
-        $link = ""
-        if ( $EnableLinks -AND -not $script:DoSanitize) { $link = "URL=`"https://entra.microsoft.com`";" }
         
-        # License header/table
-        $data += "  licenses [label = <
-                <TABLE border=`"0`" style=`"rounded`">
-                <TR><TD border=`"0`" align=`"left`"><B>Licenses:</B></TD></TR>
-                <HR/>
-                <TR><TD border=`"0`" align=`"left`"><BR/><B>License</B></TD><TD border=`"0`" align=`"right`"><B>Total</B></TD><TD border=`"0`" align=`"right`"><B>Available</B></TD><TD border=`"0`" align=`"right`"><B>Utilized</B></TD></TR>
-        "
-
-        $inventory = $inventory | Sort-Object -Property "SkuFriendlyName"
-        $inventory | ForEach-Object {
-            $license = $_
-            $amount = $license.TotalEnabled
-            $assigned = $license.ConsumedUnits
-            $available = $amount - $assigned
-            $licenseName = $license.SkuFriendlyName
-            #$licenseName = $license.SkuPartNumber
-            if ( $null -eq $licenseName -or $licenseName -eq "" ) { $licenseName = $license.SkuPartNumber }
-
-            $data += "      <TR><TD border=`"0`" align=`"left`">$licenseName</TD><TD border=`"0`" align=`"right`">$amount</TD><TD border=`"0`" align=`"right`">$available</TD><TD border=`"0`" align=`"right`">$assigned</TD></TR>
+            $link = ""
+            if ( $EnableLinks -AND -not $script:DoSanitize) { $link = "URL=`"https://entra.microsoft.com`";" }
+            
+            # License header/table
+            $data += "  licenses [label = <
+                    <TABLE border=`"0`" style=`"rounded`">
+                    <TR><TD border=`"0`" align=`"left`"><B>Licenses:</B></TD></TR>
+                    <HR/>
+                    <TR><TD border=`"0`" align=`"left`"><BR/><B>License</B></TD><TD border=`"0`" align=`"right`"><B>Total</B></TD><TD border=`"0`" align=`"right`"><B>Available</B></TD><TD border=`"0`" align=`"right`"><B>Utilized</B></TD></TR>
             "
-        }
 
-        # End table
-        $ImagePath = Join-Path $OutputPath "icons" "licenses.png"               
-        $footer = "
-                </TABLE>>;
-                image = `"$ImagePath`";imagepos = `"tr`"; labelloc = `"b`";height = 2.5;$link];
-        }"
-        $alldata = $header + $data + $footer
-        Export-AddToFile -Data $alldata
+            $inventory = $inventory | Sort-Object -Property "SkuFriendlyName"
+            $inventory | ForEach-Object {
+                $license = $_
+                $amount = $license.TotalEnabled
+                $assigned = $license.ConsumedUnits
+                $available = $amount - $assigned
+                $licenseName = $license.SkuFriendlyName
+                #$licenseName = $license.SkuPartNumber
+                if ( $null -eq $licenseName -or $licenseName -eq "" ) { $licenseName = $license.SkuPartNumber }
+
+                $data += "      <TR><TD border=`"0`" align=`"left`">$licenseName</TD><TD border=`"0`" align=`"right`">$amount</TD><TD border=`"0`" align=`"right`">$available</TD><TD border=`"0`" align=`"right`">$assigned</TD></TR>
+                "
+            }
+
+            # End table
+            $ImagePath = Join-Path $OutputPath "icons" "licenses.png"               
+            $footer = "
+                    </TABLE>>;
+                    image = `"$ImagePath`";imagepos = `"tr`"; labelloc = `"b`";height = 2.5;$link];
+            }"
+            $alldata = $header + $data + $footer
+            Export-AddToFile -Data $alldata
+        }
         
     }
     catch {
