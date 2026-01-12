@@ -196,7 +196,7 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 - [] Fixes
   - [x] Static Web App - custom domain logic error
   - [] Proper sorting of IP addresses/routes for different objects
-  	- [] NICs
+    - [] NICs
 	  - [] Route server peers
 	  - [x] Route tables
     - [x] Local Network Gateway
