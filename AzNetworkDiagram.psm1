@@ -4837,6 +4837,57 @@ function Export-LGW2IPPlan {
 
 <#
 .SYNOPSIS
+Exports details of Virtual Network Gateway P2S setup for inclusion in an IP Plan.
+
+.DESCRIPTION
+The `Export-GW2IPPlan` function processes a specified Azure Virtual Network Gatewa object, retrieves its details, and formats the data for inclusion in an IP Plan.
+
+.PARAMETER VNGW
+Specifies the Virtual Network Gateway object to be processed. This parameter is mandatory.
+#>
+function Export-GW2IPPlan {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$VNGW
+    )
+
+    try {
+        #$data = ""
+        #$id = $MgmtGroupEntityObject.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $subid = (Get-AzContext).Subscription.Id
+        $subname = (Get-AzContext).Subscription.Name
+        
+        $AddressSpaces = $VNGW.VpnClientConfiguration.VpnClientAddressPool.AddressPrefixes
+        $addressSpaces | ForEach-Object {
+            $obj = [pscustomobject]@{
+                AddressSpace     = ''
+                Type             = ''
+                Resource         = ''
+                ResourceGroup    = ''
+                SubscriptionName = ''
+                SubscriptionId   = ''
+                #vnetid          = ''
+            }
+            $prefix = $_
+            $obj.SubscriptionName = $subname
+            $obj.SubscriptionId = $subid
+            $obj.Type = "P2S VPN"
+            $obj.ResourceGroup = $VNGW.ResourceGroupName
+            $obj.Resource = $VNGW.Name
+            $obj.AddressSpace = $prefix
+            #$obj.vnetid = $vnet.id
+
+            $script:IPPlan += $obj 
+        }
+    }
+    catch {
+        Write-Error "Can't export Virtual Network Gateway 2 IP Plan at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+}
+
+<#
+.SYNOPSIS
 Exports details of IP Plan for inclusion in an infrastructure diagram.
 
 .DESCRIPTION
@@ -4856,8 +4907,9 @@ function Export-IPPlan {
     param ([PSCustomObject[]]$IPPlan)
 
     try {
-        $AddressSpaces = $IPPlan | Where-Object { $_.Type -eq "VNet" -or $_.Type -eq "VPN"}
-        $Subnets = $IPPlan | Where-Object { $_.Type -eq "Subnet" }
+        # Only types: VPN, VPN (S2S VPN) + P2S VPN
+        $AddressSpaces = $IPPlan | Where-Object { $_.Type -eq "VNet" -or $_.Type -eq "VPN" -or $_.Type -eq "P2S VPN"}
+        $Subnets = $IPPlan | Where-Object { $_.Type -eq "Subnet" } #VNETS split by subnets
 
         # Object reference
         # $obj = [pscustomobject]@{
@@ -5571,9 +5623,6 @@ function Get-DOTExecutable {
   .PARAMETER KeepDotFile
   Preserve the DOT file after diagram generation
   
-  #.PARAMETER IPPlanAsGrid
-  #Outputs IP Plan via "Out-GridView" (graphical table) instead of "Format-Table" (command line table)
-
   .PARAMETER LogoURL
   If supplied along with -LogoPath, the logo will become a clickable link
   
@@ -5656,7 +5705,7 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][switch]$EnableVM,
         [Parameter(Mandatory = $false)][switch]$EnableVMSS,
         [Parameter(Mandatory = $false)][switch]$KeepDotFile,
-        [Parameter(Mandatory = $false)][switch]$IPPlanAsGrid,
+        #[Parameter(Mandatory = $false)][switch]$IPPlanAsGrid,
         [Parameter(Mandatory = $false)][string]$LogoPath = $null,
         [Parameter(Mandatory = $false)][string]$LogoURL = $null,
         [Parameter(Mandatory = $false)][string[]]$ManagementGroups,
@@ -5945,12 +5994,18 @@ function Get-AzNetworkDiagram {
 
     try {
         if ( $OnlyMgmtGroups ) {
+            ###############################################################################################################################################
+            ############# MANAGEMENT GROUP OVERVIEW
+            ###############################################################################################################################################
             Write-Output "`nCollecting management groups and subscriptions..."
             $script:Legend = @()
             $Script:Legend += ,@("Management Group","mgmtgroup.png")
             $Script:Legend += ,@("Subscription","sub.png")
             Export-MgmtGroups
         } elseif ( $OnlyIPPlan ) {
+            ###############################################################################################################################################
+            ############# IP PLAN
+            ###############################################################################################################################################
             Write-Output "`nCollecting Data for IP Plan..."
             $script:IPPlan = @()
 
@@ -5983,14 +6038,12 @@ function Get-AzNetworkDiagram {
                 }
 
                 #P2S VPNs
-                <#
                 $VNGs = Get-AzResource | Where-Object { $_.ResourceType -eq "Microsoft.Network/virtualNetworkGateways" }
                 $VNGs | ForEach-Object {
                     $standardObject = $_
                     $gwObject = Get-AzVirtualNetworkGateway -ResourceGroupName $standardObject.ResourceGroupName -Name $standardObject.Name 
-                    Export-GW2IPPlan -GW $gwObject
+                    Export-GW2IPPlan -VNGW $gwObject
                 }
-                #>
             }
             # Output to console
             #if ( $IPPlanAsGrid ) {
@@ -6005,6 +6058,9 @@ function Get-AzNetworkDiagram {
 
 
         } else {
+            ###############################################################################################################################################
+            ############# REGULAR DIAGRAM
+            ###############################################################################################################################################
             # Collect all vNet ID's in scope otherwise we can end up with 1 vNet peered to 1000 other vNets which are not in scope
             # Errors will appear like: dot: graph is too large for cairo-renderer bitmaps. Scaling by 0.324583 to fit
             
