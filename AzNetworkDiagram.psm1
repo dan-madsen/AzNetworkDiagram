@@ -368,6 +368,8 @@ function Export-dotFooterRanking {
     subgraph rank4 {
         rank=same
         rank4;
+        ### Azure Firewall Policy
+        $($script:rankazfwp -join '; ')
         ### App Service Plan
         $($script:rankasp -join '; ') 
         ### VM
@@ -2394,6 +2396,9 @@ function Export-AzureFirewall {
         $azFWId = $FirewallId.replace("-", "").replace("/", "").replace(".", "").ToLower()
         $azFWName = $FirewallId.split("/")[-1]
         $azFW = Get-AzFirewall -ResourceGroupName $ResourceGroupName -Name $azFWName -ErrorAction Stop
+        
+        $azFWZones = $($azfw.zones -join "," )
+        if ( $null -eq $azFWZones -or "" -eq $azFWZones) { $azFWZones = "N/A" }
 
         if ($azFW.IpConfigurations.count -gt 0) {
             # Standalone Azure Firewall
@@ -2418,23 +2423,37 @@ function Export-AzureFirewall {
         }
         $ImagePath = Join-Path $OutputPath "icons" "afw.png"
         $data = "`n"
-        $data += "          $azFWId [label = `"\n\n$(SanitizeString $azFWName)\nPrivate IP Address: $(SanitizeString $PrivateIPAddress)\nSKU Tier: $($azfw.Sku.Tier)\nZones: $($azfw.zones -join "," )\nPublic IP(s):\n$($PublicIPs -join "\n")`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $azfw)];" 
+        $data += "          $azFWId [label = `"\n\n$(SanitizeString $azFWName)\nPrivate IP Address: $(SanitizeString $PrivateIPAddress)\nSKU Tier: $($azfw.Sku.Tier)\nZones: $azFWZones\nPublic IP(s):\n$($PublicIPs -join "\n")`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $azfw)];" 
 
         # Get the Azure Firewall policy
+        $data += Export-AzureFirewallPolicy -FirewallPolicyId $azfw.FirewallPolicy.Id
+        <#
         if ($null -ne $azfw.FirewallPolicy.id) {
             $firewallPolicyName = $azfw.FirewallPolicy.id.split("/")[-1]
             $firewallPolicy = Get-AzFirewallPolicy -ResourceGroupName $ResourceGroupName -Name $firewallPolicyName -ErrorAction Stop
             $fwpolid = $firewallPolicy.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-            #$parentPolicy = $firewallPolicy.BasePolicy.id
-            #$parentPolicyId =  $parentPolicy ? $parentPolicy.replace("-", "").replace("/", "").replace(".", "").ToLower() : ""
+            $parentPolicy = $firewallPolicy.BasePolicy.id
+            $parentPolicyId =  $parentPolicy ? $parentPolicy.replace("-", "").replace("/", "").replace(".", "").ToLower() : $null
 
+            #Proxy
+            $proxyEnabled = $($firewallPolicy.DnsSettings.EnableProxy)
+            if ( $null -eq $proxyEnabled -or "" -eq $proxyEnabled) { $proxyEnabled = "False"}
+
+            #DNS Server(s)
             $dnsservers = $firewallPolicy.DnsSettings.Servers
-            if ( $null -eq $dnsserver) { $dnsservers = "None"}
+            #if ( $null -eq $dnsserver) { $dnsservers = "None"}
+            $DNSServers = $(($dnsservers|ForEach-Object {SanitizeString $_}) -join '; ')
+            if ( $null -eq $DNSServers -or "" -eq $DNSServers) { $DNSServers = "Default (Azure provided)"}
 
             $ImagePath = Join-Path $OutputPath "icons" "firewallpolicy.png"
             $data += "`n"
-            $data += "          $fwpolid [label = `"\n\n$(SanitizeString $firewallPolicyName)\nSKU Tier: $($firewallPolicy.sku.tier)\nThreat Intel Mode: $($firewallPolicy.ThreatIntelMode)\nDNS Servers: $(($dnsservers|ForEach-Object {SanitizeString $_}) -join '; ')\nProxy Enabled: $($firewallPolicy.DnsSettings.EnableProxy)`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $firewallPolicy)];" 
-            $data += "`n        $azFWId -> $fwpolid;"
+            $data += "              $fwpolid [label = `"\n\n$(SanitizeString $firewallPolicyName)\nSKU Tier: $($firewallPolicy.sku.tier)\nThreat Intel Mode: $($firewallPolicy.ThreatIntelMode)\nDNS Server(s): $DNSServers\nProxy Enabled: $proxyEnabled`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $firewallPolicy)];" 
+            $data += "`n            $azFWId -> $fwpolid;"
+
+            #Link child/parent
+            if ( $null -ne $parentPolicyId -and "" -ne $parentPolicyId ){
+                $data += "`n            $fwpolid -> $parentPolicyId [label=`"child of parent policy`";constraint=false]"
+            }
 
             for ($i = 0; $i -lt $firewallPolicy.DnsSettings.Servers.Count; $i++) {
                 $index = [array]::indexof($script:PDNSREpIp, $firewallPolicy.DnsSettings.Servers[$i])
@@ -2462,10 +2481,117 @@ function Export-AzureFirewall {
                 }
             }
         }
+        #>
         return $data
     }
     catch {
         Write-Host "Can't export Azure Firewall: $($azFWName) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+}
+
+<#
+.SYNOPSIS
+Exports details of an Azure Firewall Policy and its associated policies for inclusion in an infrastructure diagram.
+
+.DESCRIPTION
+The `Export-AzureFirewallPolicy` function processes a specified Azure Firewall object, retrieves its details, and formats the data for inclusion in an infrastructure diagram. It visualizes the firewall's name, private and public IP addresses, SKU tier, zones, and associated firewall policies, including DNS settings and IP groups.
+
+.PARAMETER FirewallId
+Specifies the unique identifier of the Azure Firewall to be processed.
+
+.PARAMETER ResourceGroupName
+Specifies the resource group of the Azure Firewall.
+
+.EXAMPLE
+PS> Export-AzureFirewallPolicy -FirewallPolicyId "/subscriptions/xxxx/resourceGroups/rg1/providers/Microsoft.Network/azureFirewalls/fw1" -ResourceGroupName "rg1"
+
+This example processes the specified Azure Firewall and exports its details for inclusion in an infrastructure diagram.
+
+#>
+function Export-AzureFirewallPolicy {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$FirewallPolicyId,
+        #[Parameter(Mandatory = $true)]
+        #[string]$ResourceGroupName,
+        [Parameter(Mandatory = $false)]
+        [string]$isParent
+    )
+
+    try {
+        $data = ""
+
+        # Context might have to change, as policy can be in another sub
+        $currentcontext = (Get-AzContext).Subscription.Id
+        $tempcontext = ($FirewallPolicyId).Split("/")[2]
+        $null = Set-AzContext $tempcontext
+        #Context is changed back at the function
+
+        $firewallPolicyName = $FirewallPolicyId.split("/")[-1]
+        $firewallPolicyRG = $FirewallPolicyId.split("/")[4]     
+        $firewallPolicy = Get-AzFirewallPolicy -ResourceGroupName $firewallPolicyRG -Name $firewallPolicyName -ErrorAction Stop
+        $fwpolid = $firewallPolicy.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $parentPolicy = $firewallPolicy.BasePolicy.id
+        $parentPolicyId =  $parentPolicy ? $parentPolicy.replace("-", "").replace("/", "").replace(".", "").ToLower() : $null
+        $script:rankazfwp += $fwpolid
+
+        
+        
+        #Proxy
+        $proxyEnabled = $($firewallPolicy.DnsSettings.EnableProxy)
+        if ( $null -eq $proxyEnabled -or "" -eq $proxyEnabled) { $proxyEnabled = "False"}
+
+        #DNS Server(s)
+        $dnsservers = $firewallPolicy.DnsSettings.Servers
+        #if ( $null -eq $dnsserver) { $dnsservers = "None"}
+        $DNSServers = $(($dnsservers|ForEach-Object {SanitizeString $_}) -join '; ')
+        if ( $null -eq $DNSServers -or "" -eq $DNSServers) { $DNSServers = "Default (Azure provided)"}
+
+        $ImagePath = Join-Path $OutputPath "icons" "firewallpolicy.png"
+        $data += "`n"
+        $data += "              $fwpolid [label = `"\n\n$(SanitizeString $firewallPolicyName)\nSKU Tier: $($firewallPolicy.sku.tier)\nThreat Intel Mode: $($firewallPolicy.ThreatIntelMode)\nDNS Server(s): $DNSServers\nProxy Enabled: $proxyEnabled`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $firewallPolicy)];" 
+        if ( -not $isParent ) { $data += "`n            $azFWId -> $fwpolid;" }
+
+        #Link child/parent
+        if ( $null -ne $parentPolicyId -and "" -ne $parentPolicyId ){
+            $data += "`n            #AFWP Parent"
+            $data += "`n            $fwpolid -> $parentPolicyId [label=`"child of parent policy`";constraint=false]"
+            $data += Export-AzureFirewallPolicy -FirewallPolicyId $parentPolicy -isParent $true
+        }
+
+        for ($i = 0; $i -lt $firewallPolicy.DnsSettings.Servers.Count; $i++) {
+            $index = [array]::indexof($script:PDNSREpIp, $firewallPolicy.DnsSettings.Servers[$i])
+            if ($index -ge 0) {
+                $data += "        $fwpolid -> $($script:PDNSRId[$index]) [label = `"DNS Query`"; ];`n" 
+            }
+        }
+    
+        # Initialize an array to store IP Group names
+        $ipGroupIds = @()
+
+        foreach ($ruleCollectionGroupId in $firewallPolicy.RuleCollectionGroups.Id) {
+            $rcgName = $ruleCollectionGroupId.split("/")[-1]
+            $rcg = Get-AzFirewallPolicyRuleCollectionGroup -Name $rcgName -AzureFirewallPolicy $firewallPolicy -ErrorAction Stop
+            $ipGroupIds += $rcg.Properties.RuleCollection.rules.SourceIpGroups 
+            $ipGroupIds += $rcg.Properties.RuleCollection.rules.DestinationIpGroups
+        }
+
+        # Remove duplicates and display the IP Group names
+        $ipGroupIds = $ipGroupIds | Sort-Object -Unique
+        if ( $ipGroupIds.count -ne 0 ) {
+            $ipGroupIds = $ipGroupIds.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            foreach ($ipGroupId in $ipGroupIds) {
+                $data += "`n    $fwpolid -> $ipGroupId;"
+            }
+        }
+        
+        #Revert context
+        $null = Set-AzContext $currentcontext
+        return $data
+    }
+    catch {
+        Write-Host "Can't export Azure Firewall Policy: $($azFWName) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
     }
 }
 
@@ -3018,6 +3144,9 @@ function Export-vnet {
         $vnetAddressSpaces = $vnet.AddressSpace.AddressPrefixes
         $script:rankvnet += $id
         
+        $vnetDNSServers = ($vnet.DhcpOptions.DnsServers | ForEach-Object {SanitizeString $_}) -join '; '
+        if ( $null -eq $vnetDNSServers -or "" -eq $vnetDNSServers ) { $vnetDNSServers = "Azure Provided" }
+        
         $header = "
         # $vnetname - $id
         subgraph cluster_$id {
@@ -3033,7 +3162,7 @@ function Export-vnet {
             $vnetAddressSpacesString += $(SanitizeString $_) + "\n"
         }
         $ImagePath = Join-Path $OutputPath "icons" "vnet.png"
-        $vnetdata = "    $id [fillcolor = 10; fontcolor = white; label = `"\nLocation: $Location\nAddress Space(s):\n$vnetAddressSpacesString`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $vnet)];`n"
+        $vnetdata = "    $id [fillcolor = 10; fontcolor = white; label = `"\nLocation: $Location\nDNS Server(s): $vnetDNSServers\n\nAddress Space(s):\n$vnetAddressSpacesString`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $vnet)];`n"
 
         # Subnets
         if ($vnet.Subnets) {
@@ -3433,7 +3562,8 @@ function Export-RouteTable {
         $data = ""
 
         #Sort routes for easier reading
-        $routesSorted = $routetable.Routes | Sort-Object -Property AddressPrefix
+        #$routesSorted = $routetable.Routes | Sort-Object -Property AddressPrefix
+        $routesSorted = $routetable.Routes | Sort-Object { [regex]::Replace($_.AddressPrefix, '\d+', { $args[0].Value.PadLeft(100) }) }
         ForEach ($route in $routesSorted ) {
             if ($route.AddressPrefix -match '^[a-zA-Z]+$') {
                 # Only letters, not IP address or CIDR
@@ -3571,7 +3701,8 @@ function Export-Connection {
 
         $lgwsubnetsarray = $lgwobject.addressSpaceText | ConvertFrom-Json
         $lgwsubnets = ""
-        $lgwsubnetsarray.AddressPrefixes | Sort-Object | ForEach-Object {
+        $lgwsubnetsarraySorted = $lgwsubnetsarray.AddressPrefixes | Sort-Object { [regex]::Replace($_, '\d+', { $args[0].Value.PadLeft(100) }) }
+        $lgwsubnetsarraySorted | ForEach-Object {
             $prefix = SanitizeString $_
             $lgwsubnets += "$prefix \n"
         }
@@ -3898,8 +4029,8 @@ function Export-StaticWebApp
         $swaLocation = SanitizeLocation $StaticWebApp.Location
         $swaSKU = $StaticWebApp.SkuName
 
-        $swaCustomDomainTemp  = $StaticWebApp.CustomDomain
-        if ($null -eq $swaCustomDomainTemp ){ $swaCustomDomain = SanitizeString $($StaticWebApp.CustomDomain) } else { $swaCustomDomain = "None" }
+        $swaCustomDomainTemp = $StaticWebApp.CustomDomain
+        if ($null -ne $swaCustomDomainTemp ){ $swaCustomDomain = SanitizeString $($StaticWebApp.CustomDomain) } else { $swaCustomDomain = "None" }
 
         $swaDefaultDomain = SanitizeString "$($StaticWebApp.DefaultHostName)"
         #$swaProvider = $StaticWebApp.Provider
@@ -5896,6 +6027,7 @@ function Get-AzNetworkDiagram {
     #$script:rankAVDWorkspace = @()
     $script:rankavs = @()
     $script:rankazfw = @()
+    $script:rankazfwp = @()
     #$script:rankbas = @()
     $script:rankbv = @()
     $script:rankcontainerappenv = @()
