@@ -58,6 +58,11 @@ The recommended way of running AzNetworkDiagram is by installing from PSGallery.
 Install-Module -Name AzNetworkDiagram
 ```
 
+## Install released beta from PSGallery (for testing and/or new yet-to-be-released features)
+```powershell
+Install-Module -Name AzNetworkDiagram -AllowPrerelease
+```
+
 ## Install from GitHub repo 
 Clone repository (or download the file referenced below), switch to the cloned directory, then:
 ```powershell
@@ -177,7 +182,7 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 ---
 
 # Changelog (since v1.0.1)
-## v2.0.0 release - under construction (beta released to PowerShell Gallery)
+## v2.0.0 release - under construction (beta 1 + beta 2 released to PowerShell Gallery)
 - [x] **_BREAKING CHANGE - see v1.5 for additional info_**
 - New features
   - [x] The breaking change from v1.5 fully implemented
