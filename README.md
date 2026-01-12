@@ -58,7 +58,7 @@ The recommended way of running AzNetworkDiagram is by installing from PSGallery.
 Install-Module -Name AzNetworkDiagram
 ```
 
-## Install released beta from PSGallery (for testing and/or new yet-to-be-released features)
+### Install **_beta_** from PSGallery (for testing and/or new yet-to-be-released features)
 ```powershell
 Install-Module -Name AzNetworkDiagram -AllowPrerelease
 ```
@@ -196,7 +196,7 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 - [] Fixes
   - [x] Static Web App - custom domain logic error
   - [] Proper sorting of IP addresses/routes for different objects
-  	- [] NICs
+    - [] NICs
 	  - [] Route server peers
 	  - [x] Route tables
     - [x] Local Network Gateway
