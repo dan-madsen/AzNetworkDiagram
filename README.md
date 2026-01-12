@@ -184,7 +184,7 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 # Changelog (since v1.0.1)
 ## v2.0.0 release - under construction (beta 1 + beta 2 released to PowerShell Gallery)
 - [x] **_BREAKING CHANGE - see v1.5 for additional info_**
-- New features
+- [x] New features
   - [x] The breaking change from v1.5 fully implemented
   - [x] IP Plan overview, based on VNets in scope
     - [x] Azure resources
@@ -193,11 +193,11 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
   - [x] DevOps Organizations added to diagram
   - [x] Entra Licenses in some form, maybe just relevant Entra ID/ARM licenses
   - [x] Azure Firewall Policy parant relationships
-- [] Fixes
+- Fixes
   - [x] Static Web App - custom domain logic error
-  - [] Proper sorting of IP addresses/routes for different objects
-    - [] NICs
-    - [] Route server peers
+  - Proper sorting of IP addresses/routes for different objects
+    - NICs
+    - Route server peers
     - [x] Route tables
     - [x] Local Network Gateway
 ## v1.5
