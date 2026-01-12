@@ -58,7 +58,7 @@ The recommended way of running AzNetworkDiagram is by installing from PSGallery.
 Install-Module -Name AzNetworkDiagram
 ```
 
-## Install released beta from PSGallery (for testing and/or new yet-to-be-released features)
+### Install **_beta_** from PSGallery (for testing and/or new yet-to-be-released features)
 ```powershell
 Install-Module -Name AzNetworkDiagram -AllowPrerelease
 ```
