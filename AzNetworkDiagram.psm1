@@ -368,6 +368,8 @@ function Export-dotFooterRanking {
     subgraph rank4 {
         rank=same
         rank4;
+        ### Azure Firewall Policy
+        $($script:rankazfwp -join '; ')
         ### App Service Plan
         $($script:rankasp -join '; ') 
         ### VM
@@ -459,6 +461,14 @@ function Export-dotFooterRanking {
         rank = same;
         rank8;
     }
+
+    subgraph rank9 {
+        rank = same;
+        rank9;
+        $($script:rankADO -join '; ')
+        $($script:rankLicense -join '; ')
+    }
+    
 "@
 }
 
@@ -2386,6 +2396,9 @@ function Export-AzureFirewall {
         $azFWId = $FirewallId.replace("-", "").replace("/", "").replace(".", "").ToLower()
         $azFWName = $FirewallId.split("/")[-1]
         $azFW = Get-AzFirewall -ResourceGroupName $ResourceGroupName -Name $azFWName -ErrorAction Stop
+        
+        $azFWZones = $($azfw.zones -join "," )
+        if ( $null -eq $azFWZones -or "" -eq $azFWZones) { $azFWZones = "N/A" }
 
         if ($azFW.IpConfigurations.count -gt 0) {
             # Standalone Azure Firewall
@@ -2410,21 +2423,37 @@ function Export-AzureFirewall {
         }
         $ImagePath = Join-Path $OutputPath "icons" "afw.png"
         $data = "`n"
-        $data += "          $azFWId [label = `"\n\n$(SanitizeString $azFWName)\nPrivate IP Address: $(SanitizeString $PrivateIPAddress)\nSKU Tier: $($azfw.Sku.Tier)\nZones: $($azfw.zones -join "," )\nPublic IP(s):\n$($PublicIPs -join "\n")`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $azfw)];" 
+        $data += "          $azFWId [label = `"\n\n$(SanitizeString $azFWName)\nPrivate IP Address: $(SanitizeString $PrivateIPAddress)\nSKU Tier: $($azfw.Sku.Tier)\nZones: $azFWZones\nPublic IP(s):\n$($PublicIPs -join "\n")`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $azfw)];" 
 
         # Get the Azure Firewall policy
+        $data += Export-AzureFirewallPolicy -FirewallPolicyId $azfw.FirewallPolicy.Id
+        <#
         if ($null -ne $azfw.FirewallPolicy.id) {
             $firewallPolicyName = $azfw.FirewallPolicy.id.split("/")[-1]
             $firewallPolicy = Get-AzFirewallPolicy -ResourceGroupName $ResourceGroupName -Name $firewallPolicyName -ErrorAction Stop
             $fwpolid = $firewallPolicy.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            $parentPolicy = $firewallPolicy.BasePolicy.id
+            $parentPolicyId =  $parentPolicy ? $parentPolicy.replace("-", "").replace("/", "").replace(".", "").ToLower() : $null
 
+            #Proxy
+            $proxyEnabled = $($firewallPolicy.DnsSettings.EnableProxy)
+            if ( $null -eq $proxyEnabled -or "" -eq $proxyEnabled) { $proxyEnabled = "False"}
+
+            #DNS Server(s)
             $dnsservers = $firewallPolicy.DnsSettings.Servers
-            if ( $null -eq $dnsserver) { $dnsservers = "None"}
+            #if ( $null -eq $dnsserver) { $dnsservers = "None"}
+            $DNSServers = $(($dnsservers|ForEach-Object {SanitizeString $_}) -join '; ')
+            if ( $null -eq $DNSServers -or "" -eq $DNSServers) { $DNSServers = "Default (Azure provided)"}
 
             $ImagePath = Join-Path $OutputPath "icons" "firewallpolicy.png"
             $data += "`n"
-            $data += "          $fwpolid [label = `"\n\n$(SanitizeString $firewallPolicyName)\nSKU Tier: $($firewallPolicy.sku.tier)\nThreat Intel Mode: $($firewallPolicy.ThreatIntelMode)\nDNS Servers: $(($dnsservers|ForEach-Object {SanitizeString $_}) -join '; ')\nProxy Enabled: $($firewallPolicy.DnsSettings.EnableProxy)`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $firewallPolicy)];" 
-            $data += "`n        $azFWId -> $fwpolid;"
+            $data += "              $fwpolid [label = `"\n\n$(SanitizeString $firewallPolicyName)\nSKU Tier: $($firewallPolicy.sku.tier)\nThreat Intel Mode: $($firewallPolicy.ThreatIntelMode)\nDNS Server(s): $DNSServers\nProxy Enabled: $proxyEnabled`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $firewallPolicy)];" 
+            $data += "`n            $azFWId -> $fwpolid;"
+
+            #Link child/parent
+            if ( $null -ne $parentPolicyId -and "" -ne $parentPolicyId ){
+                $data += "`n            $fwpolid -> $parentPolicyId [label=`"child of parent policy`";constraint=false]"
+            }
 
             for ($i = 0; $i -lt $firewallPolicy.DnsSettings.Servers.Count; $i++) {
                 $index = [array]::indexof($script:PDNSREpIp, $firewallPolicy.DnsSettings.Servers[$i])
@@ -2452,10 +2481,117 @@ function Export-AzureFirewall {
                 }
             }
         }
+        #>
         return $data
     }
     catch {
         Write-Host "Can't export Azure Firewall: $($azFWName) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+}
+
+<#
+.SYNOPSIS
+Exports details of an Azure Firewall Policy and its associated policies for inclusion in an infrastructure diagram.
+
+.DESCRIPTION
+The `Export-AzureFirewallPolicy` function processes a specified Azure Firewall object, retrieves its details, and formats the data for inclusion in an infrastructure diagram. It visualizes the firewall's name, private and public IP addresses, SKU tier, zones, and associated firewall policies, including DNS settings and IP groups.
+
+.PARAMETER FirewallId
+Specifies the unique identifier of the Azure Firewall to be processed.
+
+.PARAMETER ResourceGroupName
+Specifies the resource group of the Azure Firewall.
+
+.EXAMPLE
+PS> Export-AzureFirewallPolicy -FirewallPolicyId "/subscriptions/xxxx/resourceGroups/rg1/providers/Microsoft.Network/azureFirewalls/fw1" -ResourceGroupName "rg1"
+
+This example processes the specified Azure Firewall and exports its details for inclusion in an infrastructure diagram.
+
+#>
+function Export-AzureFirewallPolicy {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$FirewallPolicyId,
+        #[Parameter(Mandatory = $true)]
+        #[string]$ResourceGroupName,
+        [Parameter(Mandatory = $false)]
+        [string]$isParent
+    )
+
+    try {
+        $data = ""
+
+        # Context might have to change, as policy can be in another sub
+        $currentcontext = (Get-AzContext).Subscription.Id
+        $tempcontext = ($FirewallPolicyId).Split("/")[2]
+        $null = Set-AzContext $tempcontext
+        #Context is changed back at the function
+
+        $firewallPolicyName = $FirewallPolicyId.split("/")[-1]
+        $firewallPolicyRG = $FirewallPolicyId.split("/")[4]     
+        $firewallPolicy = Get-AzFirewallPolicy -ResourceGroupName $firewallPolicyRG -Name $firewallPolicyName -ErrorAction Stop
+        $fwpolid = $firewallPolicy.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $parentPolicy = $firewallPolicy.BasePolicy.id
+        $parentPolicyId =  $parentPolicy ? $parentPolicy.replace("-", "").replace("/", "").replace(".", "").ToLower() : $null
+        $script:rankazfwp += $fwpolid
+
+        
+        
+        #Proxy
+        $proxyEnabled = $($firewallPolicy.DnsSettings.EnableProxy)
+        if ( $null -eq $proxyEnabled -or "" -eq $proxyEnabled) { $proxyEnabled = "False"}
+
+        #DNS Server(s)
+        $dnsservers = $firewallPolicy.DnsSettings.Servers
+        #if ( $null -eq $dnsserver) { $dnsservers = "None"}
+        $DNSServers = $(($dnsservers|ForEach-Object {SanitizeString $_}) -join '; ')
+        if ( $null -eq $DNSServers -or "" -eq $DNSServers) { $DNSServers = "Default (Azure provided)"}
+
+        $ImagePath = Join-Path $OutputPath "icons" "firewallpolicy.png"
+        $data += "`n"
+        $data += "              $fwpolid [label = `"\n\n$(SanitizeString $firewallPolicyName)\nSKU Tier: $($firewallPolicy.sku.tier)\nThreat Intel Mode: $($firewallPolicy.ThreatIntelMode)\nDNS Server(s): $DNSServers\nProxy Enabled: $proxyEnabled`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $firewallPolicy)];" 
+        if ( -not $isParent ) { $data += "`n            $azFWId -> $fwpolid;" }
+
+        #Link child/parent
+        if ( $null -ne $parentPolicyId -and "" -ne $parentPolicyId ){
+            $data += "`n            #AFWP Parent"
+            $data += "`n            $fwpolid -> $parentPolicyId [label=`"child of parent policy`";constraint=false]"
+            $data += Export-AzureFirewallPolicy -FirewallPolicyId $parentPolicy -isParent $true
+        }
+
+        for ($i = 0; $i -lt $firewallPolicy.DnsSettings.Servers.Count; $i++) {
+            $index = [array]::indexof($script:PDNSREpIp, $firewallPolicy.DnsSettings.Servers[$i])
+            if ($index -ge 0) {
+                $data += "        $fwpolid -> $($script:PDNSRId[$index]) [label = `"DNS Query`"; ];`n" 
+            }
+        }
+    
+        # Initialize an array to store IP Group names
+        $ipGroupIds = @()
+
+        foreach ($ruleCollectionGroupId in $firewallPolicy.RuleCollectionGroups.Id) {
+            $rcgName = $ruleCollectionGroupId.split("/")[-1]
+            $rcg = Get-AzFirewallPolicyRuleCollectionGroup -Name $rcgName -AzureFirewallPolicy $firewallPolicy -ErrorAction Stop
+            $ipGroupIds += $rcg.Properties.RuleCollection.rules.SourceIpGroups 
+            $ipGroupIds += $rcg.Properties.RuleCollection.rules.DestinationIpGroups
+        }
+
+        # Remove duplicates and display the IP Group names
+        $ipGroupIds = $ipGroupIds | Sort-Object -Unique
+        if ( $ipGroupIds.count -ne 0 ) {
+            $ipGroupIds = $ipGroupIds.replace("-", "").replace("/", "").replace(".", "").ToLower()
+            foreach ($ipGroupId in $ipGroupIds) {
+                $data += "`n    $fwpolid -> $ipGroupId;"
+            }
+        }
+        
+        #Revert context
+        $null = Set-AzContext $currentcontext
+        return $data
+    }
+    catch {
+        Write-Host "Can't export Azure Firewall Policy: $($azFWName) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
     }
 }
 
@@ -3008,6 +3144,9 @@ function Export-vnet {
         $vnetAddressSpaces = $vnet.AddressSpace.AddressPrefixes
         $script:rankvnet += $id
         
+        $vnetDNSServers = ($vnet.DhcpOptions.DnsServers | ForEach-Object {SanitizeString $_}) -join '; '
+        if ( $null -eq $vnetDNSServers -or "" -eq $vnetDNSServers ) { $vnetDNSServers = "Azure Provided" }
+        
         $header = "
         # $vnetname - $id
         subgraph cluster_$id {
@@ -3023,7 +3162,7 @@ function Export-vnet {
             $vnetAddressSpacesString += $(SanitizeString $_) + "\n"
         }
         $ImagePath = Join-Path $OutputPath "icons" "vnet.png"
-        $vnetdata = "    $id [fillcolor = 10; fontcolor = white; label = `"\nLocation: $Location\nAddress Space(s):\n$vnetAddressSpacesString`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $vnet)];`n"
+        $vnetdata = "    $id [fillcolor = 10; fontcolor = white; label = `"\nLocation: $Location\nDNS Server(s): $vnetDNSServers\n\nAddress Space(s):\n$vnetAddressSpacesString`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $vnet)];`n"
 
         # Subnets
         if ($vnet.Subnets) {
@@ -3423,7 +3562,8 @@ function Export-RouteTable {
         $data = ""
 
         #Sort routes for easier reading
-        $routesSorted = $routetable.Routes | Sort-Object -Property AddressPrefix
+        #$routesSorted = $routetable.Routes | Sort-Object -Property AddressPrefix
+        $routesSorted = $routetable.Routes | Sort-Object { [regex]::Replace($_.AddressPrefix, '\d+', { $args[0].Value.PadLeft(100) }) }
         ForEach ($route in $routesSorted ) {
             if ($route.AddressPrefix -match '^[a-zA-Z]+$') {
                 # Only letters, not IP address or CIDR
@@ -3561,7 +3701,8 @@ function Export-Connection {
 
         $lgwsubnetsarray = $lgwobject.addressSpaceText | ConvertFrom-Json
         $lgwsubnets = ""
-        $lgwsubnetsarray.AddressPrefixes | Sort-Object | ForEach-Object {
+        $lgwsubnetsarraySorted = $lgwsubnetsarray.AddressPrefixes | Sort-Object { [regex]::Replace($_, '\d+', { $args[0].Value.PadLeft(100) }) }
+        $lgwsubnetsarraySorted | ForEach-Object {
             $prefix = SanitizeString $_
             $lgwsubnets += "$prefix \n"
         }
@@ -3888,8 +4029,8 @@ function Export-StaticWebApp
         $swaLocation = SanitizeLocation $StaticWebApp.Location
         $swaSKU = $StaticWebApp.SkuName
 
-        $swaCustomDomainTemp  = $StaticWebApp.CustomDomain
-        if ($null -eq $swaCustomDomainTemp ){ $swaCustomDomain = SanitizeString $($StaticWebApp.CustomDomain) } else { $swaCustomDomain = "None" }
+        $swaCustomDomainTemp = $StaticWebApp.CustomDomain
+        if ($null -ne $swaCustomDomainTemp ){ $swaCustomDomain = SanitizeString $($StaticWebApp.CustomDomain) } else { $swaCustomDomain = "None" }
 
         $swaDefaultDomain = SanitizeString "$($StaticWebApp.DefaultHostName)"
         #$swaProvider = $StaticWebApp.Provider
@@ -4827,6 +4968,57 @@ function Export-LGW2IPPlan {
 
 <#
 .SYNOPSIS
+Exports details of Virtual Network Gateway P2S setup for inclusion in an IP Plan.
+
+.DESCRIPTION
+The `Export-GW2IPPlan` function processes a specified Azure Virtual Network Gatewa object, retrieves its details, and formats the data for inclusion in an IP Plan.
+
+.PARAMETER VNGW
+Specifies the Virtual Network Gateway object to be processed. This parameter is mandatory.
+#>
+function Export-GW2IPPlan {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$VNGW
+    )
+
+    try {
+        #$data = ""
+        #$id = $MgmtGroupEntityObject.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $subid = (Get-AzContext).Subscription.Id
+        $subname = (Get-AzContext).Subscription.Name
+        
+        $AddressSpaces = $VNGW.VpnClientConfiguration.VpnClientAddressPool.AddressPrefixes
+        $addressSpaces | ForEach-Object {
+            $obj = [pscustomobject]@{
+                AddressSpace     = ''
+                Type             = ''
+                Resource         = ''
+                ResourceGroup    = ''
+                SubscriptionName = ''
+                SubscriptionId   = ''
+                #vnetid          = ''
+            }
+            $prefix = $_
+            $obj.SubscriptionName = $subname
+            $obj.SubscriptionId = $subid
+            $obj.Type = "P2S VPN"
+            $obj.ResourceGroup = $VNGW.ResourceGroupName
+            $obj.Resource = $VNGW.Name
+            $obj.AddressSpace = $prefix
+            #$obj.vnetid = $vnet.id
+
+            $script:IPPlan += $obj 
+        }
+    }
+    catch {
+        Write-Error "Can't export Virtual Network Gateway 2 IP Plan at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+}
+
+<#
+.SYNOPSIS
 Exports details of IP Plan for inclusion in an infrastructure diagram.
 
 .DESCRIPTION
@@ -4846,8 +5038,9 @@ function Export-IPPlan {
     param ([PSCustomObject[]]$IPPlan)
 
     try {
-        $AddressSpaces = $IPPlan | Where-Object { $_.Type -eq "VNet" -or $_.Type -eq "VPN"}
-        $Subnets = $IPPlan | Where-Object { $_.Type -eq "Subnet" }
+        # Only types: VPN, VPN (S2S VPN) + P2S VPN
+        $AddressSpaces = $IPPlan | Where-Object { $_.Type -eq "VNet" -or $_.Type -eq "VPN" -or $_.Type -eq "P2S VPN"}
+        $Subnets = $IPPlan | Where-Object { $_.Type -eq "Subnet" } #VNETS split by subnets
 
         # Object reference
         # $obj = [pscustomobject]@{
@@ -4871,8 +5064,8 @@ function Export-IPPlan {
             
             IPPlanAddressSpaces [label = <
                 <TABLE border=`"0`" style=`"rounded`">
-                <TR><TD border=`"0`" align=`"left`"><B>Address Spaces in Azure</B><BR/><BR/></TD></TR>
-                <TR><TD border=`"0`" align=`"left`"><B>VNets + Local Network Gateways</B><BR/><BR/></TD></TR>
+                <TR><TD border=`"0`" align=`"left`" colspan=`"2`"><B>Address Spaces in Azure</B><BR/><BR/></TD></TR>
+                <TR><TD border=`"0`" align=`"left`" colspan=`"2`"><B>VNets + Local Network Gateways</B><BR/><BR/></TD></TR>
                 <TR><TD align=`"left`"><B>Address Space</B></TD><TD align=`"left`"><B>Type</B></TD><TD align=`"left`"><B>Resource</B></TD><TD align=`"left`"><B>Resource Group</B></TD><TD align=`"left`"><B>Subscription Name</B></TD></TR>
                 <HR/>"
         
@@ -4911,7 +5104,7 @@ function Export-IPPlan {
             
             IPPlanSubnets [label = <
                 <TABLE border=`"1`" style=`"rounded`">
-                <TR><TD border=`"0`" align=`"left`"><B>Subnets in Azure</B><BR/><BR/></TD></TR>
+                <TR><TD border=`"0`" align=`"left`" colspan=`"2`"><B>Subnets in Azure</B><BR/><BR/></TD></TR>
                 <TR><TD align=`"left`"><B>Subnet</B></TD><TD align=`"left`"><B>Type</B></TD><TD align=`"left`"><B>Delegation</B></TD><TD align=`"left`"><B>Resource</B></TD><TD align=`"left`"><B>Resource Group</B></TD><TD align=`"left`"><B>Subscription Name</B></TD></TR>
                 <HR/>"
         
@@ -5012,6 +5205,338 @@ function Export-MgmtGroupEntityObject
 
 <#
 .SYNOPSIS
+Exports details of a Azure DevOps for inclusion in an infrastructure diagram.
+
+.DESCRIPTION
+The `Export-AzureDevOps` function processes all DevOps organizations, retrieves its details, and formats the data for inclusion in an infrastructure diagram.
+
+.EXAMPLE
+PS> $MgmtGroupEntityObject = Get-AzManagementGroupEntity
+PS> $MgmtGroupEntityObject | Foreach-Object { Export-AzureDevOps -MgmtGroupEntityObject $MgmtGroupEntityObject }
+
+This example retrieves specified Azure Management Group object, retrieves its details, and formats the data for inclusion in an infrastructure diagram.
+#>
+function Export-AzureDevOps
+{
+    [CmdletBinding()]
+    param(
+        # [Parameter(Mandatory = $true)]
+        # [PSCustomObject]$PARAMNAME
+    )
+
+    try {
+        $data = ""
+        
+        ### Collect organization info
+        # Get Entra access token for Azure DevOps (resource app ID)
+        # Note: Get-AzAccessToken returns a SecureString in newer Az versions; convert to plain text for the header
+        $secureToken = (Get-AzAccessToken -ResourceUrl "499b84ac-1321-427f-aa17-267ca6975798").Token
+        $tokenPtr   = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureToken)
+        $accessToken = [Runtime.InteropServices.Marshal]::PtrToStringAuto($tokenPtr)
+        
+        $headers = @{
+            Authorization = "Bearer $accessToken"
+            Accept                   = "application/json"
+            "X-TFS-FedAuthRedirect"  = "Suppress"
+        }
+
+        # Resolve profile (to get your member/profile ID)
+        $profileUrl = "https://app.vssps.visualstudio.com/_apis/profile/profiles/me?api-version=7.1-preview.3"
+        $profileADO = Invoke-RestMethod -Method Get -Uri $profileUrl -Headers $headers -SkipHttpErrorCheck
+        $memberId = $profileADO.id
+        
+        if ($memberId) { # Continue ADO export
+            # List organizations (accounts) for this memberId
+            $accountsUrl = "https://app.vssps.visualstudio.com/_apis/accounts?memberId=$memberId&api-version=7.1"
+            $accountsResponse = Invoke-RestMethod -Method Get -Uri $accountsUrl -Headers $headers -SkipHttpErrorCheck
+            
+            # Shape the output
+            $orgs = $accountsResponse.value | Select-Object `
+                @{Name="OrganizationName";Expression={$_.accountName}},
+                @{Name="OrganizationUrl";Expression={ "https://dev.azure.com/$($_.accountName)" }},
+                @{Name="AccountUri (legacy)";Expression={$_.accountUri}},
+                @{Name="AccountId";Expression={$_.accountId}}
+
+            if ($orgs) {
+                $Script:Legend += ,@("Azure DevOps Organization","ado.png")
+                $orgs | ForEach-Object {
+                    $org = $_
+                    $orgDOTName = $org.OrganizationName.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $script:rankADO += "ado_$orgDOTName"
+                    $header = "        subgraph cluster_ado {
+                style = solid;
+                colorscheme = blues9;
+                bgcolor = 3;
+                margin = 0;
+                node [colorscheme = blues9; color = 3; margin = 0;];
+            "
+
+                    $link = ""
+                    if ( $EnableLinks -AND -not $script:DoSanitize) { $link = "URL=`"$($org.OrganizationUrl)`";"}
+                    
+                    $organization = $org.OrganizationName
+                    $url = "https://dev.azure.com/$organization/_apis/projects?api-version=7.1&stateFilter=WellFormed&`$top=200"
+                    $projects = Invoke-RestMethod -Method Get -Uri $url -Headers $headers
+                    $ADOProjects = $projects.value | Select-Object @{N='Organization';E={$organization}}, name, id, state
+                    
+                    # ADO Org header/table
+                    $data += "  ado_$orgDOTName [label = <
+                        <TABLE border=`"0`" style=`"rounded`">
+                        <TR><TD border=`"0`" align=`"left`"><B>Organization Name: $(SanitizeString $org.OrganizationName)</B></TD></TR>
+                        <TR><TD border=`"0`" align=`"left`"><BR/><B>Projects ($($ADOProjects.count)):</B></TD></TR>
+                        <HR/>
+                    "
+
+                    if ( $ADOProjects ) {
+                        $ADOProjects | ForEach-Object {
+                            $project = $_
+                            $projectName = $project.Name
+                            $data += "      <TR><TD border=`"0`" align=`"left`">- $(SanitizeString $projectName)</TD></TR>
+                            "
+                        }
+                    } else {
+                        $data += "      <TR><TD border=`"0`" align=`"left`">- No projects found !</TD></TR>
+                        "
+                    }
+
+                    # End table
+                    $ImagePath = Join-Path $OutputPath "icons" "ado.png"               
+                    $footer = "
+                            </TABLE>>;
+                            image = `"$ImagePath`";imagepos = `"tr`"; labelloc = `"b`";height = 2.5;$link];
+                    }"
+                }
+                
+                $alldata = $header + $data + $footer
+                Export-AddToFile -Data $alldata
+            } 
+        }
+    }
+    catch {
+        Write-Error "Can't export Azrue DevOps at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+  
+}
+
+<#
+.SYNOPSIS
+Exports details of Entra licenses for inclusion in an infrastructure diagram.
+
+.DESCRIPTION
+The `Export-Licenses` function processes all Entra licenses, retrieves its details, and formats the data for inclusion in an infrastructure diagram.
+
+This example retrieves specified Azure Management Group object, retrieves its details, and formats the data for inclusion in an infrastructure diagram.
+#>
+function Export-Licenses
+{
+    [CmdletBinding()]
+    param(
+        # [Parameter(Mandatory = $true)]
+        # [PSCustomObject]$PARAMNAME
+    )
+
+    try {
+        $data = ""
+        
+       # Acquire Graph access token (SecureString) and convert to plain text
+        $secureToken = (Get-AzAccessToken -ResourceUrl "https://graph.microsoft.com/").Token
+        $tokenPtr    = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureToken)
+        $accessToken = [Runtime.InteropServices.Marshal]::PtrToStringAuto($tokenPtr)
+
+        $headers = @{
+            Authorization = "Bearer $accessToken"
+            Accept        = "application/json"
+            #"X-TFS-FedAuthRedirect"  = "Suppress"
+        }
+
+        # ----- 1) TENANT LICENSE INVENTORY (subscribedSkus) -----
+        $skusUrl = "https://graph.microsoft.com/v1.0/subscribedSkus"
+        $skusResp = Invoke-RestMethod -Method Get -Uri $skusUrl -Headers $headers -SkipHttpErrorCheck
+
+        # Static mapping: skuPartNumber -> Friendly Product Name
+        # (Curate and extend as needed for your tenant)
+        $skuMap = @{
+            # --- Microsoft 365 / Office 365 Enterprise plans ---
+            "STANDARDPACK"                 = "Office 365 E1"
+            "ENTERPRISEPACK"               = "Office 365 E3"
+            "ENTERPRISEPREMIUM"            = "Office 365 E5"
+
+            # --- Microsoft 365 Enterprise ---
+            "SPE_E3"                       = "Microsoft 365 E3"
+            "SPE_E5"                       = "Microsoft 365 E5"
+            "SPE_F1"                       = "Microsoft 365 F1"
+            "SPE_F3"                       = "Microsoft 365 F3"
+
+            # --- Microsoft 365 Business plans ---
+            "M365_BUSINESS_BASIC"          = "Microsoft 365 Business Basic"
+            "M365_BUSINESS_STANDARD"       = "Microsoft 365 Business Standard"
+            "SPB"                          = "Microsoft 365 Business Premium"
+            "O365_BUSINESS_ESSENTIALS"     = "Office 365 Business Basic"
+
+            # --- Entra ID (Azure AD) ---
+            "AAD_BASIC"                    = "Microsoft Entra ID Basic"
+            "AAD_PREMIUM"                  = "Microsoft Entra ID P1"
+            "AAD_PREMIUM_P2"               = "Microsoft Entra ID P2"
+
+            # --- Enterprise Mobility + Security ---
+            "EMS"                          = "Enterprise Mobility + Security E3"
+            "EMSPREMIUM"                   = "Enterprise Mobility + Security E5"
+
+            # --- Exchange / SharePoint / OneDrive / Apps ---
+            "EXCHANGESTANDARD"             = "Exchange Online (Plan 1)"
+            "EXCHANGEENTERPRISE"           = "Exchange Online (Plan 2)"
+            "SHAREPOINTSTANDARD"           = "SharePoint Online (Plan 1)"
+            "SHAREPOINTENTERPRISE"         = "SharePoint Online (Plan 2)"
+            "OFFICESUBSCRIPTION"           = "Microsoft 365 Apps for Enterprise"
+            "ONEDRIVEENTERPRISE"           = "OneDrive for Business (Plan 2)"
+
+            # --- Teams ---
+            "TEAMS1"                       = "Microsoft Teams (Standalone)"
+            "MICROSOFT_TEAMS_PREMIUM"      = "Microsoft Teams Premium"
+            "ADV_COMMS"                    = "Microsoft 365 Advanced Communications"
+
+            # --- Power BI ---
+            "POWER_BI_STANDARD"            = "Power BI (Free)"
+            "POWER_BI_PRO"                 = "Power BI Pro"
+            "POWER_BI_PREMIUM_PER_USER"    = "Power BI Premium Per User"
+
+            # --- Visio ---
+            "VISIOONLINEPLAN1"             = "Visio Plan 1"
+            "VISIOONLINEPLAN2"             = "Visio Plan 2"
+            "VISIOCLIENT"                  = "Visio Plan 2 (Desktop Client)"
+
+            # --- Project ---
+            "PROJECTESSENTIALS"            = "Project Online Essentials"
+            "PROJECTPROFESSIONAL"          = "Project Online Professional"
+            "PROJECTPREMIUM"               = "Project Online Premium"
+
+            # --- Security / Defender ---
+            "ATP_ENTERPRISE"               = "Microsoft Defender for Office 365 (Plan 1)"
+            "ATP_ENTERPRISE_PREMIUM"       = "Microsoft Defender for Office 365 (Plan 2)"
+            "MICROSOFT_DEFENDER_XDR"       = "Microsoft Defender XDR"
+
+            # --- Compliance / Purview ---
+            "EQUIV_COMPLIANCE"             = "Microsoft Purview Compliance Add-on"
+
+            # --- Education SKUs ---
+            "STANDARDWOFFPACK_IW_FACULTY"  = "Office 365 A1 for Faculty"
+            "STANDARDWOFFPACK_STUDENT"     = "Office 365 A1 for Students"
+            "ENTERPRISEPACK_STUDENT"       = "Office 365 A3 for Students"
+            "ENTERPRISEPACK_FACULTY"       = "Office 365 A3 for Faculty"
+            "ENTERPRISEPREMIUM_STUDENT"    = "Office 365 A5 for Students"
+            "ENTERPRISEPREMIUM_FACULTY"    = "Office 365 A5 for Faculty"
+
+            # --- Dynamics 365 ---
+            "DYN365_ENTERPRISE_SALES"      = "Dynamics 365 Sales Enterprise"
+            "DYN365_CDS"                   = "Dynamics 365 Customer Service"
+
+            # --- Copilot ---
+            "MICROSOFT_365_COPILOT"        = "Microsoft 365 Copilot"
+
+            # --- Windows Store / Business ---
+            "WINDOWS_STORE"                = "Microsoft Store for Business"
+
+            # --- Misc ---
+            "FLOW_FREE"                    = "Power Automate Free"
+            "POWERAPPS_VIRAL"              = "Power Apps Developer/Trial"
+            "EXCHANGE_S_FOUNDATION"        = "Exchange Foundation (Service Plan)"
+        }
+
+
+        $inventory = @()
+        foreach ($sku in $skusResp.value) {
+            $inventory += [PSCustomObject]@{
+                SkuPartNumber  = $sku.skuPartNumber
+                SkuId          = $sku.skuId
+                SkuFriendlyName = $skuMap[$sku.skuPartNumber]
+                TotalEnabled   = $sku.prepaidUnits.enabled
+                ConsumedUnits  = $sku.consumedUnits
+                #WarningUnits   = $sku.prepaidUnits.warning
+                #SuspendedUnits = $sku.prepaidUnits.suspended            
+            }
+        }
+
+        if ($inventory.count -gt 0) {
+            $Script:Legend += ,@("Entra Licenses","licenses.png")
+            $script:rankLicense += "licenses"
+            $header = "        subgraph cluster_licenses {
+            style = solid;
+            colorscheme = blues9;
+            bgcolor = 3;
+            margin = 0;
+            node [colorscheme = blues9; color = 3; margin = 0;];
+        "
+        
+            $link = ""
+            if ( $EnableLinks -AND -not $script:DoSanitize) { $link = "URL=`"https://entra.microsoft.com`";" }
+            
+            # License header/table
+            $data += "  licenses [label = <
+                    <TABLE border=`"0`" style=`"rounded`">
+                    <TR><TD border=`"0`" align=`"left`"><B>Licenses:</B></TD></TR>
+                    <HR/>
+                    <TR><TD border=`"0`" align=`"left`"><BR/><B>License</B></TD><TD border=`"0`" align=`"right`"><B>Total</B></TD><TD border=`"0`" align=`"right`"><B>Available</B></TD><TD border=`"0`" align=`"right`"><B>Utilized</B></TD></TR>
+            "
+
+            $inventory = $inventory | Sort-Object -Property "SkuFriendlyName"
+            $inventory | ForEach-Object {
+                $license = $_
+                $amount = $license.TotalEnabled
+                $assigned = $license.ConsumedUnits
+                $available = $amount - $assigned
+                $licenseName = $license.SkuFriendlyName
+                #$licenseName = $license.SkuPartNumber
+                if ( $null -eq $licenseName -or $licenseName -eq "" ) { $licenseName = $license.SkuPartNumber }
+
+                $data += "      <TR><TD border=`"0`" align=`"left`">$licenseName</TD><TD border=`"0`" align=`"right`">$amount</TD><TD border=`"0`" align=`"right`">$available</TD><TD border=`"0`" align=`"right`">$assigned</TD></TR>
+                "
+            }
+
+            # End table
+            $ImagePath = Join-Path $OutputPath "icons" "licenses.png"               
+            $footer = "
+                    </TABLE>>;
+                    image = `"$ImagePath`";imagepos = `"tr`"; labelloc = `"b`";height = 2.5;$link];
+            }"
+            $alldata = $header + $data + $footer
+            Export-AddToFile -Data $alldata
+        }
+        
+    }
+    catch {
+        Write-Error "Can't export Azrue DevOps at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+  
+}
+
+<#
+.SYNOPSIS
+Confirms that all prerequisites are met for generating the Azure infrastructure diagram.
+
+.DESCRIPTION
+The `Confirm-Prerequisites` function ensures that all required tools, modules, and configurations are in place before generating the Azure infrastructure diagram. It verifies the presence of Graphviz (`dot.exe`), required PowerShell modules (`Az.Network` and `Az.Accounts`), Azure authentication, and necessary icons for the diagram. If any prerequisites are missing, it provides guidance for resolving the issues.
+
+#>
+function Update-OrderIPs {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$IPArray
+    )
+
+    try {
+        #Sort IP/routes for easier reading
+        $IPArray = $IPArray | Sort-Object { [regex]::Replace($_.AddressSpace, '\d+', { $args[0].Value.PadLeft(100) }) }
+        return $IPArray
+    }
+    catch {
+        Write-Error "Can't export Management Groups Entity Object at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+  
+}
+
+<#
+.SYNOPSIS
 Confirms that all prerequisites are met for generating the Azure infrastructure diagram.
 
 .DESCRIPTION
@@ -5047,6 +5572,7 @@ function Confirm-Prerequisites {
     $icons = @(
         "LICENSE",
         "acr.png",
+        "ado.png",
         "afw.png",
         "agw.png",
         "aks-node-pool.png",
@@ -5088,6 +5614,7 @@ function Confirm-Prerequisites {
         "ipgroup.png",
         "keyvault.png",
         "lb.png",
+        "licenses.png",
         #"lgw.png",
         "managed-identity.png",
         "mgmtgroup.png"
@@ -5227,9 +5754,6 @@ function Get-DOTExecutable {
   .PARAMETER KeepDotFile
   Preserve the DOT file after diagram generation
   
-  #.PARAMETER IPPlanAsGrid
-  #Outputs IP Plan via "Out-GridView" (graphical table) instead of "Format-Table" (command line table)
-
   .PARAMETER LogoURL
   If supplied along with -LogoPath, the logo will become a clickable link
   
@@ -5281,6 +5805,7 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][switch]$DisableRanking,    
         [Parameter(Mandatory = $false)][switch]$EnableACA,
         [Parameter(Mandatory = $false)][switch]$EnableACI,
+        [Parameter(Mandatory = $false)][switch]$EnableADO,
         [Parameter(Mandatory = $false)][switch]$EnableACR,
         [Parameter(Mandatory = $false)][switch]$EnableAKS,
         [Parameter(Mandatory = $false)][switch]$EnableAPIM,
@@ -5294,8 +5819,9 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][switch]$EnableESAN,
         [Parameter(Mandatory = $false)][switch]$EnableGAL,
         [Parameter(Mandatory = $false)][switch]$EnableKV,
-        [Parameter(Mandatory = $false)][switch]$EnableLinks,
         [Parameter(Mandatory = $false)][switch]$EnableLB,
+        [Parameter(Mandatory = $false)][switch]$EnableLicense,
+        [Parameter(Mandatory = $false)][switch]$EnableLinks,
         [Parameter(Mandatory = $false)][switch]$EnableMI,
         [Parameter(Mandatory = $false)][switch]$EnableMySQL,
         [Parameter(Mandatory = $false)][switch]$EnablePE,
@@ -5310,7 +5836,7 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][switch]$EnableVM,
         [Parameter(Mandatory = $false)][switch]$EnableVMSS,
         [Parameter(Mandatory = $false)][switch]$KeepDotFile,
-        [Parameter(Mandatory = $false)][switch]$IPPlanAsGrid,
+        #[Parameter(Mandatory = $false)][switch]$IPPlanAsGrid,
         [Parameter(Mandatory = $false)][string]$LogoPath = $null,
         [Parameter(Mandatory = $false)][string]$LogoURL = $null,
         [Parameter(Mandatory = $false)][string[]]$ManagementGroups,
@@ -5323,6 +5849,7 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][switch]$SkipACA,
         [Parameter(Mandatory = $false)][switch]$SkipACI,
         [Parameter(Mandatory = $false)][switch]$SkipACR,
+        [Parameter(Mandatory = $false)][switch]$SkipADO,
         [Parameter(Mandatory = $false)][switch]$SkipAKS,
         [Parameter(Mandatory = $false)][switch]$SkipAPIM,
         [Parameter(Mandatory = $false)][switch]$SkipASP,
@@ -5336,6 +5863,7 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][switch]$SkipGAL,
         [Parameter(Mandatory = $false)][switch]$SkipKV,
         [Parameter(Mandatory = $false)][switch]$SkipLB,
+        [Parameter(Mandatory = $false)][switch]$SkipLicense,
         [Parameter(Mandatory = $false)][switch]$SkipMI,
         [Parameter(Mandatory = $false)][switch]$SkipMySQL,
         [Parameter(Mandatory = $false)][switch]$SkipNonCoreNetwork,
@@ -5372,8 +5900,9 @@ function Get-AzNetworkDiagram {
         write-host "-EnableESAN : $EnableESAN"
         write-host "-EnableGAL : $EnableGAL"
         write-host "-EnableKV : $EnableKV"
-        write-host "-EnableLinks : $EnableLinks"
         write-host "-EnableLB : $EnableLB"
+        write-host "-EnableLB : $EnableLicense"
+        write-host "-EnableLinks : $EnableLinks"
         write-host "-EnableMI : $EnableMI"
         write-host "-EnableMySQL : $EnableMySQL"
         write-host "-EnablePE : $EnablePE"
@@ -5414,6 +5943,7 @@ function Get-AzNetworkDiagram {
         write-host "-SkipGAL : $SkipGAL"
         write-host "-SkipKV : $SkipKV"
         write-host "-SkipLB : $SkipLB"
+        write-host "-SkipLB : $SkipLicense"
         write-host "-SkipMI : $SkipMI"
         write-host "-SkipMySQL : $SkipMySQL"
         write-host "-SkipNonCoreNetwork : $SkipNonCoreNetwork"
@@ -5431,6 +5961,7 @@ function Get-AzNetworkDiagram {
         write-host "-Subscriptions : $Subscriptions"
         write-host "-TenantId : $TenantId"
         write-host "-VerticalView : $VerticalView"
+        write-host ""
     }
 
     # Remove trailing "\" from path
@@ -5441,13 +5972,15 @@ function Get-AzNetworkDiagram {
     $vermajor = $module.Version.Major
     $verminor = $module.Version.Minor
     $verbuild = $module.Version.Build
-    $ver = "${vermajor}.${verminor}.${verbuild}"
+    $prerelease = $module.PrivateData.PSData.Prerelease ? "-$($module.PrivateData.PSData.Prerelease)" : ""
+
+    $ver = "${vermajor}.${verminor}.${verbuild}${prerelease}"
 
     if ( $ver -eq "0.0.-1" ) { $ver = "(Non-PSGallery version)" } # Module loaded from file - not from PSGallery
     elseif ( $ver -eq ".." ) { $ver = "(Non-PSGallery version)" } # Module not imported - ran directly from .psm1 file ?
     else { 
         if ( $verbuild -eq "-1" ) { $verbuild = "0" }
-        $ver = "${vermajor}.${verminor}.${verbuild}"
+        $ver = "${vermajor}.${verminor}.${verbuild}${prerelease}"
     }
     
     Write-Output "##############################################################################################"
@@ -5483,6 +6016,7 @@ function Get-AzNetworkDiagram {
     #$script:rankaca = @()
     $script:rankaci = @()
     $script:rankacr = @()
+    $script:rankADO = @()
     $script:rankagw = @()
     $script:rankaks = @()
     $script:rankapim = @()
@@ -5493,6 +6027,7 @@ function Get-AzNetworkDiagram {
     #$script:rankAVDWorkspace = @()
     $script:rankavs = @()
     $script:rankazfw = @()
+    $script:rankazfwp = @()
     #$script:rankbas = @()
     $script:rankbv = @()
     $script:rankcontainerappenv = @()
@@ -5509,6 +6044,7 @@ function Get-AzNetworkDiagram {
     $script:rankipg = @()
     $script:rankkv = @()
     $script:ranklb = @()
+    $script:rankLicense = @()
     $script:rankmi = @()
     $script:rankmysql = @()
     $script:ranknic = @()
@@ -5590,12 +6126,18 @@ function Get-AzNetworkDiagram {
 
     try {
         if ( $OnlyMgmtGroups ) {
+            ###############################################################################################################################################
+            ############# MANAGEMENT GROUP OVERVIEW
+            ###############################################################################################################################################
             Write-Output "`nCollecting management groups and subscriptions..."
             $script:Legend = @()
             $Script:Legend += ,@("Management Group","mgmtgroup.png")
             $Script:Legend += ,@("Subscription","sub.png")
             Export-MgmtGroups
         } elseif ( $OnlyIPPlan ) {
+            ###############################################################################################################################################
+            ############# IP PLAN
+            ###############################################################################################################################################
             Write-Output "`nCollecting Data for IP Plan..."
             $script:IPPlan = @()
 
@@ -5626,6 +6168,14 @@ function Get-AzNetworkDiagram {
                     $lgwObject = Get-AzLocalNetworkGateway -ResourceGroupName $standardObject.ResourceGroupName -Name $standardObject.Name 
                     Export-LGW2IPPlan -LGW $lgwObject
                 }
+
+                #P2S VPNs
+                $VNGs = Get-AzResource | Where-Object { $_.ResourceType -eq "Microsoft.Network/virtualNetworkGateways" }
+                $VNGs | ForEach-Object {
+                    $standardObject = $_
+                    $gwObject = Get-AzVirtualNetworkGateway -ResourceGroupName $standardObject.ResourceGroupName -Name $standardObject.Name 
+                    Export-GW2IPPlan -VNGW $gwObject
+                }
             }
             # Output to console
             #if ( $IPPlanAsGrid ) {
@@ -5640,6 +6190,9 @@ function Get-AzNetworkDiagram {
 
 
         } else {
+            ###############################################################################################################################################
+            ############# REGULAR DIAGRAM
+            ###############################################################################################################################################
             # Collect all vNet ID's in scope otherwise we can end up with 1 vNet peered to 1000 other vNets which are not in scope
             # Errors will appear like: dot: graph is too large for cairo-renderer bitmaps. Scaling by 0.324583 to fit
             
@@ -6157,6 +6710,23 @@ function Get-AzNetworkDiagram {
                 Export-AddToFile "    ##### END"
                 Export-AddToFile "    ##########################################################################################################`n"
             }
+
+            Write-host "" #Empty line
+            
+            # Licenses
+            if ( $EnableLicense -OR (-not $SkipNonCoreNetwork -AND -not $SkipLicense ) ) {
+                Write-Output "Collecting Entra Licenses..."
+                Export-AddToFile "    ##### Licenses #####"
+                Export-Licenses
+            }
+
+            # Azure DevOps (ADO)
+            if ( $EnableADO -OR (-not $SkipNonCoreNetwork -AND -not $SkipADO ) ) {
+                Write-Output "Collecting Azure DevOps Organizations..."
+                Export-AddToFile "    ##### Azure DevOps Organizations #####"
+                Export-AzureDevOps
+            }
+            
             
             # vNet Peerings
             Write-Output "`nConnecting in-scope peered vNets..."
