@@ -1356,8 +1356,8 @@ function Export-VM {
                 
                 $PrivateIpAddresses += $nicipconfig.PrivateIpAddress ? $(SanitizeString $nicipconfig.PrivateIpAddress) : ""
             }
-            $PrivateIpAddresses = $PrivateIpAddresses | Sort-Object -Unique
-            $PublicIPAddresses = $PublicIPAddresses | Sort-Object -Unique
+            $PrivateIpAddresses = $PrivateIpAddresses | Sort-Object -Unique | Sort-Object { [regex]::Replace($_, '\d+', { $args[0].Value.PadLeft(100) }) }
+            $PublicIPAddresses = $PublicIPAddresses | Sort-Object -Unique | Sort-Object { [regex]::Replace($_, '\d+', { $args[0].Value.PadLeft(100) }) }
             if ( $null -eq $PublicIPAddresses ) { $PublicIPAddresses = "None" }
             $subnetid = $nicipconfig.Subnet.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
 
@@ -3006,7 +3006,7 @@ function Export-SubnetConfig {
                                 $ASN = SanitizeString $rtserv.RouteServerAsn
                                 $BranchToBranch = $rtserv.AllowBranchToBranchTraffic
                                 $rtservips = ($rtserv.RouteServerIps | Sort-Object | ForEach-Object {SanitizeString $_}) -join ', '
-                                $rtservpeers = $rtserv.Peerings | Sort-Object -Property PeerIp
+                                $rtservpeers = $rtserv.Peerings | Sort-Object { [regex]::Replace($_.PeerIp, '\d+', { $args[0].Value.PadLeft(100) }) }
                                 $rtservpeersstring = ""
                                 $rtservpeers | foreach-object {
                                     $peer = $_
@@ -5473,18 +5473,16 @@ function Export-Licenses
             # License header/table
             $data += "  licenses [label = <
                     <TABLE border=`"0`" style=`"rounded`">
-                    <TR><TD border=`"0`" align=`"left`"><B>Licenses:</B></TD></TR>
-                    <HR/>
-                    <TR><TD border=`"0`" align=`"left`"><BR/><B>License</B></TD><TD border=`"0`" align=`"right`"><B>Total</B></TD><TD border=`"0`" align=`"right`"><B>Available</B></TD><TD border=`"0`" align=`"right`"><B>Utilized</B></TD></TR>
+                    <TR><TD border=`"0`" align=`"left`"><B>License(s)</B></TD><TD border=`"0`" align=`"right`"><B>Total</B></TD><TD border=`"0`" align=`"right`"><B>Available</B></TD><TD border=`"0`" align=`"right`"><B>Utilized</B></TD></TR>
             "
 
             $inventory = $inventory | Sort-Object -Property "SkuFriendlyName"
             $inventory | ForEach-Object {
                 $license = $_
-                $amount = $license.TotalEnabled
-                $assigned = $license.ConsumedUnits
-                $available = $amount - $assigned
-                $licenseName = $license.SkuFriendlyName
+                $amount = SanitizeString $license.TotalEnabled
+                $assigned = SanitizeString $license.ConsumedUnits
+                $available = SanitizeString $($amount - $assigned)
+                $licenseName = SanitizeString $license.SkuFriendlyName
                 #$licenseName = $license.SkuPartNumber
                 if ( $null -eq $licenseName -or $licenseName -eq "" ) { $licenseName = $license.SkuPartNumber }
 
