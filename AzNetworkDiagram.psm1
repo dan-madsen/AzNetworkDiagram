@@ -1356,8 +1356,8 @@ function Export-VM {
                 
                 $PrivateIpAddresses += $nicipconfig.PrivateIpAddress ? $(SanitizeString $nicipconfig.PrivateIpAddress) : ""
             }
-            $PrivateIpAddresses = $PrivateIpAddresses | Sort-Object -Unique
-            $PublicIPAddresses = $PublicIPAddresses | Sort-Object -Unique
+            $PrivateIpAddresses = $PrivateIpAddresses | Sort-Object -Unique | Sort-Object { [regex]::Replace($_, '\d+', { $args[0].Value.PadLeft(100) }) }
+            $PublicIPAddresses = $PublicIPAddresses | Sort-Object -Unique | Sort-Object { [regex]::Replace($_, '\d+', { $args[0].Value.PadLeft(100) }) }
             if ( $null -eq $PublicIPAddresses ) { $PublicIPAddresses = "None" }
             $subnetid = $nicipconfig.Subnet.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
 
@@ -3006,7 +3006,7 @@ function Export-SubnetConfig {
                                 $ASN = SanitizeString $rtserv.RouteServerAsn
                                 $BranchToBranch = $rtserv.AllowBranchToBranchTraffic
                                 $rtservips = ($rtserv.RouteServerIps | Sort-Object | ForEach-Object {SanitizeString $_}) -join ', '
-                                $rtservpeers = $rtserv.Peerings | Sort-Object -Property PeerIp
+                                $rtservpeers = $rtserv.Peerings | Sort-Object { [regex]::Replace($_.PeerIp, '\d+', { $args[0].Value.PadLeft(100) }) }
                                 $rtservpeersstring = ""
                                 $rtservpeers | foreach-object {
                                     $peer = $_
