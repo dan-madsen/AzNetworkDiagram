@@ -193,9 +193,9 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
   - [x] DevOps Organizations added to diagram
   - [x] Entra Licenses in some form, maybe just relevant Entra ID/ARM licenses
   - [x] Azure Firewall Policy parant relationships
-- Fixes
+- [x] Fixes
   - [x] Static Web App - custom domain logic error
-  - Proper sorting of IP addresses/routes for different objects
+  - [x] Proper sorting of IP addresses/routes for different objects
     - [x] NICs
     - [x] Route server peers
     - [x] Route tables
