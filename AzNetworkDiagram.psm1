@@ -825,13 +825,23 @@ function Export-ApplicationGateway {
                 $ruleid = $rule.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
                 $listenerId = ($rule.HttpListenerText | ConvertFrom-Json).id.replace("-", "").replace("/", "").replace(".", "").ToLower()
                 $ruleName = SanitizeString $rule.name
-                $poolid = ($rule.BackendAddressPoolText | ConvertFrom-Json).id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                
+                $beAddressPoolText = $rule.BackendAddressPoolText
+                if ( $null -ne $beAddressPoolText -and "" -ne $beAddressPoolText -and "null" -ne $beAddressPoolText ) {
+                    $poolid = ( $beAddressPoolText | ConvertFrom-Json).id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    #DOT
+                    #$data += "        $ruleid [label = `"Routing rule name:$ruleName\n\n\n `" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n"
+                    #$data += "        $listenerid -> $ruleid;`n"
+                    #$data += "        $ruleid -> $poolid;`n"
+                    $data += "        $listenerid -> $poolid;`n"
+                }
 
-                #DOT
-                #$data += "        $ruleid [label = `"Routing rule name:$ruleName\n\n\n `" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n"
-                #$data += "        $listenerid -> $ruleid;`n"
-                #$data += "        $ruleid -> $poolid;`n"
-                $data += "        $listenerid -> $poolid;`n"
+                $redirect = $agw | Get-AzApplicationGatewayRedirectConfiguration -ErrorAction SilentlyContinue | Where-Object { $_.Name -eq $ruleName }
+                if ( $null -ne $redirect ) {
+                    $targetListener = $redirect.TargetListener.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $data += "          $listenerId -> $targetListener [constraint=false]"
+                }
+
             }
         }
 
