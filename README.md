@@ -82,6 +82,9 @@ Import-Module .\AzNetworkDiagram.psm1
 
 ### Others (change behavior and/or features)
 - **-DisableRanking** - Disables automatic ranking for resource types. For larger networks, this might be worth a shot.
+- **-EnableADO** - Add list of Azure DevOps Organizations to the output
+- **-EnableEntraDomains** - Add list of Entra ID Domains to the output
+- **-EnableEntraLicenses** - Add list of Entra/M365 licenses to the output
 - **-EnableLinks** - Many resources become links to the Azure portal can be enabled using this flag.
 - **-EnableXXX** - Enable a chosen non-core network resource type regardless of it being skipped (-EnableXXXX will take precedence!) - use tab completion to see current list.
 - **-KeepDotFile** - Keep the DOT file after the diagrams have been generated (normally it is deleted)
@@ -190,8 +193,9 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
     - [x] Azure resources
     - [x] VPN
     - [x] P2S VPN
-  - [x] DevOps Organizations added to diagram
-  - [x] Entra Licenses in some form, maybe just relevant Entra ID/ARM licenses
+  - [x] DevOps Organizations added to diagram (optional - enable manually with -EnableADO)
+  - [x] Entra Licenses added to diagram (optional - enable manually with -EnableEntraLicenses)
+  - [x] Entra Domains added do diagram (optional - enable manually with -EnableEntraDomains)
   - [x] Azure Firewall Policy parant relationships
 - [x] Fixes
   - [x] Static Web App - custom domain logic error
@@ -200,6 +204,7 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
     - [x] Route server peers
     - [x] Route tables
     - [x] Local Network Gateway
+  - [x] Application Gateway - support for redirection scenarios (Issue#120)
 ## v1.5
 - **_SEMI BREAKING CHANGE_**, for easier usage
   - Paramaters with $bool ($true/$false) no longer need the $true/$false parameter - they are now "switches" which enables flags/features without prepending a value. 
