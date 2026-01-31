@@ -841,13 +841,23 @@ function Export-ApplicationGateway {
                 $ruleid = $rule.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
                 $listenerId = ($rule.HttpListenerText | ConvertFrom-Json).id.replace("-", "").replace("/", "").replace(".", "").ToLower()
                 $ruleName = SanitizeString $rule.name
-                $poolid = ($rule.BackendAddressPoolText | ConvertFrom-Json).id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                
+                $beAddressPoolText = $rule.BackendAddressPoolText
+                if ( $null -ne $beAddressPoolText -and "" -ne $beAddressPoolText -and "null" -ne $beAddressPoolText ) {
+                    $poolid = ( $beAddressPoolText | ConvertFrom-Json).id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    #DOT
+                    #$data += "        $ruleid [label = `"Routing rule name:$ruleName\n\n\n `" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n"
+                    #$data += "        $listenerid -> $ruleid;`n"
+                    #$data += "        $ruleid -> $poolid;`n"
+                    $data += "        $listenerid -> $poolid;`n"
+                }
 
-                #DOT
-                #$data += "        $ruleid [label = `"Routing rule name:$ruleName\n\n\n `" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n"
-                #$data += "        $listenerid -> $ruleid;`n"
-                #$data += "        $ruleid -> $poolid;`n"
-                $data += "        $listenerid -> $poolid;`n"
+                $redirect = $agw | Get-AzApplicationGatewayRedirectConfiguration -ErrorAction SilentlyContinue | Where-Object { $_.Name -eq $ruleName }
+                if ( $null -ne $redirect ) {
+                    $targetListener = $redirect.TargetListener.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $data += "          $listenerId -> $targetListener [constraint=false]"
+                }
+
             }
         }
 
@@ -5313,7 +5323,7 @@ function Export-AzureDevOps
         }
     }
     catch {
-        Write-Error "Can't export Azrue DevOps at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+        Write-Error "Can't export Azure DevOps at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
     }
   
 }
@@ -5502,7 +5512,89 @@ function Export-Licenses
         
     }
     catch {
-        Write-Error "Can't export Azrue DevOps at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+        Write-Error "Can't export Entra licenses at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+  
+}
+
+<#
+.SYNOPSIS
+Exports details of Entra domains for inclusion in an infrastructure diagram.
+
+.DESCRIPTION
+The `Export-EntraDomains` function processes all Entra domains, retrieves its details, and formats the data for inclusion in an infrastructure diagram.
+#>
+function Export-EntraDomains
+{
+    [CmdletBinding()]
+    param(
+        # [Parameter(Mandatory = $true)]
+        # [PSCustomObject]$PARAMNAME
+    )
+
+    try {
+        $data = ""
+        
+       # Acquire Graph access token (SecureString) and convert to plain text
+        $secureToken = (Get-AzAccessToken -ResourceUrl "https://graph.microsoft.com/").Token
+        $tokenPtr    = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureToken)
+        $accessToken = [Runtime.InteropServices.Marshal]::PtrToStringAuto($tokenPtr)
+
+        $headers = @{
+            Authorization = "Bearer $accessToken"
+            Accept        = "application/json"
+            #"X-TFS-FedAuthRedirect"  = "Suppress"
+        }
+
+        # ----- 1) TENANT LICENSE INVENTORY (subscribedSkus) -----
+        $domainUrl = "https://graph.microsoft.com/v1.0/domains"
+        $resp = Invoke-RestMethod -Method Get -Uri $domainUrl -Headers $headers -SkipHttpErrorCheck
+        $domains = $resp.value | Select-Object id, isVerified, isDefault
+
+        if ($domains.count -gt 0) {
+            #$Script:Legend += ,@("Entra Licenses","licenses.png")
+            $script:rankLicense += "licenses"
+            $header = "        subgraph cluster_domains {
+            style = solid;
+            colorscheme = blues9;
+            bgcolor = 3;
+            margin = 0;
+            node [colorscheme = blues9; color = 3; margin = 0;];
+        "
+        
+            $link = ""
+            if ( $EnableLinks -AND -not $script:DoSanitize) { $link = "URL=`"https://entra.microsoft.com`";" }
+            
+            # Domains header/table
+            $data += "  licenses [label = <
+                    <TABLE border=`"0`" style=`"rounded`">
+                    <TR><TD border=`"0`" align=`"left`"><B>Domain(s)</B></TD><TD border=`"0`" align=`"right`"><B>Verified</B></TD><TD border=`"0`" align=`"right`"><B>Default</B></TD></TR>
+            "
+
+            $domains = $domains | Sort-Object -Property "id"
+            $domains | ForEach-Object {
+                $domain = $_
+                $domainName = SanitizeString $domain.id
+                $domainIsVerified = $domain.isVerified
+                $domainIsDefault = $domain.isDefault
+                
+                $data += "      <TR><TD border=`"0`" align=`"left`">$domainName</TD><TD border=`"0`" align=`"right`">$domainIsVerified</TD><TD border=`"0`" align=`"right`">$domainIsDefault</TD></TR>
+                "
+            }
+
+            # End table
+            $ImagePath = Join-Path $OutputPath "icons" "licenses.png"               
+            $footer = "
+                    </TABLE>>;
+                    image = `"$ImagePath`";imagepos = `"tr`"; labelloc = `"b`";height = 2.5;$link];
+            }"
+            $alldata = $header + $data + $footer
+            Export-AddToFile -Data $alldata
+        }
+        
+    }
+    catch {
+        Write-Error "Can't export Entra domains at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
     }
   
 }
@@ -5813,12 +5905,13 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][switch]$EnableAppGW,
         [Parameter(Mandatory = $false)][switch]$EnableBV,
         [Parameter(Mandatory = $false)][switch]$EnableCosmosDB,
+        [Parameter(Mandatory = $false)][switch]$EnableEntraDomains,
+        [Parameter(Mandatory = $false)][switch]$EnableEntraLicenses,
         [Parameter(Mandatory = $false)][switch]$EnableEventHub,
         [Parameter(Mandatory = $false)][switch]$EnableESAN,
         [Parameter(Mandatory = $false)][switch]$EnableGAL,
         [Parameter(Mandatory = $false)][switch]$EnableKV,
         [Parameter(Mandatory = $false)][switch]$EnableLB,
-        [Parameter(Mandatory = $false)][switch]$EnableLicense,
         [Parameter(Mandatory = $false)][switch]$EnableLinks,
         [Parameter(Mandatory = $false)][switch]$EnableMI,
         [Parameter(Mandatory = $false)][switch]$EnableMySQL,
@@ -5856,12 +5949,13 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][switch]$SkipAppGW,
         [Parameter(Mandatory = $false)][switch]$SkipBV,
         [Parameter(Mandatory = $false)][switch]$SkipCosmosDB,
+        [Parameter(Mandatory = $false)][switch]$SkipEntraDomains,
+        [Parameter(Mandatory = $false)][switch]$SkipEntraLicenses,
         [Parameter(Mandatory = $false)][switch]$SkipEventHub,
         [Parameter(Mandatory = $false)][switch]$SkipESAN,
         [Parameter(Mandatory = $false)][switch]$SkipGAL,
         [Parameter(Mandatory = $false)][switch]$SkipKV,
         [Parameter(Mandatory = $false)][switch]$SkipLB,
-        [Parameter(Mandatory = $false)][switch]$SkipLicense,
         [Parameter(Mandatory = $false)][switch]$SkipMI,
         [Parameter(Mandatory = $false)][switch]$SkipMySQL,
         [Parameter(Mandatory = $false)][switch]$SkipNonCoreNetwork,
@@ -5894,12 +5988,13 @@ function Get-AzNetworkDiagram {
         write-host "-EnableAppGW : $EnableAppGW"
         write-host "-EnableBV : $EnableBV"
         write-host "-EnableCosmosDB : $EnableCosmosDB"
+        write-host "-EnableEntraDomains : $EnableEntraDomains"
         write-host "-EnableEventHub : $EnableEventHub"
         write-host "-EnableESAN : $EnableESAN"
         write-host "-EnableGAL : $EnableGAL"
         write-host "-EnableKV : $EnableKV"
         write-host "-EnableLB : $EnableLB"
-        write-host "-EnableLB : $EnableLicense"
+        write-host "-EnableLB : $EnableEntraLicenses"
         write-host "-EnableLinks : $EnableLinks"
         write-host "-EnableMI : $EnableMI"
         write-host "-EnableMySQL : $EnableMySQL"
@@ -5936,12 +6031,13 @@ function Get-AzNetworkDiagram {
         write-host "-SkipAppGW : $SkipAppGW"
         write-host "-SkipBV : $SkipBV"
         write-host "-SkipCosmosDB : $SkipCosmosDB"
+        write-host "-SkipEntraDomains : $SkipEntraDomains"
         write-host "-SkipEventHub : $SkipEventHub"
         write-host "-SkipESAN : $SkipESAN"
         write-host "-SkipGAL : $SkipGAL"
         write-host "-SkipKV : $SkipKV"
         write-host "-SkipLB : $SkipLB"
-        write-host "-SkipLB : $SkipLicense"
+        write-host "-SkipEntraLicenses : $SkipEntraLicenses"
         write-host "-SkipMI : $SkipMI"
         write-host "-SkipMySQL : $SkipMySQL"
         write-host "-SkipNonCoreNetwork : $SkipNonCoreNetwork"
@@ -6710,21 +6806,31 @@ function Get-AzNetworkDiagram {
             }
 
             Write-host "" #Empty line
-            
+          
+            # Entra Domains (EntraDomains)
+            #if ( $EnableEntraDomains -OR (-not $SkipNonCoreNetwork -AND -not $SkipEntraDomains ) ) {
+            if ( $EnableEntraDomains ) {
+                Write-Output "Collecting Entra Domains..."
+                Export-AddToFile "    ##### Entra Domains #####"
+                Export-EntraDomains
+            }
+
             # Licenses
-            if ( $EnableLicense -OR (-not $SkipNonCoreNetwork -AND -not $SkipLicense ) ) {
+            #if ( $EnableEntraLicenses -OR (-not $SkipNonCoreNetwork -AND -not $SkipEntraLicenses ) ) {
+            if ( $EnableEntraLicenses ) {
                 Write-Output "Collecting Entra Licenses..."
-                Export-AddToFile "    ##### Licenses #####"
+                Export-AddToFile "    ##### Entra Licenses #####"
                 Export-Licenses
             }
 
             # Azure DevOps (ADO)
-            if ( $EnableADO -OR (-not $SkipNonCoreNetwork -AND -not $SkipADO ) ) {
+            #if ( $EnableADO -OR (-not $SkipNonCoreNetwork -AND -not $SkipADO ) ) {
+            if ( $EnableADO ) {
                 Write-Output "Collecting Azure DevOps Organizations..."
                 Export-AddToFile "    ##### Azure DevOps Organizations #####"
                 Export-AzureDevOps
             }
-            
+           
             
             # vNet Peerings
             Write-Output "`nConnecting in-scope peered vNets..."
