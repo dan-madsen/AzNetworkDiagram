@@ -334,4 +334,4 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 ---
 
 # Issues, bugs, comments and ideas
-Please submit using the issues option in GitHub
+Please submit these using the issues option in GitHub. Remember to supply at least version information, error description and error message from the command line. If the Azure resource/object in question have a "special/exotic/rarely used" configuration that you are aware of, please include that is well, to ease troubleshooting.
