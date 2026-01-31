@@ -205,6 +205,9 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
     - [x] Route tables
     - [x] Local Network Gateway
   - [x] Application Gateway - support for redirection scenarios (Issue#120)
+## v1.5.1
+  - Bug fixes
+    - Application Gateway - support for redirection scenarios (Issue#120)
 ## v1.5
 - **_SEMI BREAKING CHANGE_**, for easier usage
   - Paramaters with $bool ($true/$false) no longer need the $true/$false parameter - they are now "switches" which enables flags/features without prepending a value. 
