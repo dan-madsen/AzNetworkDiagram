@@ -2063,6 +2063,20 @@ function Export-AppServicePlan {
             $script:rankas += $appid
 
             $Location = SanitizeLocation $app.Location
+            
+            #Traffic calculation
+            $trafficPercentage = 100
+            $trafficRules = $app.SiteConfig.Experiments.RampUpRules
+            if ( $null -ne $trafficRules ) {
+                $trafficRules | ForEach-Object {
+                    $rule = $_
+                    $rulePercentage = $rule.ReroutePercentage
+                    if ($rulePercentage -is [double]) { $trafficPercentage = $trafficPercentage - $rulePercentage }
+                }
+            }
+            $trafficPercentageString = ""
+            if ( $trafficPercentage -lt 100 ) { $trafficPercentageString = "Traffic percentage: $($trafficPercentage)%"}
+
             $kind = $app.Kind
             if ( $kind.Contains("functionapp") ) {
                 $ImagePath = Join-Path $OutputPath "icons" "functionapp.png"
@@ -2070,7 +2084,7 @@ function Export-AppServicePlan {
                 $ImagePath = Join-Path $OutputPath "icons" "appservices.png" 
             }
 
-            $data += "        $($appid) [label = `"\nLocation: $Location\nName: $(SanitizeString $app.Name)\nKind: $kind\nHost Name: $(SanitizeString $app.DefaultHostName)\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $_)];`n" 
+            $data += "        $($appid) [label = `"\nLocation: $Location\nName: $(SanitizeString $app.Name)\nKind: $kind\nHost Name: $(SanitizeString $app.DefaultHostName)\n$trafficPercentageString`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $_)];`n" 
             $data += "        $planid -> $appid;`n"
 
             # Deployment slots
@@ -2079,9 +2093,12 @@ function Export-AppServicePlan {
                 $slots | ForEach-Object {
                     $slot = $_
                     $slotid = $slot.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                    $slotName = SanitizeString $slot.Name
+                    $slotName = SanitizeString ($slot.Name).Split("/")[1]
+                    $trafficPercentageRule = $app.SiteConfig.Experiments.RampUpRules | Where-Object { $_.Name -eq $slotName }
+                    $trafficPercentage = 0
+                    if ( $null -ne $trafficPercentageRule ) {$trafficPercentage = $trafficPercentageRule.ReroutePercentage }
 
-                    $data += "        $($slotid) [label = `"\nDeployment slot:\n$slotName\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n" 
+                    $data += "        $($slotid) [label = `"\nDeployment slot: $slotName\nTraffic percentage: $($trafficPercentage)%`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n" 
                     $data += "        $appid -> $slotid;`n"
                 }
             }
