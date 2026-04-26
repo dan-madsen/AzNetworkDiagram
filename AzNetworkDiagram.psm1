@@ -2098,6 +2098,7 @@ function Export-AppServicePlan {
                     $trafficPercentage = 0
                     if ( $null -ne $trafficPercentageRule ) {$trafficPercentage = $trafficPercentageRule.ReroutePercentage }
 
+                    $ImagePath = Join-Path $OutputPath "icons" "appservices-deploymentslot.png"
                     $data += "        $($slotid) [label = `"\nDeployment slot: $slotName\nTraffic percentage: $($trafficPercentage)%`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n" 
                     $data += "        $appid -> $slotid;`n"
                 }
@@ -5839,6 +5840,7 @@ function Confirm-Prerequisites {
         "appplan.png",
         #"appserviceplan.png",
         "appservices.png",
+        "appservices-deploymentslot.png",
         "avs.png",
         "azurefileshare.png",
         #"azuresql.png",
