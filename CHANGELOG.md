@@ -1,4 +1,4 @@
-(since v1.0.1)
+# Change log (since v1.0.1)
 ## v2.0.0 release - under construction (beta4 is the most recent version released to PowerShell Gallery)
 - [x] **_BREAKING CHANGE - see v1.5 for additional info_**
 - [x] New features
