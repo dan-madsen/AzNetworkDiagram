@@ -11,6 +11,8 @@
   - [x] Entra Licenses added to diagram (optional - enable manually with -EnableEntraLicenses)
   - [x] Entra Domains added do diagram (optional - enable manually with -EnableEntraDomains)
   - [x] Azure Firewall Policy parant relationships
+  - [x] App Service Deployment slots
+  - [x] Traffic Manager
 - [x] Fixes
   - [x] Static Web App - custom domain logic error
   - [x] Proper sorting of IP addresses/routes for different objects
