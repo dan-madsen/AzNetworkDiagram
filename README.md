@@ -12,7 +12,7 @@
 * [Runtime flow](#Runtime-flow)
 * [Currently Supported Resources](#currently-supported-resources)
 * [Pipeline runs](#pipeline-runs)
-* [Changelog](#changelog-since-v101)
+* [Changelog](#changelog)
 * [Issues, bugs, comments and ideas](#issues-bugs-comments-and-ideas)
 
 ---
