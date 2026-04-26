@@ -1,5 +1,5 @@
 #Requires -Version 7.1
-#Requires -Modules Az.Accounts, Az.Network, Az.Compute, Az.KeyVault, Az.Storage, Az.MySql, Az.PostgreSql, Az.CosmosDB, Az.RedisCache, Az.Sql, Az.EventHub, Az.Websites, Az.ApiManagement, Az.ContainerRegistry, Az.ManagedServiceIdentity, Az.Resources, Az.vmware, Az.ElasticSan
+#Requires -Modules Az.Accounts, Az.Network, Az.Compute, Az.KeyVault, Az.Storage, Az.MySql, Az.PostgreSql, Az.CosmosDB, Az.RedisCache, Az.Sql, Az.EventHub, Az.Websites, Az.ApiManagement, Az.ContainerRegistry, Az.ManagedServiceIdentity, Az.Resources, Az.vmware, Az.ElasticSan, Az.DnsResolver, Az.TrafficManager
 
 # Change Execution Policy for current process, if prohibited by policy
 # Set-ExecutionPolicy -scope process -ExecutionPolicy bypass
@@ -331,6 +331,8 @@ function Export-dotFooterRanking {
         $($script:rankagw -join '; ')
         ### Load Balancer
         $($script:ranklb -join '; ')
+        ### Traffic Manager Profiles
+        $($script:ranktraf -join '; ')
         ### vWAN instance
         $($script:rankvwans -join '; ')
     }
@@ -2061,6 +2063,20 @@ function Export-AppServicePlan {
             $script:rankas += $appid
 
             $Location = SanitizeLocation $app.Location
+            
+            #Traffic calculation
+            $trafficPercentage = 100
+            $trafficRules = $app.SiteConfig.Experiments.RampUpRules
+            if ( $null -ne $trafficRules ) {
+                $trafficRules | ForEach-Object {
+                    $rule = $_
+                    $rulePercentage = $rule.ReroutePercentage
+                    if ($rulePercentage -is [double]) { $trafficPercentage = $trafficPercentage - $rulePercentage }
+                }
+            }
+            $trafficPercentageString = ""
+            if ( $trafficPercentage -lt 100 ) { $trafficPercentageString = "Traffic percentage: $($trafficPercentage)%"}
+
             $kind = $app.Kind
             if ( $kind.Contains("functionapp") ) {
                 $ImagePath = Join-Path $OutputPath "icons" "functionapp.png"
@@ -2068,8 +2084,25 @@ function Export-AppServicePlan {
                 $ImagePath = Join-Path $OutputPath "icons" "appservices.png" 
             }
 
-            $data += "        $($appid) [label = `"\n\nLocation: $Location\nName: $(SanitizeString $app.Name)\nKind: $kind\nHost Name: $(SanitizeString $app.DefaultHostName)\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $_)];`n" 
+            $data += "        $($appid) [label = `"\nLocation: $Location\nName: $(SanitizeString $app.Name)\nKind: $kind\nHost Name: $(SanitizeString $app.DefaultHostName)\n$trafficPercentageString`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $_)];`n" 
             $data += "        $planid -> $appid;`n"
+
+            # Deployment slots
+            $slots = Get-AzWebAppSlot -ResourceGroupName $resourceGroupName -Name $app.Name
+            if ( $null -ne $slots ) {
+                $slots | ForEach-Object {
+                    $slot = $_
+                    $slotid = $slot.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $slotName = SanitizeString ($slot.Name).Split("/")[1]
+                    $trafficPercentageRule = $app.SiteConfig.Experiments.RampUpRules | Where-Object { $_.Name -eq $slotName }
+                    $trafficPercentage = 0
+                    if ( $null -ne $trafficPercentageRule ) {$trafficPercentage = $trafficPercentageRule.ReroutePercentage }
+
+                    $ImagePath = Join-Path $OutputPath "icons" "appservices-deploymentslot.png"
+                    $data += "        $($slotid) [label = `"\nDeployment slot: $slotName\nTraffic percentage: $($trafficPercentage)%`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n" 
+                    $data += "        $appid -> $slotid;`n"
+                }
+            }
 
             #vNet integration
             if ($null -ne $app.VirtualNetworkSubnetId) {
@@ -4606,7 +4639,7 @@ function Export-ESAN
 Exports details of a Load Balancer instance for inclusion in an infrastructure diagram.
 
 .DESCRIPTION
-The `Export-LB` function processes a specified ESAN object, retrieves its details, and formats the data for inclusion in the diagram.
+The `Export-LB` function processes a specified Load Balancer object, retrieves its details, and formats the data for inclusion in the diagram.
 
 .PARAMETER ESAN
 Specifies the LB object to be processed. This parameter is mandatory.
@@ -4779,6 +4812,139 @@ function Export-LB
     }
     catch {
         Write-Error "Can't export LB: $($LB.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+}
+
+<#
+.SYNOPSIS
+Exports details of a Traffic Manager Profile instance for inclusion in an infrastructure diagram.
+
+.DESCRIPTION
+The `Export-TrafficManagerProfile` function processes a specified Traffic Manager Profile object, retrieves its details, and formats the data for inclusion in the diagram.
+
+.PARAMETER ESAN
+Specifies the Traffic Manager Profile object to be processed. This parameter is mandatory.
+
+.EXAMPLE
+PS> $LB =
+PS> Export-TrafficManagerProfile -TRAF $TRAF
+
+This example retrieves an LB instance and exports its details for inclusion in the diagram.
+#>
+function Export-TrafficManagerProfile
+{
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$TRAF
+    )
+
+    try {
+        $TRAFid = $TRAF.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankTRAF += $TRAFid
+        $TRAFname = SanitizeString $TRAF.name
+        $location = "Global" #SanitizeLocation $TRAF.location
+        $DNSName = SanitizeString $($TRAF.RelativeDnsName + ".trafficmanager.net")
+        $RoutingMethod = $TRAF.TrafficRoutingMethod
+        $MonitorProtocol = $TRAF.MonitorProtocol
+        $MonitorPort = $TRAF.MonitorPort
+        $AllowedFailures = $TRAF.MonitorToleratedNumberOfFailures
+        $MonitorInterval = $TRAF.MonitorIntervalInSeconds
+        $MonitorTimeout = $TRAF.MonitorTimeoutInSeconds
+
+        #$SKU = $TRAF.Sku.Name + " / " + $TRAF.Sku.Tier
+        $header = "
+        # $($name) - $TRAFid
+        subgraph cluster_$TRAFid {
+            style = solid;
+            colorscheme = blues9 ;
+            bgcolor = 2;
+            node [colorscheme = blues9 ; style = filled;];
+        "
+
+        #TRAF DOT
+        $ImagePath = Join-Path $OutputPath "icons" "trafficmanagerprofile.png"
+        $TRAFdata += "            $TRAFid [fillcolor = 3; label=`"\nDNS name: $DNSName\nLocation: $location\n\nRouting Method: $RoutingMethod\nMonitor via: $($MonitorProtocol):$($MonitorPort)\nInterval: $MonitorInterval\nMonitor timeout: $MonitorTimeout`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $TRAF)]`n"
+
+        # ENDPOINTS
+        ## Type External
+        ### Type, Name, enabled?, FQDN, location, health check
+        ## Type: Azure
+        ### Type, Name, enabled?, target resource type, target resource 
+        $Endpoints = $TRAF.endpoints
+        if ( $null -ne $Endpoints ) {
+            $Endpoints | foreach-object  {
+                $Endpoint = $_
+                $endpointID = $Endpoint.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                # $Endpoint
+                # $endpointID
+                switch ($Endpoint.Type) {
+                    "externalEndpoints" {
+                        $Name = SanitizeString $Endpoint.Name
+                        $Type = $Endpoint.Type
+                        $Status = $Endpoint.EndpointStatus
+                        $Target = SanitizeString $Endpoint.Target
+                        $Location = SanitizeLocation $Endpoint.location
+                        $AlwaysServe = $Endpoint.AlwaysServe
+                        #DOT
+                        $TRAFdata += "            $endpointID [fillcolor = 3; label=`"\Endpoint type: $Type\nTarget: $Target\nLocation: $Location\n\nAlways Serve: $AlwaysServe\nStatus: $Status`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
+                        $TRAFdata += "            $TRAFid -> $endpointID`n"
+                    }
+                    "azureEndpoints" {
+                        $Name = SanitizeString $Endpoint.Name
+                        $Type = $Endpoint.Type
+                        $Status = $Endpoint.EndpointStatus
+                        $Location = SanitizeLocation $Endpoint.Location
+                        $Target = SanitizeString $Endpoint.Target
+                        $TagetResourceARMID = $Endpoint.TargetResourceId
+                        $AlwaysServe = $Endpoint.AlwaysServe
+
+                        #DOT
+                        $TRAFdata += "            $endpointID [fillcolor = 3; label=`"\nName: $Name\nEndpoint type: $Type\nTarget: $Target\nLocation: $Location\n\nAlways Serve: $AlwaysServe\nStatus: $Status`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
+                        $TRAFdata += "            $TRAFid -> $endpointID`n"
+
+                        # Link to resource, if enabled
+                        if ( $TagetResourceARMID.contains("providers/Microsoft.Web/sites") ) {
+                            if ( $EnableASP -OR (-not $SkipNonCoreNetwork -AND -not $SkipASP) ) {
+                                $TagetResourceID = $TagetResourceARMID.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                                $TRAFdata += "            $endpointID -> $TagetResourceID [constraint=false]`n"
+                            }
+                        }
+
+                        #Public IP (ARM) endpoint NOT IMPLEMENTED
+                        #Cloud Service NOT IMPLEMENTED
+                    }
+                    "nestedEndpoints" {
+                        $Name = SanitizeString $Endpoint.Name
+                        $Type = $Endpoint.Type
+                        $Status = $Endpoint.EndpointStatus
+                        $Location = SanitizeLocation $Endpoint.Location
+                        $Target = SanitizeString $Endpoint.Target
+                        $TagetResourceARMID = $Endpoint.TargetResourceId
+                        $AlwaysServe = $Endpoint.AlwaysServe
+
+                        #DOT
+                        $TRAFdata += "            $endpointID [fillcolor = 3; label=`"\nName: $Name\nEndpoint type: $Type\nTarget: $Target\nLocation: $Location\n\nAlways Serve: $AlwaysServe\nStatus: $Status`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
+                        $TRAFdata += "            $TRAFid -> $endpointID`n"
+                        $TagetResourceID = $TagetResourceARMID.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                        $TRAFdata += "            $endpointID -> $TagetResourceID [constraint=false]`n"
+
+
+                    }
+                }
+            }
+        }
+
+        # End subgraph
+        $footer = "
+            label = `"$(SanitizeString $TRAFname)`";
+        }
+        "
+
+        Export-AddToFile -Data ($header + $TRAFdata + $footer)
+    }
+    catch {
+        Write-Error "Can't export Traffic Manager Profile: $($TRAF.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
     }
 }
 
@@ -5674,6 +5840,7 @@ function Confirm-Prerequisites {
         "appplan.png",
         #"appserviceplan.png",
         "appservices.png",
+        "appservices-deploymentslot.png",
         "avs.png",
         "azurefileshare.png",
         #"azuresql.png",
@@ -5733,6 +5900,7 @@ function Confirm-Prerequisites {
         "sub.png"
         "swa.png",
         "table.png",
+        "trafficmanagerprofile.png"
         "vWAN-Hub.png",
         "vWAN.png",
         "vgw.png",
@@ -5924,6 +6092,7 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][switch]$EnableSQLMI,
         [Parameter(Mandatory = $false)][switch]$EnableSSHKeys,
         [Parameter(Mandatory = $false)][switch]$EnableSWA,
+        [Parameter(Mandatory = $false)][switch]$EnableTRAF,
         [Parameter(Mandatory = $false)][switch]$EnableVM,
         [Parameter(Mandatory = $false)][switch]$EnableVMSS,
         [Parameter(Mandatory = $false)][switch]$KeepDotFile,
@@ -5968,6 +6137,7 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][switch]$SkipSQLMI,
         [Parameter(Mandatory = $false)][switch]$SkipSSHKeys,
         [Parameter(Mandatory = $false)][switch]$SkipSWA,
+        [Parameter(Mandatory = $false)][switch]$SkipTRAF,
         [Parameter(Mandatory = $false)][switch]$SkipVM,
         [Parameter(Mandatory = $false)][switch]$SkipVMSS,
         [Parameter(Mandatory = $false)][string[]]$Subscriptions,
@@ -6159,6 +6329,7 @@ function Get-AzNetworkDiagram {
     $script:rankSSHKey = @()
     $script:ranksubnet = @()
     $script:rankswa = @()
+    $script:ranktraf = @()
     $script:rankvm = @()
     $script:rankvmss = @()
     $script:rankvnet = @()
@@ -6795,6 +6966,19 @@ function Get-AzNetworkDiagram {
                         $Script:Legend += ,@("Load Balancer","lb.png")
                         foreach ( $LB in $LBs ) {
                             Export-LB -LB $LB
+                        }
+                    }
+                }
+
+                #Traffic Manager Profile
+                if ( $EnableTRAF -OR (-not $SkipNonCoreNetwork -AND -not $SkipTRAF ) ) {
+                    Write-Output "Collecting Traffic Manager Profiles..."
+                    Export-AddToFile "    ##### $subname - Traffic Manager Profiles (TRAF) #####"
+                    $TRAFs = Get-AzTrafficManagerProfile
+                    if ( $null -ne $TRAFs ) {
+                        $Script:Legend += ,@("Traffic Manager Profile","trafficmanagerprofile.png")
+                        foreach ( $TRAF in $TRAFs ) {
+                            Export-TrafficManagerProfile -TRAF $TRAF
                         }
                     }
                 }
