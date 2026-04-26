@@ -1,18 +1,21 @@
 # Change log (since v1.0.1)
-## v2.0.0 release - under construction (beta4 is the most recent version released to PowerShell Gallery)
+## v2.0.0 release - under construction (beta4 is the most recent version released to PowerShell Gallery, which includes most of the changes)
 - [x] **_BREAKING CHANGE - see v1.5 for additional info_**
 - [x] New features
   - [x] The breaking change from v1.5 fully implemented
-  - [x] IP Plan overview, based on VNets in scope
+  - [x] Pirvate IP Plan overview, based on VNets in scope
     - [x] Azure resources
     - [x] VPN
     - [x] P2S VPN
+  - [ ] Public IP Plan
   - [x] DevOps Organizations added to diagram (optional - enable manually with -EnableADO)
   - [x] Entra Licenses added to diagram (optional - enable manually with -EnableEntraLicenses)
   - [x] Entra Domains added do diagram (optional - enable manually with -EnableEntraDomains)
   - [x] Azure Firewall Policy parant relationships
   - [x] App Service Deployment slots
   - [x] Traffic Manager
+  - [ ] Front Door
+  - [ ] Communication Service
 - [x] Fixes
   - [x] Static Web App - custom domain logic error
   - [x] Proper sorting of IP addresses/routes for different objects
