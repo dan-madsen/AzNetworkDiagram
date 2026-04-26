@@ -168,6 +168,7 @@ This module will include in the diagram in separate colors:
   - SSH Keys
   - Static Web Apps
   - Storage Accounts
+  - Traffic Manager
   - Virtual Machines and Virtual Machine Scale Sets
 
 ---
