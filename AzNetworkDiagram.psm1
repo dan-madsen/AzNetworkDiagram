@@ -2070,8 +2070,21 @@ function Export-AppServicePlan {
                 $ImagePath = Join-Path $OutputPath "icons" "appservices.png" 
             }
 
-            $data += "        $($appid) [label = `"\n\nLocation: $Location\nName: $(SanitizeString $app.Name)\nKind: $kind\nHost Name: $(SanitizeString $app.DefaultHostName)\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $_)];`n" 
+            $data += "        $($appid) [label = `"\nLocation: $Location\nName: $(SanitizeString $app.Name)\nKind: $kind\nHost Name: $(SanitizeString $app.DefaultHostName)\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $_)];`n" 
             $data += "        $planid -> $appid;`n"
+
+            # Deployment slots
+            $slots = Get-AzWebAppSlot -ResourceGroupName $resourceGroupName -Name $app.Name
+            if ( $null -ne $slots ) {
+                $slots | ForEach-Object {
+                    $slot = $_
+                    $slotid = $slot.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $slotName = SanitizeString $slot.Name
+
+                    $data += "        $($slotid) [label = `"\nDeployment slot:\n$slotName\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;];`n" 
+                    $data += "        $appid -> $slotid;`n"
+                }
+            }
 
             #vNet integration
             if ($null -ne $app.VirtualNetworkSubnetId) {
@@ -4813,7 +4826,7 @@ function Export-TrafficManagerProfile
         $script:rankTRAF += $TRAFid
         $TRAFname = SanitizeString $TRAF.name
         $location = "Global" #SanitizeLocation $TRAF.location
-        $DNSName = $TRAF.RelativeDnsName + ".trafficmanager.net"
+        $DNSName = SanitizeString $($TRAF.RelativeDnsName + ".trafficmanager.net")
         $RoutingMethod = $TRAF.TrafficRoutingMethod
         $MonitorProtocol = $TRAF.MonitorProtocol
         $MonitorPort = $TRAF.MonitorPort
@@ -4849,22 +4862,22 @@ function Export-TrafficManagerProfile
                 # $endpointID
                 switch ($Endpoint.Type) {
                     "externalEndpoints" {
-                        $Name = $Endpoint.Name
+                        $Name = SanitizeString $Endpoint.Name
                         $Type = $Endpoint.Type
                         $Status = $Endpoint.EndpointStatus
-                        $Target = $Endpoint.Target
-                        $Location = $Endpoint.location
+                        $Target = SanitizeString $Endpoint.Target
+                        $Location = SanitizeLocation $Endpoint.location
                         $AlwaysServe = $Endpoint.AlwaysServe
                         #DOT
                         $TRAFdata += "            $endpointID [fillcolor = 3; label=`"\Endpoint type: $Type\nTarget: $Target\nLocation: $Location\n\nAlways Serve: $AlwaysServe\nStatus: $Status`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
                         $TRAFdata += "            $TRAFid -> $endpointID`n"
                     }
                     "azureEndpoints" {
-                        $Name = $Endpoint.Name
+                        $Name = SanitizeString $Endpoint.Name
                         $Type = $Endpoint.Type
                         $Status = $Endpoint.EndpointStatus
-                        $Location = $Endpoint.Location
-                        $Target = $Endpoint.Target
+                        $Location = SanitizeLocation $Endpoint.Location
+                        $Target = SanitizeString $Endpoint.Target
                         $TagetResourceARMID = $Endpoint.TargetResourceId
                         $AlwaysServe = $Endpoint.AlwaysServe
 
@@ -4884,11 +4897,11 @@ function Export-TrafficManagerProfile
                         #Cloud Service NOT IMPLEMENTED
                     }
                     "nestedEndpoints" {
-                        $Name = $Endpoint.Name
+                        $Name = SanitizeString $Endpoint.Name
                         $Type = $Endpoint.Type
                         $Status = $Endpoint.EndpointStatus
-                        $Location = $Endpoint.Location
-                        $Target = $Endpoint.Target
+                        $Location = SanitizeLocation $Endpoint.Location
+                        $Target = SanitizeString $Endpoint.Target
                         $TagetResourceARMID = $Endpoint.TargetResourceId
                         $AlwaysServe = $Endpoint.AlwaysServe
 
