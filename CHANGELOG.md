@@ -7,7 +7,7 @@
     - [x] Azure resources
     - [x] VPN
     - [x] P2S VPN
-  - [ ] Public IP Plan
+  - [x] Public IP Plan (incl. prefixes)
   - [x] DevOps Organizations added to diagram (optional - enable manually with -EnableADO)
   - [x] Entra Licenses added to diagram (optional - enable manually with -EnableEntraLicenses)
   - [x] Entra Domains added do diagram (optional - enable manually with -EnableEntraDomains)
