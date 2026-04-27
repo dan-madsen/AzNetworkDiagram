@@ -1,5 +1,5 @@
 #Requires -Version 7.1
-#Requires -Modules Az.Accounts, Az.Network, Az.Compute, Az.KeyVault, Az.Storage, Az.MySql, Az.PostgreSql, Az.CosmosDB, Az.RedisCache, Az.Sql, Az.EventHub, Az.Websites, Az.ApiManagement, Az.ContainerRegistry, Az.ManagedServiceIdentity, Az.Resources, Az.vmware, Az.ElasticSan, Az.DnsResolver, Az.TrafficManager
+#Requires -Modules Az.Accounts, Az.Network, Az.Compute, Az.KeyVault, Az.Storage, Az.MySql, Az.PostgreSql, Az.CosmosDB, Az.RedisCache, Az.Sql, Az.EventHub, Az.Websites, Az.ApiManagement, Az.ContainerRegistry, Az.ManagedServiceIdentity, Az.Resources, Az.vmware, Az.ElasticSan, Az.DnsResolver, Az.TrafficManager, Az.Communication
 
 # Change Execution Policy for current process, if prohibited by policy
 # Set-ExecutionPolicy -scope process -ExecutionPolicy bypass
@@ -450,6 +450,8 @@ function Export-dotFooterRanking {
         $($script:rankrsv -join '; ')
         ### Backup Vault
         $($script:rankbv -join '; ')
+        ### Azure Communication Services
+        $($script:rankACS -join '; ')
     }
 
     subgraph rank7 {
@@ -4950,6 +4952,99 @@ function Export-TrafficManagerProfile
 
 <#
 .SYNOPSIS
+Exports details of a Communication Services instance for inclusion in an infrastructure diagram.
+
+.DESCRIPTION
+The `Export-CommmunicationServices` function processes a specified Communication Services object, retrieves its details, and formats the data for inclusion in the diagram.
+
+.PARAMETER ESAN
+Specifies the Communication Services object to be processed. This parameter is mandatory.
+
+.EXAMPLE
+PS> Export-CommmunicationServices -ACS $ACS
+
+This example retrieves an LB instance and exports its details for inclusion in the diagram.
+#>
+function Export-CommmunicationServices
+{
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$ACS
+    )
+
+    try {
+        $ACSid = $ACS.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankACS += $ACSid
+        $ACSname = SanitizeString $ACS.name
+        $location = SanitizeLocation $ACS.Location
+        $dataLocation = SanitizeLocation $ACS.DataLocation
+        $hostName = SanitizeString $ACS.hostname
+
+        $header = "
+        # $($ACSname) - $ACSid
+        subgraph cluster_$ACSid {
+            style = solid;
+            colorscheme = blues9 ;
+            bgcolor = 2;
+            node [colorscheme = blues9 ; style = filled;];
+        "
+
+        #ACS DOT
+        $ImagePath = Join-Path $OutputPath "icons" "acs.png"
+        $ACSdata += "            $ACSid [fillcolor = 3; label=`"Location: $location\nData location: $dataLocation\n\nHost name:\n$hostname\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $ACS)]`n"
+
+        # Email Communication Services (Domains)
+        $LinkedDomainsObject = $ACS.linkedDomain
+        if ( $null -ne $LinkedDomainsObject ) {
+            $LinkedDomainsObject | ForEach-Object {
+                $domainARMID = $_
+                $domainID = $domainARMID.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $rg = $domainARMID.split("/")[4]
+                $res = $domainARMID.split("/")[8]
+                $comServiceName = $domainARMID.split("/")[10]
+                $domainObjects = Get-AzEmailServiceDomain -ResourceGroupName $rg -EmailServiceName $res
+                
+                $domainString = "Domain(s):`n"
+                if ( $null -ne $domainObjects ) {
+                    $domainObjects | foreach-object {
+                        $domainObject = $_
+                        $name = $domainObject.Name
+                        # $type = $domainObject.Type
+
+                        # Test if domain is connected
+                        if ( $name -eq $comServiceName ) {
+                            $domainString += SanitizeString "$($domainObject.FromSenderDomain)\n"
+                        } else {
+                            $domainString += SanitizeString "$($domainObject.FromSenderDomain) (not connected)\n"
+                        }
+                    }
+                } else { $domainString += "None"}
+
+                # DOT
+                $ACSdata += "            $domainID [fillcolor = 3; label=`"\nEmail Comminucation Services name:\n$res\n\n$domainString`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
+                $ACSdata += "            $ACSid -> $domainId`n"
+            }
+
+        }
+        
+        # Other services not implemented
+
+        # End subgraph
+        $footer = "
+            label = `"$(SanitizeString $ACSname)`";
+        }
+        "
+
+        Export-AddToFile -Data ($header + $ACSdata + $footer)
+    }
+    catch {
+        Write-Error "Can't export Azure Communication Services: $($ACS.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+}
+
+<#
+.SYNOPSIS
 Exports details of a Mangement Group for inclusion in an infrastructure diagram.
 
 .DESCRIPTION
@@ -4998,6 +5093,124 @@ function Export-MgmtGroups
     }
 }
 
+<#
+.SYNOPSIS
+Exports details of Public IP for inclusion in an IP Plan.
+
+.DESCRIPTION
+The `Export-PIP2IPPlan` function processes a specified PIP object, retrieves its details, and formats the data for inclusion in an IP Plan.
+
+.PARAMETER VNet
+Specifies the Azure PIP object to be processed. This parameter is mandatory.
+
+.EXAMPLE
+PS> $PIPs = Get-AzPublicIpAddress
+PS> $PIPs | Foreach-Object { Export-PIP2IPPlan -PIP $_ }
+
+This example retrieves specified Azure PIP object, retrieves its details, and formats the data for inclusion in an in an IP Plan.
+#>
+function Export-PIP2IPPlan {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$PIP
+    )
+
+    try {
+        #$data = ""
+        #$id = $MgmtGroupEntityObject.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        #$subid = $context.Subscription.Id
+        $subname = (Get-AzContext).Subscription.Name
+                       
+    
+        $obj = [pscustomobject]@{
+            AddressSpace     = ''
+            Type             = ''
+            Resource         = ''
+            ResourceGroup    = ''
+            SubscriptionName = ''
+            SubscriptionId   = ''
+            #vnetid          = ''
+            PrefixName       = ''
+        }
+        $prefix = $PIP.IpAddress
+        $IPPREARMID = $PIP.PublicIpPrefix.id
+        $IPPREName = ""
+        if ( $null -ne $IPPREARMID ) { $IPPREName = $IPPREARMID.split("/")[8] }
+
+        $obj.SubscriptionName = $subname
+        # $obj.SubscriptionId = $subid
+        $obj.Type = "PIP"
+        $obj.ResourceGroup = $PIP.ResourceGroupName
+        $obj.Resource = $PIP.Name
+        $obj.AddressSpace = $prefix
+        $obj.PrefixName = $IPPREName
+        #$obj.vnetid = $vnet.id
+
+        $script:IPPlan += $obj
+        
+    }
+    catch {
+        Write-Error "Can't export Public IP 2 IP Plan at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+} 
+
+<#
+.SYNOPSIS
+Exports details of Public IP Prefix for inclusion in an IP Plan.
+
+.DESCRIPTION
+The `Export-IPPRE2IPPlan` function processes a specified PIP object, retrieves its details, and formats the data for inclusion in an IP Plan.
+
+.PARAMETER VNet
+Specifies the Azure PIP object to be processed. This parameter is mandatory.
+
+.EXAMPLE
+PS> $IPPREs = Get-AzPublicIPPrefix
+PS> $IPPREs | Foreach-Object { Export-PIP2IPPlan -IPPRE $_ }
+
+This example retrieves specified Azure Public IP Prefix object, retrieves its details, and formats the data for inclusion in an in an IP Plan.
+#>
+function Export-IPPRE2IPPlan {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$IPPRE
+    )
+
+    try {
+        #$data = ""
+        #$id = $MgmtGroupEntityObject.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        #$subid = $context.Subscription.Id
+        $subname = (Get-AzContext).Subscription.Name
+                       
+    
+        $obj = [pscustomobject]@{
+            AddressSpace     = ''
+            Type             = ''
+            Resource         = ''
+            ResourceGroup    = ''
+            SubscriptionName = ''
+            SubscriptionId   = ''
+            #vnetid          = ''
+        }
+        $prefix = $IPPRE.IPPrefix
+
+        $obj.SubscriptionName = $subname
+        # $obj.SubscriptionId = $subid
+        $obj.Type = "IPPRE"
+        $obj.ResourceGroup = $IPPRE.ResourceGroupName
+        $obj.Resource = $IPPRE.Name
+        $obj.AddressSpace = $prefix
+        #$obj.vnetid = $vnet.id
+
+        $script:IPPlan += $obj
+        
+    }
+    catch {
+        Write-Error "Can't export Public IP Prefix at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+} 
 
 <#
 .SYNOPSIS
@@ -5217,6 +5430,8 @@ function Export-IPPlan {
         # Only types: VPN, VPN (S2S VPN) + P2S VPN
         $AddressSpaces = $IPPlan | Where-Object { $_.Type -eq "VNet" -or $_.Type -eq "VPN" -or $_.Type -eq "P2S VPN"}
         $Subnets = $IPPlan | Where-Object { $_.Type -eq "Subnet" } #VNETS split by subnets
+        $PIPs = $IPPlan | Where-Object { $_.Type -eq "PIP" } 
+        $IPPREs = $IPPlan | Where-Object { $_.Type -eq "IPPRE" }
 
         # Object reference
         # $obj = [pscustomobject]@{
@@ -5301,6 +5516,86 @@ function Export-IPPlan {
 
         # End table
         $ImagePath = Join-Path $OutputPath "icons" "snet.png"
+        $footer = "
+                </TABLE>>;
+                image = `"$ImagePath`";imagepos = `"tr`"; labelloc = `"b`";height = 2.5;];
+        }
+                "
+        $alldata = $header + $data + $footer
+        Export-AddToFile -Data $alldata
+
+        ### IPPREs
+        $header = "
+        subgraph cluster_IPPlan_IPPRE {
+            style = solid;
+            colorscheme = purples9;
+            bgcolor = 5;
+            margin = 0;
+            node [colorscheme = purples9; shape = box; color = 5; margin = 0;];
+            
+            IPPlanIPPRE [label = <
+                <TABLE border=`"0`" style=`"rounded`">
+                <TR><TD border=`"0`" align=`"left`" colspan=`"2`"><B>Public IPs in Azure</B><BR/><BR/></TD></TR>
+                <TR><TD align=`"left`"><B>Public IP</B></TD><TD align=`"left`"><B>Type</B></TD><TD align=`"left`"><B>Resource</B></TD><TD align=`"left`"><B>Resource Group</B></TD><TD align=`"left`"><B>Subscription Name</B></TD></TR>
+                <HR/>"
+        
+        # Individual Routes        
+        $data = ""
+
+        #Sort routes for easier reading
+        $IPPREs = $IPPREs | Sort-Object { [regex]::Replace($_.AddressSpace, '\d+', { $args[0].Value.PadLeft(100) }) }
+        ForEach ($IPPRE in $IPPREs ) {
+            $address = SanitizeString $IPPRE.addressSpace
+            $type = "Public IP Prefix"
+            $resource = SanitizeString $IPPRE.resource
+            $rg = SanitizeString $IPPRE.ResourceGroup
+            $subname = SanitizeString $IPPRE.SubscriptionName
+            $prefixName = SanitizeString $IPPRE.PrefixName
+            $data = $data + "<TR><TD align=`"left`">$address</TD><TD align=`"left`">$type</TD><TD align=`"left`">$resource</TD><TD align=`"left`">$rg</TD><TD align=`"left`">$subname</TD></TR>"
+        }
+
+        # End table
+        $ImagePath = Join-Path $OutputPath "icons" "ippre.png"
+        $footer = "
+                </TABLE>>;
+                image = `"$ImagePath`";imagepos = `"tr`"; labelloc = `"b`";height = 2.5;];
+        }
+                "
+        $alldata = $header + $data + $footer
+        Export-AddToFile -Data $alldata
+
+        ### PIPs
+        $header = "
+        subgraph cluster_IPPlan_PIP {
+            style = solid;
+            colorscheme = purples9;
+            bgcolor = 5;
+            margin = 0;
+            node [colorscheme = purples9; shape = box; color = 5; margin = 0;];
+            
+            IPPlanPIP [label = <
+                <TABLE border=`"0`" style=`"rounded`">
+                <TR><TD border=`"0`" align=`"left`" colspan=`"2`"><B>Public IPs in Azure</B><BR/><BR/></TD></TR>
+                <TR><TD align=`"left`"><B>Public IP</B></TD><TD align=`"left`"><B>Type</B></TD><TD align=`"left`"><B>Prefix</B></TD><TD align=`"left`"><B>Resource</B></TD><TD align=`"left`"><B>Resource Group</B></TD><TD align=`"left`"><B>Subscription Name</B></TD></TR>
+                <HR/>"
+        
+        # Individual Routes        
+        $data = ""
+
+        #Sort routes for easier reading
+        $PIPs = $PIPs | Sort-Object { [regex]::Replace($_.AddressSpace, '\d+', { $args[0].Value.PadLeft(100) }) }
+        ForEach ($PIP in $PIPs ) {
+            $address = SanitizeString $PIP.addressSpace
+            $type = "Public IP"
+            $resource = SanitizeString $PIP.resource
+            $rg = SanitizeString $PIP.ResourceGroup
+            $subname = SanitizeString $PIP.SubscriptionName
+            $prefixName = SanitizeString $PIP.PrefixName
+            $data = $data + "<TR><TD align=`"left`">$address</TD><TD align=`"left`">$type</TD><TD align=`"left`">$prefixName</TD><TD align=`"left`">$resource</TD><TD align=`"left`">$rg</TD><TD align=`"left`">$subname</TD></TR>"
+        }
+
+        # End table
+        $ImagePath = Join-Path $OutputPath "icons" "pip.png"
         $footer = "
                 </TABLE>>;
                 image = `"$ImagePath`";imagepos = `"tr`"; labelloc = `"b`";height = 2.5;];
@@ -5828,6 +6123,7 @@ function Confirm-Prerequisites {
     $icons = @(
         "LICENSE",
         "acr.png",
+        "acs.png",
         "ado.png",
         "afw.png",
         "agw.png",
@@ -5872,6 +6168,7 @@ function Confirm-Prerequisites {
         "keyvault.png",
         "lb.png",
         "licenses.png",
+        "ippre.png",
         #"lgw.png",
         "managed-identity.png",
         "mgmtgroup.png"
@@ -5881,6 +6178,7 @@ function Confirm-Prerequisites {
         "nic.png",
         "nsg.png",
         "peerings.png",
+        "pip.png",
         "postgresql.png",
         "private-endpoint.png",
         #"privatednszone.png",
@@ -6065,6 +6363,7 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][switch]$EnableACI,
         [Parameter(Mandatory = $false)][switch]$EnableADO,
         [Parameter(Mandatory = $false)][switch]$EnableACR,
+        [Parameter(Mandatory = $false)][switch]$EnableACS,
         [Parameter(Mandatory = $false)][switch]$EnableAKS,
         [Parameter(Mandatory = $false)][switch]$EnableAPIM,
         [Parameter(Mandatory = $false)][switch]$EnableASP,
@@ -6109,6 +6408,7 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][switch]$SkipACA,
         [Parameter(Mandatory = $false)][switch]$SkipACI,
         [Parameter(Mandatory = $false)][switch]$SkipACR,
+        [Parameter(Mandatory = $false)][switch]$SkipACS,
         [Parameter(Mandatory = $false)][switch]$SkipADO,
         [Parameter(Mandatory = $false)][switch]$SkipAKS,
         [Parameter(Mandatory = $false)][switch]$SkipAPIM,
@@ -6150,6 +6450,7 @@ function Get-AzNetworkDiagram {
         write-host "-EnableACA : $EnableACA"
         write-host "-EnableACI : $EnableACI"
         write-host "-EnableACR : $EnableACR"
+        write-host "-EnableACS : $EnableACS"
         write-host "-EnableAKS : $EnableAKS"
         write-host "-EnableAPIM : $EnableAPIM"
         write-host "-EnableASP : $EnableASP"
@@ -6193,6 +6494,7 @@ function Get-AzNetworkDiagram {
         write-host "-SkipACA : $SkipACA"
         write-host "-SkipACI : $SkipACI"
         write-host "-SkipACR : $SkipACR"
+        write-host "-SkipACS : $SkipACS"
         write-host "-SkipAKS : $SkipAKS"
         write-host "-SkipAPIM : $SkipAPIM"
         write-host "-SkipASP : $SkipASP"
@@ -6280,6 +6582,7 @@ function Get-AzNetworkDiagram {
     #$script:rankaca = @()
     $script:rankaci = @()
     $script:rankacr = @()
+    $script:rankacs = @()
     $script:rankADO = @()
     $script:rankagw = @()
     $script:rankaks = @()
@@ -6440,6 +6743,20 @@ function Get-AzNetworkDiagram {
                     $standardObject = $_
                     $gwObject = Get-AzVirtualNetworkGateway -ResourceGroupName $standardObject.ResourceGroupName -Name $standardObject.Name 
                     Export-GW2IPPlan -VNGW $gwObject
+                }
+
+                # Public IP
+                $PIPs = Get-AzPublicIpAddress
+                $PIPs | ForEach-Object {
+                    $PIP = $_
+                    Export-PIP2IPPlan -PIP $PIP
+                }
+
+                # Public IP Prefixes
+                $IPPREs = Get-AzPublicIpPrefix
+                $IPPREs | ForEach-Object {
+                    $IPPRE = $_
+                    Export-IPPRE2IPPlan -IPPRE $IPPRE
                 }
             }
             # Output to console
@@ -6982,6 +7299,20 @@ function Get-AzNetworkDiagram {
                         }
                     }
                 }
+
+                #Azure Communication Service
+                if ( $EnableACS -OR (-not $SkipNonCoreNetwork -AND -not $SkipACS ) ) {
+                    Write-Output "Collecting Azure Communication Services..."
+                    Export-AddToFile "    ##### $subname - Azure Communication Services #####"
+                    $ACSs = Get-AzCommunicationService
+                    if ( $null -ne $ACSs ) {
+                        $Script:Legend += ,@("Communication Services","acs.png")
+                        foreach ( $ACS in $ACSs ) {
+                            Export-CommmunicationServices -ACS $ACS
+                        }
+                    }
+                }
+
                 #Export-AddToFile "    }" 
                 Export-AddToFile "`n    ##########################################################################################################"
                 Export-AddToFile "    ##### $subname "
