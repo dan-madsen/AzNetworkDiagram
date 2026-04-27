@@ -1,5 +1,5 @@
 #Requires -Version 7.1
-#Requires -Modules Az.Accounts, Az.Network, Az.Compute, Az.KeyVault, Az.Storage, Az.MySql, Az.PostgreSql, Az.CosmosDB, Az.RedisCache, Az.Sql, Az.EventHub, Az.Websites, Az.ApiManagement, Az.ContainerRegistry, Az.ManagedServiceIdentity, Az.Resources, Az.vmware, Az.ElasticSan, Az.DnsResolver, Az.TrafficManager
+#Requires -Modules Az.Accounts, Az.Network, Az.Compute, Az.KeyVault, Az.Storage, Az.MySql, Az.PostgreSql, Az.CosmosDB, Az.RedisCache, Az.Sql, Az.EventHub, Az.Websites, Az.ApiManagement, Az.ContainerRegistry, Az.ManagedServiceIdentity, Az.Resources, Az.vmware, Az.ElasticSan, Az.DnsResolver, Az.TrafficManager, Az.Communication
 
 # Change Execution Policy for current process, if prohibited by policy
 # Set-ExecutionPolicy -scope process -ExecutionPolicy bypass
@@ -450,6 +450,8 @@ function Export-dotFooterRanking {
         $($script:rankrsv -join '; ')
         ### Backup Vault
         $($script:rankbv -join '; ')
+        ### Azure Communication Services
+        $($script:rankACS -join '; ')
     }
 
     subgraph rank7 {
@@ -4950,6 +4952,99 @@ function Export-TrafficManagerProfile
 
 <#
 .SYNOPSIS
+Exports details of a Communication Services instance for inclusion in an infrastructure diagram.
+
+.DESCRIPTION
+The `Export-CommmunicationServices` function processes a specified Communication Services object, retrieves its details, and formats the data for inclusion in the diagram.
+
+.PARAMETER ESAN
+Specifies the Communication Services object to be processed. This parameter is mandatory.
+
+.EXAMPLE
+PS> Export-CommmunicationServices -ACS $ACS
+
+This example retrieves an LB instance and exports its details for inclusion in the diagram.
+#>
+function Export-CommmunicationServices
+{
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$ACS
+    )
+
+    try {
+        $ACSid = $ACS.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankACS += $ACSid
+        $ACSname = SanitizeString $ACS.name
+        $location = SanitizeLocation $ACS.Location
+        $dataLocation = SanitizeLocation $ACS.DataLocation
+        $hostName = SanitizeString $ACS.hostname
+
+        $header = "
+        # $($ACSname) - $ACSid
+        subgraph cluster_$ACSid {
+            style = solid;
+            colorscheme = blues9 ;
+            bgcolor = 2;
+            node [colorscheme = blues9 ; style = filled;];
+        "
+
+        #ACS DOT
+        $ImagePath = Join-Path $OutputPath "icons" "acs.png"
+        $ACSdata += "            $ACSid [fillcolor = 3; label=`"Location: $location\nData location: $dataLocation\n\nHost name:\n$hostname\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $ACS)]`n"
+
+        # Email Communication Services (Domains)
+        $LinkedDomainsObject = $ACS.linkedDomain
+        if ( $null -ne $LinkedDomainsObject ) {
+            $LinkedDomainsObject | ForEach-Object {
+                $domainARMID = $_
+                $domainID = $domainARMID.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $rg = $domainARMID.split("/")[4]
+                $res = $domainARMID.split("/")[8]
+                $comServiceName = $domainARMID.split("/")[10]
+                $domainObjects = Get-AzEmailServiceDomain -ResourceGroupName $rg -EmailServiceName $res
+                
+                $domainString = "Domain(s):`n"
+                if ( $null -ne $domainObjects ) {
+                    $domainObjects | foreach-object {
+                        $domainObject = $_
+                        $name = $domainObject.Name
+                        # $type = $domainObject.Type
+
+                        # Test if domain is connected
+                        if ( $name -eq $comServiceName ) {
+                            $domainString += SanitizeString "$($domainObject.FromSenderDomain)\n"
+                        } else {
+                            $domainString += SanitizeString "$($domainObject.FromSenderDomain) (not connected)\n"
+                        }
+                    }
+                } else { $domainString += "None"}
+
+                # DOT
+                $ACSdata += "            $domainID [fillcolor = 3; label=`"\nEmail Comminucation Services name:\n$res\n\n$domainString`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
+                $ACSdata += "            $ACSid -> $domainId`n"
+            }
+
+        }
+        
+        # Other services not implemented
+
+        # End subgraph
+        $footer = "
+            label = `"$(SanitizeString $ACSname)`";
+        }
+        "
+
+        Export-AddToFile -Data ($header + $ACSdata + $footer)
+    }
+    catch {
+        Write-Error "Can't export Azure Communication Services: $($ACS.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+}
+
+<#
+.SYNOPSIS
 Exports details of a Mangement Group for inclusion in an infrastructure diagram.
 
 .DESCRIPTION
@@ -6028,6 +6123,7 @@ function Confirm-Prerequisites {
     $icons = @(
         "LICENSE",
         "acr.png",
+        "acs.png",
         "ado.png",
         "afw.png",
         "agw.png",
@@ -6267,6 +6363,7 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][switch]$EnableACI,
         [Parameter(Mandatory = $false)][switch]$EnableADO,
         [Parameter(Mandatory = $false)][switch]$EnableACR,
+        [Parameter(Mandatory = $false)][switch]$EnableACS,
         [Parameter(Mandatory = $false)][switch]$EnableAKS,
         [Parameter(Mandatory = $false)][switch]$EnableAPIM,
         [Parameter(Mandatory = $false)][switch]$EnableASP,
@@ -6311,6 +6408,7 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][switch]$SkipACA,
         [Parameter(Mandatory = $false)][switch]$SkipACI,
         [Parameter(Mandatory = $false)][switch]$SkipACR,
+        [Parameter(Mandatory = $false)][switch]$SkipACS,
         [Parameter(Mandatory = $false)][switch]$SkipADO,
         [Parameter(Mandatory = $false)][switch]$SkipAKS,
         [Parameter(Mandatory = $false)][switch]$SkipAPIM,
@@ -6352,6 +6450,7 @@ function Get-AzNetworkDiagram {
         write-host "-EnableACA : $EnableACA"
         write-host "-EnableACI : $EnableACI"
         write-host "-EnableACR : $EnableACR"
+        write-host "-EnableACS : $EnableACS"
         write-host "-EnableAKS : $EnableAKS"
         write-host "-EnableAPIM : $EnableAPIM"
         write-host "-EnableASP : $EnableASP"
@@ -6395,6 +6494,7 @@ function Get-AzNetworkDiagram {
         write-host "-SkipACA : $SkipACA"
         write-host "-SkipACI : $SkipACI"
         write-host "-SkipACR : $SkipACR"
+        write-host "-SkipACS : $SkipACS"
         write-host "-SkipAKS : $SkipAKS"
         write-host "-SkipAPIM : $SkipAPIM"
         write-host "-SkipASP : $SkipASP"
@@ -6482,6 +6582,7 @@ function Get-AzNetworkDiagram {
     #$script:rankaca = @()
     $script:rankaci = @()
     $script:rankacr = @()
+    $script:rankacs = @()
     $script:rankADO = @()
     $script:rankagw = @()
     $script:rankaks = @()
@@ -7198,6 +7299,20 @@ function Get-AzNetworkDiagram {
                         }
                     }
                 }
+
+                #Azure Communication Service
+                if ( $EnableACS -OR (-not $SkipNonCoreNetwork -AND -not $SkipACS ) ) {
+                    Write-Output "Collecting Azure Communication Services..."
+                    Export-AddToFile "    ##### $subname - Azure Communication Services #####"
+                    $ACSs = Get-AzCommunicationService
+                    if ( $null -ne $ACSs ) {
+                        $Script:Legend += ,@("Communication Services","acs.png")
+                        foreach ( $ACS in $ACSs ) {
+                            Export-CommmunicationServices -ACS $ACS
+                        }
+                    }
+                }
+
                 #Export-AddToFile "    }" 
                 Export-AddToFile "`n    ##########################################################################################################"
                 Export-AddToFile "    ##### $subname "

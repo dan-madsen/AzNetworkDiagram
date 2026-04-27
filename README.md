@@ -142,7 +142,7 @@ This module will include in the diagram in separate colors:
     - vWAN's & Hubs
   - API Management (APIM)
   - App Service Plans and App Services
-  - Application Gateways
+  - Application Gateways  
   - Azure Container Apps
   - Azure Container Instances
   - Azure Container Registry
@@ -150,6 +150,7 @@ This module will include in the diagram in separate colors:
   - Azure VMware Solution
   - Azure Virtual Desktop
   - Backup Vaults
+  - Communication Services, incl. email communication services
   - Compute Galleries
   - Elastic SAN
   - EventHubs

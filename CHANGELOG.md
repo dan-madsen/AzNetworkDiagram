@@ -15,7 +15,7 @@
   - [x] App Service Deployment slots
   - [x] Traffic Manager
   - [ ] Front Door
-  - [ ] Communication Service
+  - [x] Communication Service, incl. Email Communication Services
 - [x] Fixes
   - [x] Static Web App - custom domain logic error
   - [x] Proper sorting of IP addresses/routes for different objects
