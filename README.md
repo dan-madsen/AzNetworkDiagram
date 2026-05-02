@@ -192,4 +192,4 @@ See change log in [CHANGELOG.md](CHANGELOG.md)
 ---
 
 # Issues, bugs, comments and ideas
-Please submit these using the issues option in GitHub. Remember to supply at least version information, error description and error message from the command line. If the Azure resource/object in question have a "special/exotic/rarely used" configuration that you are aware of, please include that is well, to ease troubleshooting.
+See [Contibuting](CONTRIBUTING.md)

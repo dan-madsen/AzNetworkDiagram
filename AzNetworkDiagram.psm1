@@ -1,5 +1,5 @@
 #Requires -Version 7.1
-#Requires -Modules Az.Accounts, Az.Network, Az.Compute, Az.KeyVault, Az.Storage, Az.MySql, Az.PostgreSql, Az.CosmosDB, Az.RedisCache, Az.Sql, Az.EventHub, Az.Websites, Az.ApiManagement, Az.ContainerRegistry, Az.ManagedServiceIdentity, Az.Resources, Az.vmware, Az.ElasticSan, Az.DnsResolver, Az.TrafficManager, Az.Communication
+#Requires -Modules Az.Accounts, Az.Network, Az.Compute, Az.KeyVault, Az.Storage, Az.MySql, Az.PostgreSql, Az.CosmosDB, Az.RedisCache, Az.Sql, Az.EventHub, Az.Websites, Az.ApiManagement, Az.ContainerRegistry, Az.ManagedServiceIdentity, Az.Resources, Az.vmware, Az.ElasticSan, Az.DnsResolver, Az.TrafficManager, Az.Communication, Az.Cdn
 
 # Change Execution Policy for current process, if prohibited by policy
 # Set-ExecutionPolicy -scope process -ExecutionPolicy bypass
@@ -331,6 +331,8 @@ function Export-dotFooterRanking {
         $($script:rankagw -join '; ')
         ### Load Balancer
         $($script:ranklb -join '; ')
+        ### Front Door
+        $($script:rankAFD -join '; ')
         ### Traffic Manager Profiles
         $($script:ranktraf -join '; ')
         ### vWAN instance
@@ -4643,7 +4645,7 @@ Exports details of a Load Balancer instance for inclusion in an infrastructure d
 .DESCRIPTION
 The `Export-LB` function processes a specified Load Balancer object, retrieves its details, and formats the data for inclusion in the diagram.
 
-.PARAMETER ESAN
+.PARAMETER LB
 Specifies the LB object to be processed. This parameter is mandatory.
 
 .EXAMPLE
@@ -4824,7 +4826,7 @@ Exports details of a Traffic Manager Profile instance for inclusion in an infras
 .DESCRIPTION
 The `Export-TrafficManagerProfile` function processes a specified Traffic Manager Profile object, retrieves its details, and formats the data for inclusion in the diagram.
 
-.PARAMETER ESAN
+.PARAMETER TRAF
 Specifies the Traffic Manager Profile object to be processed. This parameter is mandatory.
 
 .EXAMPLE
@@ -4952,12 +4954,113 @@ function Export-TrafficManagerProfile
 
 <#
 .SYNOPSIS
+Exports details of a Azure Front Door instance for inclusion in an infrastructure diagram.
+
+.DESCRIPTION
+The `Export-AFD` function processes a specified Azure Front Door object, retrieves its details, and formats the data for inclusion in the diagram.
+
+.PARAMETER AFD
+Specifies the Azure Front Door object to be processed. This parameter is mandatory.
+
+.EXAMPLE
+PS> Export-AFD -AFD $AFD
+
+This example retrieves an LB instance and exports its details for inclusion in the diagram.
+#>
+function Export-AFD
+{
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$AFD
+    )
+
+    try {
+        $AFDid = $AFD.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankAFD += $AFDid
+
+        # Collect information about AFD
+        $AFDname = SanitizeString $AFD.name
+        $location = SanitizeLocation $AFD.location
+        $SKU = $AFD.SkuName
+        $domain = Get-AzFrontDoorCdnCustomDomain -ResourceGroupName $afd.ResourceGroupName -ProfileName $afd.name
+
+        $header = "
+        # $($name) - $AFDid
+        subgraph cluster_$AFDid {
+            style = solid;
+            colorscheme = blues9 ;
+            bgcolor = 2;
+            node [colorscheme = blues9 ; style = filled;];
+        "
+
+        # AFD DOT
+        $ImagePath = Join-Path $OutputPath "icons" "AFD.png"
+        $AFDdata += "            $AFDid [fillcolor = 3; label=`"\nLocation: $location\nSKU: $SKU`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $AFD)]`n"
+
+
+        # Endpoints (front end)
+        $endpoints = Get-AzFrontDoorCdnEndpoint -ResourceGroupName $afd.ResourceGroupName -ProfileName $afd.name
+        if ( $null -ne $endpoints ) {
+            $endpoints | ForEach-Object {
+                $endpoint = $_
+                $endpointid = $endpoint.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $name = $endpoint.Name
+                $hostname = $endpoint.HostName
+
+                # DOT
+                $AFDdata += "            $endpointid [fillcolor = 3; label=`"\nName: $name\nHostname: $hostname`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $AFD)]`n"
+            }
+        }
+
+        # Origin (source)
+        # PENDING
+
+        # Routes (from endpoint to origin)
+        #Get-AzFrontDoorCdnRoute -ResourceGroupName $afd.ResourceGroupName -ProfileName $afd.name -EndpointName
+        $routes = Get-AzFrontDoorCdnRoute -ResourceGroupName $afd.ResourceGroupName -ProfileName $afd.name -EndpointName $endpoint.name
+        if ( $null -ne $routes ) {
+            $routes | ForEach-Object {
+                $route = $_
+                $routeid = $route.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $name = $route.Name
+                $endpointName = $route.EndpointName # Can be empty !
+                if ( "" -eq $endpointName ) { $endpointName = "N/A" }
+                $customDomain = $route.CustomDomain
+                if ( "" -eq $customDomain ) { $customDomain = "N/A" }
+                $forwardingProtocol = $route.ForwardingProtocol
+                $httpsRedirect = $route.HttpsRedirect
+                $supportedProtocol = $route.SupportedProtocol
+
+                # DOT
+                $AFDdata += "            $routeid [fillcolor = 3; label=`"\nName: $name\nEndpoint name: $endpointName\nCustom domain: $customDomain\n\nForwarding protocol: $forwardingProtocol\nHTTPS redirect: $httpsRedirect\nSupprted protocol: $supportedProtocol `";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $AFD)]`n"
+
+                # LINKS !!!!!!!
+            }
+        }
+
+        # End subgraph
+        $footer = "
+            label = `"$(SanitizeString $AFDname)`";
+        }
+        "
+
+        Export-AddToFile -Data ($header + $AFDdata + $footer)
+    }
+    catch {
+        Write-Error "Can't export AFD: $($AFD.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+}
+
+
+<#
+.SYNOPSIS
 Exports details of a Communication Services instance for inclusion in an infrastructure diagram.
 
 .DESCRIPTION
 The `Export-CommmunicationServices` function processes a specified Communication Services object, retrieves its details, and formats the data for inclusion in the diagram.
 
-.PARAMETER ESAN
+.PARAMETER ACS
 Specifies the Communication Services object to be processed. This parameter is mandatory.
 
 .EXAMPLE
@@ -6125,6 +6228,7 @@ function Confirm-Prerequisites {
         "acr.png",
         "acs.png",
         "ado.png",
+        "afd.png",
         "afw.png",
         "agw.png",
         "aks-node-pool.png",
@@ -6364,6 +6468,7 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][switch]$EnableADO,
         [Parameter(Mandatory = $false)][switch]$EnableACR,
         [Parameter(Mandatory = $false)][switch]$EnableACS,
+        [Parameter(Mandatory = $false)][switch]$EnableAFD,
         [Parameter(Mandatory = $false)][switch]$EnableAKS,
         [Parameter(Mandatory = $false)][switch]$EnableAPIM,
         [Parameter(Mandatory = $false)][switch]$EnableASP,
@@ -6410,6 +6515,7 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][switch]$SkipACR,
         [Parameter(Mandatory = $false)][switch]$SkipACS,
         [Parameter(Mandatory = $false)][switch]$SkipADO,
+        [Parameter(Mandatory = $false)][switch]$SkipAFD,
         [Parameter(Mandatory = $false)][switch]$SkipAKS,
         [Parameter(Mandatory = $false)][switch]$SkipAPIM,
         [Parameter(Mandatory = $false)][switch]$SkipASP,
@@ -6451,6 +6557,7 @@ function Get-AzNetworkDiagram {
         write-host "-EnableACI : $EnableACI"
         write-host "-EnableACR : $EnableACR"
         write-host "-EnableACS : $EnableACS"
+        write-host "-EnableAFD : $EnableAFD"
         write-host "-EnableAKS : $EnableAKS"
         write-host "-EnableAPIM : $EnableAPIM"
         write-host "-EnableASP : $EnableASP"
@@ -6495,6 +6602,7 @@ function Get-AzNetworkDiagram {
         write-host "-SkipACI : $SkipACI"
         write-host "-SkipACR : $SkipACR"
         write-host "-SkipACS : $SkipACS"
+        write-host "-SkipAFD : $SkipAFD"
         write-host "-SkipAKS : $SkipAKS"
         write-host "-SkipAPIM : $SkipAPIM"
         write-host "-SkipASP : $SkipASP"
@@ -6583,6 +6691,7 @@ function Get-AzNetworkDiagram {
     $script:rankaci = @()
     $script:rankacr = @()
     $script:rankacs = @()
+    $script:rankAFD = @()
     $script:rankADO = @()
     $script:rankagw = @()
     $script:rankaks = @()
@@ -7309,6 +7418,19 @@ function Get-AzNetworkDiagram {
                         $Script:Legend += ,@("Communication Services","acs.png")
                         foreach ( $ACS in $ACSs ) {
                             Export-CommmunicationServices -ACS $ACS
+                        }
+                    }
+                }
+
+                ### Azure Front Door
+                if ( $EnableAFD -OR (-not $SkipNonCoreNetwork -AND -not $SkipAFD ) ) {
+                    Write-Output "Collecting Azure Front Door..."
+                    Export-AddToFile "    ##### $subname - Azure Front Door #####"
+                    $AFDs = Get-AzFrontDoorCdnProfile -ErrorAction Stop
+                    if ($null -ne $AFDs) {
+                        $Script:Legend += ,@("Azure Front Door","afd.png")
+                        foreach ($AFD in $AFDs) {
+                            Export-AFD $AFD
                         }
                     }
                 }
