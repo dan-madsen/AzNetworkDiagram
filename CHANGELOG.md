@@ -14,7 +14,7 @@
   - [x] Azure Firewall Policy parant relationships
   - [x] App Service Deployment slots
   - [x] Traffic Manager
-  - [ ] Front Door
+  - [x] Front Door
   - [x] Communication Service, incl. Email Communication Services
 - [x] Fixes
   - [x] Static Web App - custom domain logic error

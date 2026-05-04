@@ -4982,7 +4982,7 @@ function Export-AFD
         # Collect information about AFD
         $AFDname = SanitizeString $AFD.name
         $location = SanitizeLocation $AFD.location
-        $SKU = $AFD.SkuName
+        $SKU = $AFD.SkuName.split("_")[0]
         $domain = Get-AzFrontDoorCdnCustomDomain -ResourceGroupName $afd.ResourceGroupName -ProfileName $afd.name
 
         $header = "
@@ -4996,8 +4996,48 @@ function Export-AFD
 
         # AFD DOT
         $ImagePath = Join-Path $OutputPath "icons" "AFD.png"
-        $AFDdata += "            $AFDid [fillcolor = 3; label=`"\nLocation: $location\nSKU: $SKU`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $AFD)]`n"
+        $AFDdata += "            $AFDid [fillcolor = 3; label=`"\nLocation: $location\nSKU: $SKU\n\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $AFD)]`n"
 
+# Origin (source)
+        # PENDING
+        # Types:
+        ## Storage (blob)
+        ## Cloud Service ???
+        ## App Service
+        ## SWA
+        ## APIM
+        ## AGW
+        ## PIP
+        ## Azure Sprint Apps
+        ## ACI
+        ## Container Apps
+        ## Custom
+
+        # Origin Groups
+        $OriginGroups = Get-AzFrontDoorCdnOriginGroup -ResourceGroupName $AFD.ResourceGroupName -ProfileName $AFD.Name
+        if ( $null -ne $OriginGroups ) {
+            $OriginGroups | ForEach-Object {
+                $OriginGroup = $_
+                $OriginGroupId = $OriginGroup.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $OriginGroupName = SanitizeString $OriginGroup.Name
+
+                #DOT
+                $AFDdata += "            $OriginGroupId [fillcolor = 3; label=`"\nOrigin group name: $OriginGroupName\n\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
+                
+                # Origins
+                $Origins = Get-AzFrontDoorCdnOrigin -ResourceGroupName $AFD.ResourceGroupName -ProfileName $AFD.Name -OriginGroupName $OriginGroup.Name
+                if ( $null -ne $Origins ) {
+                    $Origins | ForEach-Object {
+                        $Origin = $_
+                        $OriginID = $Origin.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                        $OriginName = SanitizeString $Origin.Name
+                        $AFDdata += "            $OriginID [fillcolor = 3; label=`"\nOrigin name: $OriginName\n\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
+                        $AFDdata += "            $OriginGroupId -> $OriginID"
+                
+                    }
+                }
+            }
+        }
 
         # Endpoints (front end)
         $endpoints = Get-AzFrontDoorCdnEndpoint -ResourceGroupName $afd.ResourceGroupName -ProfileName $afd.name
@@ -5009,33 +5049,35 @@ function Export-AFD
                 $hostname = $endpoint.HostName
 
                 # DOT
-                $AFDdata += "            $endpointid [fillcolor = 3; label=`"\nName: $name\nHostname: $hostname`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $AFD)]`n"
-            }
-        }
+                $AFDdata += "            $endpointid [fillcolor = 3; label=`"\nEndpoint name: $name\nHostname: $hostname\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
+                $AFDdata += "            $AFDid -> $endpointid"
 
-        # Origin (source)
-        # PENDING
+                # Routes (from endpoint to origin)
+                #Get-AzFrontDoorCdnRoute -ResourceGroupName $afd.ResourceGroupName -ProfileName $afd.name -EndpointName
+                $routes = Get-AzFrontDoorCdnRoute -ResourceGroupName $afd.ResourceGroupName -ProfileName $afd.name -EndpointName $endpoint.name
+                if ( $null -ne $routes ) {
+                    $routes | ForEach-Object {
+                        $route = $_
+                        $routeid = $route.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                        $name = $route.Name
+                        $endpointName = $route.EndpointName # Can be empty !
+                        if ( "" -eq $endpointName ) { $endpointName = "N/A" }
+                        $customDomain = $route.CustomDomain
+                        if ( "" -eq $customDomain ) { $customDomain = "N/A" }
+                        $forwardingProtocol = $route.ForwardingProtocol
+                        $httpsRedirect = $route.HttpsRedirect
+                        $supportedProtocol = $route.SupportedProtocol
 
-        # Routes (from endpoint to origin)
-        #Get-AzFrontDoorCdnRoute -ResourceGroupName $afd.ResourceGroupName -ProfileName $afd.name -EndpointName
-        $routes = Get-AzFrontDoorCdnRoute -ResourceGroupName $afd.ResourceGroupName -ProfileName $afd.name -EndpointName $endpoint.name
-        if ( $null -ne $routes ) {
-            $routes | ForEach-Object {
-                $route = $_
-                $routeid = $route.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $name = $route.Name
-                $endpointName = $route.EndpointName # Can be empty !
-                if ( "" -eq $endpointName ) { $endpointName = "N/A" }
-                $customDomain = $route.CustomDomain
-                if ( "" -eq $customDomain ) { $customDomain = "N/A" }
-                $forwardingProtocol = $route.ForwardingProtocol
-                $httpsRedirect = $route.HttpsRedirect
-                $supportedProtocol = $route.SupportedProtocol
+                        # DOT
+                        $AFDdata += "            $routeid [fillcolor = 3; label=`"\nRoute name: $name\nEndpoint name: $endpointName\nCustom domain: $customDomain\n\nForwarding protocol: $forwardingProtocol\nHTTPS redirect: $httpsRedirect\nSupprted protocol: $supportedProtocol `";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
+                        $AFDdata += "            $endpointid -> $routeid" 
 
-                # DOT
-                $AFDdata += "            $routeid [fillcolor = 3; label=`"\nName: $name\nEndpoint name: $endpointName\nCustom domain: $customDomain\n\nForwarding protocol: $forwardingProtocol\nHTTPS redirect: $httpsRedirect\nSupprted protocol: $supportedProtocol `";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $AFD)]`n"
+                        # LINKS !!!!!!!
+                        $OriginGroupId = $route.OriginGroupId.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                        $AFDdata += "            $routeid -> $OriginGroupId" 
 
-                # LINKS !!!!!!!
+                    }
+                }
             }
         }
 
