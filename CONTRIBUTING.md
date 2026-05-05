@@ -140,8 +140,8 @@ function Export-RES
 ```
 
 ## Sanitize
-Utilizie the "SanitizeString" and "SanitizeLocation" for all potetial confidential data that should have the OPTION to be anonymized int the digram.
+Utilize the "SanitizeString" and "SanitizeLocation" for all potential confidential data that should have the OPTION to be anonymized int the digram using the Sanitize option.
 
-## (Additional) Powershell module needed?
-- At the top of the psm1 file - add the module to the array
-- In the psd1 flie, add the module to the "RequiredModules" array
+## (Additional) Powershell module(s) needed?
+- At the top of the .psm1 file - add the module to the array
+- In the .psd1 flie, add the module to the "RequiredModules" array
