@@ -11,7 +11,7 @@
   - [x] DevOps Organizations added to diagram (optional - enable manually with -EnableADO)
   - [x] Entra Licenses added to diagram (optional - enable manually with -EnableEntraLicenses)
   - [x] Entra Domains added do diagram (optional - enable manually with -EnableEntraDomains)
-  - [x] Azure Firewall Policy parant relationships
+  - [x] Azure Firewall Policy parent relationships
   - [x] App Service Deployment slots
   - [x] Traffic Manager
   - [x] Front Door

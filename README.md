@@ -127,8 +127,11 @@ If links to other resources exist then these links are drawn too. For example, i
 # Currently Supported Resources
 The module is now compatible with both Ubuntu and Windows so you can run it successfully on either system. The requirement of having Graphviz installed exists on both platforms. You can look into the YAML file in the pipeline example on how to install Graphviz on Ubuntu unattended.
 
-This module will include in the diagram in separate colors:
+This module have the options to include these resources in the diagram in separate colors:
   - Mangement Groups and Subscriptions
+  - Azure DevOps
+  - Entra Domains
+  - Entra Licensing
   - **Core network resources**
     - Azure Firewall, including IP Groups
     - Bastion
@@ -143,9 +146,11 @@ This module will include in the diagram in separate colors:
   - API Management (APIM)
   - App Service Plans and App Services
   - Application Gateways  
+  - Azure Communication Service
   - Azure Container Apps
   - Azure Container Instances
   - Azure Container Registry
+  - Azure Front Door
   - Azure Kubernetes Services
   - Azure VMware Solution
   - Azure Virtual Desktop
@@ -187,7 +192,7 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 ---
 
 # Changelog 
-See change log in [CHANGELOG.md](CHANGELOG.md)
+See changelog in [CHANGELOG.md](CHANGELOG.md)
 
 ---
 
