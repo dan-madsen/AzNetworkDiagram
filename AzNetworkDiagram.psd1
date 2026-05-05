@@ -107,10 +107,10 @@
             # IconUri = ''
     
     # ReleaseNotes of this module
-             ReleaseNotes = 'v2.0.0 beta 4 release'
+             ReleaseNotes = 'v2.0.0 RC 1 release'
     
     # Prerelease string of this module
-             Prerelease = 'beta4'
+             Prerelease = 'rc1'
     
     # Flag to indicate whether the module requires explicit user acceptance for install/update/save
             # RequireLicenseAcceptance = $false
