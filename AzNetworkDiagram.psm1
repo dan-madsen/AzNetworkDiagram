@@ -6185,7 +6185,7 @@ function Export-EntraDomains
             if ( $EnableLinks -AND -not $script:DoSanitize) { $link = "URL=`"https://entra.microsoft.com`";" }
             
             # Domains header/table
-            $data += "  licenses [label = <
+            $data += "  EntraDomains [label = <
                     <TABLE border=`"0`" style=`"rounded`">
                     <TR><TD border=`"0`" align=`"left`"><B>Domain(s)</B></TD><TD border=`"0`" align=`"right`"><B>Verified</B></TD><TD border=`"0`" align=`"right`"><B>Default</B></TD></TR>
             "
