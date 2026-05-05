@@ -4983,7 +4983,14 @@ function Export-AFD
         $AFDname = SanitizeString $AFD.name
         $location = SanitizeLocation $AFD.location
         $SKU = $AFD.SkuName.split("_")[0]
-        $domain = Get-AzFrontDoorCdnCustomDomain -ResourceGroupName $afd.ResourceGroupName -ProfileName $afd.name
+        # $domains = Get-AzFrontDoorCdnCustomDomain -ResourceGroupName $afd.ResourceGroupName -ProfileName $afd.name
+        # $customDomains = ""
+        # if( $null -ne $domains ) {
+        #     $domains | foreach-Object {
+        #         $domain = $_
+        #         $customDomains += $domain.HostName+"\n"
+        #     }
+        # } else { $customDomains = "N/A" }
 
         $header = "
         # $($name) - $AFDid
@@ -4996,22 +5003,8 @@ function Export-AFD
 
         # AFD DOT
         $ImagePath = Join-Path $OutputPath "icons" "AFD.png"
-        $AFDdata += "            $AFDid [fillcolor = 3; label=`"\nLocation: $location\nSKU: $SKU\n\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $AFD)]`n"
-
-# Origin (source)
-        # PENDING
-        # Types:
-        ## Storage (blob)
-        ## Cloud Service ???
-        ## App Service
-        ## SWA
-        ## APIM
-        ## AGW
-        ## PIP
-        ## Azure Sprint Apps
-        ## ACI
-        ## Container Apps
-        ## Custom
+        $AFDdata += "            $AFDid [fillcolor = 3; label=`"\nLocation: $location\nSKU: $SKU\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $AFD)]`n"
+        #REMOVED: Custom domain(s) available:\n$customDomains\n
 
         # Origin Groups
         $OriginGroups = Get-AzFrontDoorCdnOriginGroup -ResourceGroupName $AFD.ResourceGroupName -ProfileName $AFD.Name
@@ -5020,9 +5013,13 @@ function Export-AFD
                 $OriginGroup = $_
                 $OriginGroupId = $OriginGroup.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
                 $OriginGroupName = SanitizeString $OriginGroup.Name
+                $healthProbeProtocol = $OriginGroup.HealthProbeSetting.ProbeProtocol
+                $healthProbeInterval = $OriginGroup.HealthProbeSetting.ProbeIntervalInSecond
+                $healthProbeRequestType = $OriginGroup.HealthProbeSetting.ProbeRequestType
+                $healthProbePath = SanitizeString $OriginGroup.HealthProbeSetting.ProbePath
 
                 #DOT
-                $AFDdata += "            $OriginGroupId [fillcolor = 3; label=`"\nOrigin group name: $OriginGroupName\n\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
+                $AFDdata += "            $OriginGroupId [fillcolor = 3; label=`"\nOrigin group name: $OriginGroupName\n\nHealth Probe Settings\nProtocol: $healthProbeProtocol\nInterval: $healthProbeInterval\nPath: $healthProbePath\nRequest type: $healthProbeRequestType`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
                 
                 # Origins
                 $Origins = Get-AzFrontDoorCdnOrigin -ResourceGroupName $AFD.ResourceGroupName -ProfileName $AFD.Name -OriginGroupName $OriginGroup.Name
@@ -5031,7 +5028,12 @@ function Export-AFD
                         $Origin = $_
                         $OriginID = $Origin.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
                         $OriginName = SanitizeString $Origin.Name
-                        $AFDdata += "            $OriginID [fillcolor = 3; label=`"\nOrigin name: $OriginName\n\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
+                        $OriginHostName = SanitizeString $origin.HostName
+                        $httpPort = $Origin.HttpPort
+                        $httpsPort = $Origin.HttpsPort
+                        $enforceCertCheck = $Origin.EnforceCertificateNameCheck
+                        
+                        $AFDdata += "            $OriginID [fillcolor = 3; label=`"\nOrigin name: $OriginName\n\nOrigin host name:\n$OriginHostName\n\nHTTP port: $httpPort\nHTTPS port: $httpsPort\nEnforce certificate check: $enforceCertCheck`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
                         $AFDdata += "            $OriginGroupId -> $OriginID"
                 
                     }
@@ -5039,17 +5041,17 @@ function Export-AFD
             }
         }
 
-        # Endpoints (front end)
+        # Endpoints (front end / CNAME reference)
         $endpoints = Get-AzFrontDoorCdnEndpoint -ResourceGroupName $afd.ResourceGroupName -ProfileName $afd.name
         if ( $null -ne $endpoints ) {
             $endpoints | ForEach-Object {
                 $endpoint = $_
                 $endpointid = $endpoint.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $name = $endpoint.Name
-                $hostname = $endpoint.HostName
+                $name = SanitizeString $endpoint.Name
+                $hostname = SanitizeString $endpoint.HostName
 
                 # DOT
-                $AFDdata += "            $endpointid [fillcolor = 3; label=`"\nEndpoint name: $name\nHostname: $hostname\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
+                $AFDdata += "            $endpointid [fillcolor = 3; label=`"Endpoint name: $name\nHostname: $hostname\n\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
                 $AFDdata += "            $AFDid -> $endpointid"
 
                 # Routes (from endpoint to origin)
@@ -5059,17 +5061,28 @@ function Export-AFD
                     $routes | ForEach-Object {
                         $route = $_
                         $routeid = $route.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                        $name = $route.Name
-                        $endpointName = $route.EndpointName # Can be empty !
-                        if ( "" -eq $endpointName ) { $endpointName = "N/A" }
-                        $customDomain = $route.CustomDomain
-                        if ( "" -eq $customDomain ) { $customDomain = "N/A" }
+                        $name = SanitizeString $route.Name
+                        #$endpointName = SanitizeString $route.EndpointName # Can be empty !
+                        #if ( "" -eq $endpointName ) { $endpointName = "N/A" }
+                        
+                        $customDomainIDs = $route.CustomDomain.id
+                        $customDomainsString = ""
+                        if( $null -ne $customDomainIDs ) {
+                            $customDomainIDs | foreach-Object {
+                                $customDomainID = $_                                
+                                $customDomainNameObjectName = $customDomainID.split("/")[10]
+                                $customDomainName = Get-AzFrontDoorCdnCustomDomain -ResourceGroupName $afd.ResourceGroupName -ProfileName $afd.name -CustomDomainName $customDomainNameObjectName
+                                $customDomainsString += SanitizeString $customDomainName.HostName+"\n"
+                            }
+                        } else { $customDomainsString = "N/A" }
+                        
                         $forwardingProtocol = $route.ForwardingProtocol
                         $httpsRedirect = $route.HttpsRedirect
-                        $supportedProtocol = $route.SupportedProtocol
+                        $supportedProtocols = $route.SupportedProtocol
 
                         # DOT
-                        $AFDdata += "            $routeid [fillcolor = 3; label=`"\nRoute name: $name\nEndpoint name: $endpointName\nCustom domain: $customDomain\n\nForwarding protocol: $forwardingProtocol\nHTTPS redirect: $httpsRedirect\nSupprted protocol: $supportedProtocol `";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
+                        $AFDdata += "            $routeid [fillcolor = 3; label=`"\nRoute name: $name\n\nCustom domain(s):\n$customDomainsString\n\nForwarding protocol: $forwardingProtocol\nHTTPS redirect: $httpsRedirect\nSupported protocol(s): $supportedProtocols `";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
+                        #Endpoint name: $endpointName
                         $AFDdata += "            $endpointid -> $routeid" 
 
                         # LINKS !!!!!!!
