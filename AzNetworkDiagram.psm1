@@ -5051,7 +5051,7 @@ function Export-AFD
                 $hostname = SanitizeString $endpoint.HostName
 
                 # DOT
-                $AFDdata += "            $endpointid [fillcolor = 3; label=`"Endpoint name: $name\nHostname (CNAME reference):\n$hostname\n\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
+                $AFDdata += "            $endpointid [fillcolor = 3; label=`"\nEndpoint name: $name\n\nHostname (CNAME reference):\n$hostname\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
                 $AFDdata += "            $AFDid -> $endpointid"
 
                 # Routes (from endpoint to origin)
