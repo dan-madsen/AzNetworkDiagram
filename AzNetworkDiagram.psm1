@@ -5051,7 +5051,7 @@ function Export-AFD
                 $hostname = SanitizeString $endpoint.HostName
 
                 # DOT
-                $AFDdata += "            $endpointid [fillcolor = 3; label=`"Endpoint name: $name\nHostname: $hostname\n\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
+                $AFDdata += "            $endpointid [fillcolor = 3; label=`"Endpoint name: $name\nHostname (CNAME reference):\n$hostname\n\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
                 $AFDdata += "            $AFDid -> $endpointid"
 
                 # Routes (from endpoint to origin)
@@ -5072,7 +5072,7 @@ function Export-AFD
                                 $customDomainID = $_                                
                                 $customDomainNameObjectName = $customDomainID.split("/")[10]
                                 $customDomainName = Get-AzFrontDoorCdnCustomDomain -ResourceGroupName $afd.ResourceGroupName -ProfileName $afd.name -CustomDomainName $customDomainNameObjectName
-                                $customDomainsString += SanitizeString $customDomainName.HostName+"\n"
+                                $customDomainsString += SanitizeString ($customDomainName.HostName+"\n")
                             }
                         } else { $customDomainsString = "N/A" }
                         
