@@ -1,5 +1,5 @@
 # Change log (since v1.0.1)
-## v2.0.0 release - under construction (RC1 is the most recent version released to PowerShell Gallery, which includes almost all of the changes)
+## v2.0.0 release - under construction (RC1 is the most recent version released to PowerShell Gallery, which includes all of the changes)
 - [x] **_BREAKING CHANGE - see v1.5 for additional info_**
 - [x] New features
   - [x] The breaking change from v1.5 fully implemented
