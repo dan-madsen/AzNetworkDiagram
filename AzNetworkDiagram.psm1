@@ -1,5 +1,5 @@
 #Requires -Version 7.1
-#Requires -Modules Az.Accounts, Az.Network, Az.Compute, Az.KeyVault, Az.Storage, Az.MySql, Az.PostgreSql, Az.CosmosDB, Az.RedisCache, Az.Sql, Az.EventHub, Az.Websites, Az.ApiManagement, Az.ContainerRegistry, Az.ManagedServiceIdentity, Az.Resources, Az.vmware, Az.ElasticSan, Az.DnsResolver, Az.TrafficManager, Az.Communication, Az.Cdn
+#Requires -Modules Az.Accounts, Az.Network, Az.Compute, Az.KeyVault, Az.Storage, Az.MySql, Az.PostgreSql, Az.CosmosDB, Az.RedisCache, Az.Sql, Az.EventHub, Az.Websites, Az.ApiManagement, Az.ContainerRegistry, Az.ManagedServiceIdentity, Az.Resources, Az.vmware, Az.ElasticSan, Az.DnsResolver, Az.TrafficManager, Az.Communication, Az.Cdn, Az.App
 
 # Change Execution Policy for current process, if prohibited by policy
 # Set-ExecutionPolicy -scope process -ExecutionPolicy bypass
@@ -1437,8 +1437,8 @@ function Export-MySQLServer {
     
     try {
         # Get Entra ID Admin
-        $subid = $mysql.id.split("/")[2]
-        $resourceGroupName = $mysql.id.split("/")[4]
+        # $subid = $mysql.id.split("/")[2]
+        # $resourceGroupName = $mysql.id.split("/")[4]
         
         <#
         $uri = "https://management.azure.com/subscriptions/$subid/resourceGroups/$resourceGroupName/providers/Microsoft.DBforMySQL/flexibleServers/$($mysql.Name)/administrators?api-version=2023-06-01-preview"
@@ -1455,6 +1455,8 @@ function Export-MySQLServer {
 
         # Get other server properties
         $mysqlid = $mysql.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankmysql += $mysqlid
+
         $properties = Get-AzResource -ResourceId $mysql.id -ErrorAction Stop      
         $Name = SanitizeString $mysql.Name
         $Location = SanitizeLocation $mysql.Location
@@ -1466,7 +1468,7 @@ function Export-MySQLServer {
             bgcolor = 4;
         "
         $ImagePath = Join-Path $OutputPath "icons" "mysql.png"
-        $data += "        $mysqlid [label = `"\n\n\nLocation: $Location\nSKU: $($mysql.SkuName)\nTier: $($mysql.SkuTier.ToString())\nVersion: $($mysql.Version)\nLogin Admins:$(SanitizeString $sqladmins)\nVM Size: $($properties.Sku.Name)\nAvailability Zone: $($mysql.AvailabilityZone)\nStandby Zone: $($mysql.HighAvailabilityStandbyAvailabilityZone)\nPublic Network Access: $($mysql.NetworkPublicNetworkAccess)`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.5;$(Generate-DotURL -resource $mysql)];"
+        $data += "        $mysqlid [label = `"\nLocation: $Location\nSKU: $($mysql.SkuName)\nTier: $($mysql.SkuTier.ToString())\nVersion: $($mysql.Version)\nLogin Admins:$(SanitizeString $sqladmins)\nVM Size: $($properties.Sku.Name)\nAvailability Zone: $($mysql.AvailabilityZone)\nStandby Zone: $($mysql.HighAvailabilityStandbyAvailabilityZone)\nPublic Network Access: $($mysql.NetworkPublicNetworkAccess)`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.5;$(Generate-DotURL -resource $mysql)];"
         $data += "`n"
         
         $dbs = Get-AzMySqlFlexibleServerDatabase -ResourceGroupName $mysql.id.split("/")[4] -ServerName $mysql.Name -ErrorAction Stop
@@ -1481,6 +1483,19 @@ function Export-MySQLServer {
             $mysqlsubnetid = $properties.properties.network.delegatedSubnetResourceId.replace("-", "").replace("/", "").replace(".", "").ToLower()
             $data += "        $mysqlid -> $($mysqlsubnetid);`n"
         }
+        
+        # Private Endpoints enabled at runtime?
+        if ( $EnablePE -OR (-not $SkipNonCoreNetwork -AND -not $SkipPE ) ) {
+            $peids = Get-AzPrivateEndpointConnection -PrivateLinkResourceId $mysql.Id -ErrorAction Stop
+            
+            if ($peids) {
+                foreach ($peid in $peids) {
+                    $pedotid = $peid.PrivateEndpoint.Id.ToString().replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $data += "        $mysqlid -> $($pedotid) [label = `"Private Endpoint`"; constraint=false ];`n"
+                }
+            }
+        }
+        
         # User Assigned Managed Identities enabled at runtime?
         if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
             if ($properties.Identity.UserAssignedIdentities.Keys) {
@@ -1713,6 +1728,8 @@ function Export-PostgreSQLServer {
     )
     try {
         $postgresqlid = $postgresql.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankpostgresql += $postgresqlid
+
         $Name = SanitizeString $postgresql.Name
         $data = "
         # $Name - $postgresqlid
@@ -1736,7 +1753,7 @@ function Export-PostgreSQLServer {
         $data += "        $postgresqlid [label = `"\nLocation: $Location\nVersion: $($postgresql.Version.ToString()).$($postgresql.MinorVersion)\nAvailability Zone: $($postgresql.AvailabilityZone)\nConfiguration: $config\nMax IOPS: $iops\nPublic Network Access: $($postgresql.NetworkPublicNetworkAccess.ToString())`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;$(Generate-DotURL -resource $postgresql)];"
         $data += "`n"
 
-        $dbs = Get-AzPostgreSqlFlexibleServerDatabase -ResourceGroupName $postgresqlserver.id.split("/")[4] -ServerName $postgresqlserver.Name -ErrorAction Stop
+        $dbs = Get-AzPostgreSqlFlexibleServerDatabase -ResourceGroupName $postgresql.id.split("/")[4] -ServerName $postgresql.Name -ErrorAction Stop
         $ImagePath = Join-Path $OutputPath "icons" "db.png"
         foreach ($db in $dbs) {
             $dbid = $db.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
@@ -1747,6 +1764,19 @@ function Export-PostgreSQLServer {
             $postgresqlsubnetid = $postgresql.NetworkDelegatedSubnetResourceId.replace("-", "").replace("/", "").replace(".", "").ToLower()
             $data += "        $postgresqlid -> $($postgresqlsubnetid);`n"
         }
+        
+         # Private Endpoints enabled at runtime?
+        if ( $EnablePE -OR (-not $SkipNonCoreNetwork -AND -not $SkipPE ) ) {
+            $peids = Get-AzPrivateEndpointConnection -PrivateLinkResourceId $postgresql.Id -ErrorAction Stop
+            
+            if ($peids) {
+                foreach ($peid in $peids) {
+                    $pedotid = $peid.PrivateEndpoint.Id.ToString().replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $data += "        $postgresqlid -> $($pedotid) [label = `"Private Endpoint`"; constraint=false ];`n"
+                }
+            }
+        }
+        
         # User Assigned Managed Identities enabled at runtime?
         if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
             if ($resource.Identity.UserAssignedIdentities.Keys) {
@@ -1948,7 +1978,7 @@ function Export-SQLServer {
             if ($peids) {
                 foreach ($peid in $peids) {
                     $pedotid = $peid.PrivateEndpoint.Id.ToString().replace("-", "").replace("/", "").replace(".", "").ToLower()
-                    $data += "        $sqlserverid -> $($pedotid) [label = `"Private Endpoint`"; ];`n"
+                    $data += "        $sqlserverid -> $($pedotid) [label = `"Private Endpoint`"; constraint=false ];`n"
                 }
             }
         }
@@ -4013,12 +4043,25 @@ function Export-ContainerAppEnv
                     $acaStorage = "Unknown"
                 }
 
-                $acaDetails = "Name: $acaName\nLocation: $acaLocation\nEnvironment Type: $AppEnvironmentType\nApp Name: $acaAppName\nApp Image: $acaImage\nApp CPU: $acaCpu Cores\nApp Memory: $acaMemory\nApp Storage: $acaStorage\nOutbound IP Address: $($aca.OutboundIPAddress -join ', ')\n"
+                #$acaDetails = "Name: $acaName\nLocation: $acaLocation\nEnvironment Type: $AppEnvironmentType\nApp Name: $acaAppName\nApp Image: $acaImage\nApp CPU: $acaCpu Cores\nApp Memory: $acaMemory\nApp Storage: $acaStorage\nOutbound IP Address: $($aca.OutboundIPAddress -join ', ')\n"
+                $acaDetails = "Name: $acaName\nLocation: $acaLocation\nEnvironment Type: $AppEnvironmentType\nApp Name: $acaAppName\nApp Image: $acaImage\nApp CPU: $acaCpu Cores\nApp Memory: $acaMemory\nApp Storage: $acaStorage\nOutbound IP Addresses (amount): $($aca.OutboundIPAddress.Count)\n"
                 
                 # DOT
                 $ImagePath = Join-Path $OutputPath "icons" "containerapp.png"
                 $envdata += "    $acaId [fillcolor = 4; label = `"\n$acaDetails`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $aca)];`n"
                 $envdata += "    $id -> $acaId [ltail = cluster_$id; lhead = cluster_$acaId;];`n"
+
+                # Private Endpoints enabled at runtime?
+                if ( $EnablePE -OR (-not $SkipNonCoreNetwork -AND -not $SkipPE ) ) {
+                    $peids = Get-AzPrivateEndpointConnection -PrivateLinkResourceId $containerAppEnvironment.Id -ErrorAction Stop
+                    
+                    if ($peids) {
+                        foreach ($peid in $peids) {
+                            $pedotid = $peid.PrivateEndpoint.Id.ToString().replace("-", "").replace("/", "").replace(".", "").ToLower()
+                            $envdata += "        $id -> $($pedotid) [label = `"Private Endpoint`"; constraint=false ];`n"
+                        }
+                    }
+                }
             }
         }
 
@@ -6185,7 +6228,7 @@ function Export-EntraDomains
             if ( $EnableLinks -AND -not $script:DoSanitize) { $link = "URL=`"https://entra.microsoft.com`";" }
             
             # Domains header/table
-            $data += "  licenses [label = <
+            $data += "  EntraDomains [label = <
                     <TABLE border=`"0`" style=`"rounded`">
                     <TR><TD border=`"0`" align=`"left`"><B>Domain(s)</B></TD><TD border=`"0`" align=`"right`"><B>Verified</B></TD><TD border=`"0`" align=`"right`"><B>Default</B></TD></TR>
             "

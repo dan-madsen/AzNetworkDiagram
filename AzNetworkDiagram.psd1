@@ -51,7 +51,7 @@
     # ProcessorArchitecture = ''
     
     # Modules that must be imported into the global environment prior to importing this module
-    RequiredModules = @("Az.Accounts", "Az.Network", "Az.Compute", "Az.KeyVault", "Az.Storage", "Az.MySql", "Az.PostgreSql", "Az.CosmosDB", "Az.RedisCache", "Az.Sql", "Az.EventHub", "Az.Websites", "Az.ApiManagement", "Az.ContainerRegistry", "Az.ManagedServiceIdentity", "Az.Resources", "Az.vmware", "Az.ElasticSan", "Az.DnsResolver", "Az.TrafficManager", "Az.Communication", "Az.Cdn")
+    RequiredModules = @("Az.Accounts", "Az.Network", "Az.Compute", "Az.KeyVault", "Az.Storage", "Az.MySql", "Az.PostgreSql", "Az.CosmosDB", "Az.RedisCache", "Az.Sql", "Az.EventHub", "Az.Websites", "Az.ApiManagement", "Az.ContainerRegistry", "Az.ManagedServiceIdentity", "Az.Resources", "Az.vmware", "Az.ElasticSan", "Az.DnsResolver", "Az.TrafficManager", "Az.Communication", "Az.Cdn", "Az.App")
     
     # Assemblies that must be loaded prior to importing this module
     # RequiredAssemblies = @()
@@ -107,10 +107,10 @@
             # IconUri = ''
     
     # ReleaseNotes of this module
-             ReleaseNotes = 'v2.0.0 RC 1 release'
+             ReleaseNotes = 'v2.0.0 RC 2 release'
     
     # Prerelease string of this module
-             Prerelease = 'rc1'
+             Prerelease = 'rc2'
     
     # Flag to indicate whether the module requires explicit user acceptance for install/update/save
             # RequireLicenseAcceptance = $false

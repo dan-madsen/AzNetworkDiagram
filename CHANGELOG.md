@@ -16,6 +16,10 @@
   - [x] Traffic Manager
   - [x] Front Door
   - [x] Communication Service, incl. Email Communication Services
+  - [ ] Under consideration
+    - [ ] Service Bus
+    - [ ] Event Grid
+    - [ ] Relay
 - [x] Fixes
   - [x] Static Web App - custom domain logic error
   - [x] Proper sorting of IP addresses/routes for different objects
@@ -24,6 +28,9 @@
     - [x] Route tables
     - [x] Local Network Gateway
   - [x] Application Gateway - support for redirection scenarios (Issue#120)
+  - [x] Private endpoint fixes/additions for PostgreSQL, MySQL, Container App Environments
+  - [x] Ranking fixes for PostgreSQL, MySQL
+  - [x] Added missing dependency Powershell module: Az.App
 ## v1.5.1
   - Bug fixes
     - Application Gateway - support for redirection scenarios (Issue#120)
