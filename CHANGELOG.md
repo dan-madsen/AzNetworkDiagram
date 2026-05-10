@@ -1,5 +1,5 @@
 # Change log (since v1.0.1)
-## v2.0.0 release - under construction (RC1 is the most recent version released to PowerShell Gallery, which includes all of the changes)
+## v2.0.0 release - under construction (RC1 is the most recent version released to PowerShell Gallery, which includes almost all of the changes)
 - [x] **_BREAKING CHANGE - see v1.5 for additional info_**
 - [x] New features
   - [x] The breaking change from v1.5 fully implemented
@@ -16,6 +16,10 @@
   - [x] Traffic Manager
   - [x] Front Door
   - [x] Communication Service, incl. Email Communication Services
+  - [ ] Under consideratioin
+    - [ ] Service Bus
+    - [ ] Event Grid
+    - [ ] Relay
 - [x] Fixes
   - [x] Static Web App - custom domain logic error
   - [x] Proper sorting of IP addresses/routes for different objects
@@ -24,6 +28,9 @@
     - [x] Route tables
     - [x] Local Network Gateway
   - [x] Application Gateway - support for redirection scenarios (Issue#120)
+  - [x] Private endpoint fixes/additions for PostgreSQL, MySQL, Container App Environments
+  - [x] Ranking fixes for PostgreSQL, MySQL
+  - [x] Added missing dependency Powershell module: Az.App
 ## v1.5.1
   - Bug fixes
     - Application Gateway - support for redirection scenarios (Issue#120)
