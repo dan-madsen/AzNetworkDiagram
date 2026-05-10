@@ -16,7 +16,7 @@
   - [x] Traffic Manager
   - [x] Front Door
   - [x] Communication Service, incl. Email Communication Services
-  - [ ] Under consideratioin
+  - [ ] Under consideration
     - [ ] Service Bus
     - [ ] Event Grid
     - [ ] Relay
