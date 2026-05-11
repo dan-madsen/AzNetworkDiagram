@@ -2245,7 +2245,7 @@ function Export-EventGridNameSpace
                         $deliveryMode = $topicSubScription.DeliveryConfigurationDeliveryMode
 
                         $ImagePath = Join-Path $OutputPath "icons" "eventgriddomain.png"
-                        $EventGriddata += "            $topicSubScriptionId [fillcolor = 3; label=`"Topic Name: $name\nDelivery schema: $schema\nDelivery mode: $deliveryMode\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $topic)]`n"
+                        $EventGriddata += "            $topicSubScriptionId [fillcolor = 3; label=`"Topic Subscription name: $name\nDelivery schema: $schema\nDelivery mode: $deliveryMode\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $topic)]`n"
                         $EventGriddata += "            $topicId -> $topicSubScriptionId"
 
                         ## Subscriptions
@@ -2334,7 +2334,7 @@ function Export-EventGridTopic
                 $schema = $topicSubscription.EventDeliverySchema
                 # $crossTenantDelivery = $topicSubscription.$crossTenantDelivery
 
-                $EventGriddata += "            $topicSubscriptionId [fillcolor = 3; label=`"\nSubscription name: $name\nSchema: $schema\n\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $EventGridTopic)]`n"
+                $EventGriddata += "            $topicSubscriptionId [fillcolor = 3; label=`"\nTopic Subscription name: $name\nSchema: $schema\n\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $EventGridTopic)]`n"
                 $EventGriddata += "            $EventGridTopicid -> $topicSubscriptionId"
 
             }
@@ -2430,7 +2430,7 @@ function Export-EventGridDomain
                         $schema = $topicSubScription.EventDeliverySchema
 
                         $ImagePath = Join-Path $OutputPath "icons" "eventgriddomain.png"
-                        $EventGriddata += "            $topicSubScriptionId [fillcolor = 3; label=`"Topic Name: $name\nDelivery schema: $schema\n\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $topic)]`n"
+                        $EventGriddata += "            $topicSubScriptionId [fillcolor = 3; label=`"Topic Subscription name: $name\nDelivery schema: $schema\n\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $topic)]`n"
                         $EventGriddata += "            $topicId -> $topicSubScriptionId"
                     }
                 }
