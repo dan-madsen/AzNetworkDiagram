@@ -1,5 +1,5 @@
 #Requires -Version 7.1
-#Requires -Modules Az.Accounts, Az.Network, Az.Compute, Az.KeyVault, Az.Storage, Az.MySql, Az.PostgreSql, Az.CosmosDB, Az.RedisCache, Az.Sql, Az.EventHub, Az.Websites, Az.ApiManagement, Az.ContainerRegistry, Az.ManagedServiceIdentity, Az.Resources, Az.vmware, Az.ElasticSan, Az.DnsResolver, Az.TrafficManager, Az.Communication, Az.Cdn, Az.App
+#Requires -Modules Az.Accounts, Az.Network, Az.Compute, Az.KeyVault, Az.Storage, Az.MySql, Az.PostgreSql, Az.CosmosDB, Az.RedisCache, Az.Sql, Az.EventHub, Az.Websites, Az.ApiManagement, Az.ContainerRegistry, Az.ManagedServiceIdentity, Az.Resources, Az.vmware, Az.ElasticSan, Az.DnsResolver, Az.TrafficManager, Az.Communication, Az.Cdn, Az.App, Az.Relay, Az.ServiceBus, Az.EventGrid
 
 # Change Execution Policy for current process, if prohibited by policy
 # Set-ExecutionPolicy -scope process -ExecutionPolicy bypass
@@ -390,6 +390,12 @@ function Export-dotFooterRanking {
         $($script:rankcosmosdb -join '; ')
         ### DNSPRRS
         $($script:rankdnsprrs -join '; ')
+        ### Relay
+        $($script:rankrelay -join '; ')
+        ### Service Bus
+        $($script:rankservicebus -join '; ')
+        ### Event Griid
+        $($script:rankEventGrid -join '; ')
     }
 
     subgraph rank5 {
@@ -2048,6 +2054,506 @@ function Export-EventHub {
     }
     catch {
         Write-Host "Can't export Event Hub Namespace: $($namespace.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+}
+
+<#
+.SYNOPSIS
+Exports details of a Service Bus instance for inclusion in an infrastructure diagram.
+
+.DESCRIPTION
+The `Export-ServiceBus` function processes a specified Service Bus object, retrieves its details, and formats the data for inclusion in the diagram.
+
+.PARAMETER SB
+Specifies the Service Bus object to be processed. This parameter is mandatory.
+
+.EXAMPLE
+PS> Export-ServiceBus -SB $SB
+
+This example retrieves an LB instance and exports its details for inclusion in the diagram.
+#>
+function Export-ServiceBus
+{
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$SB
+    )
+
+    try {
+        $SBid = $SB.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankservicebus += $SBid
+
+        # Collect information about SB
+        $SBname = SanitizeString $SB.name
+        $location = SanitizeLocation $SB.location
+        $endpoint = SanitizeString $sb.ServiceBusEndpoint
+        $sku = $sb.skuName
+        $publicAccess = $sb.publicNetworkAccess
+        $partitions = $sb.PremiumMessagingPartition
+
+        $header = "
+        # $($name) - $SBid
+        subgraph cluster_$SBid {
+            style = solid;
+            colorscheme = blues9 ;
+            bgcolor = 5;
+            node [colorscheme = blues9 ; style = filled;];
+        "
+
+        #SB DOT
+        $ImagePath = Join-Path $OutputPath "icons" "servicebus.png"
+        $SBdata += "            $SBid [fillcolor = 3; label=`"\nLocation: $location\nSKU: $sku\nPublic Access: $publicAccess\nPartitions: $partitions\n\nEndpoint:\n$endpoint\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $SB)]`n"
+
+        # Queues
+        $queues = Get-AzServiceBusQueue -ResourceGroupName $sb.ResourceGroupName -NamespaceName $sb.Name
+        if ( $null -ne $queues ) {
+            $queues | ForEach-Object {
+                $queue = $_
+                $queueId = $queue.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $name = SanitizeString $queue.Name
+                $maxSize = $queue.MaxSizeInMegabytes
+                $maxMessageSize = $queue.MaxMessageSizeInKilobytes
+                $maxDeliveryCount = $queue.MaxDeliveryCount
+                
+                $ImagePath = Join-Path $OutputPath "icons" "servicebus.png"
+                $SBdata += "            $queueId [fillcolor = 3; label=`"\nQueue name:\n$name\n\nMax size: $maxSize MB\n\Max Message Size: $maxMessageSize KB\nMax Delivery Count: $maxDeliveryCount`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -Resource $queue)]`n"
+                $SBdata += "            $SBid -> $queueId"
+            }
+        }
+
+        # Topics
+        $topics = Get-AzServiceBusTopic -ResourceGroupName $sb.ResourceGroupName -NamespaceName $sb.Name
+        if ( $null -ne $topics ) {
+            $topics | ForEach-Object {
+                $topic = $_
+                $topicId = $topic.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $name = SanitizeString $topic.Name
+                $maxSize = $topic.MaxSizeInMegabytes
+                $maxMessageSize = $topic.MaxMessageSizeInKilobytes
+                                
+                $ImagePath = Join-Path $OutputPath "icons" "servicebus.png"
+                $SBdata += "            $topicId [fillcolor = 3; label=`"\nTopic name:\n$name\n\nMax size: $maxSize MB\n\Max Message Size: $maxMessageSize KB\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -Resource $topic)]`n"
+                $SBdata += "            $SBid -> $topicId"
+
+                # Topic Subscriptions
+                $topicSubs = Get-AzServiceBusSubscription -ResourceGroupName $sb.ResourceGroupName -NamespaceName $sb.name -TopicName $topic.Name
+                if ( $null -ne $topicSubs ) {
+                    $topicSubs | ForEach-Object {
+                        $topicSub = $_
+                        $topicSubId = $topicSub.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                        $name = SanitizeString $topicSub.Name
+                                        
+                        $ImagePath = Join-Path $OutputPath "icons" "servicebus.png"
+                        $SBdata += "            $topicSubId [fillcolor = 3; label=`"\nTopic Subscription name:\n$name\n\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -Resource $topicSub)]`n"
+                        $SBdata += "            $topicId -> $topicSubId"
+                    }
+                }
+            }
+        }
+
+        # Private Endpoints enabled at runtime?
+        if ( $EnablePE -OR (-not $SkipNonCoreNetwork -AND -not $SkipPE ) ) {
+            if ($SB.PrivateEndpointConnection.PrivateEndpointId) {
+                $peid = $SB.PrivateEndpointConnection.PrivateEndpointId.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $SBdata += "        $SBid -> $peid [label = `"Private Endpoint`"; constraint=false ];`n"
+            }
+        }
+
+        # End subgraph
+        $footer = "
+            label = `"$(SanitizeString $SBname)`";
+        }
+        "
+
+        Export-AddToFile -Data ($header + $SBdata + $footer)
+    }
+    catch {
+        Write-Error "Can't export Servicie Bus: $($SB.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+}
+
+<#
+.SYNOPSIS
+Exports details of a Event Grid instance for inclusion in an infrastructure diagram.
+
+.DESCRIPTION
+The `Export-EventGridNameSpace` function processes a specified Event Grid object, retrieves its details, and formats the data for inclusion in the diagram.
+
+.PARAMETER EventGrid
+Specifies the Event Grid object to be processed. This parameter is mandatory.
+
+.EXAMPLE
+PS> Export-EventGridNameSpace EventGridNameSpace $EventGrid
+
+This example retrieves an LB instance and exports its details for inclusion in the diagram.
+#>
+function Export-EventGridNameSpace
+{
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$EventGridNameSpace
+    )
+
+    try {
+        $EventGridNameSpaceid = $EventGridNameSpace.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankEventGrid += $EventGridNameSpaceid
+
+        # Collect information about EventGrid
+        $EventGridname = SanitizeString $EventGridNameSpace.Name
+        $type = $EventGridNameSpace.Type.split("/")[1] -replace ".$"
+        $location = SanitizeLocation $EventGridNameSpace.location
+        $sku = $EventGridNameSpace.skuName
+        $zoneRedundant = $EventGridNameSpace.IsZoneRedundant
+        $publicAccess = $EventGridNameSpace.publicNetworkAccess
+
+        $header = "
+        # $($name) - $EventGridNameSpaceid
+        subgraph cluster_$EventGridNameSpaceid {
+            style = solid;
+            colorscheme = blues9 ;
+            bgcolor = 2;
+            node [colorscheme = blues9 ; style = filled;];
+        "
+
+        #EventGrid DOT
+        $ImagePath = Join-Path $OutputPath "icons" "eventgriddomain.png"
+        $EventGriddata += "            $EventGridNameSpaceid [fillcolor = 3; label=`"\nLocation: $location\nType: $type\nSKU: $sku\nZone redudant: $zoneRedundant\nPublic Access: $publicAccess\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $EventGridNameSpace)]`n"
+
+        # Namespace Topics
+        $topics = Get-AzEventGridNamespaceTopic -ResourceGroupName $EventGridNameSpace.ResourceGroupName -NamespaceName $EventGridNameSpace.Name
+        if ( $null -ne $topics ) {
+            $topics | Foreach-Object {
+                $topic = $_
+                $topicId = $topic.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $name = $topic.Name
+                $schema = $topic.InputSchema
+
+                $ImagePath = Join-Path $OutputPath "icons" "eventgriddomain.png"
+                $EventGriddata += "            $topicId [fillcolor = 3; label=`"Topic Name: $name\nSchema: $schema\n\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $topic)]`n"
+                $EventGriddata += "            $EventGridNameSpaceid -> $topicId"
+
+                ## Subscriptions
+                $topicSubScriptions = Get-AzEventGridNamespaceTopicEventSubscription -ResourceGroupName $topic.resourceGroupName -TopicName $topic.Name -NamespaceName $EventGridNameSpace.Name
+                if ( $null -ne $topicSubScriptions ) {
+                    $topicSubScriptions | Foreach-Object {
+                        $topicSubScription = $_
+                        $topicSubScriptionId = $topicSubScription.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                        $name = $topicSubScription.Name
+                        $schema = $topicSubScription.EventDeliverySchema
+                        $deliveryMode = $topicSubScription.DeliveryConfigurationDeliveryMode
+
+                        $ImagePath = Join-Path $OutputPath "icons" "eventgriddomain.png"
+                        $EventGriddata += "            $topicSubScriptionId [fillcolor = 3; label=`"Topic Subscription name: $name\nDelivery schema: $schema\nDelivery mode: $deliveryMode\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $topic)]`n"
+                        $EventGriddata += "            $topicId -> $topicSubScriptionId"
+
+                        ## Subscriptions
+                        
+                    }
+                }
+            }
+        }
+        
+
+        # Private Endpoints enabled at runtime?
+        if ( $EnablePE -OR (-not $SkipNonCoreNetwork -AND -not $SkipPE ) ) {
+            if ($EventGridNameSpace.PrivateEndpointConnection.PrivateEndpointId) {
+                $peid = $EventGridNameSpace.PrivateEndpointConnection.PrivateEndpointId.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $EventGriddata += "        $EventGridNameSpaceid -> $peid [label = `"Private Endpoint`"; constraint=false ];`n"
+            }
+        }
+
+        # End subgraph
+        $footer = "
+            label = `"$(SanitizeString $EventGridname)`";
+        }
+        "
+
+        Export-AddToFile -Data ($header + $EventGriddata + $footer)
+    }
+    catch {
+        Write-Error "Can't export EventGrid Namespace: $($EventGridNameSpace.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+}
+
+<#
+.SYNOPSIS
+Exports details of a Event Grid instance for inclusion in an infrastructure diagram.
+
+.DESCRIPTION
+The `Export-EventGridTopic` function processes a specified Event Grid object, retrieves its details, and formats the data for inclusion in the diagram.
+
+.PARAMETER EventGrid
+Specifies the Event Grid object to be processed. This parameter is mandatory.
+
+.EXAMPLE
+PS> Export-EventGridTopic EventGridTopic $EventGrid
+
+This example retrieves an LB instance and exports its details for inclusion in the diagram.
+#>
+function Export-EventGridTopic
+{
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$EventGridTopic
+    )
+
+    try {
+        $EventGridTopicid = $EventGridTopic.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankEventGrid += $EventGridTopicid
+
+        # Collect information about EventGrid
+        $EventGridname = SanitizeString $EventGridTopic.Name
+        $type = $EventGridTopic.Type.split("/")[1] -replace ".$"
+        $location = SanitizeLocation $EventGridTopic.location
+        $sku = $EventGridTopic.skuName
+        $publicAccess = $EventGridTopic.publicNetworkAccess
+
+        $header = "
+        # $($name) - $EventGridTopicid
+        subgraph cluster_$EventGridTopicid {
+            style = solid;
+            colorscheme = blues9 ;
+            bgcolor = 2;
+            node [colorscheme = blues9 ; style = filled;];
+        "
+
+        #EventGrid DOT
+        $ImagePath = Join-Path $OutputPath "icons" "eventgridtopic.png"
+        $EventGriddata += "            $EventGridTopicid [fillcolor = 3; label=`"\nLocation: $location\nType: $type\nSKU: $sku\nPublic Access: $publicAccess\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $EventGridTopic)]`n"
+
+        #Subscriptions
+        $topicSubscriptions = Get-AzEventGridTopicEventSubscription -ResourceGroupName $EventGridTopic.resourceGroupName -TopicName $EventGridTopic.Name
+        if ( $null -ne $topicSubscriptions ) {
+            $topicSubscriptions | ForEach-Object {
+                $topicSubscription = $_
+                $topicSubscriptionId = $topicSubscription.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $name = $topicSubscription.Name
+                $schema = $topicSubscription.EventDeliverySchema
+                # $crossTenantDelivery = $topicSubscription.$crossTenantDelivery
+
+                $EventGriddata += "            $topicSubscriptionId [fillcolor = 3; label=`"\nTopic Subscription name: $name\nSchema: $schema\n\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $EventGridTopic)]`n"
+                $EventGriddata += "            $EventGridTopicid -> $topicSubscriptionId"
+
+            }
+        }
+
+        # Private Endpoints enabled at runtime?
+        if ( $EnablePE -OR (-not $SkipNonCoreNetwork -AND -not $SkipPE ) ) {
+            if ($EventGridTopic.PrivateEndpointConnection.PrivateEndpointId) {
+                $peid = $EventGridTopic.PrivateEndpointConnection.PrivateEndpointId.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $EventGriddata += "        $EventGridTopicid -> $peid [label = `"Private Endpoint`"; constraint=false ];`n"
+            }
+        }
+
+        # End subgraph
+        $footer = "
+            label = `"$(SanitizeString $EventGridname)`";
+        }
+        "
+
+        Export-AddToFile -Data ($header + $EventGriddata + $footer)
+    }
+    catch {
+        Write-Error "Can't export EventGrid Namespace: $($EventGridTopic.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+}
+
+<#
+.SYNOPSIS
+Exports details of a Event Grid instance for inclusion in an infrastructure diagram.
+
+.DESCRIPTION
+The `Export-EventGridDomain` function processes a specified Event Grid object, retrieves its details, and formats the data for inclusion in the diagram.
+
+.PARAMETER EventGrid
+Specifies the Event Grid object to be processed. This parameter is mandatory.
+
+.EXAMPLE
+PS> Export-EventGridDomain EventGridDomain $EventGrid
+
+This example retrieves an LB instance and exports its details for inclusion in the diagram.
+#>
+function Export-EventGridDomain
+{
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$EventGridDomain
+    )
+
+    try {
+        $EventGridDomainid = $EventGridDomain.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankEventGrid += $EventGridDomainid
+
+        # Collect information about EventGrid
+        $EventGridname = SanitizeString $EventGridDomain.Name
+        $type = $EventGridDomain.Type.split("/")[1] -replace ".$"
+        $location = SanitizeLocation $EventGridDomain.location
+        $sku = $EventGridDomain.skuName
+        $publicAccess = $EventGridDomain.publicNetworkAccess
+
+        $header = "
+        # $($name) - $EventGridDomainid
+        subgraph cluster_$EventGridDomainid {
+            style = solid;
+            colorscheme = blues9 ;
+            bgcolor = 2;
+            node [colorscheme = blues9 ; style = filled;];
+        "
+
+        #EventGrid DOT
+        $ImagePath = Join-Path $OutputPath "icons" "eventgriddomain.png"
+        $EventGriddata += "            $EventGridDomainid [fillcolor = 3; label=`"\nLocation: $location\nType: $type\nSKU: $sku\nPublic Access: $publicAccess\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $EventGridDomain)]`n"
+
+        # Domain Topics
+        $topics = Get-AzEventGridDomainTopic -ResourceGroupName $EventGridDomain.ResourceGroupName -DomainName $EventGridDomain.Name
+        if ( $null -ne $topics ) {
+            $topics | Foreach-Object {
+                $topic = $_
+                $topicId = $topic.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $name = $topic.Name
+
+                $ImagePath = Join-Path $OutputPath "icons" "eventgriddomain.png"
+                $EventGriddata += "            $topicId [fillcolor = 3; label=`"Topic Name: $name\n\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $topic)]`n"
+                $EventGriddata += "            $EventGridDomainid -> $topicId"
+
+                ## Subscriptions
+                $topicSubScriptions = Get-AzEventGridDomainTopicEventSubscription -ResourceGroupName $EventGridDomain.resourceGroupName -TopicName $topic.Name -DomainName $EventGridDomain.Name
+                if ( $null -ne $topicSubScriptions ) {
+                    $topicSubScriptions | Foreach-Object {
+                        $topicSubScription = $_
+                        $topicSubScriptionId = $topicSubScription.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                        $name = $topicSubScription.Name
+                        $schema = $topicSubScription.EventDeliverySchema
+
+                        $ImagePath = Join-Path $OutputPath "icons" "eventgriddomain.png"
+                        $EventGriddata += "            $topicSubScriptionId [fillcolor = 3; label=`"Topic Subscription name: $name\nDelivery schema: $schema\n\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $topic)]`n"
+                        $EventGriddata += "            $topicId -> $topicSubScriptionId"
+                    }
+                }
+            }
+        }
+
+        # Private Endpoints enabled at runtime?
+        if ( $EnablePE -OR (-not $SkipNonCoreNetwork -AND -not $SkipPE ) ) {
+            if ($EventGridDomain.PrivateEndpointConnection.PrivateEndpointId) {
+                $peid = $EventGridDomain.PrivateEndpointConnection.PrivateEndpointId.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $EventGriddata += "        $EventGridDomainid -> $peid [label = `"Private Endpoint`"; constraint=false ];`n"
+            }
+        }
+
+        # End subgraph
+        $footer = "
+            label = `"$(SanitizeString $EventGridname)`";
+        }
+        "
+
+        Export-AddToFile -Data ($header + $EventGriddata + $footer)
+    }
+    catch {
+        Write-Error "Can't export EventGrid Namespace: $($EventGridDomain.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+}
+
+<#
+.SYNOPSIS
+Exports details of a Relay instance for inclusion in an infrastructure diagram.
+
+.DESCRIPTION
+The `Export-Relay` function processes a specified Relay object, retrieves its details, and formats the data for inclusion in the diagram.
+
+.PARAMETER Relay
+Specifies the Relay object to be processed. This parameter is mandatory.
+
+.EXAMPLE
+PS> Export-Relay -Relay $Relay
+
+This example retrieves an LB instance and exports its details for inclusion in the diagram.
+#>
+function Export-Relay
+{
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$Relay
+    )
+
+    try {
+        $Relayid = $Relay.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankrelay += $Relayid
+
+        # Collect information about Relay
+        $Relayname = SanitizeString $Relay.name
+        $location = SanitizeLocation $Relay.location
+        $endpoint = SanitizeString $relay.ServiceBusEndpoint
+        $publicAccess = $relay.PublicNetworkAccess
+
+        $header = "
+        # $($name) - $Relayid
+        subgraph cluster_$Relayid {
+            style = solid;
+            colorscheme = blues9 ;
+            bgcolor = 5;
+            node [colorscheme = blues9 ; style = filled;];
+        "
+
+        #Relay DOT
+        $ImagePath = Join-Path $OutputPath "icons" "relay.png"
+        $Relaydata += "            $Relayid [fillcolor = 3; label=`"\nLocation: $location\nPublic access: $publicAccess\n\nEndpoint:\n$endpoint`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -Resource $Relay)]`n"
+
+        # Hybrid Connections
+        $connections = Get-AzRelayHybridConnection -ResourceGroupName $relay.ResourceGroupName -namespace $relay.Name
+        if ( $null -ne $connections ) {
+            $connections | ForEach-Object {
+                $connection = $_
+                $connectionId = $connection.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $name = SanitizeString $connection.Name
+                
+                $ImagePath = Join-Path $OutputPath "icons" "hybridconnection.png"
+                $Relaydata += "            $connectionId [fillcolor = 3; label=`"Hybrid Connection name:\n$name\n\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -Resource $connection)]`n"
+                $Relaydata += "            $Relayid -> $connectionId"
+            }
+        }
+
+        # WCF relays
+        $WCFRelays = Get-AzWcfRelay -ResourceGroupName $relay.ResourceGroupName -Namespace $relay.Name
+        if ( $null -ne $WCFRelays ) {
+            $WCFRelays | ForEach-Object {
+                $WCFRelay = $_
+                $WCFRelayId = $WCFRelay.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $name = SanitizeString $WCFRelay.Name
+                
+                $ImagePath = Join-Path $OutputPath "icons" "relay.png"
+                $Relaydata += "            $WCFRelayId [fillcolor = 3; label=`"WCF relay name:\n$name\n\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -Resource $WCFRelay)]`n"
+                $Relaydata += "            $Relayid -> $WCFRelayId"
+            }
+        }
+
+        # Private Endpoints enabled at runtime?
+        if ( $EnablePE -OR (-not $SkipNonCoreNetwork -AND -not $SkipPE ) ) {
+            $peids = Get-AzPrivateEndpointConnection -PrivateLinkResourceId $relay.Id -ErrorAction Stop
+            
+            if ($peids) {
+                foreach ($peid in $peids) {
+                    $stapeid = $peid.PrivateEndpoint.Id.ToString().replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $Relaydata += "        $Relayid -> $($stapeid) [label = `"Private Endpoint`"; constraint=false ];`n"
+                }
+            }
+        }
+
+        # End subgraph
+        $footer = "
+            label = `"$(SanitizeString $Relayname)`";
+        }
+        "
+
+        Export-AddToFile -Data ($header + $Relaydata + $footer)
+    }
+    catch {
+        Write-Error "Can't export Relay: $($Relay.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
     }
 }
 
@@ -6361,6 +6867,8 @@ function Confirm-Prerequisites {
         "erport.png",
         "esan.png",
         "eventhub.png",
+        "eventgriddomain.png",
+        "eventgridtopic.png",
         "firewallpolicy.png",
         "functionapp.png",
         "gremlin.png",
@@ -6385,9 +6893,11 @@ function Confirm-Prerequisites {
         "private-endpoint.png",
         #"privatednszone.png",
         "redis.png",
+        "relay.png",
         "RouteTable.png",
         "rsv.png",
         "rtserv.png".
+        "servicebus.png",
         "snet.png",
         "sqldb.png",
         "sqlmi.png",
@@ -6577,6 +7087,7 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][switch]$EnableCosmosDB,
         [Parameter(Mandatory = $false)][switch]$EnableEntraDomains,
         [Parameter(Mandatory = $false)][switch]$EnableEntraLicenses,
+        [Parameter(Mandatory = $false)][switch]$EnableEventGrid,
         [Parameter(Mandatory = $false)][switch]$EnableEventHub,
         [Parameter(Mandatory = $false)][switch]$EnableESAN,
         [Parameter(Mandatory = $false)][switch]$EnableGAL,
@@ -6588,8 +7099,10 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][switch]$EnablePE,
         [Parameter(Mandatory = $false)][switch]$EnablePostgreSQL,
         [Parameter(Mandatory = $false)][switch]$EnableRedis,
+        [Parameter(Mandatory = $false)][switch]$EnableRelay,
         [Parameter(Mandatory = $false)][switch]$EnableRSV,
         [Parameter(Mandatory = $false)][switch]$EnableSA,
+        [Parameter(Mandatory = $false)][switch]$EnableSB,
         [Parameter(Mandatory = $false)][switch]$EnableSQLDB,
         [Parameter(Mandatory = $false)][switch]$EnableSQLMI,
         [Parameter(Mandatory = $false)][switch]$EnableSSHKeys,
@@ -6624,6 +7137,7 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][switch]$SkipCosmosDB,
         [Parameter(Mandatory = $false)][switch]$SkipEntraDomains,
         [Parameter(Mandatory = $false)][switch]$SkipEntraLicenses,
+        [Parameter(Mandatory = $false)][switch]$SkipEventGrid,
         [Parameter(Mandatory = $false)][switch]$SkipEventHub,
         [Parameter(Mandatory = $false)][switch]$SkipESAN,
         [Parameter(Mandatory = $false)][switch]$SkipGAL,
@@ -6636,7 +7150,9 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][switch]$SkipPostgreSQL,
         [Parameter(Mandatory = $false)][switch]$SkipRSV,
         [Parameter(Mandatory = $false)][switch]$SkipRedis,
+        [Parameter(Mandatory = $false)][switch]$SkipRelay,
         [Parameter(Mandatory = $false)][switch]$SkipSA,
+        [Parameter(Mandatory = $false)][switch]$SkipSB,
         [Parameter(Mandatory = $false)][switch]$SkipSQLDB,
         [Parameter(Mandatory = $false)][switch]$SkipSQLMI,
         [Parameter(Mandatory = $false)][switch]$SkipSSHKeys,
@@ -6665,6 +7181,7 @@ function Get-AzNetworkDiagram {
         write-host "-EnableBV : $EnableBV"
         write-host "-EnableCosmosDB : $EnableCosmosDB"
         write-host "-EnableEntraDomains : $EnableEntraDomains"
+        write-host "-EnableEventGrid : $EnableEventGrid"
         write-host "-EnableEventHub : $EnableEventHub"
         write-host "-EnableESAN : $EnableESAN"
         write-host "-EnableGAL : $EnableGAL"
@@ -6677,8 +7194,10 @@ function Get-AzNetworkDiagram {
         write-host "-EnablePE : $EnablePE"
         write-host "-EnablePostgreSQL : $EnablePostgreSQL"
         write-host "-EnableRedis : $EnableRedis"
+        write-host "-EnableRelay : $EnableRelay"
         write-host "-EnableRSV : $EnableRSV"
         write-host "-EnableSA : $EnableSA"
+        write-host "-EnableSB : $EnableSB"
         write-host "-EnableSQLDB : $EnableSQLDB"
         write-host "-EnableSQLMI : $EnableSQLMI"
         write-host "-EnableSSHKeys : $EnableSSHKeys"
@@ -6710,6 +7229,7 @@ function Get-AzNetworkDiagram {
         write-host "-SkipBV : $SkipBV"
         write-host "-SkipCosmosDB : $SkipCosmosDB"
         write-host "-SkipEntraDomains : $SkipEntraDomains"
+        write-host "-SkipEventGrid : $SkipEventGrid"
         write-host "-SkipEventHub : $SkipEventHub"
         write-host "-SkipESAN : $SkipESAN"
         write-host "-SkipGAL : $SkipGAL"
@@ -6721,9 +7241,11 @@ function Get-AzNetworkDiagram {
         write-host "-SkipNonCoreNetwork : $SkipNonCoreNetwork"
         write-host "-SkipPE : $SkipPE"
         write-host "-SkipPostgreSQL : $SkipPostgreSQL"
-        write-host "-SkipRSV : $SkipRSV"
         write-host "-SkipRedis : $SkipRedis"
+        write-host "-SkipRelay : $SkipRelay"
+        write-host "-SkipRSV : $SkipRSV"
         write-host "-SkipSA : $SkipSA"
+        write-host "-SkipSB : $SkipSB"
         write-host "-SkipSQLDB : $SkipSQLDB"
         write-host "-SkipSQLMI : $SkipSQLMI"
         write-host "-SkipSSHKeys : $SkipSSHKeys"
@@ -6813,6 +7335,7 @@ function Get-AzNetworkDiagram {
     $script:rankercircuit = @()
     $script:rankergw = @()
     $script:rankesan = @()
+    $script:rankEventGrid = @()
     $script:rankeventhub = @()
     $script:rankgal = @()
     $script:rankipg = @()
@@ -6826,6 +7349,7 @@ function Get-AzNetworkDiagram {
     $script:rankpe = @()
     $script:rankpostgresql = @()
     $script:rankredis = @()
+    $script:rankrelay = @()
     $script:rankrsv = @()
     $script:rankrsvpol = @()
     $script:rankrt = @()
@@ -6833,6 +7357,7 @@ function Get-AzNetworkDiagram {
     $script:ranksa = @()
     $script:ranksac = @()
     $script:ranksafs = @()
+    $script:rankservicebus = @()
     $script:rankSQLMI = @()
     $script:rankSQLServer = @()
     $script:rankSQLServerDB = @()
@@ -7529,6 +8054,65 @@ function Get-AzNetworkDiagram {
                         $Script:Legend += ,@("Azure Front Door","afd.png")
                         foreach ($AFD in $AFDs) {
                             Export-AFD $AFD
+                        }
+                    }
+                }
+
+                ### Relays
+                if ( $EnableRelay -OR (-not $SkipNonCoreNetwork -AND -not $SkipRelay ) ) {
+                    Write-Output "Collecting Relays..."
+                    Export-AddToFile "    ##### $subname - Relays #####"
+                    $Relays = Get-AzRelayNamespace -ErrorAction Stop
+                    if ($null -ne $Relays) {
+                        $Script:Legend += ,@("Relay","relay.png")
+                        foreach ($Relay in $Relays) {
+                            Export-Relay $Relay
+                        }
+                    }
+                }
+
+                ### Service Bus
+                if ( $EnableSB -OR (-not $SkipNonCoreNetwork -AND -not $SkipSB ) ) {
+                    Write-Output "Collecting Service bus..."
+                    Export-AddToFile "    ##### $subname - Service Bus #####"
+                    $SBs = Get-AzServiceBusNamespace -ErrorAction Stop
+                    if ($null -ne $SBs) {
+                        $Script:Legend += ,@("Service Bus","servicebus.png")
+                        foreach ($SB in $SBs) {
+                            Export-ServiceBus $SB
+                        }
+                    }
+                }
+
+                ### Event Grid Domains, Namespaces, Topics
+                if ( $EnableEventGrid -OR (-not $SkipNonCoreNetwork -AND -not $SkipEventGrid ) ) {
+                    Write-Output "Collecting Event Grid Domains..."
+                    Export-AddToFile "    ##### $subname - Event Grid Domains #####"
+                    $EventGridDomains = Get-AzEventGridDomain -ErrorAction Stop
+                    if ($null -ne $EventGridDomains) {
+                        $Script:Legend += ,@("Event Grid Domain","eventgriddomain.png")
+                        foreach ($EventGridDomain in $EventGridDomains) {
+                            Export-EventGridDomain $EventGridDomain
+                        }
+                    }
+
+                    Write-Output "Collecting Event Grid Namespaces..."
+                    Export-AddToFile "    ##### $subname - Event Grid Name Spaces #####"
+                    $EventGridNamespaces = Get-AzEventGridNameSpace -ErrorAction Stop
+                    if ($null -ne $EventGridNamespaces) {
+                        $Script:Legend += ,@("Event Grid Namespace","eventgriddomain.png")
+                        foreach ($EventGridNamespace in $EventGridNamespaces) {
+                            Export-EventGridNameSpace $EventGridNameSpace
+                        }
+                    }
+
+                    Write-Output "Collecting Event Grid Topics..."
+                    Export-AddToFile "    ##### $subname - Event Grid Topics #####"
+                    $EventGridTopics = Get-AzEventGridTopic -ErrorAction Stop
+                    if ($null -ne $EventGridTopics) {
+                        $Script:Legend += ,@("Event Grid Topic","eventgridtopic.png")
+                        foreach ($EventGridTopic in $EventGridTopics) {
+                            Export-EventGridTopic $EventGridTopic
                         }
                     }
                 }
