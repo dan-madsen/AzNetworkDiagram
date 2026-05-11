@@ -17,8 +17,8 @@
   - [x] Front Door
   - [x] Communication Service, incl. Email Communication Services
   - [x] Relay
+  - [x] Service Bus
   - [ ] Under consideration
-    - [ ] Service Bus
     - [ ] Event Grid
 - [x] Fixes
   - [x] Static Web App - custom domain logic error

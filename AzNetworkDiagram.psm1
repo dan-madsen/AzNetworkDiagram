@@ -1,5 +1,5 @@
 #Requires -Version 7.1
-#Requires -Modules Az.Accounts, Az.Network, Az.Compute, Az.KeyVault, Az.Storage, Az.MySql, Az.PostgreSql, Az.CosmosDB, Az.RedisCache, Az.Sql, Az.EventHub, Az.Websites, Az.ApiManagement, Az.ContainerRegistry, Az.ManagedServiceIdentity, Az.Resources, Az.vmware, Az.ElasticSan, Az.DnsResolver, Az.TrafficManager, Az.Communication, Az.Cdn, Az.App, Az.Relay
+#Requires -Modules Az.Accounts, Az.Network, Az.Compute, Az.KeyVault, Az.Storage, Az.MySql, Az.PostgreSql, Az.CosmosDB, Az.RedisCache, Az.Sql, Az.EventHub, Az.Websites, Az.ApiManagement, Az.ContainerRegistry, Az.ManagedServiceIdentity, Az.Resources, Az.vmware, Az.ElasticSan, Az.DnsResolver, Az.TrafficManager, Az.Communication, Az.Cdn, Az.App, Az.Relay, Az.ServiceBus
 
 # Change Execution Policy for current process, if prohibited by policy
 # Set-ExecutionPolicy -scope process -ExecutionPolicy bypass
@@ -392,6 +392,8 @@ function Export-dotFooterRanking {
         $($script:rankdnsprrs -join '; ')
         ### Relay
         $($script:rankrelay -join '; ')
+        ### Service Bus
+        $($script:rankservicebus -join '; ')
     }
 
     subgraph rank5 {
@@ -2055,6 +2057,107 @@ function Export-EventHub {
 
 <#
 .SYNOPSIS
+Exports details of a Service Bus instance for inclusion in an infrastructure diagram.
+
+.DESCRIPTION
+The `Export-ServiceBus` function processes a specified Service Bus object, retrieves its details, and formats the data for inclusion in the diagram.
+
+.PARAMETER SB
+Specifies the Service Bus object to be processed. This parameter is mandatory.
+
+.EXAMPLE
+PS> Export-ServiceBus -SB $SB
+
+This example retrieves an LB instance and exports its details for inclusion in the diagram.
+#>
+function Export-ServiceBus
+{
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$SB
+    )
+
+    try {
+        $SBid = $SB.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankservicebus += $SBid
+
+        # Collect information about SB
+        $SBname = SanitizeString $SB.name
+        $location = SanitizeLocation $SB.location
+        $endpoint = SanitizeString $sb.ServiceBusEndpoint
+        $sku = $sb.skuName
+        $publicAccess = $sb.publicNetworkAccess
+
+        $header = "
+        # $($name) - $SBid
+        subgraph cluster_$SBid {
+            style = solid;
+            colorscheme = blues9 ;
+            bgcolor = 5;
+            node [colorscheme = blues9 ; style = filled;];
+        "
+
+        #SB DOT
+        $ImagePath = Join-Path $OutputPath "icons" "servicebus.png"
+        $SBdata += "            $SBid [fillcolor = 3; label=`"\nLocation: $location\nSKU: $sku\nPublic Access: $publicAccess\n\nEndpoint:\n$endpoint\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $SB)]`n"
+
+        # Queues
+        $queues = Get-AzServiceBusQueue -ResourceGroupName $sb.ResourceGroupName -NamespaceName $sb.Name
+        if ( $null -ne $queues ) {
+            $queues | ForEach-Object {
+                $queue = $_
+                $queueId = $queue.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $name = SanitizeString $queue.Name
+                $maxSize = $queue.MaxSizeInMegabytes
+                $maxMessageSize = $queue.MaxMessageSizeInKilobytes
+                $maxDeliveryCount = $queue.MaxDeliveryCount
+                
+                $ImagePath = Join-Path $OutputPath "icons" "servicebus.png"
+                $SBdata += "            $queueId [fillcolor = 3; label=`"\nQueue name:\n$name\n\nMax size: $maxSize MB\n\Max Message Size: $maxMessageSize KB\nMax Delivery Count: $maxDeliveryCount`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -Resource $queue)]`n"
+                $SBdata += "            $SBid -> $queueId"
+            }
+        }
+
+        # Topics
+        $topics = Get-AzServiceBusTopic -ResourceGroupName $sb.ResourceGroupName -NamespaceName $sb.Name
+        if ( $null -ne $topics ) {
+            $topics | ForEach-Object {
+                $topic = $_
+                $topicId = $topic.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $name = SanitizeString $topic.Name
+                $maxSize = $topic.MaxSizeInMegabytes
+                $maxMessageSize = $topic.MaxMessageSizeInKilobytes
+                                
+                $ImagePath = Join-Path $OutputPath "icons" "servicebus.png"
+                $SBdata += "            $topicId [fillcolor = 3; label=`"\nTopic name:\n$name\n\nMax size: $maxSize MB\n\Max Message Size: $maxMessageSize KB\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -Resource $topic)]`n"
+                $SBdata += "            $SBid -> $topicId"
+            }
+        }
+
+        # Private Endpoints enabled at runtime?
+        if ( $EnablePE -OR (-not $SkipNonCoreNetwork -AND -not $SkipPE ) ) {
+            if ($SB.PrivateEndpointConnection.PrivateEndpointId) {
+                $peid = $SB.PrivateEndpointConnection.PrivateEndpointId.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $SBdata += "        $SBid -> $peid [label = `"Private Endpoint`"; constraint=false ];`n"
+            }
+        }
+
+        # End subgraph
+        $footer = "
+            label = `"$(SanitizeString $SBname)`";
+        }
+        "
+
+        Export-AddToFile -Data ($header + $SBdata + $footer)
+    }
+    catch {
+        Write-Error "Can't export Servicie Bus: $($SB.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+}
+
+<#
+.SYNOPSIS
 Exports details of a Relay instance for inclusion in an infrastructure diagram.
 
 .DESCRIPTION
@@ -2107,7 +2210,7 @@ function Export-Relay
                 $connectionId = $connection.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
                 $name = SanitizeString $connection.Name
                 
-                $ImagePath = Join-Path $OutputPath "icons" "relay.png"
+                $ImagePath = Join-Path $OutputPath "icons" "hybridconnection.png"
                 $Relaydata += "            $connectionId [fillcolor = 3; label=`"Hybrid Connection name:\n$name\n\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -Resource $connection)]`n"
                 $Relaydata += "            $Relayid -> $connectionId"
             }
@@ -6490,6 +6593,7 @@ function Confirm-Prerequisites {
         "RouteTable.png",
         "rsv.png",
         "rtserv.png".
+        "servicebus.png",
         "snet.png",
         "sqldb.png",
         "sqlmi.png",
@@ -6693,6 +6797,7 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][switch]$EnableRelay,
         [Parameter(Mandatory = $false)][switch]$EnableRSV,
         [Parameter(Mandatory = $false)][switch]$EnableSA,
+        [Parameter(Mandatory = $false)][switch]$EnableSB,
         [Parameter(Mandatory = $false)][switch]$EnableSQLDB,
         [Parameter(Mandatory = $false)][switch]$EnableSQLMI,
         [Parameter(Mandatory = $false)][switch]$EnableSSHKeys,
@@ -6741,6 +6846,7 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][switch]$SkipRedis,
         [Parameter(Mandatory = $false)][switch]$SkipRelay,
         [Parameter(Mandatory = $false)][switch]$SkipSA,
+        [Parameter(Mandatory = $false)][switch]$SkipSB,
         [Parameter(Mandatory = $false)][switch]$SkipSQLDB,
         [Parameter(Mandatory = $false)][switch]$SkipSQLMI,
         [Parameter(Mandatory = $false)][switch]$SkipSSHKeys,
@@ -6784,6 +6890,7 @@ function Get-AzNetworkDiagram {
         write-host "-EnableRelay : $EnableRelay"
         write-host "-EnableRSV : $EnableRSV"
         write-host "-EnableSA : $EnableSA"
+        write-host "-EnableSB : $EnableSB"
         write-host "-EnableSQLDB : $EnableSQLDB"
         write-host "-EnableSQLMI : $EnableSQLMI"
         write-host "-EnableSSHKeys : $EnableSSHKeys"
@@ -6830,6 +6937,7 @@ function Get-AzNetworkDiagram {
         write-host "-SkipRelay : $SkipRelay"
         write-host "-SkipRSV : $SkipRSV"
         write-host "-SkipSA : $SkipSA"
+        write-host "-SkipSB : $SkipSB"
         write-host "-SkipSQLDB : $SkipSQLDB"
         write-host "-SkipSQLMI : $SkipSQLMI"
         write-host "-SkipSSHKeys : $SkipSSHKeys"
@@ -6940,6 +7048,7 @@ function Get-AzNetworkDiagram {
     $script:ranksa = @()
     $script:ranksac = @()
     $script:ranksafs = @()
+    $script:rankservicebus = @()
     $script:rankSQLMI = @()
     $script:rankSQLServer = @()
     $script:rankSQLServerDB = @()
@@ -7649,6 +7758,19 @@ function Get-AzNetworkDiagram {
                         $Script:Legend += ,@("Relay","relay.png")
                         foreach ($Relay in $Relays) {
                             Export-Relay $Relay
+                        }
+                    }
+                }
+
+                ### Service Bus
+                if ( $EnableSB -OR (-not $SkipNonCoreNetwork -AND -not $SkipSB ) ) {
+                    Write-Output "Collecting Service bus..."
+                    Export-AddToFile "    ##### $subname - Service Bus #####"
+                    $SBs = Get-AzServiceBusNamespace -ErrorAction Stop
+                    if ($null -ne $SBs) {
+                        $Script:Legend += ,@("Service Bus","servicebus.png")
+                        foreach ($SB in $SBs) {
+                            Export-ServiceBus $SB
                         }
                     }
                 }
