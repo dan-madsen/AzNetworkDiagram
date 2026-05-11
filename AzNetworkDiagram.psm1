@@ -1,5 +1,5 @@
 #Requires -Version 7.1
-#Requires -Modules Az.Accounts, Az.Network, Az.Compute, Az.KeyVault, Az.Storage, Az.MySql, Az.PostgreSql, Az.CosmosDB, Az.RedisCache, Az.Sql, Az.EventHub, Az.Websites, Az.ApiManagement, Az.ContainerRegistry, Az.ManagedServiceIdentity, Az.Resources, Az.vmware, Az.ElasticSan, Az.DnsResolver, Az.TrafficManager, Az.Communication, Az.Cdn, Az.App
+#Requires -Modules Az.Accounts, Az.Network, Az.Compute, Az.KeyVault, Az.Storage, Az.MySql, Az.PostgreSql, Az.CosmosDB, Az.RedisCache, Az.Sql, Az.EventHub, Az.Websites, Az.ApiManagement, Az.ContainerRegistry, Az.ManagedServiceIdentity, Az.Resources, Az.vmware, Az.ElasticSan, Az.DnsResolver, Az.TrafficManager, Az.Communication, Az.Cdn, Az.App, Az.Relay
 
 # Change Execution Policy for current process, if prohibited by policy
 # Set-ExecutionPolicy -scope process -ExecutionPolicy bypass
@@ -390,6 +390,8 @@ function Export-dotFooterRanking {
         $($script:rankcosmosdb -join '; ')
         ### DNSPRRS
         $($script:rankdnsprrs -join '; ')
+        ### Relay
+        $($script:rankrelay -join '; ')
     }
 
     subgraph rank5 {
@@ -2048,6 +2050,105 @@ function Export-EventHub {
     }
     catch {
         Write-Host "Can't export Event Hub Namespace: $($namespace.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+    }
+}
+
+<#
+.SYNOPSIS
+Exports details of a Relay instance for inclusion in an infrastructure diagram.
+
+.DESCRIPTION
+The `Export-Relay` function processes a specified Relay object, retrieves its details, and formats the data for inclusion in the diagram.
+
+.PARAMETER Relay
+Specifies the Relay object to be processed. This parameter is mandatory.
+
+.EXAMPLE
+PS> Export-Relay -Relay $Relay
+
+This example retrieves an LB instance and exports its details for inclusion in the diagram.
+#>
+function Export-Relay
+{
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$Relay
+    )
+
+    try {
+        $Relayid = $Relay.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankrelay += $Relayid
+
+        # Collect information about Relay
+        $Relayname = SanitizeString $Relay.name
+        $location = SanitizeLocation $Relay.location
+        $endpoint = SanitizeString $relay.ServiceBusEndpoint
+        $publicAccess = $relay.PublicNetworkAccess
+
+        $header = "
+        # $($name) - $Relayid
+        subgraph cluster_$Relayid {
+            style = solid;
+            colorscheme = blues9 ;
+            bgcolor = 5;
+            node [colorscheme = blues9 ; style = filled;];
+        "
+
+        #Relay DOT
+        $ImagePath = Join-Path $OutputPath "icons" "relay.png"
+        $Relaydata += "            $Relayid [fillcolor = 3; label=`"\nLocation: $location\nPublic access: $publicAccess\n\nEndpoint:\n$endpoint`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -Resource $Relay)]`n"
+
+        # Hybrid Connections
+        $connections = Get-AzRelayHybridConnection -ResourceGroupName $relay.ResourceGroupName -namespace $relay.Name
+        if ( $null -ne $connections ) {
+            $connections | ForEach-Object {
+                $connection = $_
+                $connectionId = $connection.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $name = SanitizeString $connection.Name
+                
+                $ImagePath = Join-Path $OutputPath "icons" "relay.png"
+                $Relaydata += "            $connectionId [fillcolor = 3; label=`"Hybrid Connection name:\n$name\n\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -Resource $connection)]`n"
+                $Relaydata += "            $Relayid -> $connectionId"
+            }
+        }
+
+        # WCF relays
+        $WCFRelays = Get-AzWcfRelay -ResourceGroupName $relay.ResourceGroupName -Namespace $relay.Name
+        if ( $null -ne $WCFRelays ) {
+            $WCFRelays | ForEach-Object {
+                $WCFRelay = $_
+                $WCFRelayId = $WCFRelay.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                $name = SanitizeString $WCFRelay.Name
+                
+                $ImagePath = Join-Path $OutputPath "icons" "relay.png"
+                $Relaydata += "            $WCFRelayId [fillcolor = 3; label=`"WCF relay name:\n$name\n\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -Resource $WCFRelay)]`n"
+                $Relaydata += "            $Relayid -> $WCFRelayId"
+            }
+        }
+
+        # Private Endpoints enabled at runtime?
+        if ( $EnablePE -OR (-not $SkipNonCoreNetwork -AND -not $SkipPE ) ) {
+            $peids = Get-AzPrivateEndpointConnection -PrivateLinkResourceId $relay.Id -ErrorAction Stop
+            
+            if ($peids) {
+                foreach ($peid in $peids) {
+                    $stapeid = $peid.PrivateEndpoint.Id.ToString().replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $Relaydata += "        $Relayid -> $($stapeid) [label = `"Private Endpoint`"; constraint=false ];`n"
+                }
+            }
+        }
+
+        # End subgraph
+        $footer = "
+            label = `"$(SanitizeString $Relayname)`";
+        }
+        "
+
+        Export-AddToFile -Data ($header + $Relaydata + $footer)
+    }
+    catch {
+        Write-Error "Can't export Relay: $($Relay.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
     }
 }
 
@@ -6385,6 +6486,7 @@ function Confirm-Prerequisites {
         "private-endpoint.png",
         #"privatednszone.png",
         "redis.png",
+        "relay.png",
         "RouteTable.png",
         "rsv.png",
         "rtserv.png".
@@ -6588,6 +6690,7 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][switch]$EnablePE,
         [Parameter(Mandatory = $false)][switch]$EnablePostgreSQL,
         [Parameter(Mandatory = $false)][switch]$EnableRedis,
+        [Parameter(Mandatory = $false)][switch]$EnableRelay,
         [Parameter(Mandatory = $false)][switch]$EnableRSV,
         [Parameter(Mandatory = $false)][switch]$EnableSA,
         [Parameter(Mandatory = $false)][switch]$EnableSQLDB,
@@ -6636,6 +6739,7 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][switch]$SkipPostgreSQL,
         [Parameter(Mandatory = $false)][switch]$SkipRSV,
         [Parameter(Mandatory = $false)][switch]$SkipRedis,
+        [Parameter(Mandatory = $false)][switch]$SkipRelay,
         [Parameter(Mandatory = $false)][switch]$SkipSA,
         [Parameter(Mandatory = $false)][switch]$SkipSQLDB,
         [Parameter(Mandatory = $false)][switch]$SkipSQLMI,
@@ -6677,6 +6781,7 @@ function Get-AzNetworkDiagram {
         write-host "-EnablePE : $EnablePE"
         write-host "-EnablePostgreSQL : $EnablePostgreSQL"
         write-host "-EnableRedis : $EnableRedis"
+        write-host "-EnableRelay : $EnableRelay"
         write-host "-EnableRSV : $EnableRSV"
         write-host "-EnableSA : $EnableSA"
         write-host "-EnableSQLDB : $EnableSQLDB"
@@ -6721,8 +6826,9 @@ function Get-AzNetworkDiagram {
         write-host "-SkipNonCoreNetwork : $SkipNonCoreNetwork"
         write-host "-SkipPE : $SkipPE"
         write-host "-SkipPostgreSQL : $SkipPostgreSQL"
-        write-host "-SkipRSV : $SkipRSV"
         write-host "-SkipRedis : $SkipRedis"
+        write-host "-SkipRelay : $SkipRelay"
+        write-host "-SkipRSV : $SkipRSV"
         write-host "-SkipSA : $SkipSA"
         write-host "-SkipSQLDB : $SkipSQLDB"
         write-host "-SkipSQLMI : $SkipSQLMI"
@@ -6826,6 +6932,7 @@ function Get-AzNetworkDiagram {
     $script:rankpe = @()
     $script:rankpostgresql = @()
     $script:rankredis = @()
+    $script:rankrelay = @()
     $script:rankrsv = @()
     $script:rankrsvpol = @()
     $script:rankrt = @()
@@ -7529,6 +7636,19 @@ function Get-AzNetworkDiagram {
                         $Script:Legend += ,@("Azure Front Door","afd.png")
                         foreach ($AFD in $AFDs) {
                             Export-AFD $AFD
+                        }
+                    }
+                }
+
+                ### Relays
+                if ( $EnableRelay -OR (-not $SkipNonCoreNetwork -AND -not $SkipRelay ) ) {
+                    Write-Output "Collecting Relays..."
+                    Export-AddToFile "    ##### $subname - Relays #####"
+                    $Relays = Get-AzRelayNamespace -ErrorAction Stop
+                    if ($null -ne $Relays) {
+                        $Script:Legend += ,@("Relay","relay.png")
+                        foreach ($Relay in $Relays) {
+                            Export-Relay $Relay
                         }
                     }
                 }

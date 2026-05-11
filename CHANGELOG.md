@@ -16,10 +16,10 @@
   - [x] Traffic Manager
   - [x] Front Door
   - [x] Communication Service, incl. Email Communication Services
+  - [x] Relay
   - [ ] Under consideration
     - [ ] Service Bus
     - [ ] Event Grid
-    - [ ] Relay
 - [x] Fixes
   - [x] Static Web App - custom domain logic error
   - [x] Proper sorting of IP addresses/routes for different objects
