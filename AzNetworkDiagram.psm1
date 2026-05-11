@@ -2132,8 +2132,24 @@ function Export-ServiceBus
                 $ImagePath = Join-Path $OutputPath "icons" "servicebus.png"
                 $SBdata += "            $topicId [fillcolor = 3; label=`"\nTopic name:\n$name\n\nMax size: $maxSize MB\n\Max Message Size: $maxMessageSize KB\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -Resource $topic)]`n"
                 $SBdata += "            $SBid -> $topicId"
+
+                # Topic Subscriptions
+                $topicSubs = Get-AzServiceBusSubscription -ResourceGroupName $sb.ResourceGroupName -NamespaceName $sb.name -TopicName $topic.Name
+                if ( $null -ne $topicSubs ) {
+                    $topicSubs | ForEach-Object {
+                        $topicSub = $_
+                        $topicSubId = $topicSub.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                        $name = SanitizeString $topicSub.Name
+                                        
+                        $ImagePath = Join-Path $OutputPath "icons" "servicebus.png"
+                        $SBdata += "            $topicSubId [fillcolor = 3; label=`"\nTopic Subscription name:\n$name\n\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -Resource $topicSub)]`n"
+                        $SBdata += "            $topicId -> $topicSubId"
+                    }
+                }
             }
         }
+
+
 
         # Private Endpoints enabled at runtime?
         if ( $EnablePE -OR (-not $SkipNonCoreNetwork -AND -not $SkipPE ) ) {
