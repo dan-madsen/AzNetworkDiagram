@@ -2,7 +2,7 @@
 * [Introduction](#-introduction)
 * [Demo Output](#-demo-output-v11)
 * [Requirements](#-Requirements)
-* [Getting started](#-Getting-started)
+* [Getting started](##%EF%B8%8F-getting-started)
   - [Install](#install-using-psgallery-recommended-method)
   - [Runtime options](#runtime-options)
     - [Primary (Setting scope and output)](#primary-setting-scope-and-output)
@@ -113,7 +113,7 @@ It is inevitable that large environments make the diagram **very large** (in thi
 
 ---
 
-# ⚡ Flow
+# ⚡ Runtime Flow
 It will loop over any subscriptions available (or those defined as in scope using the parameters) and process supported resource types in scope. After data is collected, a .PDF, .PNG and/or .SVG file with the diagram will be created. For very large environments the PNG format could display a scaling error. The .SVG format is editable with Microsoft Visio. **Consult above recommendation.**
 
 The .DOT settings in the .DOT file try to make the diagram as compact as possible and the ranking tries to keep similar resources ranked accordingly. 
