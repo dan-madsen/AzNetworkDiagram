@@ -71,23 +71,23 @@ Import-Module .\AzNetworkDiagram.psm1
 
 ## Runtime options
 ### Primary (setting scope and output)
-- **-ManagementGroups "ManagementGroupID1","ManagementGroupID2","..."** - a list of management groups. Subscriptions under any of the listed management group IDs (ie. NOT name!) will be added to the list of subscriptions in scope for data collection. Can be used in conjunction with -Subscriptions.
+- **-ManagementGroups "ManagementGroupID1","ManagementGroupID2","..."** - a list of management groups. Subscriptions under any of the listed management group IDs (ie. NOT name!) will be added to the list of subscriptions in scope for data collection. Can be used in conjunction with -Subscriptions. **Default: Everything you have permission to**
 - **-OnlyIPPlan** - Creates an IP Plan of all VNets in scope. Everything else is skipped.
   - If **-OnlyMgmtGroups** is set - that will take precedence over the IP Plan !
 - **-OnlyMgmtGroups** - Creates a Management Group and Subscription overview diagram - everything else is skipped.
 - **-OutputPath <path>** - set output directory. Default: "."
-- **-Prefix "string"** - Adds a prefix to the output file name. For example is cases where you want to do multiple automated runs then the file names will have the prefix per run that you specify. **Default: No Prefix**
-- **-Subscriptions "subid1","subid2","subname","..."** - a list of subscriptions in scope for the diagram. They can be names or Id's
+- **-Prefix "string"** - Adds a prefix to the output file name. For example is cases where you want to do multiple automated runs, then the file names will have the prefix per run that you specify. **Default: No Prefix**
+- **-Subscriptions "subid1","subid2","subname","..."** - a list of subscriptions in scope for the diagram. They can be names or Id's. **Default: Everything you have permission to**
 - **-Tenant "tenantId"** Specifies the tenant Id to be used in all subscription authentication. Handy when you have multiple tenants to work with. **Default: current tenant**
 
 ### Others (change behavior and/or features)
 - **-DisableRanking** - Disables automatic ranking for resource types. For larger networks, this might be worth a shot.
-- **-EnableADO** - Add list of Azure DevOps Organizations to the output
-- **-EnableEntraDomains** - Add list of Entra ID Domains to the output
-- **-EnableEntraLicenses** - Add list of Entra/M365 licenses to the output
-- **-EnableLinks** - Many resources become links to the Azure portal can be enabled using this flag.
+- **-EnableADO** - Add list of Azure DevOps Organizations to the output. **Default: disabled**
+- **-EnableEntraDomains** - Add list of Entra ID Domains to the output. **Default: disabled**
+- **-EnableEntraLicenses** - Add list of Entra/M365 licenses to the output. **Default: disabled**
+- **-EnableLinks** - Many resources become links to the Azure portal can be enabled using this flag. **Default: disabled**
 - **-EnableXXX** - Enable a chosen non-core network resource type regardless of it being skipped (-EnableXXXX will take precedence!) - use tab completion to see current list.
-- **-KeepDotFile** - Keep the DOT file after the diagrams have been generated (normally it is deleted)
+- **-KeepDotFile** - Keep the DOT file after the diagrams have been generated. **Default: file is deleted**
 - **-OutputFormat** (pdf, svg, png) - One or more output files get generated with the specified formats. **Default is PDF.**
 - **-Sanitize** Sanitizes all names, locations, IP addresses and CIDR blocks.
 - **-SkipNonCoreNetwork** - Only process cores network resources (unless resource types are explicitly enabled using -EnableXXXX options) - ie. non-network resources are skipped for a cleaner diagram - but you will also lack some references from shown resources. 
