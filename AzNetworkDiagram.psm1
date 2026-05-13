@@ -6169,7 +6169,7 @@ function Export-IPPlan {
                 <TR><TD border=`"0`" align=`"left`" colspan=`"2`"><B>Address Spaces in Azure</B><BR/><BR/></TD></TR>
                 <TR><TD border=`"0`" align=`"left`" colspan=`"2`"><B>VNets + Local Network Gateways</B><BR/><BR/></TD></TR>
                 <TR><TD align=`"left`"><B>Address Space</B></TD><TD align=`"left`"><B>Type</B></TD><TD align=`"left`"><B>Resource</B></TD><TD align=`"left`"><B>Resource Group</B></TD><TD align=`"left`"><B>Subscription Name</B></TD></TR>
-                <HR/>"
+                "
         
         # Individual Routes        
         $data = ""
@@ -6208,7 +6208,7 @@ function Export-IPPlan {
                 <TABLE border=`"1`" style=`"rounded`">
                 <TR><TD border=`"0`" align=`"left`" colspan=`"2`"><B>Subnets in Azure</B><BR/><BR/></TD></TR>
                 <TR><TD align=`"left`"><B>Subnet</B></TD><TD align=`"left`"><B>Type</B></TD><TD align=`"left`"><B>Delegation</B></TD><TD align=`"left`"><B>Resource</B></TD><TD align=`"left`"><B>Resource Group</B></TD><TD align=`"left`"><B>Subscription Name</B></TD></TR>
-                <HR/>"
+                "
         
         # Individual Routes        
         $data = ""
@@ -6246,9 +6246,9 @@ function Export-IPPlan {
             
             IPPlanIPPRE [label = <
                 <TABLE border=`"0`" style=`"rounded`">
-                <TR><TD border=`"0`" align=`"left`" colspan=`"2`"><B>Public IPs in Azure</B><BR/><BR/></TD></TR>
-                <TR><TD align=`"left`"><B>Public IP</B></TD><TD align=`"left`"><B>Type</B></TD><TD align=`"left`"><B>Resource</B></TD><TD align=`"left`"><B>Resource Group</B></TD><TD align=`"left`"><B>Subscription Name</B></TD></TR>
-                <HR/>"
+                <TR><TD border=`"0`" align=`"left`" colspan=`"2`"><B>Public IP Prefixes in Azure</B><BR/><BR/></TD></TR>
+                <TR><TD align=`"left`"><B>Public IP Prefix</B></TD><TD align=`"left`"><B>Type</B></TD><TD align=`"left`"><B>Resource</B></TD><TD align=`"left`"><B>Resource Group</B></TD><TD align=`"left`"><B>Subscription Name</B></TD></TR>
+                "
         
         # Individual Routes        
         $data = ""
@@ -6288,7 +6288,7 @@ function Export-IPPlan {
                 <TABLE border=`"0`" style=`"rounded`">
                 <TR><TD border=`"0`" align=`"left`" colspan=`"2`"><B>Public IPs in Azure</B><BR/><BR/></TD></TR>
                 <TR><TD align=`"left`"><B>Public IP</B></TD><TD align=`"left`"><B>Type</B></TD><TD align=`"left`"><B>Prefix</B></TD><TD align=`"left`"><B>Resource</B></TD><TD align=`"left`"><B>Resource Group</B></TD><TD align=`"left`"><B>Subscription Name</B></TD></TR>
-                <HR/>"
+                "
         
         # Individual Routes        
         $data = ""
