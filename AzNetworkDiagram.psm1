@@ -6219,6 +6219,7 @@ function Export-IPPlan {
             $addressSpace = SanitizeString $subnet.addressSpace
             $type = $subnet.type
             $delegation = $subnet.delegation
+            if ( $null -eq $delegation ) { $delegation = "N/A" }
             $resource = SanitizeString $subnet.resource
             $rg = SanitizeString $subnet.ResourceGroup
             $subname = SanitizeString $subnet.SubscriptionName
