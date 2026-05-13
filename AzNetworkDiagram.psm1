@@ -6261,7 +6261,7 @@ function Export-IPPlan {
             $resource = SanitizeString $IPPRE.resource
             $rg = SanitizeString $IPPRE.ResourceGroup
             $subname = SanitizeString $IPPRE.SubscriptionName
-            $prefixName = SanitizeString $IPPRE.PrefixName
+            # $prefixName = SanitizeString $IPPRE.PrefixName
             $data = $data + "<TR><TD align=`"left`">$address</TD><TD align=`"left`">$type</TD><TD align=`"left`">$resource</TD><TD align=`"left`">$rg</TD><TD align=`"left`">$subname</TD></TR>"
         }
 
@@ -6287,7 +6287,7 @@ function Export-IPPlan {
             IPPlanPIP [label = <
                 <TABLE border=`"0`" style=`"rounded`">
                 <TR><TD border=`"0`" align=`"left`" colspan=`"2`"><B>Public IPs in Azure</B><BR/><BR/></TD></TR>
-                <TR><TD align=`"left`"><B>Public IP</B></TD><TD align=`"left`"><B>Type</B></TD><TD align=`"left`"><B>Prefix</B></TD><TD align=`"left`"><B>Resource</B></TD><TD align=`"left`"><B>Resource Group</B></TD><TD align=`"left`"><B>Subscription Name</B></TD></TR>
+                <TR><TD align=`"left`"><B>Public IP</B></TD><TD align=`"left`"><B>Type</B></TD><TD align=`"left`"><B>Parent Prefix</B></TD><TD align=`"left`"><B>Resource</B></TD><TD align=`"left`"><B>Resource Group</B></TD><TD align=`"left`"><B>Subscription Name</B></TD></TR>
                 "
         
         # Individual Routes        
@@ -6302,6 +6302,8 @@ function Export-IPPlan {
             $rg = SanitizeString $PIP.ResourceGroup
             $subname = SanitizeString $PIP.SubscriptionName
             $prefixName = SanitizeString $PIP.PrefixName
+            if ( "" -eq $prefixName ) { $prefixName = "N/A"}
+
             $data = $data + "<TR><TD align=`"left`">$address</TD><TD align=`"left`">$type</TD><TD align=`"left`">$prefixName</TD><TD align=`"left`">$resource</TD><TD align=`"left`">$rg</TD><TD align=`"left`">$subname</TD></TR>"
         }
 
