@@ -88,9 +88,9 @@ Import-Module .\AzNetworkDiagram.psm1
 - **-EnableLinks** - Many resources become links to the Azure portal can be enabled using this flag.
 - **-EnableXXX** - Enable a chosen non-core network resource type regardless of it being skipped (-EnableXXXX will take precedence!) - use tab completion to see current list.
 - **-KeepDotFile** - Keep the DOT file after the diagrams have been generated (normally it is deleted)
-- **-OutputFormat** (pdf, svg, png) - One or more output files get generated with the specified formats. Default is PDF.
+- **-OutputFormat** (pdf, svg, png) - One or more output files get generated with the specified formats. **Default is PDF.**
 - **-Sanitize** Sanitizes all names, locations, IP addresses and CIDR blocks.
-- **-SkipNonCoreNetwork** - Only rocess cores network resources (unless resource types are explicitly enabled using -EnableXXXX options) - ie. non-network resources are skipped for a cleaner diagram - but you will also lack some references from shown resources. 
+- **-SkipNonCoreNetwork** - Only process cores network resources (unless resource types are explicitly enabled using -EnableXXXX options) - ie. non-network resources are skipped for a cleaner diagram - but you will also lack some references from shown resources. 
 - **-SkipXXX** - Skips a chosen non-core network resource type - use tab completion to see current list.
 
 ## Running the Powershell module
@@ -114,68 +114,82 @@ It is inevitable that large environments make the diagram **very large** (in thi
 ---
 
 # Flow
-It will loop over any subscriptions available (or those defined as the parameter) and process supported resource types. After data is collected, a .PDF, .PNG and/or .SVG file with the diagram will be created. For very large environments the PNG format could display a scaling error. The .SVG format is editable with Microsoft Visio. **Consult above recommendation.**
+It will loop over any subscriptions available (or those defined as in scope using the parameters) and process supported resource types in scope. After data is collected, a .PDF, .PNG and/or .SVG file with the diagram will be created. For very large environments the PNG format could display a scaling error. The .SVG format is editable with Microsoft Visio. **Consult above recommendation.**
 
 The .DOT settings in the .DOT file try to make the diagram as compact as possible and the ranking tries to keep similar resources ranked accordingly. 
 
 In Hub-Spoke and vWAN environments only resources in scope are depicted to avoid a very large number of links to orphan vNets from a scope point of view. Both vWAN resources and standalone versions of them are handled accordingly with similar data drawn.
 
-If links to other resources exist then these links are drawn too. For example, if the vWAN Firewall has a DNS proxy enabled which points to a Private DNS Resolver then that link will be displayed too. If an IP Group is used in a Firewall Policy then that link is also displayed.
+If links to other resources exist, then these links are drawn too. For example, if the vWAN Firewall has a DNS proxy enabled which points to a Private DNS Resolver then that link will be displayed too. If an IP Group is used in a Firewall Policy then that link is also displayed.
 
 ---
 
-# Currently Supported Resources
+# Supported resource types
 The module is now compatible with both Ubuntu and Windows so you can run it successfully on either system. The requirement of having Graphviz installed exists on both platforms. You can look into the YAML file in the pipeline example on how to install Graphviz on Ubuntu unattended.
 
 This module have the options to include these resources in the diagram in separate colors:
-  - Mangement Groups and Subscriptions
+
+## Non-ARM resources
   - Azure DevOps
   - Entra Domains
   - Entra Licensing
-  - **Core network resources**
-    - Azure Firewall, including IP Groups
-    - Bastion
-    - NAT Gateway
-    - NSG's
-    - Route Server
-    - Route Tables
-    - VPN/ER Gateways and connections
-      - Express Routes Circuits, ER Direct ports and Links
-    - vNets incl. delegations, peerings and subnets 
-    - vWAN's & Hubs
-  - API Management (APIM)
-  - App Service Plans and App Services
-  - Application Gateways  
-  - Azure Communication Service
-  - Azure Container Apps
-  - Azure Container Instances
-  - Azure Container Registry
-  - Azure Front Door
-  - Azure Kubernetes Services
-  - Azure VMware Solution
-  - Azure Virtual Desktop
-  - Backup Vaults
-  - Communication Services, incl. email communication services
-  - Compute Galleries
-  - Elastic SAN
-  - EventHubs
-  - Keyvaults
+
+## ARM resources
+  - Mangement Groups and Subscriptions
+
+### Network resources
+  - Application Gateways 
+  - Azure Firewall, including IP Groups
+  - Bastion
+  - Front Door
   - Load Balancers
-  - Open Source DBs
-    - CosmosDB
-    - MongoDB
-    - MySQL
-    - PostgreSQL
+  - NAT Gateway
+  - NSG's
   - Private Endpoints
-  - Recovery Service Vaults
-  - Redis Cache
+  - Route Server
+  - Route Tables
+  - Traffic Manager
+  - VPN/ER Gateways and connections
+    - Express Routes Circuits, ER Direct ports and Links
+  - vNets incl. delegations, peerings and subnets 
+  - vWAN's & Hubs
+
+### Container technologies
+  - Container Apps
+  - Container Instances
+  - Container Registry
+  - Kubernetes Services
+
+### Databases
+  - CosmosDB
+  - MongoDB
+  - MySQL
+  - PostgreSQL
   - SQL Managed Instance
   - SQL Server (logical server), Azure SQL
+
+### IaaS related services
+  - Azure Virtual Desktop
+  - Azure VMware Solution
+  - Compute Galleries 
+  - Elastic SAN
+  - Virtual Machines and Virtual Machine Scale Sets
+
+### Other services
+  - API Management (APIM)
+  - App Service Plans and App Services
+  - Backup Vaults
+  - Communication Services, incl. email communication services
+  - Event Grid
+  - Event Hubs
+  - Keyvaults
+  - Recovery Service Vaults
+  - Redis Cache
+  - Relay
+  - Service Bus
   - SSH Keys
   - Static Web Apps
   - Storage Accounts
-  - Traffic Manager
-  - Virtual Machines and Virtual Machine Scale Sets
 
 ---
 
@@ -197,4 +211,4 @@ See changelog in [CHANGELOG.md](CHANGELOG.md)
 ---
 
 # Issues, bugs, comments and ideas
-See [Contibuting](CONTRIBUTING.md)
+See [Contibuting.md](CONTRIBUTING.md)
