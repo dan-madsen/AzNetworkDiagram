@@ -17,7 +17,7 @@
 
 ---
 
-# Introduction 
+# 🚀 Introduction 
 The **Get-AzNetworkDiagram** (Powershell)Cmdlet visualizes Azure infrastructure leveraging Graphviz and the "DOT" (diagram-as-code) language to export a PDF, SVG or PNG with a digram containing the [supported resources](#currently-supported-resources).
 
 Initially it was with network as a focus, but it has emerged into some more - it is quite capable of documenting a broader spectrum of resource types. It is a robust utility for generating comprehensive network and infrastructure diagrams, useful for documentation and/or troubleshooting.
@@ -31,7 +31,7 @@ Initially it was with network as a focus, but it has emerged into some more - it
 ```
 ---
 
-# Demo output v1.1
+# 🔍 Demo output v1.1
 Some examples of the diagrams. **Additional demo outputs are available in the "DemoOutput" folder.**
 
 ## Demo output (partial):
@@ -42,7 +42,7 @@ Some examples of the diagrams. **Additional demo outputs are available in the "D
 
 ---
 
-# Requirements
+#🚦 Requirements
 **The script depends on _Graphviz_** (the "DOT", diagram-as-code language) to generate the graphical output.
 
 Graphviz can be downloaded from: https://graphviz.org/. But note that the default install doesn't add the executable to $PATH, so make sure to enable that during install (or manually afterwards).
@@ -51,7 +51,7 @@ It can also be installed using "Winget", but that will **_NOT_** add the executa
 
 ---
 
-# Getting started 
+# 🛠️ Getting started 
 The recommended way of running AzNetworkDiagram is by installing from PSGallery. But should you wish to have the absolute latest and greatest, you could opt for a version from GitHub, potentially with not-yet released features.
 ## Install using PSGallery (recommended method)
 ```powershell
@@ -105,7 +105,7 @@ Beware, that by using "-Subscriptions" to limit the scope of data collection, yo
 
 ---
 
-# Recommendation
+# 🧠 Recommendation
 It is inevitable that large environments make the diagram **very large** (in this case "wide"), but zooming into the PDF or SVG works the best. In cases where diagrams gets too big/wide, you should consider scoping the digram (ie. utilize **-Subscriptions "subid","subid2"....**) to create smaller diagrams with a scope that matches your deployment(s), instead of your entire infrastructure. For many environments, you could probably go with something like this:
 - A management group diagram (-OnlyMgmtGroups)
 - A core network diagram (-SkipNonCoreNetwork) that spans part of your core infrastructure (or maybe everything), which will only include the core network resources listed under "Currently supported resources"
@@ -113,7 +113,7 @@ It is inevitable that large environments make the diagram **very large** (in thi
 
 ---
 
-# Flow
+# ⚡ Flow
 It will loop over any subscriptions available (or those defined as in scope using the parameters) and process supported resource types in scope. After data is collected, a .PDF, .PNG and/or .SVG file with the diagram will be created. For very large environments the PNG format could display a scaling error. The .SVG format is editable with Microsoft Visio. **Consult above recommendation.**
 
 The .DOT settings in the .DOT file try to make the diagram as compact as possible and the ranking tries to keep similar resources ranked accordingly. 
@@ -124,7 +124,7 @@ If links to other resources exist, then these links are drawn too. For example, 
 
 ---
 
-# Supported resource types
+# 🎯 Supported resource types
 The module is now compatible with both Ubuntu and Windows so you can run it successfully on either system. The requirement of having Graphviz installed exists on both platforms. You can look into the YAML file in the pipeline example on how to install Graphviz on Ubuntu unattended.
 
 This module have the options to include these resources in the diagram in separate colors:
@@ -193,7 +193,7 @@ This module have the options to include these resources in the diagram in separa
 
 ---
 
-# Pipeline Runs
+# 🔍 Pipeline Runs
 An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagram/tree/main/pipeline) has been added with support Powershell scripts. This pipeline does the following:
   - It assumes you have a Wiki in use for your project
   - It pulls this Wiki and the azNetworkDiagram repo on the standard runner
@@ -205,10 +205,10 @@ An example [ADO pipeline YAML file](https://github.com/dan-madsen/AzNetworkDiagr
 
 ---
 
-# Changelog 
+# 🎯 Changelog 
 See changelog in [CHANGELOG.md](CHANGELOG.md)
 
 ---
 
-# Issues, bugs, comments and ideas
+# 🙌 Issues, bugs, comments and ideas
 See [Contibuting.md](CONTRIBUTING.md)
