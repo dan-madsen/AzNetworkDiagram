@@ -42,7 +42,7 @@ Some examples of the diagrams. **Additional demo outputs are available in the "D
 
 ---
 
-#🚦 Requirements
+# 🚦 Requirements
 **The script depends on _Graphviz_** (the "DOT", diagram-as-code language) to generate the graphical output.
 
 Graphviz can be downloaded from: https://graphviz.org/. But note that the default install doesn't add the executable to $PATH, so make sure to enable that during install (or manually afterwards).
