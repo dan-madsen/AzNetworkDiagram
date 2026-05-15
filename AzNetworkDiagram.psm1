@@ -449,8 +449,6 @@ function Export-dotFooterRanking {
         $($script:rankkv -join '; ')
         ### SSH Key
         $($script:rankSSHKey -join '; ')
-        ### Managed Identities
-        $($script:rankmi -join '; ')
         ### Azure Container Registry
         $($script:rankacr -join '; ')
         ### Azure VMware Solution / AVS
@@ -470,6 +468,8 @@ function Export-dotFooterRanking {
         rank7;
         ### Storage Account
         $($script:ranksa -join '; ')
+        ### Managed Identities
+        $($script:rankmi -join '; ')
     }
 
     subgraph rank8 {
@@ -678,16 +678,7 @@ function Export-AKSCluster {
                 $data += "        $aksid -> $sshid;`n"
             }
         }
-        # Check for User Assign Identity
-        # User Assigned Managed Identities enabled at runtime?
-        if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
-            if ($aks.Identity.UserAssignedIdentities.Keys) {
-                foreach ($identity in $aks.Identity.UserAssignedIdentities.Keys) { 
-                    $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower() 
-                    $data += "        $aksid -> $managedIdentityId;`n"
-                } 
-            }
-        }
+
         # Check for Private Endpoints
         # Private Endpoints enabled at runtime?
         if ( $EnablePE -OR (-not $SkipNonCoreNetwork -AND -not $SkipPE ) ) {
@@ -730,6 +721,17 @@ function Export-AKSCluster {
         }
         $data += "   label = `"$Name`";
                 }`n"
+
+        # User Assigned Managed Identities enabled at runtime?
+        if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
+            if ($aks.Identity.UserAssignedIdentities.Keys) {
+                foreach ($identity in $aks.Identity.UserAssignedIdentities.Keys) { 
+                    $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower() 
+                    $data += "        $aksid -> $managedIdentityId;`n"
+                } 
+            }
+        }
+
         Export-AddToFile -Data $data
     }
     catch {
@@ -931,6 +933,9 @@ function Export-ApplicationGateway {
             }
         }
 
+        $data += "   label = `"$Name`";
+                }`n"
+
         # User Assigned Managed Identities
         # User Assigned Managed Identities enabled at runtime?
         if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
@@ -941,9 +946,6 @@ function Export-ApplicationGateway {
                 }
             }
         }
-
-        $data += "   label = `"$Name`";
-                }`n"
 
         Export-AddToFile $data
 
@@ -1246,15 +1248,7 @@ function Export-VMSS {
                 $data += "        $vmssid -> $sshid;`n"
             }
         }
-        # User Assigned Managed Identities enabled at runtime?
-        if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
-            if ($vmss.Identity.UserAssignedIdentities.Keys) {
-                foreach ($identity in $vmss.Identity.UserAssignedIdentities.Keys) { 
-                    $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower() 
-                    $data += "        $vmssid -> $managedIdentityId;`n"
-                } 
-            }
-        }
+
         if ($vmss.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations.IpConfigurations.Subnet.Id) {
             $subnetid = $vmss.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations.IpConfigurations.Subnet.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
             $data += "        $vmssid -> $subnetid;`n"
@@ -1265,6 +1259,16 @@ function Export-VMSS {
         }
         $data += "   label = `"$Name`";
         }`n"
+
+        # User Assigned Managed Identities enabled at runtime?
+        if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
+            if ($vmss.Identity.UserAssignedIdentities.Keys) {
+                foreach ($identity in $vmss.Identity.UserAssignedIdentities.Keys) { 
+                    $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower() 
+                    $data += "        $vmssid -> $managedIdentityId;`n"
+                } 
+            }
+        }
 
         Export-AddToFile -Data $data
 
@@ -1393,15 +1397,6 @@ function Export-VM {
             $data += "            $subnetid -> $NICid;`n"
         }
 
-        # User Assigned Managed Identities enabled at runtime?
-        if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
-            if ($vm.Identity.UserAssignedIdentities.Keys) {
-                foreach ($identity in $vm.Identity.UserAssignedIdentities.Keys) { 
-                    $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                    $data += "            $vmid -> $managedIdentityId;`n"
-                }
-            }
-        }
         # VM (NIC) -> NSG
         $NetworkProfiles = $vm.NetworkProfile.networkinterfaces
         $NetworkProfiles | Foreach-Object {
@@ -1419,6 +1414,16 @@ function Export-VM {
         }
         $data += "            label = `"$Name`";
         }`n"
+
+        # User Assigned Managed Identities enabled at runtime?
+        if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
+            if ($vm.Identity.UserAssignedIdentities.Keys) {
+                foreach ($identity in $vm.Identity.UserAssignedIdentities.Keys) { 
+                    $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $data += "            $vmid -> $managedIdentityId;`n"
+                }
+            }
+        }
 
         Export-AddToFile -Data $data
     }
@@ -1505,6 +1510,9 @@ function Export-MySQLServer {
             }
         }
         
+        $data += "   label = `"$Name`";
+                }`n"
+
         # User Assigned Managed Identities enabled at runtime?
         if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
             if ($properties.Identity.UserAssignedIdentities.Keys) {
@@ -1514,8 +1522,6 @@ function Export-MySQLServer {
                 }
             }
         }
-        $data += "   label = `"$Name`";
-                }`n"
 
         Export-AddToFile -Data $data
 
@@ -1700,6 +1706,10 @@ function Export-CosmosDBAccount {
                 $data += "        $cosmosdbactid -> $peid [label = `"Private Endpoint`"; ];`n"
             }
         }
+
+        $data += "   label = `"$Name`";
+                }`n"
+        
         # User Assigned Managed Identities enabled at runtime?
         if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
             if ($cosmosdbact.Identity.UserAssignedIdentities.Keys) {
@@ -1709,8 +1719,6 @@ function Export-CosmosDBAccount {
                 } 
             }
         }
-        $data += "   label = `"$Name`";
-                }`n"
 
         Export-AddToFile -Data $data
     }
@@ -1785,6 +1793,9 @@ function Export-PostgreSQLServer {
                 }
             }
         }
+
+        $data += "   label = `"$Name`";
+                }`n"
         
         # User Assigned Managed Identities enabled at runtime?
         if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
@@ -1795,8 +1806,6 @@ function Export-PostgreSQLServer {
                 } 
             }
         }
-        $data += "   label = `"$Name`";
-                }`n"
 
         Export-AddToFile -Data $data
 
@@ -1846,6 +1855,10 @@ function Export-RedisServer {
                 $data += "        $redisid -> $peid [label = `"Private Endpoint`"; ];`n"
             }
         }
+
+        $data += "   label = `"$Name`";
+                }`n"
+        
         # User Assigned Managed Identities enabled at runtime?
         if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
             if ($redis.Identity.UserAssignedIdentities.Keys) {
@@ -1855,8 +1868,6 @@ function Export-RedisServer {
                 } 
             }
         }
-        $data += "   label = `"$Name`";
-                }`n"
 
         Export-AddToFile -Data $data
     }
@@ -1913,6 +1924,16 @@ function Export-SQLManagedInstance {
         }
         $data += "   label = `"$Name`";
                 }`n"
+
+        # User Assigned Managed Identities enabled at runtime?
+        if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
+            if ($sqlmi.Identity.UserAssignedIdentities.Keys) {
+                foreach ($identity in $sqlmi.Identity.UserAssignedIdentities.Keys) { 
+                    $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $data += "            $sqlmiid -> $managedIdentityId;`n"
+                }
+            }
+        }
 
         Export-AddToFile -Data $data
     }
@@ -1994,6 +2015,16 @@ function Export-SQLServer {
 
         $data += "   label = `"$Name`";
                 }`n"
+
+        # User Assigned Managed Identities enabled at runtime?
+        if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
+            if ($sqlserver.Identity.UserAssignedIdentities.Keys) {
+                foreach ($identity in $sqlserver.Identity.UserAssignedIdentities.Keys) { 
+                    $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $data += "            $sqlserverid -> $managedIdentityId;`n"
+                }
+            }
+        }
 
         Export-AddToFile -Data $data
     }
@@ -2273,7 +2304,17 @@ function Export-EventGridNameSpace
         }
         "
 
-        Export-AddToFile -Data ($header + $EventGriddata + $footer)
+        # User Assigned Managed Identities enabled at runtime?
+        if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
+            if ($EventGridNameSpace.IdentityUserAssignedIdentity.Keys) {
+                foreach ($identity in $EventGridNameSpace.IdentityUserAssignedIdentity.Keys) { 
+                    $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $MIdata += "            $EventGridNameSpaceid -> $managedIdentityId;`n"
+                }
+            }
+        }
+
+        Export-AddToFile -Data ($header + $EventGriddata + $footer + $MIdata)
     }
     catch {
         Write-Error "Can't export EventGrid Namespace: $($EventGridNameSpace.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
@@ -2357,7 +2398,17 @@ function Export-EventGridTopic
         }
         "
 
-        Export-AddToFile -Data ($header + $EventGriddata + $footer)
+        # User Assigned Managed Identities enabled at runtime?
+        if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
+            if ($EventGridTopic.IdentityUserAssignedIdentity.Keys) {
+                foreach ($identity in $EventGridTopic.IdentityUserAssignedIdentity.Keys) { 
+                    $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $MIdata += "            $EventGridTopicid -> $managedIdentityId;`n"
+                }
+            }
+        }
+
+        Export-AddToFile -Data ($header + $EventGriddata + $footer + $MIdata)
     }
     catch {
         Write-Error "Can't export EventGrid Namespace: $($EventGridTopic.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
@@ -2454,7 +2505,17 @@ function Export-EventGridDomain
         }
         "
 
-        Export-AddToFile -Data ($header + $EventGriddata + $footer)
+        # User Assigned Managed Identities enabled at runtime?
+        if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
+            if ($EventGridDomain.IdentityUserAssignedIdentity.Keys) {
+                foreach ($identity in $EventGridDomain.IdentityUserAssignedIdentity.Keys) { 
+                    $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $MIdata += "            $EventGridDomainid -> $managedIdentityId;`n"
+                }
+            }
+        }
+
+        Export-AddToFile -Data ($header + $EventGriddata + $footer + $MIdata)
     }
     catch {
         Write-Error "Can't export EventGrid Namespace: $($EventGridDomain.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
@@ -2650,20 +2711,9 @@ function Export-AppServicePlan {
             #vNet integration
             if ($null -ne $app.VirtualNetworkSubnetId) {
                 $subnetref = $app.VirtualNetworkSubnetId.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $data += "        $appid -> $subnetref [label = `"vNet integration`"; ];`n"
+                $data += "        $appid -> $subnetref [label = `"vNet integration`"; constraint=false;];`n"
             }
             
-            # Add links to Private Endpoints and Managed Identities
-            # User Assigned Managed Identities enabled at runtime?
-            if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
-                if ($app.Identity.UserAssignedIdentities.Keys) {
-                    foreach ($identity in $app.Identity.UserAssignedIdentities.Keys) { 
-                        $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower() 
-                        $data += "        $appid -> $managedIdentityId;`n"
-                    } 
-                }
-            }
-
             # Private Endpoints enabled at runtime?
             if ( $EnablePE -OR (-not $SkipNonCoreNetwork -AND -not $SkipPE ) ) {
                 $peids = Get-AzPrivateEndpointConnection -PrivateLinkResourceId $app.Id -ErrorAction Stop
@@ -2679,6 +2729,17 @@ function Export-AppServicePlan {
 
         $data += "   label = `"$Name`";
                 }`n"
+
+        # User Assigned Managed Identities enabled at runtime?
+        if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
+            if ($app.Identity.UserAssignedIdentities.Keys) {
+                foreach ($identity in $app.Identity.UserAssignedIdentities.Keys) { 
+                    $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower() 
+                    $data += "        $appid -> $managedIdentityId [constraint=false;];`n"
+                } 
+            }
+        }
+
         Export-AddToFile -Data $data
     }
     catch {
@@ -2749,6 +2810,16 @@ function Export-APIM {
         $data += "   label = `"$Name`";
                 }`n"
 
+        # User Assigned Managed Identities enabled at runtime?
+        if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
+            if ($apim.identity.UserAssignedIdentity.Keys) {
+                foreach ($identity in $apim.identity.UserAssignedIdentity.Keys) { 
+                    $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $data += "            $apimid -> $managedIdentityId;`n"
+                }
+            }
+        }
+
         Export-AddToFile -Data $data
     }
     catch {
@@ -2814,6 +2885,17 @@ function Export-ACR {
         }
         $data += "   label = `"$Name`";
                 }`n"
+
+        # User Assigned Managed Identities enabled at runtime?
+        if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
+            # if ($acr.Identity.UserAssignedIdentities.Keys) {
+            if ($acr.IdentityUserAssignedIdentity.Keys) {
+                foreach ($identity in $acr.IdentityUserAssignedIdentity.Keys) { 
+                    $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $data += "            $acrid -> $managedIdentityId;`n"
+                }
+            }
+        }
 
         Export-AddToFile $data
 
@@ -4476,9 +4558,23 @@ function Export-ContainerGroup
         # DOT
         if ($null -ne $containerGroup.SubnetId) {
             $subnetid = $containerGroup.SubnetId.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-            $data += "    $id -> $subnetId;`n"
+            $data += "    $id -> $subnetId [constraint=false;];`n"
         }
         Export-AddToFile -Data ($header + $data + "label = `"$name`";}")
+
+        
+        # User Assigned Managed Identities enabled at runtime?
+        if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
+            if ($containerGroup.IdentityUserAssignedIdentity.Keys) {
+                foreach ($identity in $containerGroup.IdentityUserAssignedIdentity.Keys) { 
+                    $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $MIdata += "            $id -> $managedIdentityId;`n"
+                }
+            }
+        }
+
+        Export-AddToFile -Data ($MIdata)
+
     }
     catch {
         Write-Error "Can't export Container Group: $($containerGroup.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
@@ -4496,7 +4592,7 @@ The `Export-ContainerAppEnv` function processes a specified Azure Container App 
 Specifies the Azure Container App Environment object to be processed. This parameter is mandatory.
 
 .EXAMPLE
-PS> $containerAppEnv = Get-AzContainerAppEnvironment -Name "MyEnvironment" -ResourceGroupName "MyResourceGroup"
+PS> $containerAppEnv = Get-AzContainerAppManagedEnv -Name "MyEnvironment" -ResourceGroupName "MyResourceGroup"
 PS> Export-ContainerAppEnv -containerAppEnvironment $containerAppEnv
 
 This example retrieves an Azure Container App Environment object and exports its details for inclusion in an infrastructure diagram.
@@ -4536,6 +4632,7 @@ function Export-ContainerAppEnv
                 $acaName = SanitizeString $aca.Name
                 $acaId = $aca.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
                 $acaLocation = SanitizeLocation $aca.Location
+
                 $AppEnvironmentType = $null -eq $aca.WorkloadProfileName? "Consumption Only" : "Unknown"
                 if ($nul -ne $aca.TemplateContainer) {
                     $acaImage = $aca.TemplateContainer.Image
@@ -4571,6 +4668,17 @@ function Export-ContainerAppEnv
                         }
                     }
                 }
+                        
+                # User Assigned Managed Identities enabled at runtime?
+                if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
+                    if ($aca.IdentityUserAssignedIdentity.Keys) {
+                        foreach ($identity in $aca.IdentityUserAssignedIdentity.Keys) { 
+                            $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                            $MIdata += "            $acaId -> $managedIdentityId;`n"
+                        }
+                    }
+                }
+        
             }
         }
 
@@ -4579,8 +4687,8 @@ function Export-ContainerAppEnv
             label = `"$envName`";
         }
         "
-        
-        Export-AddToFile -Data ($header + $envdata + $footer)
+
+        Export-AddToFile -Data ($header + $envdata + $footer + $MIdata)
     }
     catch {
         Write-Error "Can't export Container App Environment: $($containerAppEnvironment.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
@@ -5738,7 +5846,7 @@ function Export-CommmunicationServices
             }
 
         }
-        
+
         # Other services not implemented
 
         # End subgraph
@@ -5746,8 +5854,18 @@ function Export-CommmunicationServices
             label = `"$(SanitizeString $ACSname)`";
         }
         "
+        
+        # User Assigned Managed Identities enabled at runtime?
+        if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
+            if ($ACS.IdentityUserAssignedIdentity.Keys) {
+                foreach ($identity in $ACS.IdentityUserAssignedIdentity.Keys) { 
+                    $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                    $MIdata += "            $ACSid -> $managedIdentityId;`n"
+                }
+            }
+        }
 
-        Export-AddToFile -Data ($header + $ACSdata + $footer)
+        Export-AddToFile -Data ($header + $ACSdata + $footer + $MIdata)
     }
     catch {
         Write-Error "Can't export Azure Communication Services: $($ACS.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message

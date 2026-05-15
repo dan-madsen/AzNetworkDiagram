@@ -82,59 +82,59 @@ Search and replace (IN ORDER)
 ``` Powershell
 <#
 .SYNOPSIS
-Exports details of a RESOURCE TYPE instance for inclusion in an infrastructure diagram.
+Exports details of a {{RESOURCE TYPE}} instance for inclusion in an infrastructure diagram.
 
 .DESCRIPTION
-The `Export-RES` function processes a specified RESOURCE TYPE object, retrieves its details, and formats the data for inclusion in the diagram.
+The `Export-{{RES}}` function processes a specified {{RESOURCE TYPE}} object, retrieves its details, and formats the data for inclusion in the diagram.
 
-.PARAMETER RES
-Specifies the RESOURCE TYPE object to be processed. This parameter is mandatory.
+.PARAMETER {{RES}}
+Specifies the {{RESOURCE TYPE}} object to be processed. This parameter is mandatory.
 
 .EXAMPLE
-PS> Export-RES -RES $RES
+PS> Export-{{RES}} -{{RES}} ${{RES}}
 
 This example retrieves an LB instance and exports its details for inclusion in the diagram.
 #>
-function Export-RES
+function Export-{{RES}}
 {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [PSCustomObject]$RES
+        [PSCustomObject]${{RES}}
     )
 
     try {
-        $RESid = $RES.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-        $script:rankRES += $RESid
+        ${{RES}}id = ${{RES}}.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rank{{RES}} += ${{RES}}id
 
-        # Collect information about RES
-        $RESname = SanitizeString $RES.name
-        $location = SanitizeLocation $RES.location
+        # Collect information about {{RES}}
+        ${{RES}}name = SanitizeString ${{RES}}.name
+        $location = SanitizeLocation ${{RES}}.location
 
         $header = "
-        # $($name) - $RESid
-        subgraph cluster_$RESid {
+        # $($name) - ${{RES}}id
+        subgraph cluster_${{RES}}id {
             style = solid;
             colorscheme = blues9 ;
             bgcolor = 2;
             node [colorscheme = blues9 ; style = filled;];
         "
 
-        #RES DOT
+        #{{RES}} DOT
         $ImagePath = Join-Path $OutputPath "icons" "ICONNAME.png"
-        $RESdata += "            $RESid [fillcolor = 3; label=`"Location: $location`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $RES)]`n"
+        ${{RES}}data += "            ${{RES}}id [fillcolor = 3; label=`"Location: $location`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -{{RES}}ource ${{RES}})]`n"
 
 
         # End subgraph
         $footer = "
-            label = `"$(SanitizeString $RESname)`";
+            label = `"$(SanitizeString ${{RES}}name)`";
         }
         "
 
-        Export-AddToFile -Data ($header + $RESdata + $footer)
+        Export-AddToFile -Data ($header + ${{RES}}data + $footer)
     }
     catch {
-        Write-Error "Can't export RES: $($RES.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
+        Write-Error "Can't export {{RES}}: $(${{RES}}.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
     }
 }
 ```

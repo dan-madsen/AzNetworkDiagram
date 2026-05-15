@@ -23,6 +23,7 @@
 - [x] Fixes
   - [x] Added missing dependency Powershell modules
   - [x] Application Gateway - support for redirection scenarios (Issue#120)
+  - [x] Managed Identities added for multiple resource types
   - [x] Output in the console is now sorted and structured in a better way
   - [x] Private endpoint fixes/additions for PostgreSQL, MySQL and Container App Environments
   - [x] Proper sorting of IP addresses/routes for different objects
