@@ -1,5 +1,5 @@
 #Requires -Version 7.1
-#Requires -Modules Az.Accounts, Az.Network, Az.Compute, Az.KeyVault, Az.Storage, Az.MySql, Az.PostgreSql, Az.CosmosDB, Az.RedisCache, Az.Sql, Az.EventHub, Az.Websites, Az.ApiManagement, Az.ContainerRegistry, Az.ManagedServiceIdentity, Az.Resources, Az.vmware, Az.ElasticSan, Az.DnsResolver, Az.TrafficManager, Az.Communication, Az.Cdn, Az.App, Az.Relay, Az.ServiceBus, Az.EventGrid, Az.aks, Az.DesktopVirtualization, Az.DataProtection, Az.ContainerInstance, Az.RecoveryServices
+#Requires -Modules Az.Accounts, Az.Network, Az.Compute, Az.KeyVault, Az.Storage, Az.MySql, Az.PostgreSql, Az.CosmosDB, Az.RedisCache, Az.Sql, Az.EventHub, Az.Websites, Az.ApiManagement, Az.ContainerRegistry, Az.ManagedServiceIdentity, Az.Resources, Az.vmware, Az.ElasticSan, Az.DnsResolver, Az.TrafficManager, Az.Communication, Az.Cdn, Az.App, Az.Relay, Az.ServiceBus, Az.EventGrid, Az.aks, Az.DesktopVirtualization, Az.DataProtection, Az.ContainerInstance, Az.RecoveryServices, Az.SqlVirtualMachine
 
 # Change Execution Policy for current process, if prohibited by policy
 # Set-ExecutionPolicy -scope process -ExecutionPolicy bypass
@@ -690,6 +690,10 @@ function Export-AKSCluster {
                 }
             }
         }
+
+        $data += "   label = `"$Name`";
+                }`n"
+
         # Match VMSS to node pools
         $vmssResources = Get-AzVmss 
         
@@ -719,8 +723,6 @@ function Export-AKSCluster {
                 }
             }
         }
-        $data += "   label = `"$Name`";
-                }`n"
 
         # User Assigned Managed Identities enabled at runtime?
         if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
@@ -988,7 +990,7 @@ function Export-ManagedIdentity {
             margin = 0;
             node [colorscheme = blues9; color = 3; margin = 0;];
 
-            $id [label = `"\n$Name\nLocation: $Location`"; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $managedIdentity)];
+            $id [label = `"\n\n$Name\nLocation: $Location`"; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $managedIdentity)];
             label = `"$Name`";
         }
         "
@@ -1251,11 +1253,11 @@ function Export-VMSS {
 
         if ($vmss.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations.IpConfigurations.Subnet.Id) {
             $subnetid = $vmss.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations.IpConfigurations.Subnet.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-            $data += "        $vmssid -> $subnetid;`n"
+            $data += "        $vmssid -> $subnetid [constraint=false;];`n"
         }
         if ($vmss.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations.NetworkSecurityGroup.Id) {
             $nsgid = $vmss.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations.NetworkSecurityGroup.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-            $data += "        $vmssid -> $nsgid;`n"
+            $data += "        $vmssid -> $nsgid [constraint=false;];`n"
         }
         $data += "   label = `"$Name`";
         }`n"
@@ -1393,8 +1395,8 @@ function Export-VM {
             #NIC DOT
             $ImagePath = Join-Path $OutputPath "icons" "nic.png"
             $data += "            $NICid [label = `"\nName: $NICname\nPrivate IP(s): $($PrivateIpAddresses -Join ", ")\nPublic IP(s): $($PublicIpAddresses -Join ", ")\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $NIC)];`n"
-            $data += "            $NICid -> $VMid;`n"
-            $data += "            $subnetid -> $NICid;`n"
+            $data += "            $VMid -> $NICid [constraint=false;];`n"
+            $data += "            $NICid -> $subnetid [constraint=false;];`n"
         }
 
         # VM (NIC) -> NSG
@@ -1712,8 +1714,9 @@ function Export-CosmosDBAccount {
         
         # User Assigned Managed Identities enabled at runtime?
         if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
-            if ($cosmosdbact.Identity.UserAssignedIdentities.Keys) {
-                foreach ($identity in $cosmosdbact.Identity.UserAssignedIdentities.Keys) { 
+            $res = Get-AzResource -ResourceGroupName $resourceGroupName -ResourceName $Name -ExpandProperties -ResourceType "Microsoft.DocumentDB/databaseAccounts" # Workaround for Cosmos DBidentity
+            if ($res.Identity.UserAssignedIdentities.Keys) {
+                foreach ($identity in $res.Identity.UserAssignedIdentities.Keys) { 
                     $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower() 
                     $data += "        $cosmosdbactid -> $managedIdentityId;`n"
                 } 
@@ -1833,6 +1836,8 @@ function Export-RedisServer {
     )
     try {
         $redisid = $redis.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
+        $script:rankredis += $redisid
+
         $Location = SanitizeLocation $redis.Location
         $Name = SanitizeString $redis.Name
         $data = "
@@ -1861,8 +1866,8 @@ function Export-RedisServer {
         
         # User Assigned Managed Identities enabled at runtime?
         if ( $EnableMI -OR (-not $SkipNonCoreNetwork -AND -not $SkipMI ) ) {
-            if ($redis.Identity.UserAssignedIdentities.Keys) {
-                foreach ($identity in $redis.Identity.UserAssignedIdentities.Keys) { 
+            if ($redis.UserAssignedIdentity) {
+                foreach ($identity in $redis.UserAssignedIdentity) { 
                     $managedIdentityId = $identity.replace("-", "").replace("/", "").replace(".", "").ToLower() 
                     $data += "        $redisid -> $managedIdentityId;`n"
                 } 
@@ -5447,7 +5452,7 @@ function Export-LB
                             #Split for NIC ref
                             $BEAddressNICDOTID = ($BEAddressARMID.split("/")[0..8] -join "").replace("-", "").replace("/", "").replace(".", "").ToLower()
                             
-                            $LBdata += "            $BEid -> $BEAddressNICDOTID [constraint=false]`n"
+                            $LBdataREFERENCES += "            $BEid -> $BEAddressNICDOTID [constraint=false]`n"
                         }
                     }
                 }
@@ -5472,7 +5477,7 @@ function Export-LB
         }
         "
 
-        Export-AddToFile -Data ($header + $LBdata + $footer)
+        Export-AddToFile -Data ($header + $LBdata + $footer + $LBdataREFERENCES)
     }
     catch {
         Write-Error "Can't export LB: $($LB.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
