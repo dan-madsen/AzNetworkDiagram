@@ -1,35 +1,39 @@
 # Change log (since v1.0.1)
-## v2.0.0 release - under construction (RC3 is the most recent version released to PowerShell Gallery, which includes all of the changes)
+## v2.0.0
 - [x] **_BREAKING CHANGE - see v1.5 for additional info_**
-- [x] New features
   - [x] The breaking change from v1.5 fully implemented
-  - [x] Pirvate IP Plan overview, based on VNets in scope
-    - [x] Azure resources
-    - [x] VPN
-    - [x] P2S VPN
-  - [x] Public IP Plan (incl. prefixes)
-  - [x] DevOps Organizations added to diagram (optional - enable manually with -EnableADO)
-  - [x] Entra Licenses added to diagram (optional - enable manually with -EnableEntraLicenses)
-  - [x] Entra Domains added do diagram (optional - enable manually with -EnableEntraDomains)
+- [x] New features
   - [x] Azure Firewall Policy parent relationships
   - [x] App Service Deployment slots
-  - [x] Traffic Manager
-  - [x] Front Door
   - [x] Communication Service, incl. Email Communication Services
+  - [x] DevOps Organizations added to diagram (optional - enable manually with -EnableADO)
+  - [x] Entra Domains added do diagram (optional - enable manually with -EnableEntraDomains)
+  - [x] Entra Licenses added to diagram (optional - enable manually with -EnableEntraLicenses)
+  - [x] Event Grid (Domains, Namespaces, Topics) 
+  - [x] Front Door
+  - [x] IP Plan
+    - [x] Private IP Plan overview
+      - [x] Point2Site VPN
+      - [x] Site2Site VPN
+      - [x] Vnet/subnets
+    - [x] Public IP Plan (incl. prefixes)
   - [x] Relay
   - [x] Service Bus
-  - [x] Event Grid (Domains, Namespaces, Topics) 
+  - [x] Traffic Manager
 - [x] Fixes
-  - [x] Static Web App - custom domain logic error
+  - [x] Added missing dependency Powershell modules
+  - [x] Application Gateway - support for redirection scenarios (Issue#120)
+  - [x] Managed Identities added for multiple resource types
+  - [x] Output in the console is now sorted and structured in a better way
+  - [x] Private endpoint fixes/additions for PostgreSQL, MySQL and Container App Environments
   - [x] Proper sorting of IP addresses/routes for different objects
     - [x] NICs
     - [x] Route server peers
     - [x] Route tables
     - [x] Local Network Gateway
-  - [x] Application Gateway - support for redirection scenarios (Issue#120)
-  - [x] Private endpoint fixes/additions for PostgreSQL, MySQL, Container App Environments
   - [x] Ranking fixes for PostgreSQL, MySQL
-  - [x] Added missing dependency Powershell module: Az.App
+  - [x] SanitizeString changed to support string with more parts - ie. subdomains like the xyz.onmicrosoft.com domain
+  - [x] Static Web App - custom domain logic error
 ## v1.5.1
   - Bug fixes
     - Application Gateway - support for redirection scenarios (Issue#120)
