@@ -9,6 +9,80 @@ $ErrorActionPreference = 'Stop'
 $WarningPreference = 'Continue'
 $InformationPreference = 'Continue'
 
+# COLORSC
+
+## LEGEND
+$basecolor_legend_general_cluster = "#fdebe2"
+$basecolor_legend_general_fill    = "#fdebe2"
+
+## IDENTITY (ADO, ENTRA)
+$basecolor_identity_general_cluster = "#c6dbef"
+$basecolor_identity_general_fill    = "#c6dbef"
+
+## MANAGEMENT (MG + SUBSCRIPTIONS)
+$basecolor_management_general_cluster = "#F3F2F1"
+$basecolor_management_general_fill    = "#E1DFDD"   # Neutral grey, governance feeling
+
+
+## NETWORK CORE
+$basecolor_network_core_cluster = "#EAF4FD"
+$basecolor_network_core_fill    = "#DCEEFF" #Vnet
+$basecolor_network_subnet_fill    = "#D4E8FB" #Subnet, NAT GW, vWAN, VGW
+$basecolor_network_security_fill    = "#E3F3F9" #Basion, AFW, Route Server, PE
+$basecolor_network_policy_fill    = "#E3E8EC" #NSG, UDR
+
+# Network "traffic management" - LB, AFD, Traffic Manager, AppGW
+$basecolor_network_traffic_fill   = "#C9D4F8"   # base (shifted darker ✅ FIX)
+$basecolor_network_traffic_level1 = "#EEF2FE"   # very light
+$basecolor_network_traffic_level2 = "#DCE4FB"   # clearly distinct from L1
+$basecolor_network_traffic_level3 = "#B9C7F3"   # stronger
+$basecolor_network_traffic_level4 = "#A5B6EE"   # deepest
+
+## IAAS (VM + VM-based workloads)
+$basecolor_compute_iaas_cluster = "#E9F2F4"
+$basecolor_compute_iaas_fill    = "#DCE8EC"
+
+## CONTAINERS
+$basecolor_container_general_cluster = "#E6FAFC"
+$basecolor_container_general_fill    = "#CFF3F7"   # Cyan tone, distinct from compute
+
+## DATABASES
+$basecolor_db_general_cluster = "#FFF4EC"
+$basecolor_db_general_fill    = "#FFE0CC"   # Warmer orange → persistence/data feel
+
+## PLATFORM SERVICES (APIM, ASP, Redis)
+$basecolor_paas_general_cluster = "#FFF8E1"
+$basecolor_paas_general_fill    = "#FFECB3"   # Amber/yellow → service layer
+
+## BACKUP (BV, RSV)
+$basecolor_backup_general_cluster = "#EFEBE9"
+$basecolor_backup_general_fill    = "#D7CCC8"   # Brownish → archive/protection
+
+## MESSAGING (Event Grid, Event Hub, Service Bus, Relay)
+$basecolor_messaging_general_cluster = "#F3E5F5"
+$basecolor_messaging_general_fill    = "#E1BEE7"   # More saturated purple → event systems
+
+## COMMUNICATION SERVICES
+$basecolor_communication_general_cluster = "#E0F7FA"
+$basecolor_communication_general_fill    = "#B2EBF2"   # Teal-blue → communication flow
+
+## KEYVAULT
+$basecolor_security_keyvault_cluster = "#FDE7E9"
+$basecolor_security_keyvault_fill    = "#F4B6C2"   # Red/pink → sensitive/security
+
+## SSH KEYS
+$basecolor_security_ssh_cluster = "#ECEFF1"
+$basecolor_security_ssh_fill    = "#CFD8DC"   # Neutral grey-blue → technical/security asset
+
+## STATIC WEB APPS (FRONTEND)
+$basecolor_frontend_staticweb_cluster = "#FCE4EC"
+$basecolor_frontend_staticweb_fill    = "#F8BBD0"   # Pink → user-facing/UI layer
+
+## STORAGE ACCOUNTS
+$basecolor_storage_general_cluster = "#EDF7ED"
+$basecolor_storage_general_fill    = "#C8E6C9"   # Green → persistence/storage
+
+
 <#
 .SYNOPSIS
 Sanitizes a given string by replacing sensitive or identifiable information with randomized or predefined values.
@@ -261,14 +335,37 @@ function Export-dotHeader {
     if ( $script:VerticalView ) { $rankdir = "LR" }
 
     $Data = "digraph AzNetworkDiagram {  
-    # Colors
-    colorscheme=pastel19;
-    bgcolor=9;
 
-    fontname=`"Arial,sans-serif`"
-    fontsize=24
-    node [colorscheme=x11; fontname=`"Arial,sans-serif`";fontsize=24]
-    edge [fontname=`"Arial,sans-serif`"fontsize=24]
+    graph [
+        fontname=`"Arial`",
+        fontsize=20,
+        fontcolor=`"#1A1A1A`",
+        bgcolor=`"#FAFAFA`",
+        pad=0.3,
+        nodesep=0.6,
+        ranksep=1.0,
+        splines=ortho
+    ];
+
+    node [
+        shape=box,
+        style=`"rounded,filled`",
+        fontname=`"Arial`",
+        fontsize=18,
+        fontcolor=`"#1A1A1A`",
+        color=`"#444444`",
+        penwidth=1.2
+    ];
+
+    edge [
+        fontname=`"Arial`",
+        fontsize=18,
+        fontcolor=`"#1A1A1A`",
+        color=`"#777777`",
+        penwidth=1.0,
+        arrowsize=0.6
+    ];
+
     
     # Ability for peerings arrows/connections to end at border
     compound = true;
@@ -480,6 +577,7 @@ function Export-dotFooterRanking {
     subgraph rank9 {
         rank = same;
         rank9;
+        $($script:rankEntraDomains -join '; ')
         $($script:rankADO -join '; ')
         $($script:rankLicense -join '; ')
     }
@@ -530,16 +628,15 @@ function Export-dotFooter {
     rank9 [style = invis;];
 
     subgraph clusterLegend {
-                    style = solid;
-                    margin = 0;
-                    colorscheme = rdpu7;
-                    bgcolor = 1;
-                    node [colorscheme = rdpu7;color = 1; margin = 0; ];
+                    style = `"rounded,filled`";
+                    color = `"$($basecolor_legend_general_cluster)`";
+                    margin = 12;
+                    node [color = `"$($basecolor_legend_general_fill)`"; margin = 1;];
                     labelloc=b;
                     label = `"Tenant:\n$tenantDisplayName\n\nCreated on $date by:\nAzNetworkDiagram $ver`";
                     URL = `"https://github.com/dan-madsen/AzNetworkDiagram`"
 
-                    l1 [color = 1; label = < <TABLE border=`"0`" style=`"rounded`">
+                    l1 [color = `"$($basecolor_legend_general_cluster)`"; label = < <TABLE border=`"0`" style=`"rounded,filled`">
                                              <TR><TD colspan=`"2`" border=`"0`"><FONT POINT-SIZE=`"25`"><B>Legend</B></FONT></TD></TR>
 "
 
@@ -774,11 +871,10 @@ function Export-ApplicationGateway {
         $data = "
         # $Name - $agwid
         subgraph cluster_$agwid {
-            style = solid;
-            colorscheme = gnbu9;
-            bgcolor = 5;
-            margin = 0;
-            node [colorscheme = gnbu9; margin = 0;];
+            style = `"rounded,filled`";
+            color = `"$($basecolor_network_traffic_fill)`";
+            margin = 12;
+            node [color = `"$($basecolor_network_traffic_level1)`"; margin = 0;];
         "
 
         $skuname = $agw.Sku.Name
@@ -807,7 +903,7 @@ function Export-ApplicationGateway {
             $feports = "None"
         }
         $ImagePath = Join-Path $OutputPath "icons" "agw.png"
-        $data += "        $agwid [label = `"\nLocation: $Location\nPolicy name: $polname\nSKU: $skuname\nZones: $zones\nSSL Certificates: $sslcerts\nFrontend ports: $feports\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $agw)];"
+        $data += "        $agwid [label = `"\nLocation: $Location\nPolicy name: $polname\nSKU: $skuname\nZones: $zones\nSSL Certificates: $sslcerts\nFrontend ports: $feports\n`" ; color=`"$($basecolor_network_traffic_level1)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $agw)];"
         $data += "`n"
         $data += "        $agwid -> $agwSubnetId;`n"
 
@@ -820,14 +916,14 @@ function Export-ApplicationGateway {
                     if ($ipconfig.PublicIPAddress.Id) {
                         $pip = Get-AzPublicIpAddress -ResourceGroupName $agw.ResourceGroupName -Name $ipconfig.PublicIPAddress.Id.split("/")[-1] -ErrorAction SilentlyContinue
                         $pubip = $(SanitizeString $pip.IPAddress) + " (Public)"
-                        $data += "        $feid [label = `"Frontend IP Config name:\n$FEname\n\nIP: $pubip`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n"
+                        $data += "        $feid [label = `"Frontend IP Config name:\n$FEname\n\nIP: $pubip`" ; color=`"$($basecolor_network_traffic_level2)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n"
                         $data += "        $agwid -> $feid;`n"
         
                     }
                 }
                 elseif ($ipconfig.PrivateIPAllocationMethod -eq "Static") {
                     $privip = $(SanitizeString $ipconfig.PrivateIPAddress) + " (Private)"
-                    $data += "        $feid [label = `"Frontend IP Config name:\n$FEname\n\nIP: $privip`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n"
+                    $data += "        $feid [label = `"Frontend IP Config name:\n$FEname\n\nIP: $privip`" ; color=`"$($basecolor_network_traffic_level2)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n"
                     $data += "        $agwid -> $feid;`n"
                 }
             }
@@ -847,7 +943,7 @@ function Export-ApplicationGateway {
                 $FEport = ($listener.FrontendPortText | ConvertFrom-Json).id.split("/")[10].replace("port_","")
 
                 #DOT
-                $data += "        $listenerid [label = `"Listener name:$ListenerName\nHostname: $Hostname\nPort: $Protocol/$FEport`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n"
+                $data += "        $listenerid [label = `"Listener name:$ListenerName\nHostname: $Hostname\nPort: $Protocol/$FEport`" ; color=`"$($basecolor_network_traffic_level3)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n"
                 $data += "        $feid -> $listenerid;`n"
             }
         }
@@ -918,7 +1014,7 @@ function Export-ApplicationGateway {
                 }
 
                 #DOT
-                $data += "        $poolid [label = `"\nBackend pool name: $poolName\n\n$IPInfo\n$FQDNInfo`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n"
+                $data += "        $poolid [label = `"\nBackend pool name: $poolName\n\n$IPInfo\n$FQDNInfo`" ; color=`"$($basecolor_network_traffic_level4)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;];`n"
                 
                 # IP Configurations
                 # VMs enabled at runtime?
@@ -1027,11 +1123,12 @@ function Export-NSG {
         $data = "
         # $($nsg.Name) - $id
         subgraph cluster_$id {
-            style = solid;
-            bgcolor = 8;
-            node [colorscheme = rdylgn11; style = filled;];
+            style = `"rounded,filled`";
+            color = `"$($basecolor_network_policy_fill)`";
+            margin = 12;
+            node [color = `"$($basecolor_network_policy_fill)`"; margin = 0;];
 
-            $id [label = `"\n$Name\nLocation: $Location`" ; fillcolor = 8;image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $nsg)];
+            $id [label = `"\n$Name\nLocation: $Location`" ; color=`"$($basecolor_network_policy_fill)`"; margin=0.2;  image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $nsg)];
             label = `"$Name`";
         }
         "
@@ -1231,15 +1328,15 @@ function Export-VMSS {
         $data = "
         # $Name - $vmssid
         subgraph cluster_$vmssid {
-            style = solid;
-            colorscheme = blues9;
-            bgcolor = 2;
-            node [colorscheme = blues9; color = 2;];
+            style = `"rounded,filled`";
+            color = `"$($basecolor_compute_iaas_cluster)`";
+            margin = 12;
+            node [color = `"$($basecolor_compute_iaas_fill)`"; margin = 0;];
         "
         $extensions = $vmss.VirtualMachineProfile.ExtensionProfile.Extensions | ForEach-Object { $_.Name } | Join-String -Separator "\n"
         if ( $extensions -eq "" ) { $extensions = "None" }
         $ImagePath = Join-Path $OutputPath "icons" "vmss.png"
-        $data += "        $vmssid [label = `"\nLocation: $Location\nSKU: $($vmss.Sku.Name)\nCapacity: $($vmss.Sku.Capacity)\nZones: $($vmss.Zones)\nOS Type: $($vmss.VirtualMachineProfile.StorageProfile.OsDisk.OsType)\nOrchestration Mode: $($vmss.OrchestrationMode)\nUpgrade Policy: $($vmss.UpgradePolicy.Mode)\n\nExtensions:\n$extensions`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $vmss)];"
+        $data += "        $vmssid [label = `"\nLocation: $Location\nSKU: $($vmss.Sku.Name)\nCapacity: $($vmss.Sku.Capacity)\nZones: $($vmss.Zones)\nOS Type: $($vmss.VirtualMachineProfile.StorageProfile.OsDisk.OsType)\nOrchestration Mode: $($vmss.OrchestrationMode)\nUpgrade Policy: $($vmss.UpgradePolicy.Mode)\n\nExtensions:\n$extensions`" ; color=`"$($basecolor_compute_iaas_fill)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $vmss)];"
         $data += "`n"
 
         # SSHKeys enabled at runtime?
@@ -1338,10 +1435,10 @@ function Export-VM {
         $data = "
         # $Name - $vmid
         subgraph cluster_$vmid {
-            style = solid;
-            colorscheme = blues9;
-            bgcolor = 3;
-            node [colorscheme = blues9; ];
+            style = `"rounded,filled`";
+            color = `"$($basecolor_compute_iaas_cluster)`";
+            margin = 12;
+            node [color = `"$($basecolor_compute_iaas_fill)`"; margin = 0;];
         "
         $extensions = $vm.Extensions | ForEach-Object { $_.Id.split("/")[-1] } | Join-String -Separator "\n"
         if ( $extensions -eq "" ) { $extensions = "None" }
@@ -1357,7 +1454,7 @@ function Export-VM {
         if ( $vmIsSQLVM ) { $ImagePath = Join-Path $OutputPath "icons" "vm-sql.png" }
         else { $ImagePath = Join-Path $OutputPath "icons" "vm.png" }
 
-        $data += "    $vmid [label = `"\nLocation: $Location\nSKU: $($vm.HardwareProfile.VmSize)\nZones: $zones\nOS Type: $($vm.StorageProfile.OsDisk.OsType)\n\nExtensions:\n$extensions`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $vm)];"
+        $data += "    $vmid [label = `"\nLocation: $Location\nSKU: $($vm.HardwareProfile.VmSize)\nZones: $zones\nOS Type: $($vm.StorageProfile.OsDisk.OsType)\n\nExtensions:\n$extensions`" ; color=`"$($basecolor_compute_iaas_fill)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $vm)];"
         $data += "`n"
 
         # NIC loop for private + public IPs
@@ -1394,7 +1491,7 @@ function Export-VM {
 
             #NIC DOT
             $ImagePath = Join-Path $OutputPath "icons" "nic.png"
-            $data += "            $NICid [label = `"\nName: $NICname\nPrivate IP(s): $($PrivateIpAddresses -Join ", ")\nPublic IP(s): $($PublicIpAddresses -Join ", ")\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $NIC)];`n"
+            $data += "            $NICid [label = `"\nName: $NICname\nPrivate IP(s): $($PrivateIpAddresses -Join ", ")\nPublic IP(s): $($PublicIpAddresses -Join ", ")\n`" ; color=`"$($basecolor_compute_iaas_fill)`"; margin=0.2;  image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $NIC)];`n"
             $data += "            $VMid -> $NICid [constraint=false;];`n"
             $data += "            $NICid -> $subnetid [constraint=false;];`n"
         }
@@ -3492,7 +3589,7 @@ function Export-VirtualGateway {
         
         }
         $ImagePath = Join-Path $OutputPath "icons" "vgw.png"
-        $data += "            $GatewayId [fillcolor = 7;label = `"\n\nName: $(SanitizeString $GatewayName)\nSKU: $gwsku\n\nPublic IP(s):\n$gwips`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $gw)];"
+        $data += "            $GatewayId [label = `"\n\nName: $(SanitizeString $GatewayName)\nSKU: $gwsku\n\nPublic IP(s):\n$gwips`"; color=`"$($basecolor_network_security_fill)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $gw)];"
 
         # Get P2S conf, if configured
         $protocol = $gw.VpnClientConfiguration.VpnClientProtocols
@@ -3505,14 +3602,14 @@ function Export-VirtualGateway {
             $script:rankvngwcon += "${GatewayId}P2S"
             #P2S config present
             $ImagePath = Join-Path $OutputPath "icons" "VPN-User.png"
-            $data += "            ${GatewayId}P2S [fillcolor = 8;label = `"\n\nProtocol: $protocol, Auth: $auth\nP2S Address Prefix: $(SanitizeString $cidr)\nCustom routes: $(($customroutes | ForEach-Object {SanitizeString $_}) -join "\n")`"; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5;]; "
+            $data += "            ${GatewayId}P2S [label = `"\n\nProtocol: $protocol, Auth: $auth\nP2S Address Prefix: $(SanitizeString $cidr)\nCustom routes: $(($customroutes | ForEach-Object {SanitizeString $_}) -join "\n")`"; color=`"$($basecolor_network_security_fill)`"; margin=0.2; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5;]; "
             $data += "            $GatewayId -> ${GatewayId}P2S"
         } 
     }
     elseif ($gwtype -eq "ExpressRoute") {
         $Script:Legend += ,@("ER Gateway", "ergw.png")
         $ImagePath = Join-Path $OutputPath "icons" "ergw.png"
-        $data += "        $GatewayId [fillcolor = 3; label = `"\nName: $(SanitizeString $GatewayName)\nSKU: $gwsku`"; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5;$(Generate-DotURL -resource $gw)]; "
+        $data += "        $GatewayId [label = `"\nName: $(SanitizeString $GatewayName)\nSKU: $gwsku`"; color=`"$($basecolor_network_security_fill)`"; margin=0.2; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5;$(Generate-DotURL -resource $gw)]; "
     }
     $data += "`n"
     $data += "            $HeadId -> $GatewayId"
@@ -3599,7 +3696,7 @@ function Export-SubnetConfig {
                         $AzFWid = $subnet.IpConfigurations.Id.ToLower().split("/azurefirewallipconfigurations/")[0]
                         $AzFWrg = $subnet.IpConfigurations.id.split("/")[4]
 
-                        $data += "            $id [label = `"\n\n$name\n$AddressPrefix`" ; fillcolor = 9; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; " 
+                        $data += "            $id [label = `"\n\n$name\n$AddressPrefix`" ; color=`"$($basecolor_network_subnet_fill)`"; margin=0.2; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; " 
 
                         $data += Export-AzureFirewall -FirewallId $AzFWid -ResourceGroupName $AzFWrg
                         $AzFWDotId = $AzFWid.replace("-", "").replace("/", "").replace(".", "").ToLower()
@@ -3608,7 +3705,7 @@ function Export-SubnetConfig {
                     }
                     else {
                         # No firewall deployed
-                        $data += "            $id [label = `"\n\n$name\n$AddressPrefix\nName: Firewall not deployed`" ; fillcolor = 9; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; "
+                        $data += "            $id [label = `"\n\n$name\n$AddressPrefix\nName: Firewall not deployed`" ; color=`"$($basecolor_network_subnet_fill)`"; margin=0.2; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; "
                     }
                 }
                 "AzureBastionSubnet" { 
@@ -3627,7 +3724,7 @@ function Export-SubnetConfig {
                     $ImagePath = Join-Path $OutputPath "icons" "bas.png"
                     $Script:Legend += ,@("Azure Bastion", "bas.png")
                     
-                    $data += "            $id [label = `"\n\n$name\n$AddressPrefix\nName: $AzBastionName`\nSKU: $AzBastionSKU`" ; fillcolor = 6; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5;$AzBastionLink]; " 
+                    $data += "            $id [label = `"\n\n$name\n$AddressPrefix\nName: $AzBastionName`\nSKU: $AzBastionSKU`" ; color=`"$($basecolor_network_subnet_fill)`"; margin=0.2; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5;$AzBastionLink]; " 
                 }
                 "AppGatewaySubnet" { 
                     if ( $null -ne $subnet.IpConfigurations.Id ) { 
@@ -3637,13 +3734,13 @@ function Export-SubnetConfig {
                         $ImagePath = Join-Path $OutputPath "icons" "agw.png"
                         $Script:Legend += ,@("Application Gateway", "agw.png")
                     
-                        $data += "            $id [label = `"\n\n$name\n$AddressPrefix\nName: $AppGatewayName`" ; fillcolor = 5; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; " 
+                        $data += "            $id [label = `"\n\n$name\n$AddressPrefix\nName: $AppGatewayName`" ; color=`"$($basecolor_network_subnet_fill)`"; margin=0.2; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; " 
                     }
                 }
                 "GatewaySubnet" { 
                     $ImagePath = Join-Path $OutputPath "icons" "vgw.png"
                     $Script:Legend += ,@("Virtual Network Gateway", "vgw.png")
-                    $data += "            $id [label = `"\n\n$name\n$AddressPrefix`"; fillcolor = 4; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; " 
+                    $data += "            $id [label = `"\n\n$name\n$AddressPrefix`"; color=`"$($basecolor_network_subnet_fill)`"; margin=0.2; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; " 
                     $data += "`n"
                     
                     #GW DOT
@@ -3659,7 +3756,7 @@ function Export-SubnetConfig {
                 "RouteServerSubnet" { 
                     $ImagePath = Join-Path $OutputPath "icons" "rtserv.png"
                     $Script:Legend += ,@("Route Server", "rtserv.png")
-                    $data += "            $id [label = `"\n\n$name\n$AddressPrefix`"; fillcolor = 4; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ];" 
+                    $data += "            $id [label = `"\n\n$name\n$AddressPrefix`"; color=`"$($basecolor_network_subnet_fill)`"; margin=0.2; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ];" 
                     $data += "`n"
                     
                     #Route server DOT
@@ -3692,7 +3789,7 @@ function Export-SubnetConfig {
                                 if ( "" -eq $rtservpeersstring ) { $rtservpeersstring = "No peers configured" }
                                 
                                 #RTSERV DOT
-                                $data += "            $rtservid [label = `"\n\nName: $rtservname\nASN: $ASN\nIPs: $rtservips\nBranchToBranch: $BranchToBranch\n\nPeers:\n$rtservpeersstring`"; fillcolor = 4; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5;$(Generate-DotURL -resource $rtserv)];`n" 
+                                $data += "            $rtservid [label = `"\n\nName: $rtservname\nASN: $ASN\nIPs: $rtservips\nBranchToBranch: $BranchToBranch\n\nPeers:\n$rtservpeersstring`"; color=`"$($basecolor_network_subnet_fill)`"; margin=0.2; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5;$(Generate-DotURL -resource $rtserv)];`n" 
                                 $data += "            $id -> $rtservid"
                                 
                             } else {
@@ -3718,14 +3815,14 @@ function Export-SubnetConfig {
                         }
                         
                         $ImagePath = Join-Path $OutputPath "icons" "$iconname.png"
-                        $data = $data + "            $id [label = `"\n\n$(SanitizeString $name)\n$AddressPrefix\n\nDelegated to:\n$subnetDelegationName`" ; fillcolor = 3; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; " 
+                        $data = $data + "            $id [label = `"\n\n$(SanitizeString $name)\n$AddressPrefix\n\nDelegated to:\n$subnetDelegationName`" ; fillcolor=`"$($basecolor_network_subnet_fill)`"; margin=0.2; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; " 
                     }
                     else {
                         # No Delegation
                         if ( "AzureFirewallManagementSubnet" -eq $name ) { $ImagePath = Join-Path $OutputPath "icons" "afw.png" }
                         else { $ImagePath = Join-Path $OutputPath "icons" "snet.png" }
 
-                        $data = $data + "            $id [label = `"\n\n$(SanitizeString $name)\n$AddressPrefix`" ; fillcolor = 9; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; " 
+                        $data = $data + "            $id [label = `"\n\n$(SanitizeString $name)\n$AddressPrefix`" ; fillcolor=`"$($basecolor_network_subnet_fill)`"; margin=0.2; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5; ]; " 
                     }
                     $data += "`n"
                     # Private Endpoints enabled at runtime?
@@ -3778,7 +3875,7 @@ function Export-SubnetConfig {
                 if ( $ipprefixesstring -eq "" ) { $ipprefixesstring = "None" }
                 
                 $ImagePath = Join-Path $OutputPath "icons" "ng.png" 
-                $data += "            $NATGWID [fillcolor = 9; label = `"\n\nName: $(SanitizeString $name)\n\nPublic IP(s):\n$ipsstring\nPublic IP Prefix(es):\n$ipprefixesstring`"; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5;$(Generate-DotURL -resource $NATGWobject)]; `n"
+                $data += "            $NATGWID [label = `"\n\nName: $(SanitizeString $name)\n\nPublic IP(s):\n$ipsstring\nPublic IP Prefix(es):\n$ipprefixesstring`"; color=`"$($basecolor_network_subnet_fill)`"; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5;$(Generate-DotURL -resource $NATGWobject)]; `n"
                 $data += "            $id -> $NATGWID" + "`n"
 
             }
@@ -3823,10 +3920,10 @@ function Export-vnet {
         $header = "
         # $vnetname - $id
         subgraph cluster_$id {
-            style = solid;
-            colorscheme = pastel19 ;
-            bgcolor = 3;
-            node [colorscheme = rdylgn11 ; style = filled;];
+            style = `"rounded,filled`";
+            color = `"$($basecolor_network_core_cluster)`";
+            margin = 12;
+            node [color = `"$($basecolor_network_core_fill)`"; margin = 0;];
         "
 
         # Convert addressSpace prefixes from array to string
@@ -3835,7 +3932,7 @@ function Export-vnet {
             $vnetAddressSpacesString += $(SanitizeString $_) + "\n"
         }
         $ImagePath = Join-Path $OutputPath "icons" "vnet.png"
-        $vnetdata = "    $id [fillcolor = 10; fontcolor = white; label = `"\nLocation: $Location\nDNS Server(s): $vnetDNSServers\n\nAddress Space(s):\n$vnetAddressSpacesString`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $vnet)];`n"
+        $vnetdata = "    $id [label = `"\n\nLocation: $Location\nDNS Server(s): $vnetDNSServers\n\nAddress Space(s):\n$vnetAddressSpacesString`"; color=`"$($basecolor_network_core_fill)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $vnet)];`n"
 
         # Subnets
         if ($vnet.Subnets) {
@@ -3855,10 +3952,10 @@ function Export-vnet {
                 $script:rankdnspr += "$($pdnsrId)instance"
 
                 $dnsprdata += "`n        subgraph cluster_$pdnsrId {
-            style = solid;
-            colorscheme = pastel19;
-            bgcolor = 2;
-            node [colorscheme = rdylgn11 ; shape = box ; style = filled;];`n"
+            style = `"rounded,filled`";
+            color = `"$($basecolor_network_subnet_cluster)`";
+            margin = 12;
+            node [color = `"$($basecolor_network_subnet_fill)`"; margin = 0;];`n"
 
 
                 $Location = SanitizeLocation $resolver.Location
@@ -3881,7 +3978,7 @@ function Export-vnet {
 
                 #DOT DNSPR instance
                 $ImagePath = Join-Path $OutputPath "icons" "dnspr.png"
-                $dnsprdata += "             $($pdnsrId)instance [label = `"\n\nName: $(SanitizeString $resolverName)\nLocation: $location\n\nIP address(es):\n $inboundEpIps`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $resolver)];`n"
+                $dnsprdata += "             $($pdnsrId)instance [label = `"\n\nName: $(SanitizeString $resolverName)\nLocation: $location\n\nIP address(es):\n $inboundEpIps`"; color=`"$($basecolor_network_core_fill)`"; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $resolver)];`n"
                 
 
                     #if ( "N/A" -ne $outboundEpSubnetId ) { $dnsprdata += "$pdnsrId -> $outboundEpSubnetId [label = `"vNet integration (outbound)`"; ]" }
@@ -4217,11 +4314,10 @@ function Export-RouteTable {
 
         $header = "
         subgraph cluster_$id {
-            style = solid;
-            colorscheme = purples9;
-            bgcolor = 5;
-            margin = 0;
-            node [colorscheme = purples9; shape = box; color = 5; margin = 0;];
+            style = `"rounded,filled`";
+            color = `"$($basecolor_network_policy_fill)`";
+            margin = 12;
+            node [color = `"$($basecolor_network_policy_fill)`"; margin = 0;];
             
             $id [label = <
                 <TABLE border=`"0`" style=`"rounded`">
@@ -4486,7 +4582,7 @@ function Export-PrivateEndpoint {
         }
 
         $ImagePath = Join-Path $OutputPath "icons" "private-endpoint.png"
-        $data = "`n                     $peid [colorscheme = rdylgn11; color = 1; fontcolor = white; label = `"\n$pedetails`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $pe)];" 
+        $data = "`n                     $peid [label = `"\n$pedetails`" ; color=`"$($basecolor_network_security_fill)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $pe)];" 
         Export-AddToFile -Data $data
     }
     catch {
@@ -5342,15 +5438,15 @@ function Export-LB
         $header = "
         # $($name) - $LBid
         subgraph cluster_$LBid {
-            style = solid;
-            colorscheme = blues9 ;
-            bgcolor = 2;
-            node [colorscheme = blues9 ; style = filled;];
+            style = `"rounded,filled`";
+            color = `"$($basecolor_network_traffic_fill)`";
+            margin = 12;
+            node [color = `"$($basecolor_network_traffic_level1)`"; margin = 0;];
         "
 
         #LB DOT
         $ImagePath = Join-Path $OutputPath "icons" "lb.png"
-        $LBdata += "            $lbid [fillcolor = 3; label=`"\nName: $name\nLocation: $location\n\nSKU: $SKU\nType: $Type`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $LB)]`n"
+        $LBdata += "            $lbid [label=`"\nName: $name\nLocation: $location\n\nSKU: $SKU\nType: $Type`"; color=`"$($basecolor_network_traffic_level1)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $LB)]`n"
 
         #Front End IPs
         $FrontEndIPs = $LB.FrontendIPConfigurations
@@ -5385,7 +5481,7 @@ function Export-LB
                 }
 
                 #LB-FE DOT
-                $LBdata += "            $FEid [fillcolor = 3; label=`"Frontend IP Configuration name:\n$($FEName)$($FEZonesString)\n\nIP(s): $FEIP`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
+                $LBdata += "            $FEid [label=`"Frontend IP Configuration name:\n$($FEName)$($FEZonesString)\n\nIP(s): $FEIP`"; color=`"$($basecolor_network_traffic_level2)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
                 $LBdata += "            $LBid -> $FEid`n"
                 if ( $null -ne $FESubnetRefARMID ) {
                     $FESubnetRef = $FESubnetRefARMID.replace("-", "").replace("/", "").replace(".", "").ToLower()
@@ -5412,7 +5508,7 @@ function Export-LB
                 $LoadDistribution = $LBR.LoadDistribution
                 
                 #LB-LBR DOT
-                $LBdata += "            $LBRid [fillcolor = 3; label=`"\nLoad Balancing Rule name:\n$LBRName\nFloating IP: $FloatingIP\nLoad distribution/Session persistence: $LoadDistribution\n\nFrontend port: $FEPort\nBackend port: $BEPort`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
+                $LBdata += "            $LBRid [label=`"\nLoad Balancing Rule name:\n$LBRName\nFloating IP: $FloatingIP\nLoad distribution/Session persistence: $LoadDistribution\n\nFrontend port: $FEPort\nBackend port: $BEPort`"; color=`"$($basecolor_network_traffic_level3)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
                 $LBdata += "            $FEid -> $LBRid`n"
                 $LBdata += "            $LBRid -> $BEAddressPools`n"
             }
@@ -5442,7 +5538,7 @@ function Export-LB
                 }
                 
                 #LB-BE DOT
-                $LBdata += "            $BEid [fillcolor = 3; label=`"\nBackend Pool name:\n$BEName\n\n$IPString`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
+                $LBdata += "            $BEid [label=`"Backend Pool name:\n$BEName\n\n$IPString`"; color=`"$($basecolor_network_traffic_level4)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
 
                 # VMs enabled at runtime ?
                 if ( $EnableVM -OR (-not $SkipNonCoreNetwork -AND -not $SkipVM ) ) {
@@ -5525,15 +5621,15 @@ function Export-TrafficManagerProfile
         $header = "
         # $($name) - $TRAFid
         subgraph cluster_$TRAFid {
-            style = solid;
-            colorscheme = blues9 ;
-            bgcolor = 2;
-            node [colorscheme = blues9 ; style = filled;];
+            style = `"rounded,filled`";
+            color = `"$($basecolor_network_traffic_fill)`";
+            margin = 12;
+            node [color = `"$($basecolor_network_traffic_level1)`"; margin = 0;];
         "
 
         #TRAF DOT
         $ImagePath = Join-Path $OutputPath "icons" "trafficmanagerprofile.png"
-        $TRAFdata += "            $TRAFid [fillcolor = 3; label=`"\nDNS name: $DNSName\nLocation: $location\n\nRouting Method: $RoutingMethod\nMonitor via: $($MonitorProtocol):$($MonitorPort)\nInterval: $MonitorInterval\nMonitor timeout: $MonitorTimeout`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $TRAF)]`n"
+        $TRAFdata += "            $TRAFid [label=`"\nDNS name: $DNSName\nLocation: $location\n\nRouting Method: $RoutingMethod\nMonitor via: $($MonitorProtocol):$($MonitorPort)\nInterval: $MonitorInterval\nMonitor timeout: $MonitorTimeout`"; color=`"$($basecolor_network_traffic_level1)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $TRAF)]`n"
 
         # ENDPOINTS
         ## Type External
@@ -5556,7 +5652,7 @@ function Export-TrafficManagerProfile
                         $Location = SanitizeLocation $Endpoint.location
                         $AlwaysServe = $Endpoint.AlwaysServe
                         #DOT
-                        $TRAFdata += "            $endpointID [fillcolor = 3; label=`"\Endpoint type: $Type\nTarget: $Target\nLocation: $Location\n\nAlways Serve: $AlwaysServe\nStatus: $Status`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
+                        $TRAFdata += "            $endpointID [label=`"\Endpoint type: $Type\nTarget: $Target\nLocation: $Location\n\nAlways Serve: $AlwaysServe\nStatus: $Status`"; color=`"$($basecolor_network_traffic_level2)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
                         $TRAFdata += "            $TRAFid -> $endpointID`n"
                     }
                     "azureEndpoints" {
@@ -5569,7 +5665,7 @@ function Export-TrafficManagerProfile
                         $AlwaysServe = $Endpoint.AlwaysServe
 
                         #DOT
-                        $TRAFdata += "            $endpointID [fillcolor = 3; label=`"\nName: $Name\nEndpoint type: $Type\nTarget: $Target\nLocation: $Location\n\nAlways Serve: $AlwaysServe\nStatus: $Status`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
+                        $TRAFdata += "            $endpointID [label=`"\nName: $Name\nEndpoint type: $Type\nTarget: $Target\nLocation: $Location\n\nAlways Serve: $AlwaysServe\nStatus: $Status`"; color=`"$($basecolor_network_traffic_level2)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
                         $TRAFdata += "            $TRAFid -> $endpointID`n"
 
                         # Link to resource, if enabled
@@ -5593,7 +5689,7 @@ function Export-TrafficManagerProfile
                         $AlwaysServe = $Endpoint.AlwaysServe
 
                         #DOT
-                        $TRAFdata += "            $endpointID [fillcolor = 3; label=`"\nName: $Name\nEndpoint type: $Type\nTarget: $Target\nLocation: $Location\n\nAlways Serve: $AlwaysServe\nStatus: $Status`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
+                        $TRAFdata += "            $endpointID [label=`"\nName: $Name\nEndpoint type: $Type\nTarget: $Target\nLocation: $Location\n\nAlways Serve: $AlwaysServe\nStatus: $Status`"; color=`"$($basecolor_network_traffic_level2)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
                         $TRAFdata += "            $TRAFid -> $endpointID`n"
                         $TagetResourceID = $TagetResourceARMID.replace("-", "").replace("/", "").replace(".", "").ToLower()
                         $TRAFdata += "            $endpointID -> $TagetResourceID [constraint=false]`n"
@@ -5660,15 +5756,15 @@ function Export-AFD
         $header = "
         # $($name) - $AFDid
         subgraph cluster_$AFDid {
-            style = solid;
-            colorscheme = blues9 ;
-            bgcolor = 2;
-            node [colorscheme = blues9 ; style = filled;];
+            style = `"rounded,filled`";
+            color = `"$($basecolor_network_traffic_fill)`";
+            margin = 12;
+            node [color = `"$($basecolor_network_traffic_level1)`"; margin = 0;];
         "
 
         # AFD DOT
         $ImagePath = Join-Path $OutputPath "icons" "AFD.png"
-        $AFDdata += "            $AFDid [fillcolor = 3; label=`"\nLocation: $location\nSKU: $SKU\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $AFD)]`n"
+        $AFDdata += "            $AFDid [label=`"\nLocation: $location\nSKU: $SKU\n\n`"; color=`"$($basecolor_network_traffic_level1)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $AFD)]`n"
         #REMOVED: Custom domain(s) available:\n$customDomains\n
 
         # Origin Groups
@@ -5684,7 +5780,7 @@ function Export-AFD
                 $healthProbePath = SanitizeString $OriginGroup.HealthProbeSetting.ProbePath
 
                 #DOT
-                $AFDdata += "            $OriginGroupId [fillcolor = 3; label=`"\nOrigin group name: $OriginGroupName\n\nHealth Probe Settings\nProtocol: $healthProbeProtocol\nInterval: $healthProbeInterval\nPath: $healthProbePath\nRequest type: $healthProbeRequestType`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
+                $AFDdata += "            $OriginGroupId [label=`"\nOrigin group name: $OriginGroupName\n\nHealth Probe Settings\nProtocol: $healthProbeProtocol\nInterval: $healthProbeInterval\nPath: $healthProbePath\nRequest type: $healthProbeRequestType`"; color=`"$($basecolor_network_traffic_level3)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
                 
                 # Origins
                 $Origins = Get-AzFrontDoorCdnOrigin -ResourceGroupName $AFD.ResourceGroupName -ProfileName $AFD.Name -OriginGroupName $OriginGroup.Name
@@ -5698,7 +5794,7 @@ function Export-AFD
                         $httpsPort = $Origin.HttpsPort
                         $enforceCertCheck = $Origin.EnforceCertificateNameCheck
                         
-                        $AFDdata += "            $OriginID [fillcolor = 3; label=`"\nOrigin name: $OriginName\n\nOrigin host name:\n$OriginHostName\n\nHTTP port: $httpPort\nHTTPS port: $httpsPort\nEnforce certificate check: $enforceCertCheck`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
+                        $AFDdata += "            $OriginID [label=`"\nOrigin name: $OriginName\n\nOrigin host name:\n$OriginHostName\n\nHTTP port: $httpPort\nHTTPS port: $httpsPort\nEnforce certificate check: $enforceCertCheck`"; color=`"$($basecolor_network_traffic_level4)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
                         $AFDdata += "            $OriginGroupId -> $OriginID"
                 
                     }
@@ -5716,7 +5812,7 @@ function Export-AFD
                 $hostname = SanitizeString $endpoint.HostName
 
                 # DOT
-                $AFDdata += "            $endpointid [fillcolor = 3; label=`"\nEndpoint name: $name\n\nHostname (CNAME reference):\n$hostname\n\n`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
+                $AFDdata += "            $endpointid [label=`"\nEndpoint name: $name\n\nHostname (CNAME reference):\n$hostname\n\n`"; color=`"$($basecolor_network_traffic_level1)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
                 $AFDdata += "            $AFDid -> $endpointid"
 
                 # Routes (from endpoint to origin)
@@ -5746,7 +5842,7 @@ function Export-AFD
                         $supportedProtocols = $route.SupportedProtocol
 
                         # DOT
-                        $AFDdata += "            $routeid [fillcolor = 3; label=`"\nRoute name: $name\n\nCustom domain(s):\n$customDomainsString\n\nForwarding protocol: $forwardingProtocol\nHTTPS redirect: $httpsRedirect\nSupported protocol(s): $supportedProtocols `";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
+                        $AFDdata += "            $routeid [label=`"\nRoute name: $name\n\nCustom domain(s):\n$customDomainsString\n\nForwarding protocol: $forwardingProtocol\nHTTPS redirect: $httpsRedirect\nSupported protocol(s): $supportedProtocols `"; color=`"$($basecolor_network_traffic_level2)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;]`n"
                         #Endpoint name: $endpointName
                         $AFDdata += "            $endpointid -> $routeid" 
 
@@ -5898,10 +5994,10 @@ function Export-MgmtGroups
         $header = "
     # Management Group overview
     subgraph cluster_mgmtgroups {
-        style = solid;
-        colorscheme = blues9 ;
-        bgcolor = 2;
-        node [colorscheme = blues9 ; style = filled;];
+            style = `"rounded,filled`";
+            color = `"$($basecolor_management_general_cluster)`";
+            margin = 12;
+            node [color = `"$($basecolor_management_general_fill)`"; margin = 0;];
     "
 
         $MgmtGroupsEntityObjects = Get-AzManagementGroupEntity -ErrorAction Stop 
@@ -6281,11 +6377,10 @@ function Export-IPPlan {
         ### Address Spaces
         $header = "
         subgraph cluster_IPPlan_AddressSpaces {
-            style = solid;
-            colorscheme = purples9;
-            bgcolor = 5;
-            margin = 0;
-            node [colorscheme = purples9; shape = box; color = 5; margin = 0;];
+            style = `"rounded,filled`";
+            color = `"$($basecolor_management_general_cluster)`";
+            margin = 12;
+            node [color = `"$($basecolor_management_general_cluster)`"; margin = 0;];
             
             IPPlanAddressSpaces [label = <
                 <TABLE border=`"0`" style=`"rounded`">
@@ -6321,11 +6416,10 @@ function Export-IPPlan {
         ### Subnets
         $header = "
         subgraph cluster_IPPlan_Subnets {
-            style = solid;
-            colorscheme = purples9;
-            bgcolor = 5;
-            margin = 0;
-            node [colorscheme = purples9; shape = box; color = 5; margin = 0;];
+            style = `"rounded,filled`";
+            color = `"$($basecolor_management_general_cluster)`";
+            margin = 12;
+            node [color = `"$($basecolor_management_general_cluster)`"; margin = 0;];
             
             IPPlanSubnets [label = <
                 <TABLE border=`"1`" style=`"rounded`">
@@ -6362,11 +6456,10 @@ function Export-IPPlan {
         ### IPPREs
         $header = "
         subgraph cluster_IPPlan_IPPRE {
-            style = solid;
-            colorscheme = purples9;
-            bgcolor = 5;
-            margin = 0;
-            node [colorscheme = purples9; shape = box; color = 5; margin = 0;];
+            style = `"rounded,filled`";
+            color = `"$($basecolor_management_general_cluster)`";
+            margin = 12;
+            node [color = `"$($basecolor_management_general_cluster)`"; margin = 0;];
             
             IPPlanIPPRE [label = <
                 <TABLE border=`"0`" style=`"rounded`">
@@ -6402,11 +6495,10 @@ function Export-IPPlan {
         ### PIPs
         $header = "
         subgraph cluster_IPPlan_PIP {
-            style = solid;
-            colorscheme = purples9;
-            bgcolor = 5;
-            margin = 0;
-            node [colorscheme = purples9; shape = box; color = 5; margin = 0;];
+            style = `"rounded,filled`";
+            color = `"$($basecolor_management_general_cluster)`";
+            margin = 12;
+            node [color = `"$($basecolor_management_general_cluster)`"; margin = 0;];
             
             IPPlanPIP [label = <
                 <TABLE border=`"0`" style=`"rounded`">
@@ -6480,7 +6572,7 @@ function Export-MgmtGroupEntityObject
             $name = SanitizeString $MgmtGroup.DisplayName
             $descendants = $MgmtGroupEntityObject.NumberOfDescendants
             
-            $data += "      $id [fillcolor = 4; label = `"\nName: $name\nDescendants: $descendants`";image = `"$ImagePath`";imagepos = `"tc`";height = 2.0;];`n"
+            $data += "      $id [label = `"\n\n\nName:\n$name\n\nDescendants: $descendants`"; color=`"$($basecolor_management_general_fill)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";height = 2.0;];`n"
             
         } 
         elseif ( $MgmtGroupEntityObject.Type -eq "/subscriptions" ) {
@@ -6492,7 +6584,7 @@ function Export-MgmtGroupEntityObject
 
             $Script:Legend += ,@("Subscription","sub.png")
             
-            $data += "      $id [fillcolor = 4; label = `"\nName: $name`";image = `"$ImagePath`";imagepos = `"tc`";height = 2.0;$(Generate-DotURL -resource $sub)];`n"
+            $data += "      $id [label = `"\nName:\n$name`"; color=`"$($basecolor_management_general_cluster)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";height = 2.0;$(Generate-DotURL -resource $sub)];`n"
             
         }    
         $parent = $MgmtGroupEntityObject.parent
@@ -6572,11 +6664,10 @@ function Export-AzureDevOps
                     $orgDOTName = $org.OrganizationName.replace("-", "").replace("/", "").replace(".", "").ToLower()
                     $script:rankADO += "ado_$orgDOTName"
                     $header = "        subgraph cluster_ado {
-                style = solid;
-                colorscheme = blues9;
-                bgcolor = 3;
-                margin = 0;
-                node [colorscheme = blues9; color = 3; margin = 0;];
+                    style = `"rounded,filled`";
+                    color = `"$($basecolor_identity_general_cluster)`";
+                    margin = 12;
+                    node [color = `"$($basecolor_identity_general_fill)`"; margin = 0;];
             "
 
                     $link = ""
@@ -6590,7 +6681,7 @@ function Export-AzureDevOps
                     # ADO Org header/table
                     $data += "  ado_$orgDOTName [label = <
                         <TABLE border=`"0`" style=`"rounded`">
-                        <TR><TD border=`"0`" align=`"left`"><B>Organization Name: $(SanitizeString $org.OrganizationName)</B></TD></TR>
+                        <TR><TD border=`"0`" align=`"left`"><B>Organization Name: $(SanitizeString $org.OrganizationName)                </B></TD></TR>
                         <TR><TD border=`"0`" align=`"left`"><BR/><B>Projects ($($ADOProjects.count)):</B></TD></TR>
                         <HR/>
                     "
@@ -6769,11 +6860,10 @@ function Export-Licenses
             $Script:Legend += ,@("Entra Licenses","licenses.png")
             $script:rankLicense += "licenses"
             $header = "        subgraph cluster_licenses {
-            style = solid;
-            colorscheme = blues9;
-            bgcolor = 3;
-            margin = 0;
-            node [colorscheme = blues9; color = 3; margin = 0;];
+            style = `"rounded,filled`";
+            color = `"$($basecolor_identity_general_cluster)`";
+            margin = 12;
+            node [color = `"$($basecolor_identity_general_fill)`"; margin = 0;];
         "
         
             $link = ""
@@ -6835,6 +6925,7 @@ function Export-EntraDomains
         $data = ""
         
         $Script:Legend += ,@("Entra Domains","entra.png")
+        $script:rankEntraDomains += "EntraDomains"
         
         # Acquire Graph access token (SecureString) and convert to plain text
         $secureToken = (Get-AzAccessToken -ResourceUrl "https://graph.microsoft.com/").Token
@@ -6856,11 +6947,10 @@ function Export-EntraDomains
             #$Script:Legend += ,@("Entra Licenses","licenses.png")
             $script:rankLicense += "licenses"
             $header = "        subgraph cluster_domains {
-            style = solid;
-            colorscheme = blues9;
-            bgcolor = 3;
-            margin = 0;
-            node [colorscheme = blues9; color = 3; margin = 0;];
+            style = `"rounded,filled`";
+            color = `"$($basecolor_identity_general_cluster)`";
+            margin = 12;
+            node [color = `"$($basecolor_identity_general_fill)`"; margin = 0;];
         "
         
             $link = ""
