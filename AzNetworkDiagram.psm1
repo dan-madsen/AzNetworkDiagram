@@ -408,7 +408,7 @@ function Export-dotFooterRanking {
     Export-AddToFile -Data @"
 
     #Rank control
-    rank1 -> rank2 -> rank3 -> rank4 -> rank5 -> rank6 -> rank7 -> rank8 -> rank9 [style = invis; constraint = true;];
+    rank1 -> rank2 -> rank3 -> rank4 -> rank5 -> rank6 -> rank7 -> rank8 [style = invis; constraint = true;];
     rank1 [style = invis;];
     rank2 [style = invis;];
     rank3 [style = invis;];
@@ -417,12 +417,12 @@ function Export-dotFooterRanking {
     rank6 [style = invis;];
     rank7 [style = invis;];
     rank8 [style = invis;];
-    rank9 [style = invis;];
+    # rank9 [style = invis;];
     
     subgraph rank1 {
         rank = same;
         rank1;
-        ### LEGEND / Does not span ranks - has been put in rank 9 - lowest
+        ### LEGEND / Does not span ranks - has been put in rank 8 - lowest
         #l1
         ### VNet
         $($script:rankvnet -join '; ')
@@ -568,14 +568,14 @@ function Export-dotFooterRanking {
         $($script:rankmi -join '; ')
     }
 
+    # subgraph rank8 {
+    #     rank = same;
+    #     rank8;
+    # }
+
     subgraph rank8 {
         rank = same;
         rank8;
-    }
-
-    subgraph rank9 {
-        rank = same;
-        rank9;
         $($script:rankEntraDomains -join '; ')
         $($script:rankADO -join '; ')
         $($script:rankLicense -join '; ')
@@ -615,7 +615,7 @@ function Export-dotFooter {
     
     $data = "
     #Rank control for Legend only - ie. without messing with resources
-    rank1 -> rank2 -> rank3 -> rank4 -> rank5 -> rank6 -> rank7 -> rank8 -> rank9 [style = invis; constraint = true;];
+    rank1 -> rank2 -> rank3 -> rank4 -> rank5 -> rank6 -> rank7 -> rank8 [style = invis; constraint = true;];
     rank1 [style = invis;];
     rank2 [style = invis;];
     rank3 [style = invis;];
@@ -624,7 +624,7 @@ function Export-dotFooter {
     rank6 [style = invis;];
     rank7 [style = invis;];
     rank8 [style = invis;];
-    rank9 [style = invis;];
+    # rank9 [style = invis;];
 
     subgraph clusterLegend {
                     style = `"rounded,filled`";
@@ -651,7 +651,7 @@ function Export-dotFooter {
 
     $data += "                                             </TABLE>>]; 
             }
-            { rank=max; l1; rank9; $logorank }
+            { rank=max; l1; rank8; $logorank }
     }"
     Export-AddToFile -Data $data #EOF
 }
