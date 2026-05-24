@@ -23,13 +23,12 @@ $basecolor_identity_general_fill    = "#c6dbef"
 $basecolor_management_general_cluster = "#F3F2F1"
 $basecolor_management_general_fill    = "#E1DFDD"   # Neutral grey, governance feeling
 
-
 ## NETWORK CORE
 $basecolor_network_core_cluster = "#EAF4FD"
-$basecolor_network_core_fill    = "#DCEEFF" #Vnet
-$basecolor_network_subnet_fill    = "#D4E8FB" #Subnet, NAT GW, vWAN, VGW
-$basecolor_network_security_fill    = "#E3F3F9" #Basion, AFW, Route Server, PE
-$basecolor_network_policy_fill    = "#E3E8EC" #NSG, UDR
+$basecolor_network_core_fill    = "#D2E8FF" #Vnet
+$basecolor_network_subnet_fill  = "#A9D4FF" #Subnet, NAT GW, vWAN, VGW
+$basecolor_network_security_fill = "#D6EEF7" #Basion, AFW, Route Server, PE
+$basecolor_network_policy_fill   = "#DADFE5" #NSG, UDR
 
 # Network "traffic management" - LB, AFD, Traffic Manager, AppGW
 $basecolor_network_traffic_fill   = "#C9D4F8"   # base (shifted darker ✅ FIX)
@@ -3978,7 +3977,7 @@ function Export-vnet {
 
                 #DOT DNSPR instance
                 $ImagePath = Join-Path $OutputPath "icons" "dnspr.png"
-                $dnsprdata += "             $($pdnsrId)instance [label = `"\n\nName: $(SanitizeString $resolverName)\nLocation: $location\n\nIP address(es):\n $inboundEpIps`"; color=`"$($basecolor_network_core_fill)`"; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $resolver)];`n"
+                $dnsprdata += "             $($pdnsrId)instance [label = `"\n\nName: $(SanitizeString $resolverName)\nLocation: $location\n\nIP address(es):\n $inboundEpIps`"; color=`"$($basecolor_network_policy_fill)`"; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $resolver)];`n"
                 
 
                     #if ( "N/A" -ne $outboundEpSubnetId ) { $dnsprdata += "$pdnsrId -> $outboundEpSubnetId [label = `"vNet integration (outbound)`"; ]" }
