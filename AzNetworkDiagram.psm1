@@ -2755,7 +2755,7 @@ function Export-AppServicePlan {
             node [color = `"$($basecolor_network_traffic_level1)`"; margin = 0;];
         "
         $ImagePath = Join-Path $OutputPath "icons" "appplan.png"
-        $data += "        $planid [label = `"\nLocation: $Location\nSKU: $($plan.Sku.Name)\nTier: $($plan.Sku.Tier)\nKind: $($plan.Kind)\nCapacity: $($plan.Sku.Capacity)\nNumber of Apps: $($plan.NumberOfSites)\n`" ; color=`"$($basecolor_network_traffic_level1)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;$(Generate-DotURL -resource $plan)];"
+        $data += "        $planid [label = `"\n\nLocation: $Location\nSKU: $($plan.Sku.Name)\nTier: $($plan.Sku.Tier)\nKind: $($plan.Kind)\nCapacity: $($plan.Sku.Capacity)\nNumber of Apps: $($plan.NumberOfSites)\n`" ; color=`"$($basecolor_network_traffic_level1)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;$(Generate-DotURL -resource $plan)];"
         $data += "`n"
 
         $ImagePath = Join-Path $OutputPath "icons" "appservices.png"
@@ -2789,7 +2789,7 @@ function Export-AppServicePlan {
                 $ImagePath = Join-Path $OutputPath "icons" "appservices.png" 
             }
 
-            $data += "        $($appid) [label = `"\nLocation: $Location\nName: $(SanitizeString $app.Name)\nKind: $kind\nHost Name: $(SanitizeString $app.DefaultHostName)\n$trafficPercentageString`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $_)];`n" 
+            $data += "        $($appid) [label = `"\nLocation: $Location\nName: $(SanitizeString $app.Name)\nKind: $kind\nHost Name: $(SanitizeString $app.DefaultHostName)\n$trafficPercentageString`" ; color=`"$($basecolor_network_traffic_level1)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $_)];`n" 
             $data += "        $planid -> $appid;`n"
 
             # Deployment slots
@@ -3192,7 +3192,7 @@ function Export-AzureFirewall {
         }
         $ImagePath = Join-Path $OutputPath "icons" "afw.png"
         $data = "`n"
-        $data += "          $azFWId [label = `"\n\n\n$(SanitizeString $azFWName)\nPrivate IP Address: $(SanitizeString $PrivateIPAddress)\nSKU Tier: $($azfw.Sku.Tier)\nZones: $azFWZones\nPublic IP(s):\n$($PublicIPs -join "\n")`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $azfw)];" 
+        $data += "          $azFWId [label = `"\n\n\n$(SanitizeString $azFWName)\nPrivate IP Address: $(SanitizeString $PrivateIPAddress)\nSKU Tier: $($azfw.Sku.Tier)\nZones: $azFWZones\nPublic IP(s):\n$($PublicIPs -join "\n")`" ; color=`"$($basecolor_network_security_fill)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $azfw)];" 
 
         # Get the Azure Firewall policy
         $data += Export-AzureFirewallPolicy -FirewallPolicyId $azfw.FirewallPolicy.Id
@@ -3319,7 +3319,7 @@ function Export-AzureFirewallPolicy {
 
         $ImagePath = Join-Path $OutputPath "icons" "firewallpolicy.png"
         $data += "`n"
-        $data += "              $fwpolid [label = `"\n\n\n$(SanitizeString $firewallPolicyName)\nSKU Tier: $($firewallPolicy.sku.tier)\nThreat Intel Mode: $($firewallPolicy.ThreatIntelMode)\nDNS Server(s): $DNSServers\nProxy Enabled: $proxyEnabled`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $firewallPolicy)];" 
+        $data += "              $fwpolid [label = `"\n\n\n$(SanitizeString $firewallPolicyName)\nSKU Tier: $($firewallPolicy.sku.tier)\nThreat Intel Mode: $($firewallPolicy.ThreatIntelMode)\nDNS Server(s): $DNSServers\nProxy Enabled: $proxyEnabled`" ; color=`"$($basecolor_network_security_fill)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $firewallPolicy)];" 
         if ( -not $isParent ) { $data += "`n            $azFWId -> $fwpolid;" }
 
         #Link child/parent
