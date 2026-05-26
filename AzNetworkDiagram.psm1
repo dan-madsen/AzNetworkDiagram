@@ -2749,13 +2749,13 @@ function Export-AppServicePlan {
         $data = "
         # $Name - $planid
         subgraph cluster_$planid {
-            style = solid;
-            bgcolor = 1;
-            
-            node [color = black;];
+            style = `"rounded,filled`";
+            color = `"$($basecolor_network_traffic_fill)`";
+            margin = 12;
+            node [color = `"$($basecolor_network_traffic_level1)`"; margin = 0;];
         "
         $ImagePath = Join-Path $OutputPath "icons" "appplan.png"
-        $data += "        $planid [label = `"\nLocation: $Location\nSKU: $($plan.Sku.Name)\nTier: $($plan.Sku.Tier)\nKind: $($plan.Kind)\nCapacity: $($plan.Sku.Capacity)\nNumber of Apps: $($plan.NumberOfSites)\n`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;$(Generate-DotURL -resource $plan)];"
+        $data += "        $planid [label = `"\nLocation: $Location\nSKU: $($plan.Sku.Name)\nTier: $($plan.Sku.Tier)\nKind: $($plan.Kind)\nCapacity: $($plan.Sku.Capacity)\nNumber of Apps: $($plan.NumberOfSites)\n`" ; color=`"$($basecolor_network_traffic_level1)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.5;$(Generate-DotURL -resource $plan)];"
         $data += "`n"
 
         $ImagePath = Join-Path $OutputPath "icons" "appservices.png"
@@ -3192,7 +3192,7 @@ function Export-AzureFirewall {
         }
         $ImagePath = Join-Path $OutputPath "icons" "afw.png"
         $data = "`n"
-        $data += "          $azFWId [label = `"\n\n$(SanitizeString $azFWName)\nPrivate IP Address: $(SanitizeString $PrivateIPAddress)\nSKU Tier: $($azfw.Sku.Tier)\nZones: $azFWZones\nPublic IP(s):\n$($PublicIPs -join "\n")`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $azfw)];" 
+        $data += "          $azFWId [label = `"\n\n\n$(SanitizeString $azFWName)\nPrivate IP Address: $(SanitizeString $PrivateIPAddress)\nSKU Tier: $($azfw.Sku.Tier)\nZones: $azFWZones\nPublic IP(s):\n$($PublicIPs -join "\n")`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $azfw)];" 
 
         # Get the Azure Firewall policy
         $data += Export-AzureFirewallPolicy -FirewallPolicyId $azfw.FirewallPolicy.Id
@@ -3319,7 +3319,7 @@ function Export-AzureFirewallPolicy {
 
         $ImagePath = Join-Path $OutputPath "icons" "firewallpolicy.png"
         $data += "`n"
-        $data += "              $fwpolid [label = `"\n\n$(SanitizeString $firewallPolicyName)\nSKU Tier: $($firewallPolicy.sku.tier)\nThreat Intel Mode: $($firewallPolicy.ThreatIntelMode)\nDNS Server(s): $DNSServers\nProxy Enabled: $proxyEnabled`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $firewallPolicy)];" 
+        $data += "              $fwpolid [label = `"\n\n\n$(SanitizeString $firewallPolicyName)\nSKU Tier: $($firewallPolicy.sku.tier)\nThreat Intel Mode: $($firewallPolicy.ThreatIntelMode)\nDNS Server(s): $DNSServers\nProxy Enabled: $proxyEnabled`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $firewallPolicy)];" 
         if ( -not $isParent ) { $data += "`n            $azFWId -> $fwpolid;" }
 
         #Link child/parent
@@ -3874,7 +3874,7 @@ function Export-SubnetConfig {
                 if ( $ipprefixesstring -eq "" ) { $ipprefixesstring = "None" }
                 
                 $ImagePath = Join-Path $OutputPath "icons" "ng.png" 
-                $data += "            $NATGWID [label = `"\n\nName: $(SanitizeString $name)\n\nPublic IP(s):\n$ipsstring\nPublic IP Prefix(es):\n$ipprefixesstring`"; color=`"$($basecolor_network_subnet_fill)`"; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5;$(Generate-DotURL -resource $NATGWobject)]; `n"
+                $data += "            $NATGWID [label = `"\n\n\nName: $(SanitizeString $name)\n\nPublic IP(s):\n$ipsstring\nPublic IP Prefix(es):\n$ipprefixesstring`"; color=`"$($basecolor_network_subnet_fill)`"; image = `"$ImagePath`"; imagepos = `"tc`"; labelloc = `"b`"; height = 1.5;$(Generate-DotURL -resource $NATGWobject)]; `n"
                 $data += "            $id -> $NATGWID" + "`n"
 
             }
@@ -4399,9 +4399,13 @@ function Export-IpGroup {
     $ImagePath = Join-Path $OutputPath "icons" "ipgroup.png"
     $alldata = "
     subgraph cluster_$id {
-        style = invis;
+        # style = invis;
+        style = `"rounded,filled`";
+        color = `"$($basecolor_network_security_fill)`";
+        margin = 12;
+        node [color = `"$($basecolor_network_security_fill)`"; margin = 0;];
         
-        $id [shape = box; label = `"\n\n\nName: $(SanitizeString $ipGroup.Name)\nLocation: $Location\n\n$IpAddresses`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $IpGroup)];
+        $id [label = `"\n\nName: $(SanitizeString $ipGroup.Name)\nLocation: $Location\n\n$IpAddresses`" ; color=`"$($basecolor_network_security_fill)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $IpGroup)];
     }
     "
     Export-AddToFile -Data $alldata
@@ -4474,11 +4478,11 @@ function Export-Connection {
             $prefix = SanitizeString $_
             $lgwsubnets += "$prefix \n"
         }
-        $data = "    $lgwid [color = lightgrey;label = `"\n\nGateway: $(SanitizeString $lgwname)\nConnection Name: $(SanitizeString $lgwconnectionname)\nConnection Type: $lgconnectionType\n"
+        $data = "    $lgwid [label = `"\n\n\nGateway: $(SanitizeString $lgwname)\nConnection Name: $(SanitizeString $lgwconnectionname)\nConnection Type: $lgconnectionType\n"
 
         $data += "Peer : $(SanitizeString $lgwPeerInfo)\n\nStatic remote subnet(s):\n$lgwsubnets"
         $ImagePath = Join-Path $OutputPath "icons" "VPN-Site.png"
-        $data += "`";image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $connection)];"
+        $data += "`"; color=`"$($basecolor_network_traffic_level4)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $connection)];"
     } 
     elseif ($VNET2VNET) {
         $lgwid = $connection.VirtualNetworkGateway2.id.replace("-", "").replace("/", "").replace("`"", "").replace(".", "").ToLower()
@@ -4509,7 +4513,7 @@ function Export-Connection {
             #Define unknown ER Cicuit here as unknown, if not found.
             $Script:Legend += ,@("Express Route Circuit","ercircuit.png")
             $ImagePath = Join-Path $OutputPath "icons" "ercircuit.png"
-            $data += "$peerid [label = `"\nName:$peerName\n(Unknown Express route circuit)`" ; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
+            $data += "$peerid [label = `"\nName:$peerName\n(Unknown Express route circuit)`" ;  color=`"$($basecolor_network_traffic_level4)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];"
         }
 
         $data += "`n    $vpngwid -> $peerid`n"
@@ -4581,7 +4585,7 @@ function Export-PrivateEndpoint {
         }
 
         $ImagePath = Join-Path $OutputPath "icons" "private-endpoint.png"
-        $data = "`n                     $peid [label = `"\n$pedetails`" ; color=`"$($basecolor_network_security_fill)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $pe)];" 
+        $data = "`n                     $peid [label = `"\n\n$pedetails`" ; color=`"$($basecolor_network_security_fill)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $pe)];" 
         Export-AddToFile -Data $data
     }
     catch {
@@ -7779,8 +7783,10 @@ function Get-AzNetworkDiagram {
                 if ($null -ne $ipGroups) {
                     $Script:Legend += ,@("IP Group","ipgroup.png")
                     $cluster = "subgraph cluster_ipgroups {
-                        style = solid;
-                        bgcolor = 5;
+                        style = `"rounded,filled`";
+                        color = `"$($basecolor_network_security_fill)`";
+                        margin = 12;
+                        node [color = `"$($basecolor_network_security_fill)`"; margin = 0;];
                     "
                     Export-AddToFile -Data $cluster
                     $ipGroups | ForEach-Object {
