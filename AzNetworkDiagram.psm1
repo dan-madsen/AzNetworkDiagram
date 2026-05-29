@@ -7762,7 +7762,7 @@ function Get-AzNetworkDiagram {
                 #Export-AddToFile "        label=`"Subscription: $subname`""
                 #Export-AddToFile "        style=`"dashed`"`n"
 
-                Write-Output "`n# Collecting core network resources"
+                Write-Output "# Collecting core network resources"
 
                 #Express Route Circuits
                 Write-Output "Collecting Express Route Circuits..."
@@ -7966,7 +7966,7 @@ function Get-AzNetworkDiagram {
                 if ( $EnableACS -OR (-not $SkipNonCoreNetwork -AND -not $SkipACS ) ) {
                     Write-Output "Collecting Communication Services..."
                     Export-AddToFile "    ##### $subname - Azure Communication Services #####"
-                    $ACSs = Get-AzCommunicationService
+                    $ACSs = Get-AzCommunicationService -ErrorAction Ignore
                     if ( $null -ne $ACSs ) {
                         $Script:Legend += ,@("Communication Services","acs.png")
                         foreach ( $ACS in $ACSs ) {
