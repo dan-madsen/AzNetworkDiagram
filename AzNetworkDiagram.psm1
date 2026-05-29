@@ -1411,9 +1411,9 @@ This function processes a VM object and formats its details for the Azure infras
 .PARAMETER vm
 The Virtual Machine object to process.
 .EXAMPLE
-Export-VM -vm $vm
+Export-VirtualMachine -vm $vm
 #>
-function Export-VM {
+function Export-VirtualMachine {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -8336,7 +8336,7 @@ function Get-AzNetworkDiagram {
                         $Script:Legend += ,@("Virtual Machine (MSSQL)","vm-sql.png")
                         $Script:Legend += ,@("Network Interface Card","nic.png")
                         foreach ($vm in $VMs) {
-                            Export-VM $VM
+                            Export-VirtualMachine $VM
                         }
                     }
                 }
