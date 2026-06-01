@@ -7124,7 +7124,7 @@ function Confirm-Prerequisites {
         "relay.png",
         "RouteTable.png",
         "rsv.png",
-        "rtserv.png".
+        "rtserv.png",
         "servicebus.png",
         "snet.png",
         "sqldb.png",
@@ -7134,7 +7134,7 @@ function Confirm-Prerequisites {
         "ssh-key.png",
         "storage-account.png",
         "storage-account-container.png",
-        "sub.png"
+        "sub.png",
         "swa.png",
         "table.png",
         "trafficmanagerprofile.png"
