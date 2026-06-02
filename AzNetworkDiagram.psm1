@@ -6948,7 +6948,7 @@ function Export-EntraDomains
 
         if ($domains.count -gt 0) {
             #$Script:Legend += ,@("Entra Licenses","licenses.png")
-            $script:rankLicense += "licenses"
+            # $script:rankLicense += "licenses"
             $header = "        subgraph cluster_domains {
             style = `"rounded,filled`";
             color = `"$($basecolor_identity_general_cluster)`";
