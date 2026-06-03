@@ -9,6 +9,10 @@ param environment string = 'dev'
 
 // PaaS
 param enableASP bool = true
+param enableLB bool = true
+param enableAppGW bool = true
+param enableTM bool = true
+param enableAFD bool = true
 param enableSWA bool = true
 param enableKV bool = true
 param enableUMI bool = true
@@ -84,6 +88,12 @@ module pe01 'br/public:avm/res/network/private-endpoint:0.12.1' = if (enableASP)
     ]
   }
 }
+
+
+// LB
+// AppGW
+// TM
+// AFD
 
 module st 'br/public:avm/res/storage/storage-account:0.32.0' = if (enableST) {
   params: {
