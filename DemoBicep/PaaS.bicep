@@ -50,6 +50,8 @@ module asp01 'br/public:avm/res/web/serverfarm:0.7.0' = if (enableASP) {
   params: {
     name: 'asp-aznetworkdiagram-${environment}-${locationshort}-01'
     location: location
+    skuName: 'P0v3'
+    skuCapacity: 1
   }
 }
 
@@ -242,6 +244,9 @@ module sb 'br/public:avm/res/service-bus/namespace:0.16.2' = if(enableServiceBus
   params: {
     name: 'sb-aznetworkdiagram-${environment}-${locationshort}-01'
     location: location
+    skuObject: {
+      name: 'Basic'
+    }
   }
 }
 
