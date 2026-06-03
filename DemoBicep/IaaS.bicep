@@ -189,6 +189,14 @@ module rsv 'br/public:avm/res/recovery-services/vault:0.11.3' = if(enableBackup)
   params: {
     name: 'rsv-aznetworkdiagram-${environment}-${locationshort}-01'
     location: location
+    redundancySettings: {
+      standardTierStorageRedundancy: 'LocallyRedundant'
+    }
+    softDeleteSettings: {
+      enhancedSecurityState: 'Disabled'
+      softDeleteRetentionPeriodInDays: 14
+      softDeleteState: 'Disabled'
+    }
   }
 }
 
