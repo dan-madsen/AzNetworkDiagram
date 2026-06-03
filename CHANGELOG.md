@@ -2,9 +2,11 @@
 ## v2.1.0
 - [x] New features
   - [x] Visual overhaul - output is now way more modern
-  - [x] Demo.bicep added - create a basic demo environment quickly, to showcase AzNetworkDiagram.
+  - [x] DemoBicep folder added. Bicep files for quick and easy creatain of basic demo environments, to showcase AzNetworkDiagram.
+    - Built for single resourcegroup deployment
+    - For a large demo, you can deploy multiple environments
     - Supported resources is expected to grow overtime - but the environment will not be "functional" as such.
-    - The .bicep includes flags to enable/disable resource types, to tailer the demo environemnt.
+    - The .bicep includes flags to enable/disable resource types, to tailor the demo environemnt.
     - Remember to clean up afterwards.
 - [x] Bug fixes
   - [x] Suppressed an error if Az provider is not registered (in that case no resources would be present anyway)

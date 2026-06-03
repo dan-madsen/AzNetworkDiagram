@@ -383,7 +383,7 @@ function Export-dotHeader {
         subgraph cluster_logo {
             label = `"`"; // No label for the cluster itself
             style=invis; // Make the cluster invisible
-            logo [label=`"`", labelloc=b, shape=none, image=`"$LogoPath`", width=0, height=0;$URLLINK];
+            logo [color=`"#FAFAFA`"; label=`"`", labelloc=b, shape=none, image=`"$LogoPath`", width=0, height=0;$URLLINK];
         }
         "
     }
@@ -3951,9 +3951,9 @@ function Export-vnet {
 
                 $dnsprdata += "`n        subgraph cluster_$pdnsrId {
             style = `"rounded,filled`";
-            color = `"$($basecolor_network_subnet_cluster)`";
+            color = `"$($basecolor_network_security_fill)`";
             margin = 12;
-            node [color = `"$($basecolor_network_subnet_fill)`"; margin = 0;];`n"
+            node [color = `"$($basecolor_network_policy_fill)`"; margin = 0;];`n"
 
 
                 $Location = SanitizeLocation $resolver.Location
@@ -3976,7 +3976,7 @@ function Export-vnet {
 
                 #DOT DNSPR instance
                 $ImagePath = Join-Path $OutputPath "icons" "dnspr.png"
-                $dnsprdata += "             $($pdnsrId)instance [label = `"\n\nName: $(SanitizeString $resolverName)\nLocation: $location\n\nIP address(es):\n $inboundEpIps`"; color=`"$($basecolor_network_policy_fill)`"; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $resolver)];`n"
+                $dnsprdata += "             $($pdnsrId)instance [label = `"\n\nName: $(SanitizeString $resolverName)\nLocation: $location\n\nIP address(es):\n $inboundEpIps`"; color=`"$($basecolor_network_policy_fill)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $resolver)];`n"
                 
 
                     #if ( "N/A" -ne $outboundEpSubnetId ) { $dnsprdata += "$pdnsrId -> $outboundEpSubnetId [label = `"vNet integration (outbound)`"; ]" }
@@ -4031,7 +4031,7 @@ function Export-vnet {
                                 }
                                 # End table                     $pdnsrId -> $dnsFrsId;     
                                 $ImagePath = Join-Path $OutputPath "icons" "dnspr.png"
-                                $dnsprdata += "             </TABLE>>; image = `"$ImagePath`";imagepos = `"t`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $dnsFrs)];`n" 
+                                $dnsprdata += "             </TABLE>>; color=`"$($basecolor_network_policy_fill)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"t`";labelloc = `"b`";height = 3.0;$(Generate-DotURL -resource $dnsFrs)];`n" 
                                 $dnsprdata += "             $dnsFrsId -> $outboundEpSubnetId [constraint=false ; label = `"vNet integration (outbound)`"; ]`n"
                             }   
                         }
@@ -4975,7 +4975,7 @@ function Export-RecoveryServiceVault
             
                 #DOT
                 if ( $null -ne $resobject ) {
-                    $rsvdata += "$resid -> $policyid`n"
+                    $rsvdataREFERENCES += "$resid -> $policyid`n"
                 }
             }
         }
@@ -4986,7 +4986,7 @@ function Export-RecoveryServiceVault
         }
         "
         
-        Export-AddToFile -Data ($header + $rsvdata + $footer)
+        Export-AddToFile -Data ($header + $rsvdata + $footer + $rsvdataREFERENCES)
     }
     catch {
         Write-Error "Can't export Recovery Service Vault: $($RecoveryServiceVault.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message
@@ -6424,6 +6424,7 @@ function Export-IPPlan {
             margin = 12;
             node [color = `"$($basecolor_management_general_cluster)`"; margin = 0;];
             
+            IPPlanAddressSpaces -> IPPlanSubnets [style=`"invis`"]
             IPPlanSubnets [label = <
                 <TABLE border=`"1`" style=`"rounded`">
                 <TR><TD border=`"0`" align=`"left`" colspan=`"2`"><B>Subnets in Azure</B><BR/><BR/></TD></TR>
@@ -6503,6 +6504,7 @@ function Export-IPPlan {
             margin = 12;
             node [color = `"$($basecolor_management_general_cluster)`"; margin = 0;];
             
+            IPPlanIPPRE -> IPPlanPIP [style=`"invis`"]
             IPPlanPIP [label = <
                 <TABLE border=`"0`" style=`"rounded`">
                 <TR><TD border=`"0`" align=`"left`" colspan=`"2`"><B>Public IPs in Azure</B><BR/><BR/></TD></TR>
@@ -6533,6 +6535,7 @@ function Export-IPPlan {
                 image = `"$ImagePath`";imagepos = `"tr`"; labelloc = `"b`";height = 2.5;];
         }
                 "
+        
         $alldata = $header + $data + $footer
         Export-AddToFile -Data $alldata
     }
@@ -6575,7 +6578,7 @@ function Export-MgmtGroupEntityObject
             $name = SanitizeString $MgmtGroup.DisplayName
             $descendants = $MgmtGroupEntityObject.NumberOfDescendants
             
-            $data += "      $id [label = `"\n\n\nName:\n$name\n\nDescendants: $descendants`"; color=`"$($basecolor_management_general_fill)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";height = 2.0;];`n"
+            $data += "      $id [label = `"\n\n\n$name\n\nDescendants: $descendants`"; color=`"$($basecolor_management_general_fill)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";height = 2.0;];`n"
             
         } 
         elseif ( $MgmtGroupEntityObject.Type -eq "/subscriptions" ) {
@@ -6587,7 +6590,7 @@ function Export-MgmtGroupEntityObject
 
             $Script:Legend += ,@("Subscription","sub.png")
             
-            $data += "      $id [label = `"\nName:\n$name`"; color=`"$($basecolor_management_general_cluster)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";height = 2.0;$(Generate-DotURL -resource $sub)];`n"
+            $data += "      $id [label = `"\n$name`"; color=`"$($basecolor_management_general_cluster)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";height = 2.0;$(Generate-DotURL -resource $sub)];`n"
             
         }    
         $parent = $MgmtGroupEntityObject.parent
