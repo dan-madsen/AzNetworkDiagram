@@ -199,13 +199,13 @@ module AzFW 'br/public:avm/res/network/azure-firewall:0.10.1' = if (enableAzFW) 
   params: {
     name: 'afw-aznetworkdiagram-${environment}-${locationshort}-01'
     location: location
-    azureSkuTier: 'Standard'
+    azureSkuTier: 'Basic'
     virtualNetworkResourceId: hub.outputs.resourceId
     firewallPolicyId: AzFWPol.outputs.resourceId
   }
 }
 
-module AzFWPol 'br/public:avm/res/network/firewall-policy:0.3.5' = if (enableAzFW) {
+module AzFWPolParent 'br/public:avm/res/network/firewall-policy:0.3.5' = if (enableAzFW) {
   params: {
     name: 'afwp-aznetworkdiagram-${environment}-${locationshort}-01'
     location: location
@@ -213,10 +213,19 @@ module AzFWPol 'br/public:avm/res/network/firewall-policy:0.3.5' = if (enableAzF
   }
 }
 
+module AzFWPolChild 'br/public:avm/res/network/firewall-policy:0.3.5' = if (enableAzFW) {
+  params: {
+    name: 'afwp-aznetworkdiagram-${environment}-${locationshort}-02'
+    location: location
+    basePolicyResourceId: AzFWPolParent.outputs.resourceId
+    // ruleCollectionGroups: []
+  }
+}
+
 module rcg01 'br/public:avm/res/network/firewall-policy/rule-collection-group:0.1.0' = if (enableAzFW) {
   params: {
     name: 'rcg-test'
-    firewallPolicyName: AzFWPol.outputs.name
+    firewallPolicyName: AzFWPolChild.outputs.name
     priority: 100
     ruleCollections: [
       {

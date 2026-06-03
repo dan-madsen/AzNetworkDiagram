@@ -52,6 +52,7 @@ module asp01 'br/public:avm/res/web/serverfarm:0.7.0' = if (enableASP) {
     location: location
     skuName: 'P0v3'
     skuCapacity: 1
+    kind: 'linux'
   }
 }
 
