@@ -201,7 +201,7 @@ module AzFW 'br/public:avm/res/network/azure-firewall:0.10.1' = if (enableAzFW) 
     location: location
     azureSkuTier: 'Basic'
     virtualNetworkResourceId: hub.outputs.resourceId
-    firewallPolicyId: AzFWPol.outputs.resourceId
+    firewallPolicyId: AzFWPolChild.outputs.resourceId
   }
 }
 
