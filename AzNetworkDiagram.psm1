@@ -4085,9 +4085,11 @@ function Export-vWAN {
 
     try {
         Write-Host "Collecting vWAN info: $vwanname"
-        $hubs = Get-AzVirtualHub -ResourceGroupName $ResourceGroupName -ErrorAction Stop | Where-Object { $($_.VirtualWAN.id) -eq $($vwan.id) }
-        if ($null -ne $hubs) {
+        $hubs = Get-AzVirtualHub -ResourceGroupName $ResourceGroupName -ErrorAction Ignore
+        if ($null -ne $hubs) { 
+            $hubs = $hubs | Where-Object { $($_.VirtualWAN.id) -eq $($vwan.id) } }
             $script:rankvwans += $id
+
             $header = "
             # $Name - $id
             subgraph cluster_$id {
@@ -4114,7 +4116,7 @@ function Export-vWAN {
             $alldata = $header + $vwandata + $hubdata + $footer
         
             Export-AddToFile -Data $alldata
-        }            
+        # }            
     }
     catch {
         Write-Error "Can't export Hub: $($hub.name) at line $($_.InvocationInfo.ScriptLineNumber) " $_.Exception.Message

@@ -4,12 +4,13 @@
   - [x] Visual overhaul - output is now way more modern
   - [x] DemoBicep folder added. Bicep files for quick and easy creatain of basic demo environments, to showcase AzNetworkDiagram.
     - Built for single resourcegroup deployment
-    - For a large demo, you can deploy multiple environments
+    - For a larger demo, you can deploy multiple environments
     - Supported resources is expected to grow overtime - but the environment will not be "functional" as such.
-    - The .bicep includes flags to enable/disable resource types, to tailor the demo environemnt.
+    - The .bicep files includes flags to enable/disable resource types, to tailor the demo environemnt.
     - Remember to clean up afterwards.
 - [x] Bug fixes
   - [x] Suppressed an error if Az provider is not registered (in that case no resources would be present anyway)
+  - [-] vWAN hub logic error - hub info was suppressed
 ## v2.0.0
 - [x] **_BREAKING CHANGE - see v1.5 for additional info_**
   - [x] The breaking change from v1.5 fully implemented

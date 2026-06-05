@@ -1,4 +1,4 @@
-// az deployment group create --resource-group RGNAME --name 'AzNetworkDiagram-demo' --template-file Demo.bicep -c
+// az deployment group create --resource-group RGNAME --name 'AzNetworkDiagram-demo' --template-file Network.bicep -c
 
 // Deploy everything to the same RG
 targetScope = 'resourceGroup'
@@ -54,6 +54,46 @@ module hub 'br/public:avm/res/network/virtual-network:0.9.0' = {
         addressPrefix: '10.0.1.128/26'
         delegation: 'Microsoft.Network/dnsResolvers'
       }
+      {
+        name: 'AzureFirewallManagementSubnet'
+        addressPrefix: '10.0.1.192/26'
+        delegation: 'Microsoft.Network/dnsResolvers'
+      }
+      // {
+      //   name: 'default'
+      //   addressPrefix: '10.0.0.0/26'
+      //   routeTableResourceId: rt02.outputs.resourceId
+      // }
+      // {
+      //   name: 'AzureFirewallSubnet'
+      //   addressPrefix: '10.0.0.64/26'
+      // }
+      // {
+      //   name: 'AzureFirewallManagementSubnet '
+      //   addressPrefix: '10.0.0.128/26'
+      // }
+      // {
+      //   name: 'AzureBastionSubnet'
+      //   addressPrefix: '10.0.0.192/26'
+      // }
+      // {
+      //   name: 'GatewaySubnet'
+      //   addressPrefix: '10.0.1.0/26'
+      // }
+      // {
+      //   name: 'RouteServerSubnet'
+      //   addressPrefix: '10.0.1.64/26'
+      // }
+      // {
+      //   name: 'DNSPRin'
+      //   addressPrefix: '10.0.1.128/26'
+      //   delegation: 'Microsoft.Network/dnsResolvers'
+      // }
+      // {
+      //   name: 'DNSPROut'
+      //   addressPrefix: '10.0.1.192/26'
+      //   delegation: 'Microsoft.Network/dnsResolvers'
+      // }
     ]
   }
 }
@@ -75,32 +115,48 @@ module spoke 'br/public:avm/res/network/virtual-network:0.9.0' = {
   }
 }
 
-// Coupling to vnet/subnet missing !?
-resource rs01 'Microsoft.Network/virtualHubs@2025-05-01' = if (enableRS) {
+// API deprecated - now part of virtualhub
+// resource rs01 'Microsoft.Network/virtualRouters@2025-07-01' = if (enableRS) {
+//   name: 'rs-aznetworkdiagram-${environment}-${locationshort}-01'
+//   location: location
+//   properties: {
+//     hostedSubnet: {
+//       id: hub.outputs.subnetResourceIds[4]
+//     }
+//   }
+
+// }
+
+resource rs 'Microsoft.Network/virtualRouters@2023-09-01' = if (enableRS) {
   name: 'rs-aznetworkdiagram-${environment}-${locationshort}-01'
   location: location
   properties: {
-    sku: 'Standard'
-  }
-}
-
-module rspip 'br/public:avm/res/network/public-ip-address:0.12.0' = {
-  params: {
-    name: '${rs01.name}-pip-01'
-    location: location
-  }
-}
-
-resource rs01b 'Microsoft.Network/virtualHubs/ipConfigurations@2025-05-01' = if (enableRS) {
-  name: 'rs-testConfiga-znetworkdiagram-${environment}-${locationshort}-01'
-  parent: rs01
-  properties: {
-    subnet: {
-      id: '${hub.outputs.resourceId}/subnets/RouteServerSubnet'
+    hostedSubnet: {
+      id: hub.outputs.subnetResourceIds[4]
     }
-    publicIPAddress: rspip
+    virtualRouterAsn: 65515
   }
 }
+
+module rspip 'br/public:avm/res/network/public-ip-address:0.12.0' = if (enableRS) {
+  params: {
+    name: '${rs.name}-pip-01'
+    location: location
+    skuName: 'Standard'
+  }
+}
+
+// resource rs01b 'Microsoft.Network/virtualHubs/ipConfigurations@2025-05-01' = if (enableRS) {
+//   name: 'rs-testConfig-aznetworkdiagram-${environment}-${locationshort}-01'
+//   parent: rs01
+//   properties: {
+//     privateIPAllocationMethod: 'Dynamic'
+//     subnet: {
+//       id: '${hub.outputs.resourceId}/subnets/RouteServerSubnet'
+//     }
+//     publicIPAddress: rspip.outputs.resourceId
+//   }
+// }
 
 module rt02 'br/public:avm/res/network/route-table:0.5.0' = {
   params: {
@@ -162,11 +218,43 @@ module vgw 'br/public:avm/res/network/virtual-network-gateway:0.11.0' = if (enab
   params: {
     name: 'vgw-aznetworkdiagram-${environment}-${locationshort}-01'
     location: location
+    skuName: 'VpnGw1AZ'
     clusterSettings: {
-      clusterMode: 'activePassiveBgp'
+      clusterMode: 'activeActiveBgp'
+      existingSecondaryPublicIPResourceId: vgwpip2.outputs.resourceId
     }
     gatewayType: 'Vpn'
     virtualNetworkResourceId: hub.outputs.resourceId
+    vpnClientAddressPoolPrefix: enableVPN ? '172.31.0.0/24' : null
+    vpnClientAadConfiguration: enableVPN ? { // https://learn.microsoft.com/en-us/azure/vpn-gateway/point-to-site-entra-gateway
+      aadAudience: 'c632b3df-fb67-4d84-bdcf-b95ad541b5c8' // Default Microsoft registered audience
+      aadIssuer: 'https://sts.windows.net/${tenant().tenantId}/' //https://sts.windows.net/{Microsoft ID Entra Tenant ID}/
+      aadTenant: tenant().tenantId //TenantID
+      vpnAuthenticationTypes: [
+        'AAD'
+      ]
+      vpnClientProtocols: [
+        'OpenVPN'
+      ]
+    } : null
+    existingPrimaryPublicIPResourceId: vgwpip1.outputs.resourceId
+    
+  }
+}
+
+module vgwpip1 'br/public:avm/res/network/public-ip-address:0.12.0' = if (enableVPN) {
+  params: {
+    name: 'vgw-aznetworkdiagram-${environment}-${locationshort}-01-pip-01'
+    location: location
+    skuName: 'Standard'
+  }
+}
+
+module vgwpip2 'br/public:avm/res/network/public-ip-address:0.12.0' = if (enableVPN) {
+  params: {
+    name: 'vgw-aznetworkdiagram-${environment}-${locationshort}-01-pip-02'
+    location: location
+    skuName: 'Standard'
   }
 }
 
@@ -202,6 +290,16 @@ module AzFW 'br/public:avm/res/network/azure-firewall:0.10.1' = if (enableAzFW) 
     azureSkuTier: 'Basic'
     virtualNetworkResourceId: hub.outputs.resourceId
     firewallPolicyId: AzFWPolChild.outputs.resourceId
+    publicIPResourceID: AzFWpip.outputs.resourceId
+    publicIPAddressObject: AzFWpip
+  }
+}
+
+module AzFWpip 'br/public:avm/res/network/public-ip-address:0.12.0' = if (enableAzFW) {
+  params: {
+    name: 'afw-aznetworkdiagram-${environment}-${locationshort}-01-pip-01'
+    location: location
+    skuName: 'Standard'
   }
 }
 
@@ -209,6 +307,8 @@ module AzFWPolParent 'br/public:avm/res/network/firewall-policy:0.3.5' = if (ena
   params: {
     name: 'afwp-aznetworkdiagram-${environment}-${locationshort}-01'
     location: location
+    tier: 'Basic'
+    threatIntelMode: 'Off'
     // ruleCollectionGroups: []
   }
 }
@@ -218,6 +318,8 @@ module AzFWPolChild 'br/public:avm/res/network/firewall-policy:0.3.5' = if (enab
     name: 'afwp-aznetworkdiagram-${environment}-${locationshort}-02'
     location: location
     basePolicyResourceId: AzFWPolParent.outputs.resourceId
+    tier: 'Basic'
+    threatIntelMode: 'Off'
     // ruleCollectionGroups: []
   }
 }
@@ -280,7 +382,16 @@ module bas01 'br/public:avm/res/network/bastion-host:0.8.2' = if (enableBastion)
     name: 'bas-aznetworkdiagram-${environment}-${locationshort}-01'
     location: location
     virtualNetworkResourceId: hub.outputs.resourceId
+    
     skuName: 'Basic'
+  }
+}
+
+module baspip 'br/public:avm/res/network/public-ip-address:0.12.0' = if (enableBastion) {
+  params: {
+    name: 'bas-aznetworkdiagram-${environment}-${locationshort}-01-pip-01'
+    location: location
+    skuName: 'Standard'
   }
 }
 
@@ -304,10 +415,11 @@ module dnspr 'br/public:avm/res/network/dns-resolver:0.5.7' = if (enableDNSPR) {
   }
 }
 
-module dnsprrs 'br/public:avm/res/network/dns-forwarding-ruleset:0.5.4' = {
+module dnsprrs 'br/public:avm/res/network/dns-forwarding-ruleset:0.5.4' = if (enableDNSPR) {
   params: {
-    name: 'dnsprrs-test-t-01'
-    dnsForwardingRulesetOutboundEndpointResourceIds: [ dnspr.outputs.outboundEndpointsObject[0].resourceId ]
+    name: 'dnsprfrs-aznetworkdiagram-${environment}-${locationshort}-01'
+    location: location
+    dnsForwardingRulesetOutboundEndpointResourceIds: [dnspr.outputs.outboundEndpointsObject[0].resourceId]
     forwardingRules: [
       {
         name: 'r1'
@@ -338,6 +450,7 @@ module vwan 'br/public:avm/res/network/virtual-wan:0.4.3' = if (enableVWAN) {
 module vwanhub 'br/public:avm/res/network/virtual-hub:0.4.4' = if (enableVWAN) {
   params: {
     name: 'vhub-azdiagram-${environment}-${locationshort}-01'
+    location: location
     addressPrefix: '10.1.0.0/24'
     virtualWanResourceId: vwan.outputs.resourceId
     sku: 'Standard'

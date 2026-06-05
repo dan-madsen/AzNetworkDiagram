@@ -1,4 +1,4 @@
-// az deployment group create --resource-group RGNAME --name 'AzNetworkDiagram-demo' --template-file Demo.bicep -c
+// az deployment group create --resource-group RGNAME --name 'AzNetworkDiagram-demo' --template-file Containers.bicep -c
 
 // Deploy everything to the same RG
 targetScope = 'resourceGroup'
