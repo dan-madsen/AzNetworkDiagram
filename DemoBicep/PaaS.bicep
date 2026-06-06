@@ -1,4 +1,4 @@
-// az deployment group create --resource-group RGNAME --name 'AzNetworkDiagram-demo' --template-file PaaS.bicep -c
+// az deployment group create --resource-group RGNAME --name 'AzNetworkDiagram-PaaS-demo' --template-file PaaS.bicep -c
 
 // Deploy everything to the same RG
 targetScope = 'resourceGroup'
@@ -19,7 +19,7 @@ param enableUMI bool = true
 param enableSSH bool = true
 param enableST bool = true
 param enableSQL bool = true
-param enableSQLMI bool = true
+param enableSQLMI bool = false
 param enablePGSQL bool = true
 param enableMySQL bool = true
 param enableCosmos bool = true
@@ -143,6 +143,7 @@ module mysql 'br/public:avm/res/db-for-my-sql/flexible-server:0.10.3' = if(enabl
     location: location
     availabilityZone: -1
     highAvailability: 'Disabled'
+    geoRedundantBackup: 'Disabled'
     skuName: 'Standard_B1ms'
     tier: 'Burstable'
     administratorLogin: 'sqlsa'
@@ -189,6 +190,7 @@ module sqldb 'br/public:avm/res/sql/server/database:0.2.1' = if(enableSQL) {
     name: 'sqldb-aznetworkdiagram-${environment}-${locationshort}-01'
     availabilityZone: 1
     serverName: sqlserver.outputs.name
+    maxSizeBytes: 40000000
     sku: {
       name: 'S0' // S0 = 10 DTU
       tier: 'Standard'
@@ -294,6 +296,11 @@ module egt 'br/public:avm/res/event-grid/topic:0.9.3' = if(enableEventGrid) {
     eventSubscriptions: [
       {
         name: 'egt-sub-01'
+        deliveryWithResourceIdentity: {
+          identity: {
+            type: 'SystemAssigned'
+          }
+        }
       }
     ]
   }

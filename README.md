@@ -31,11 +31,14 @@ Initially it was with network as a focus, but it has emerged into some more - it
 ```
 ---
 
-# 🔍 Demo output v1.1
-Some examples of the diagrams. **Additional demo outputs are available in the "DemoOutput" folder.**
+# 🔍 Demo output v2.1
+Some examples of the diagrams. **Additional demo outputs are available in the "DemoOutput" folder.** These are however with the old visual styling from versions prior to v2.1.
 
 ## Demo output (partial):
 ![Demo output (partial)](https://github.com/dan-madsen/AzNetworkDiagram/blob/main/DemoOutput/Demo-Workload-AzNetworkDiagram-Partial.png) 
+
+## IP Plan overview:
+![IP Plan overview](https://github.com/dan-madsen/AzNetworkDiagram/blob/main/DemoOutput/IPPlan-AzNetworkDiagram.png) 
 
 ## Management group overview:
 ![Management Group overview](https://github.com/dan-madsen/AzNetworkDiagram/blob/main/DemoOutput/Management-Groups-AzNetworkDiagram.png) 

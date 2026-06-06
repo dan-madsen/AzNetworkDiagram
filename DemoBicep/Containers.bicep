@@ -1,4 +1,4 @@
-// az deployment group create --resource-group RGNAME --name 'AzNetworkDiagram-demo' --template-file Containers.bicep -c
+// az deployment group create --resource-group RGNAME --name 'AzNetworkDiagram-Contains-demo' --template-file Containers.bicep -c
 
 // Deploy everything to the same RG
 targetScope = 'resourceGroup'
@@ -37,6 +37,7 @@ module acr 'br/public:avm/res/container-registry/registry:0.12.1' = if(enableACR
     acrSku: 'Basic'
   }
 }
+
 
 module cae 'br/public:avm/res/app/managed-environment:0.13.3' = if(enableCAE) {
   params: {

@@ -2,15 +2,29 @@
 ## v2.1.0
 - [x] New features
   - [x] Visual overhaul - output is now way more modern
-  - [x] DemoBicep folder added. Bicep files for quick and easy creatain of basic demo environments, to showcase AzNetworkDiagram.
+    - Colors have a theme, for example:
+      - Core Networking - Blue
+      - Traffic management (AppGW, LB, Traffic Mangager, AFD) - another Blue
+      - Container stuff - Lighter blue
+      - Storage - Green
+      - VMs - Gray-ish
+      - Databases - Orange-ish
+      - Backup (RSV + BV) - Brown-ish
+      - "Messaging" - Purple
+  - [x] DemoBicep folder added. Bicep files for quick and easy creatain of basic demo environments, to showcase AzNetworkDiagram. Currently NOT perfect and tested - but mostly allows for a quick deployment when developing AzNetworkDiagram.
     - Built for single resourcegroup deployment
     - For a larger demo, you can deploy multiple environments
     - Supported resources is expected to grow overtime - but the environment will not be "functional" as such.
     - The .bicep files includes flags to enable/disable resource types, to tailor the demo environemnt.
-    - Remember to clean up afterwards.
+    - Remember to clean up afterwards - to avoid to cost!
 - [x] Bug fixes
   - [x] Suppressed an error if Az provider is not registered (in that case no resources would be present anyway)
-  - [-] vWAN hub logic error - hub info was suppressed
+  - [x] vWAN hub logic error - hub info was suppressed
+  - [x] ESAN bug (DOT output syntax error would break graphical output generation)
+  - [x] App Service Plan with Private Endpoint would mess up ranking
+  - [x] ACR with no repos would break the data gathering
+  - [x] Sanitize option would break Backup Vault export
+  - [x] Sanitization fixes
 ## v2.0.0
 - [x] **_BREAKING CHANGE - see v1.5 for additional info_**
   - [x] The breaking change from v1.5 fully implemented

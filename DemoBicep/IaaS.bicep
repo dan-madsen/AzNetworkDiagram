@@ -1,4 +1,4 @@
-// az deployment group create --resource-group RGNAME --name 'AzNetworkDiagram-demo' --template-file IaaS.bicep -c
+// az deployment group create --resource-group RGNAME --name 'AzNetworkDiagram-IaaS-demo' --template-file IaaS.bicep -c
 
 // Deploy everything to the same RG
 targetScope = 'resourceGroup'
@@ -44,6 +44,21 @@ module hub 'br/public:avm/res/network/virtual-network:0.9.0' = {
       {
         name: 'RouteServerSubnet'
         addressPrefix: '10.0.1.0/26'
+      }
+      {
+        name: 'DNSPRin'
+        addressPrefix: '10.0.1.64/26'
+        delegation: 'Microsoft.Network/dnsResolvers'
+      }
+      {
+        name: 'DNSPROut'
+        addressPrefix: '10.0.1.128/26'
+        delegation: 'Microsoft.Network/dnsResolvers'
+      }
+      {
+        name: 'AzureFirewallManagementSubnet'
+        addressPrefix: '10.0.1.192/26'
+        delegation: 'Microsoft.Network/dnsResolvers'
       }
     ]
   }
@@ -258,7 +273,7 @@ module avdapp2 'br/public:avm/res/desktop-virtualization/application-group/appli
 
 module esan 'br/public:avm/res/elastic-san/elastic-san:0.5.1' = if(enableESAN) {
   params: {
-    name: 'esan-azdiagram-${environment}-${locationshort}-01'
+    name: 'esan-azdiagram-${environment}-${locationshort}-1'
     availabilityZone: -1
     baseSizeTiB: 1
     location: location

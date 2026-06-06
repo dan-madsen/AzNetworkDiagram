@@ -1,18 +1,32 @@
-// az deployment group create --resource-group RGNAME --name 'AzNetworkDiagram-demo' --template-file Network.bicep -c
+// az deployment group create --resource-group RGNAME --name 'AzNetworkDiagram-Network-demo' --template-file Network.bicep -c
 
 // Deploy everything to the same RG
 targetScope = 'resourceGroup'
+// targetScope = 'subscription'
 
 param location string = 'swedencentral'
 param locationshort string = 'sdc'
 param environment string = 'dev'
 
 param enableAzFW bool = true
-param enableRS bool = true
+param enableRS bool = false // Dont enable together with VWAN !
 param enableVPN bool = true
 param enableBastion bool = true
 param enableDNSPR bool = true
-param enableVWAN bool = true
+param enableVWAN bool = true // Dont enable together with Route Server !
+
+// RGS
+// module hubRG 'br/public:avm/res/resources/resource-group:0.4.3' = {
+//   params: {
+//     name: 'rg-aznetworkdiagramHub-${environment}-${locationshort}-01'
+//   }
+// }
+
+// module wanRG 'br/public:avm/res/resources/resource-group:0.4.3' = {
+//   params: {
+//     name: 'rg-aznetworkdiagramVWAN-${environment}-${locationshort}-01'
+//   }
+// }
 
 ///////////////////////////////////////////////
 //// Network core
@@ -57,7 +71,6 @@ module hub 'br/public:avm/res/network/virtual-network:0.9.0' = {
       {
         name: 'AzureFirewallManagementSubnet'
         addressPrefix: '10.0.1.192/26'
-        delegation: 'Microsoft.Network/dnsResolvers'
       }
       // {
       //   name: 'default'
@@ -110,6 +123,23 @@ module spoke 'br/public:avm/res/network/virtual-network:0.9.0' = {
         natGatewayResourceId: natgw2.outputs.resourceId
         networkSecurityGroupResourceId: nsg2.outputs.resourceId
         routeTableResourceId: rt02.outputs.resourceId
+      }
+    ]
+  }
+}
+
+module VWANspoke 'br/public:avm/res/network/virtual-network:0.9.0' = {
+  params: {
+    name: 'vnet-VWANspoke-${environment}-${locationshort}-01'
+    location: location
+    addressPrefixes: ['10.0.3.0/24']
+    subnets: [
+      {
+        name: 'default'
+        addressPrefix: '10.0.3.0/24'
+        // natGatewayResourceId: natgw2.outputs.resourceId
+        // networkSecurityGroupResourceId: nsg2.outputs.resourceId
+        // routeTableResourceId: rt02.outputs.resourceId
       }
     ]
   }
@@ -382,16 +412,10 @@ module bas01 'br/public:avm/res/network/bastion-host:0.8.2' = if (enableBastion)
     name: 'bas-aznetworkdiagram-${environment}-${locationshort}-01'
     location: location
     virtualNetworkResourceId: hub.outputs.resourceId
-    
+    publicIPAddressObject: {
+      name: 'bas-aznetworkdiagram-${environment}-${locationshort}-01-pip-01'
+    }
     skuName: 'Basic'
-  }
-}
-
-module baspip 'br/public:avm/res/network/public-ip-address:0.12.0' = if (enableBastion) {
-  params: {
-    name: 'bas-aznetworkdiagram-${environment}-${locationshort}-01-pip-01'
-    location: location
-    skuName: 'Standard'
   }
 }
 
@@ -457,7 +481,7 @@ module vwanhub 'br/public:avm/res/network/virtual-hub:0.4.4' = if (enableVWAN) {
     hubVirtualNetworkConnections: [
       {
         name: 'hub1vnet1'
-        remoteVirtualNetworkResourceId: spoke.outputs.resourceId
+        remoteVirtualNetworkResourceId: VWANspoke.outputs.resourceId
       }
     ]
   }
