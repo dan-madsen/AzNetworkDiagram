@@ -2089,6 +2089,11 @@ function Export-SQLServer {
                 # pricing tier , vCore-based DBs expose Family
                 if ($db.Family) {
                     $pricingTier = $db.Edition + " " + $db.Family + " " + $db.Capacity + " vCores"
+                    
+                    # Serverless ?
+                    $autoPause = $db.AutoPauseDelayInMinutes
+                    $provision = "\nProvisioned: True"
+                    if( $null -ne $autoPause ) { $provision = "\nServerless: $autoPause minute(s) delay" }
                 }
                 else {
                     $pricingTier = $db.Edition + " " + $db.ServiceObjectiveName + " " + $db.Capacity + " DTUs"
@@ -2098,7 +2103,7 @@ function Export-SQLServer {
                 $gb = [math]::Round($db.MaxSizeBytes / 1GB, 2)   # 1 GB = 1 073 741 824 bytes
                 $Location = SanitizeLocation $db.Location
                 $ImagePath = Join-Path $OutputPath "icons" "sqldb.png"
-                $data += "        $($dbid) [label = `"\n\nLocation: $Location\nName: $(SanitizeString $db.DatabaseName)\nPricing Tier: $pricingTier\nMax Size: $gb GB\nZone Redundant: $($db.ZoneRedundant)\nElastic Pool Name: $($db.ElasticPoolName ? (SanitizeString $db.ElasticPoolName) : 'N/A')`" ; color=`"$($basecolor_db_general_fill)`"; margin=0.2;  image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $_)];`n" 
+                $data += "        $($dbid) [label = `"\n\nLocation: $Location\nName: $(SanitizeString $db.DatabaseName)\nPricing Tier: ${pricingTier}${provision}\n\nMax Size: $gb GB\nZone Redundant: $($db.ZoneRedundant)\nElastic Pool Name: $($db.ElasticPoolName ? (SanitizeString $db.ElasticPoolName) : 'N/A')`" ; color=`"$($basecolor_db_general_fill)`"; margin=0.2;  image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 2.0;$(Generate-DotURL -resource $_)];`n" 
                 $data += "        $sqlserverid -> $($dbid);`n"
             }
         }
