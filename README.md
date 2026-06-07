@@ -31,11 +31,14 @@ Initially it was with network as a focus, but it has emerged into some more - it
 ```
 ---
 
-# 🔍 Demo output v1.1
-Some examples of the diagrams. **Additional demo outputs are available in the "DemoOutput" folder.**
+# 🔍 Demo output v2.1
+Some examples of the diagrams. **Additional demo outputs are available in the "DemoOutput" folder.** These are however with the old visual styling from versions prior to v2.1.
 
 ## Demo output (partial):
 ![Demo output (partial)](https://github.com/dan-madsen/AzNetworkDiagram/blob/main/DemoOutput/Demo-Workload-AzNetworkDiagram-Partial.png) 
+
+## IP Plan overview:
+![IP Plan overview](https://github.com/dan-madsen/AzNetworkDiagram/blob/main/DemoOutput/IPPlan-AzNetworkDiagram.png) 
 
 ## Management group overview:
 ![Management Group overview](https://github.com/dan-madsen/AzNetworkDiagram/blob/main/DemoOutput/Management-Groups-AzNetworkDiagram.png) 
@@ -43,7 +46,8 @@ Some examples of the diagrams. **Additional demo outputs are available in the "D
 ---
 
 # 🚦 Requirements
-**The script depends on _Graphviz_** (the "DOT", diagram-as-code language) to generate the graphical output.
+> [!NOTE]
+> **The script depends on _Graphviz_** (the "DOT", diagram-as-code language) to generate the graphical output.
 
 Graphviz can be downloaded from: https://graphviz.org/. But note that the default install doesn't add the executable to $PATH, so make sure to enable that during install (or manually afterwards).
 
