@@ -424,7 +424,7 @@ function Export-dotFooterRanking {
     subgraph rank1 {
         rank = same;
         rank1;
-        ### LEGEND / Does not span ranks - has been put in rank 8 - lowest
+        ### LEGEND / Does not span ranks - has been put in rank 9 - lowest
         #l1
         ### VNet
         $($script:rankvnet -join '; ')
