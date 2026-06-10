@@ -1,4 +1,7 @@
 # Change log (since v1.0.1)
+## v2.1.1
+- [x] Bug fixe(s)
+  - [x] Azure Firewall bug, when no Firewall Policy is attached (classic model)
 ## v2.1.0
 - [x] New features
   - [x] Visual overhaul - output is now way more modern
