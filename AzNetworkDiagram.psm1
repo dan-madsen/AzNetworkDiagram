@@ -3201,7 +3201,9 @@ function Export-AzureFirewall {
         $data += "          $azFWId [label = `"\n\n\n$(SanitizeString $azFWName)\nPrivate IP Address: $(SanitizeString $PrivateIPAddress)\nSKU Tier: $($azfw.Sku.Tier)\nZones: $azFWZones\nPublic IP(s):\n$($PublicIPs -join "\n")`" ; color=`"$($basecolor_network_security_fill)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;$(Generate-DotURL -resource $azfw)];" 
 
         # Get the Azure Firewall policy
-        $data += Export-AzureFirewallPolicy -FirewallPolicyId $azfw.FirewallPolicy.Id
+        if ( $null -ne $azfw.FirewallPolicy.Id) {
+            $data += Export-AzureFirewallPolicy -FirewallPolicyId $azfw.FirewallPolicy.Id
+        }
         <#
         if ($null -ne $azfw.FirewallPolicy.id) {
             $firewallPolicyName = $azfw.FirewallPolicy.id.split("/")[-1]
