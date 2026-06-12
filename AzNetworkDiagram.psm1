@@ -7521,6 +7521,11 @@ function Get-AzNetworkDiagram {
     if ( "" -eq $OutputFileName ) { $OutputFileName = "AzNetworkDiagram-$((Get-Date).ToString("yyyyMMdd-HHmm"))" }
     
     # Add prefix to fileName ?
+    $Prefix = $Prefix -replace '\s',''
+    $Prefix = $Prefix -replace ':',''
+    $Prefix = $Prefix -replace ';',''
+    $Prefix = $Prefix -replace '\\',''
+
     if ($Prefix) {
             $OutputFileName = $Prefix + "-" + $OutputFileName
     }
