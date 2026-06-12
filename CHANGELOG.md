@@ -1,4 +1,11 @@
 # Change log (since v1.0.1)
+## v2.1.2
+- [x] New feature(s)
+  - [x] Option to set OutputFileName (-OutputFileName) - omit the file extension !
+  - [x] The .dot file are now given the same name as the output (except for the file extension)
+  - [x] Emphasized in the Readme.md and the Powershell Synopsis, that OutputPath and OutputFileName doesn't support spaces and specal characters
+    - [x] An error will now be shown at runtime if OutputPath (or current dir if unset) contains a space
+    - [x] OutputFileName will have spaces, ":", ";" and "\" stripped from the name
 ## v2.1.1
 - [x] Bug fix(es)
   - [x] Azure Firewall bug, when no Firewall Policy is attached (classic model)

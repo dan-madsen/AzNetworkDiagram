@@ -79,8 +79,9 @@ Import-Module .\AzNetworkDiagram.psm1
 - **-OnlyIPPlan** - Creates an IP Plan of all VNets in scope. Everything else is skipped.
   - If **-OnlyMgmtGroups** is set - that will take precedence over the IP Plan !
 - **-OnlyMgmtGroups** - Creates a Management Group and Subscription overview diagram - everything else is skipped.
-- **-OutputPath <path>** - set output directory. Default: "."
-- **-Prefix "string"** - Adds a prefix to the output file name. For example is cases where you want to do multiple automated runs, then the file names will have the prefix per run that you specify. **Default: No Prefix**
+- **-OutputFileName** - Set the output file name (without the extension). Spaces and special characters not supported - spaces, ":", ";", and "\" will be stripped. **Default: AzNetworkDiagram-yyyyMMdd-HHmm**
+- **-OutputPath <path>** - set output directory. Spaces and special characters not supported. Default: "."
+- **-Prefix "string"** - Adds a prefix to the output file name. For example is cases where you want to do multiple automated runs, then the file names will have the prefix per run that you specify. Spaces and special characters not supported. **Default: No Prefix**
 - **-Subscriptions "subid1","subid2","subname","..."** - a list of subscriptions in scope for the diagram. They can be names or Id's. **Default: Everything you have permission to**
 - **-Tenant "tenantId"** Specifies the tenant Id to be used in all subscription authentication. Handy when you have multiple tenants to work with. **Default: current tenant**
 

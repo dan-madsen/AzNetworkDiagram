@@ -672,7 +672,7 @@ function Export-CreateFile {
     [CmdletBinding()]
     param([string]$Data)
 
-    $Data | Out-File -Encoding ASCII $OutputPath\AzNetworkDiagram.dot
+    $Data | Out-File -Encoding ASCII $OutputPath\${OutputFileName}.dot
 }
 
 <#
@@ -689,7 +689,7 @@ function Export-AddToFile {
     [CmdletBinding()]
     param([string]$Data)
 
-    $Data | Out-File -Encoding ASCII -Append $OutputPath\AzNetworkDiagram.dot
+    $Data | Out-File -Encoding ASCII -Append $OutputPath\${OutputFileName}.dot
 }
 
 <#
@@ -7241,7 +7241,7 @@ function Get-DOTExecutable {
   Icons in the .\icons\ folder is necessary in order to generate the diagram. If not present, they will be downloaded to the output directory during runtime.
   
   .PARAMETER OutputPath
-  Specifies the path for the DOT-based output file (DOT, PDF, PNG, SVG). If unset - current working directory will be used.
+  Specifies the path for the DOT-based output file (DOT, PDF, PNG, SVG). If unset - current working directory will be used. Spaces and special characters not supported.
 
   .PARAMETER TenantId
   Specifies the tenantId to be used in all subscription authentication. Handy when you have multiple tenants to work with. Default: current tenant
@@ -7274,6 +7274,9 @@ function Get-DOTExecutable {
 
   .PARAMETER ManagementGroups
   A list of management groups in scope for processing. Ie. -ManagementGroups "ManagementGroupID1","ManagementGroupID2","..." . Subscriptions under any of the listed management group IDs (ie. NOT name!) will be added to the list of subscriptions in scope for data collection. Can be used in conjunction with -Subscriptions ""
+
+  .PARAMETER OutputFileName
+  Set name of the output file without ".ext" (ie. ".pdf"). Spaces and special characters not supported.
 
   .PARAMETER OutputFormat
   One or more output files get generated with the specified formats. Choose between (pdf, svg, png) - Default is PDF.
@@ -7361,6 +7364,7 @@ function Get-AzNetworkDiagram {
         [Parameter(Mandatory = $false)][switch]$OnlyMgmtGroups,
         [Parameter(Mandatory = $false)][ValidateSet('pdf','svg','png')][string[]]$OutputFormat = "pdf",
         [Parameter(Mandatory = $false)][string]$OutputPath = $pwd,
+        [Parameter(Mandatory = $false)][string]$OutputFileName = "AzNetworkDiagram-$((Get-Date).ToString("yyyyMMdd-HHmm"))",
         [Parameter(Mandatory = $false)][string]$Prefix = $null,
         [Parameter(Mandatory = $false)][switch]$Sanitize,
         [Parameter(Mandatory = $false)][switch]$SkipACA,
@@ -7453,6 +7457,7 @@ function Get-AzNetworkDiagram {
         write-host "-ManagementGroups : $ManagementGroups"
         write-host "-OnlyIPPlan : $OnlyIPPlan"
         write-host "-OnlyMgmtGroups : $OnlyMgmtGroups"
+        write-host "-OutputFileName : $OutputFileName"
         write-host "-OutputFormat : $OutputFormat"
         write-host "-OutputPath : $OutputPath"
         write-host "-Prefix : $Prefix"
@@ -7502,6 +7507,23 @@ function Get-AzNetworkDiagram {
 
     # Remove trailing "\" from path
     $OutputPath = $OutputPath.TrimEnd('\')
+
+    # Spaces in OutputPath not supported by Graphviz
+    if ($OutputPath.Contains(" ") ) { Write-Error "`nA AzNetworkDiagram dependency doesn't support spaces in OutputPath`nPlease change directory or use `"-OutputPath path`" to save the output elsewhere without a space in the path" }
+
+    # Simple sanitize of OutputFileName (spaces, : and \)
+    $OutputFileName = $OutputFileName -replace '\s',''
+    $OutputFileName = $OutputFileName -replace ':',''
+    $OutputFileName = $OutputFileName -replace ';',''
+    $OutputFileName = $OutputFileName -replace '\\',''
+
+    # In the rare case that OutputFileName is set empty (or just the above stripped characters), reset to default
+    if ( "" -eq $OutputFileName ) { $OutputFileName = "AzNetworkDiagram-$((Get-Date).ToString("yyyyMMdd-HHmm"))" }
+    
+    # Add prefix to fileName ?
+    if ($Prefix) {
+            $OutputFileName = $Prefix + "-" + $OutputFileName
+    }
 
     #Version info
     $module = Get-Module AzNetworkDiagram 
@@ -8455,23 +8477,16 @@ function Get-AzNetworkDiagram {
         Export-dotFooter
 
         ##### Generate diagram #####
-        # Generate diagram using Graphviz
-        $OutputFileName = "AzNetworkDiagram"
-        if ($Prefix) {
-            $OutputFileName = $Prefix + "-" + $OutputFileName
-        }
-        $OutputFileName = Join-Path $OutputPath -ChildPath $OutputFileName  # OS-safe, works on Linux as well as Windows
-
-    #    dot -q1 -Tpdf $OutputPath\AzNetworkDiagram.dot -o "$OutputFileName.pdf"
+        $OutputFileNameFullPathNoExt = Join-Path $OutputPath -ChildPath $OutputFileName  # OS-safe, works on Linux as well as Windows
+        $DOTFileNameFullPath = Join-Path $OutputPath -ChildPath "${OutputFileName}.dot"
 
         $DOT = (Get-DOTExecutable).Fullname
         $esc = '--%'
         foreach ($format in $OutputFormat) {
             Write-Output "`nGenerating $OutputFileName.$format ..."
-            #GenerateDotFile -OutputPath $OutputPath -OutputFileName $OutputFileName -Format $OutputFormat
-            $DOTFileName = Join-Path $OutputPath -ChildPath "AzNetworkDiagram.dot"
-            $arguments = "-v -T$format $DOTFileName -o $OutputFileName.$format"
+            $arguments = "-v -T$format $DOTFileNameFullPath -o $OutputFileNameFullPathNoExt.$format"
             $errorOutput = $( $output = & $DOT $esc $arguments) 2>&1
+
             # Check the exit code and error output
             if ($LastExitCode -ne 0) {
                 Write-Host "The executable failed with exit code: $LastExitCode"
@@ -8484,7 +8499,7 @@ function Get-AzNetworkDiagram {
     }
     finally {
         if (-not $KeepDotFile) {
-            Remove-Item "$OutputPath\AzNetworkDiagram.dot" -Force
+            Remove-Item "$OutputPath\${OutputFileName}.dot" -Force
         }
     }
 } 
