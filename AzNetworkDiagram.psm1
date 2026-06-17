@@ -784,7 +784,7 @@ function Export-AKSCluster {
             if ($pvtendpoints) {
                 foreach ($pe in $($pvtendpoints.PrivateEndpoint)) {
                     $peid = $pe.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                    $data += "        $aksid -> $peid [label = `"Private Endpoint`"; ];`n"
+                    $data += "        $aksid -> $peid [label = `"Private Endpoint`"; constraint=false ];`n"
                 }
             }
         }
@@ -1801,7 +1801,7 @@ function Export-CosmosDBAccount {
         if ( $EnablePE -OR (-not $SkipNonCoreNetwork -AND -not $SkipPE ) ) {
             if ($cosmosdbact.PrivateEndpointConnections.PrivateEndpoint.Id) {
                 $peid = $cosmosdbact.PrivateEndpointConnections.PrivateEndpoint.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $data += "        $cosmosdbactid -> $peid [label = `"Private Endpoint`"; ];`n"
+                $data += "        $cosmosdbactid -> $peid [label = `"Private Endpoint`"; constraint=false ];`n"
             }
         }
 
@@ -1952,7 +1952,7 @@ function Export-RedisServer {
         if ( $EnablePE -OR (-not $SkipNonCoreNetwork -AND -not $SkipPE ) ) {
             if ($redis.PrivateEndpointConnection.PrivateEndpoint.Id) {
                 $peid = $redis.PrivateEndpointConnection.PrivateEndpoint.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $data += "        $redisid -> $peid [label = `"Private Endpoint`"; ];`n"
+                $data += "        $redisid -> $peid [label = `"Private Endpoint`"; constraint=false ];`n"
             }
         }
 
@@ -2187,7 +2187,7 @@ function Export-EventHub {
         if ( $EnablePE -OR (-not $SkipNonCoreNetwork -AND -not $SkipPE ) ) {
             if ($namespace.PrivateEndpointConnection.PrivateEndpointId) {
                 $peid = $namespace.PrivateEndpointConnection.PrivateEndpointId.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $data += "        $namespaceid -> $peid [label = `"Private Endpoint`"; ];`n"
+                $data += "        $namespaceid -> $peid [label = `"Private Endpoint`"; constraint=false ];`n"
             }
         }
         
@@ -2913,7 +2913,7 @@ function Export-APIM {
         if ( $EnablePE -OR (-not $SkipNonCoreNetwork -AND -not $SkipPE ) ) {
             if ($apim.PrivateEndpointConnections.Id) {
                 $peid = $apim.PrivateEndpointConnections.Id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $data += "        $apimid -> $peid [label = `"Private Endpoint`"; ];`n"
+                $data += "        $apimid -> $peid [label = `"Private Endpoint`"; constraint=false ];`n"
             }
         }
         $data += "   label = `"$Name`";
@@ -2988,7 +2988,7 @@ function Export-ACR {
         if ( $EnablePE -OR (-not $SkipNonCoreNetwork -AND -not $SkipPE ) ) {
             if ($acr.PrivateEndpointConnection.PrivateEndpointId) {
                 $acrpeid = $acr.PrivateEndpointConnection.PrivateEndpointId.ToString().replace("-", "").replace("/", "").replace(".", "").ToLower()
-                $data += "        $acrid -> $($acrpeid) [label = `"Private Endpoint`"; ];`n"
+                $data += "        $acrid -> $($acrpeid) [label = `"Private Endpoint`"; constraint=false ];`n"
             }
         }
         $data += "   label = `"$Name`";
@@ -3124,7 +3124,7 @@ function Export-StorageAccount {
             if ($peids) {
                 foreach ($peid in $peids) {
                     $stapeid = $peid.PrivateEndpoint.Id.ToString().replace("-", "").replace("/", "").replace(".", "").ToLower()
-                    $data += "        $staid -> $($stapeid) [label = `"Private Endpoint`"; ];`n"
+                    $data += "        $staid -> $($stapeid) [label = `"Private Endpoint`"; constraint=false ];`n"
                 }
             }
         }
@@ -3841,7 +3841,7 @@ function Export-SubnetConfig {
                     if ( $EnablePE -OR (-not $SkipNonCoreNetwork -AND -not $SkipPE ) ) {
                         foreach ($pe in $subnet.PrivateEndpoints) {
                             $peid = $pe.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                            $data += "            $id -> $peid [label = `"Private Endpoint`"; ] ; `n"
+                            $data += "            $id -> $peid [label = `"Private Endpoint`"; constraint=false ];`n"
                         }
                     }
                 }
@@ -5394,7 +5394,7 @@ function Export-ESAN
                         $PEs | ForEach-Object {
                             $PE = $_
                             $PEid = $PE.PrivateEndpointId.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                            $ESANdata += "            $VGID -> $PEid`n"
+                            $ESANdata += "            $VGID -> $PEid [label = `"Private Endpoint`"; constraint=false ];`n"
                         }
                     }
                 }
@@ -7521,6 +7521,11 @@ function Get-AzNetworkDiagram {
     if ( "" -eq $OutputFileName ) { $OutputFileName = "AzNetworkDiagram-$((Get-Date).ToString("yyyyMMdd-HHmm"))" }
     
     # Add prefix to fileName ?
+    $Prefix = $Prefix -replace '\s',''
+    $Prefix = $Prefix -replace ':',''
+    $Prefix = $Prefix -replace ';',''
+    $Prefix = $Prefix -replace '\\',''
+
     if ($Prefix) {
             $OutputFileName = $Prefix + "-" + $OutputFileName
     }
