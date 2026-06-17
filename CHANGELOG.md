@@ -1,4 +1,6 @@
 # Change log (since v1.0.1)
+## v2.1.3
+- [x] Multiple resources - Private Endpoint contraint added (fix rank/height in the output)
 ## v2.1.2
 - [x] New feature(s)
   - [x] Option to set OutputFileName (-OutputFileName) - omit the file extension !

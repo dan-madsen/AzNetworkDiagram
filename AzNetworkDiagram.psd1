@@ -12,7 +12,7 @@
     RootModule = 'AzNetworkDiagram.psm1'
     
     # Version number of this module.
-    ModuleVersion = '2.1.2'
+    ModuleVersion = '2.1.3'
     
     # Supported PSEditions
     # CompatiblePSEditions = @()
@@ -107,7 +107,7 @@
             # IconUri = ''
     
     # ReleaseNotes of this module
-             ReleaseNotes = 'v2.1.2 release'
+             ReleaseNotes = 'v2.1.3 release'
     
     # Prerelease string of this module
         #      Prerelease = 'rc3'
