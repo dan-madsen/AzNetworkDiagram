@@ -3454,7 +3454,7 @@ function Export-Hub {
             $vgwName = $hub.VpnGateway.id.split("/")[-1]
             $vgwRGName = $hub.VpnGateway.id.split("/")[4]
             $vgwNameShort = $vgwName.split("-")[1, 2, 3] -join ("-")
-            $vpngw = Get-AzVpnGateway -ResourceGroupName $vgwRGName -Name $vgwName -ErrorAction Continue
+            $vpngw = Get-AzVpnGateway -ResourceGroupName $vgwRGName -Name $vgwName -ErrorAction SilentlyContinue
             if ( $null -ne $vpngw ) {
                 $ImagePath = Join-Path $OutputPath "icons" "vgw.png"
                 $data += "`n"
@@ -3492,7 +3492,7 @@ function Export-Hub {
             $ergwName = $hub.ExpressRouteGateway.id.split("/")[-1]
             $ergwRGName = $hub.ExpressRouteGateway.id.split("/")[4]
             $ergwshortname = $ergwName.split("-")[1, 2, 3] -join ("-")
-            $ergw = Get-AzExpressRouteGateway -ResourceGroupName $ergwRGName -Name $ergwName -ErrorAction Continue
+            $ergw = Get-AzExpressRouteGateway -ResourceGroupName $ergwRGName -Name $ergwName -ErrorAction SilentlyContinue
             if ( $null -ne $ergw ) {
                 $ImagePath = Join-Path $OutputPath "icons" "ergw.png"
                 $data += "`n"
