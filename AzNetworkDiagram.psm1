@@ -3452,33 +3452,36 @@ function Export-Hub {
             $Script:Legend += ,@("vWAN-VPN-Gateway", "vgw.png")
             $vgwId = $hub.VpnGateway.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
             $vgwName = $hub.VpnGateway.id.split("/")[-1]
+            $vgwRGName = $hub.VpnGateway.id.split("/")[4]
             $vgwNameShort = $vgwName.split("-")[1, 2, 3] -join ("-")
-            $vpngw = Get-AzVpnGateway -ResourceGroupName $hub.ResourceGroupName -Name $vgwName -ErrorAction Stop
-            $ImagePath = Join-Path $OutputPath "icons" "vgw.png"
-            $data += "`n"
-            $data += "        $vgwId [label = `"\n\n$(SanitizeString $vgwNameShort)\nScale Units: $($vpngw.VpnGatewayScaleUnit)\nPublic IP(s):\n$(($vpngw.IpConfigurations.PublicIpAddress | ForEach-Object {SanitizeString $_}) -join ",")\n`" ; color=`"$($basecolor_network_security_fill)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
-            $data += "`n    $headid -> $vgwId;"
+            $vpngw = Get-AzVpnGateway -ResourceGroupName $vgwRGName -Name $vgwName -ErrorAction Continue
+            if ( $null -ne $vpngw ) {
+                $ImagePath = Join-Path $OutputPath "icons" "vgw.png"
+                $data += "`n"
+                $data += "        $vgwId [label = `"\n\n$(SanitizeString $vgwNameShort)\nScale Units: $($vpngw.VpnGatewayScaleUnit)\nPublic IP(s):\n$(($vpngw.IpConfigurations.PublicIpAddress | ForEach-Object {SanitizeString $_}) -join ",")\n`" ; color=`"$($basecolor_network_security_fill)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+                $data += "`n    $headid -> $vgwId;"
 
-            # Connections
-            $VpnSites = Get-AzVPNSite -ResourceGroupName $hub.ResourceGroupName  -ErrorAction Stop | Where-Object { $_.VirtualWan.id -eq $hub.virtualwan.id }
-            # Get the VPN connections from this gateway
-            $vpnConnections = $vpngw.Connections
+                # Connections
+                $VpnSites = Get-AzVPNSite -ResourceGroupName $vgwRGName -ErrorAction Stop | Where-Object { $_.VirtualWan.id -eq $hub.virtualwan.id }
+                # Get the VPN connections from this gateway
+                $vpnConnections = $vpngw.Connections
 
-            #foreach ($VpnSite in $VpnSites) {
-            foreach ($connection in $vpnConnections) {
-                # Find which VPN site this connection is linked to
-                $siteId = $connection.RemoteVpnSite.Id
-                $vpnSite = $VpnSites | Where-Object { $_.Id -eq $siteId }
-            
-                if ($vpnSite) {
-                    $vpnsiteId = $siteId.replace("-", "").replace("/", "").replace(".", "").ToLower()
-                    $script:rankvngwcon += $vpnsiteId
-                    $vpnsiteName = SanitizeString $VpnSite.Name
-                    $peerip = $vpnSite.VpnSiteLinks.IpAddress
-                    $ImagePath = Join-Path $OutputPath "icons" "VPN-Site.png"
-                    $data += "`n"
-                    $data += "        $vpnsiteId [label = `"\n\n$(SanitizeString $vpnsiteName)\nDevice Vendor: $($VpnSite.DeviceProperties.DeviceVendor)\nLink Speed: $($VpnSite.VpnSiteLinks.LinkProperties.LinkSpeedInMbps) Mbps\nLinks: $($VpnSite.VpnSiteLinks.count)\n\nPeer : $(SanitizeString $peerip)\nAddressPrefixes: $(($VpnSite.AddressSpace.AddressPrefixes | ForEach-Object {SanitizeString $_}) -join ",")\n`" ; color=`"$($basecolor_network_traffic_level4)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
-                    $data += "`n    $vgwId -> $vpnsiteId;"
+                #foreach ($VpnSite in $VpnSites) {
+                foreach ($connection in $vpnConnections) {
+                    # Find which VPN site this connection is linked to
+                    $siteId = $connection.RemoteVpnSite.Id
+                    $vpnSite = $VpnSites | Where-Object { $_.Id -eq $siteId }
+                
+                    if ($vpnSite) {
+                        $vpnsiteId = $siteId.replace("-", "").replace("/", "").replace(".", "").ToLower()
+                        $script:rankvngwcon += $vpnsiteId
+                        $vpnsiteName = SanitizeString $VpnSite.Name
+                        $peerip = $vpnSite.VpnSiteLinks.IpAddress
+                        $ImagePath = Join-Path $OutputPath "icons" "VPN-Site.png"
+                        $data += "`n"
+                        $data += "        $vpnsiteId [label = `"\n\n$(SanitizeString $vpnsiteName)\nDevice Vendor: $($VpnSite.DeviceProperties.DeviceVendor)\nLink Speed: $($VpnSite.VpnSiteLinks.LinkProperties.LinkSpeedInMbps) Mbps\nLinks: $($VpnSite.VpnSiteLinks.count)\n\nPeer : $(SanitizeString $peerip)\nAddressPrefixes: $(($VpnSite.AddressSpace.AddressPrefixes | ForEach-Object {SanitizeString $_}) -join ",")\n`" ; color=`"$($basecolor_network_traffic_level4)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+                        $data += "`n    $vgwId -> $vpnsiteId;"
+                    }
                 }
             }
         }
@@ -3487,16 +3490,19 @@ function Export-Hub {
             $Script:Legend += ,@("ER Gateway", "ergw.png")
             $ergwId = $hub.ExpressRouteGateway.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
             $ergwName = $hub.ExpressRouteGateway.id.split("/")[-1]
+            $ergwRGName = $hub.ExpressRouteGateway.id.split("/")[4]
             $ergwshortname = $ergwName.split("-")[1, 2, 3] -join ("-")
-            $ergw = Get-AzExpressRouteGateway -ResourceGroupName $hub.ResourceGroupName -Name $ergwName -ErrorAction Stop
-            $ImagePath = Join-Path $OutputPath "icons" "ergw.png"
-            $data += "`n"
-            $data += "        $ergwId [label = `"\n\n\n$(SanitizeString $ergwshortname)\nAuto Scale Configuration: $($ergw.AutoScaleConfiguration.Bounds.min)-$($ergw.AutoScaleConfiguration.Bounds.max)`" ; color=`"$($basecolor_network_security_fill)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
-            $data += "`n    $headid -> $ergwId;"
-            $peerings = $ergw.ExpressRouteConnections.ExpressRouteCircuitPeering.id
-            foreach ($peering in $peerings) {
-                $peeringId = $peering.replace("-", "").replace("/", "").replace(".", "").replace("peeringsAzurePrivatePeering", "").ToLower()
-                $data += "`n    $ergwId -> $peeringId ;"
+            $ergw = Get-AzExpressRouteGateway -ResourceGroupName $ergwRGName -Name $ergwName -ErrorAction Continue
+            if ( $null -ne $ergw ) {
+                $ImagePath = Join-Path $OutputPath "icons" "ergw.png"
+                $data += "`n"
+                $data += "        $ergwId [label = `"\n\n\n$(SanitizeString $ergwshortname)\nAuto Scale Configuration: $($ergw.AutoScaleConfiguration.Bounds.min)-$($ergw.AutoScaleConfiguration.Bounds.max)`" ; color=`"$($basecolor_network_security_fill)`"; margin=0.2; image = `"$ImagePath`";imagepos = `"tc`";labelloc = `"b`";height = 1.5;];" 
+                $data += "`n    $headid -> $ergwId;"
+                $peerings = $ergw.ExpressRouteConnections.ExpressRouteCircuitPeering.id
+                foreach ($peering in $peerings) {
+                    $peeringId = $peering.replace("-", "").replace("/", "").replace(".", "").replace("peeringsAzurePrivatePeering", "").ToLower()
+                    $data += "`n    $ergwId -> $peeringId ;"
+                }
             }
         }
         if ($null -ne $hub.P2SVpnGateway) {
@@ -3524,7 +3530,8 @@ function Export-Hub {
             $data += "`n    $headid -> $p2sgwId;"
         }
         if ($null -ne $hub.AzureFirewall) {
-            $data += Export-AzureFirewall -FirewallId $hub.AzureFirewall.id -ResourceGroupName $hub.ResourceGroupName
+            $AzFWRGName = $hub.AzureFirewall.id.split("/")[4]
+            $data += Export-AzureFirewall -FirewallId $hub.AzureFirewall.id -ResourceGroupName $AzFWRGName
             $azFWId = $hub.AzureFirewall.id.replace("-", "").replace("/", "").replace(".", "").ToLower()
 
             $data += "`n                $headid -> $azFWId [label = `"Secure Hub`"];"

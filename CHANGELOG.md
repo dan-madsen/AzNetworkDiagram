@@ -1,4 +1,7 @@
 # Change log (since v1.0.1)
+## v2.1.4
+- [x] Bug fixe(s)
+  - [x] vWAN bug would occur if hub resources (ie. gateways, firewalls) are not in the same resource group as the vWAN instance
 ## v2.1.3
 - [x] Multiple resources - Private Endpoint contraint added (fix rank/height in the output)
 ## v2.1.2
